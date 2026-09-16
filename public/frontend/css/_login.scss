@@ -1,0 +1,727 @@
+.login-container {
+  padding: 0 160px;
+
+  //login first_page for desktop
+  .login-page {
+    background-color: #efefef;
+    height: 713px;
+    margin-top: 32px;
+    position: relative;
+    display: flex;
+
+    .login-page-close-icon {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      cursor: pointer;
+      img {
+        width: 24px;
+        height: 24px;
+        margin-top: 0;
+      }
+    }
+
+    &__wrap {
+      width: 317px;
+      height: 237px;
+      position: absolute;
+      top: 86px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      h1 {
+        font-size: 20px;
+        font-weight: 400;
+        text-align: center;
+      }
+
+      &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-top: 44px;
+
+        input {
+          border: 1px solid #c4c4c4;
+          padding: 17px 12px;
+          font-size: 12px;
+          font-weight: 400;
+          height: 48px;
+          background-color: transparent;
+        }
+
+        .actions {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          width: 100%;
+
+          button {
+            width: 100%;
+            height: 43px;
+            background-color: #232a38;
+            font-size: 12px;
+            font-weight: 400;
+            color: #fff;
+            border: 1px solid #232a38;
+            cursor: pointer;
+          }
+
+          .gmail-btn {
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #232a38;
+
+            img {
+              margin-right: 8px;
+            }
+          }
+        }
+      }
+
+      //OTP SECTION
+      #otpSection {
+        display: none;
+        margin-top: 44px;
+        flex-direction: column;
+
+        .otp-sent-message {
+          font-family: Roboto;
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 14.06px;
+          text-align: left;
+          text-underline-position: from-font;
+          text-decoration-skip-ink: none;
+          color: #00000096;
+          margin-bottom: 14px;
+        }
+
+        .otp-section-form {
+          display: flex;
+          flex-direction: column;
+
+          .otp-error-message {
+            color: #ff3b30;
+            font-family: Roboto;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 14.06px;
+            text-align: left;
+            margin-bottom: 15px;
+            margin-left: 12px;
+            margin-top: 4px;
+          }
+
+          .error {
+            border: 1px solid #ff3b30;
+          }
+
+          &-label {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0px 15px 0px;
+
+            .seconds {
+              font-size: 12px;
+              font-weight: 400;
+              line-height: 14.06px;
+              text-align: left;
+              color: #00000096;
+            }
+
+            .send-again-text {
+              font-family: Roboto;
+              font-size: 12px;
+              font-weight: 400;
+              line-height: 14.06px;
+              text-align: left;
+              color: #c4c4c4;
+              cursor: pointer;
+            }
+          }
+        }
+
+        input {
+          border: 1px solid #c4c4c4;
+          padding: 17px 12px;
+          font-size: 12px;
+          font-weight: 400;
+          height: 48px;
+          background-color: transparent;
+          margin-top: 10px;
+        }
+
+        .actions {
+          width: 100%;
+          display: flex;
+          gap: 10px;
+
+          button {
+            height: 43px;
+            font-size: 12px;
+            font-weight: 400;
+            color: #fff;
+            border: 1px solid #232a38;
+            cursor: pointer;
+            width: 100%;
+          }
+
+          #backBtn {
+            background-color: #c4c4c4;
+            color: #232a38;
+            border: 1px solid #c4c4c4;
+          }
+
+          #otpSubmitBtn {
+            background-color: #232a38;
+            color: #fff;
+            border: 1px solid #232a38;
+          }
+        }
+      }
+
+      /* Form Visible Class */
+      .show-otp-section {
+        display: flex !important;
+      }
+
+      .hide-form {
+        display: none !important;
+      }
+
+      #success-login {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+        text-align: center;
+
+        h3 {
+          font-family: Roboto;
+          font-size: 20px;
+          font-weight: 400;
+          line-height: 23.44px;
+          text-align: center;
+          color: #000000;
+        }
+
+        h4 {
+          font-family: Roboto;
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 16.41px;
+          text-align: center;
+          color: #000000;
+        }
+
+        span {
+          font-family: Roboto;
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 14.06px;
+          text-align: center;
+          color: #00000096;
+
+          .link-personal-cabinet {
+            font-family: Roboto;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 14.06px;
+            text-align: center;
+            color: #007aff;
+          }
+        }
+      }
+
+      // Show success-login when OTP is correct
+      .hide-form {
+        display: none !important;
+      }
+
+      .show-otp-section {
+        display: flex !important;
+      }
+    }
+  }
+
+  //#otpSection for desktop
+  #otpSection {
+    display: flex;
+    display: none;
+    margin-top: 44px;
+    flex-direction: column;
+    height: 713px;
+    background-color: #efefef;
+    margin-top: 32px;
+    position: relative;
+
+    .otpSection-close-icon {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      cursor: pointer;
+      img {
+        width: 24px;
+        height: 24px;
+        margin-top: 0;
+      }
+    }
+
+    .otpSection-wrapper {
+      width: 317px;
+      height: 237px;
+      position: absolute;
+      top: 86px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      .headers {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        width: 100%;
+
+        .otp-sent-message {
+          margin-top: 15px;
+        }
+
+        .regular-otp-input {
+          width: 100%;
+          // display: none;
+          border: 1px solid #c4c4c4;
+          padding: 17px 12px;
+          font-size: 12px;
+          font-weight: 400;
+          height: 48px;
+          background-color: transparent;
+          margin-top: 10px;
+          background-color: #f4f4f4;
+          border-radius: 4px;
+        }
+
+        .field-with-error {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          display: none;
+          input {
+            border: 1px solid #ff3b30;
+            padding: 17px 12px;
+            font-size: 12px;
+            font-weight: 400;
+            height: 48px;
+            background-color: transparent;
+            width: 100%;
+          }
+          .error-message {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 14.06px;
+            text-align: left;
+            color: #ff3b30;
+            margin-top: 5px;
+          }
+        }
+      }
+
+      .otp-sent-message {
+        font-family: Roboto;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 14.06px;
+        text-align: left;
+        text-decoration-skip-ink: none;
+        color: #00000096;
+        margin-bottom: 14px;
+      }
+
+      .otp-section-form-label {
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0px 15px 0px;
+
+        .seconds {
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 14.06px;
+          text-align: left;
+          color: #00000096;
+        }
+
+        .send-again-text {
+          font-family: Roboto;
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 14.06px;
+          text-align: left;
+          color: #c4c4c4;
+          cursor: pointer;
+        }
+      }
+    }
+    .actions {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+
+      button {
+        height: 43px;
+        font-size: 12px;
+        font-weight: 400;
+        color: #fff;
+        border: 1px solid #232a38;
+        cursor: pointer;
+        width: 100%;
+        border-radius: 4px;
+      }
+
+      #backBtn {
+        background-color: #c4c4c4;
+        color: #232a38;
+        border: 1px solid #c4c4c4;
+      }
+
+      #otpSubmitBtn {
+        background-color: #232a38;
+        color: #fff;
+        border: 1px solid #232a38;
+      }
+    }
+  }
+
+  //success login part for desktop
+  #success-login {
+    display: flex;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    background-color: #efefef;
+    height: 713px;
+    padding: 20px;
+    position: relative;
+
+    .success-login-close-icon {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      cursor: pointer;
+      img {
+        width: 24px;
+        height: 24px;
+        margin-top: 0;
+      }
+    }
+
+    img {
+      width: 80px;
+      height: 80px;
+      margin-top: 64px;
+    }
+
+    h3 {
+      font-family: Roboto;
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 24px;
+      text-align: center;
+      color: #232a38;
+      margin-top: 30px;
+    }
+
+    h4 {
+      font-family: Roboto;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 16.8px;
+      text-align: center;
+      color: #232a38;
+      margin-top: 10px;
+    }
+
+    span {
+      color: #232a38;
+      margin-top: 20px;
+      text-align: center;
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 14.06px;
+      text-align: center;
+    }
+
+    .link-personal-cabinet {
+      color: #007aff;
+      font-family: Roboto;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 14.06px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .actions {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      padding: 0 20px;
+
+      button {
+        height: 43px;
+        font-size: 12px;
+        font-weight: 400;
+        color: #fff;
+        border: 1px solid #232a38;
+        cursor: pointer;
+        width: 100%;
+        border-radius: 4px;
+      }
+
+      #backBtn {
+        background-color: #c4c4c4;
+        color: #232a38;
+        border: 1px solid #c4c4c4;
+      }
+
+      #otpSubmitBtn {
+        background-color: #232a38;
+        color: #fff;
+        border: 1px solid #232a38;
+      }
+    }
+  }
+}
+
+.login-page-mobile {
+  display: none;
+}
+
+// Mobile and Tablet Styles
+@media (max-width: 768px) {
+  .login-header {
+    display: none !important;
+  }
+
+  .login-container {
+    .login-page {
+      display: none;
+    }
+    #otpSection {
+      display: none;
+    }
+  }
+  .login-page-mobile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0px 15px;
+
+    //login first_page for mobile
+    .login-page {
+      background-color: transparent;
+      display: flex;
+      // display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+
+      span {
+        margin-bottom: 30px;
+        color: #1c1b1f;
+      }
+
+      h1 {
+        font-family: Roboto;
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 23.44px;
+        text-align: center;
+        color: #000000;
+      }
+
+      form {
+        flex-grow: 1;
+      }
+
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        padding: 0 20px;
+      }
+
+      input {
+        border: 1px solid #c4c4c4;
+        padding: 17px 12px;
+        font-size: 12px;
+        font-weight: 400;
+        height: 48px;
+        background-color: transparent;
+        width: 100%;
+        margin-top: 25px;
+      }
+
+      button {
+        width: 100%;
+        height: 43px;
+        background-color: #232a38;
+        font-size: 12px;
+        font-weight: 400;
+        color: #fff;
+        border: 1px solid #232a38;
+        cursor: pointer;
+      }
+
+      .gmail-btn {
+        background-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #232a38;
+
+        img {
+          margin-right: 8px;
+        }
+        span {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    //#otpSection for mobile
+    #otp-section-mobile {
+      display: none; // make display:flex if u want to see on ui
+      flex-direction: column;
+      justify-content: flex-start;
+      background-color: transparent;
+      height: 100%;
+      padding: 20px;
+
+      span {
+        display: flex;
+        justify-content: flex-start;
+        cursor: pointer;
+        margin-bottom: 30px;
+        color: #1c1b1f;
+      }
+
+      h1 {
+        font-family: Roboto;
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 23.44px;
+        text-align: center;
+        color: #000000;
+      }
+
+      .headers {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 30px;
+
+        .otp-sent-message {
+          font-family: Roboto;
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 14.06px;
+          text-align: left;
+          color: #00000096;
+          text-align: start;
+        }
+
+        .regular-otp-input {
+          border: 1px solid #c4c4c4;
+          padding: 17px 12px;
+          font-size: 12px;
+          font-weight: 400;
+          height: 48px;
+          background-color: transparent;
+          // display: none;
+        }
+
+        .field-with-error {
+          // display: flex;
+          flex-direction: column;
+          display: none;
+          input {
+            border: 1px solid #ff3b30;
+            padding: 17px 12px;
+            font-size: 12px;
+            font-weight: 400;
+            height: 48px;
+            background-color: transparent;
+            width: 100%;
+          }
+          .error-message {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 14.06px;
+            text-align: left;
+            color: #ff3b30;
+            margin-top: 5px;
+          }
+        }
+      }
+
+      .otp-section-form-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+
+        .seconds {
+          font-family: Roboto;
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 14.06px;
+          text-align: left;
+          color: #00000096;
+        }
+
+        .send-again-text {
+          font-family: Roboto;
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 14.06px;
+          text-align: left;
+          color: #c4c4c4;
+          cursor: pointer;
+        }
+      }
+
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        padding: 0 20px;
+
+        button {
+          width: 100%;
+          height: 43px;
+          background-color: #232a38;
+          font-size: 12px;
+          font-weight: 400;
+          color: #fff;
+          border: 1px solid #232a38;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

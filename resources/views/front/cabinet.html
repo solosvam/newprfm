@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ParfumShop.az - онлайн заказ парфюмерии, мужские женские аро</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+
+<body>
+  <!-- Header section -->
+  <header>
+    <div class="container">
+      <div class="header-all">
+        <div class="lang">
+          <img src="assets/images/aze.svg" alt="country image for translate" />
+          <span>AZ</span>
+          <img src="assets/images/arrow_down.svg" alt="" />
+        </div>
+        <div class="logo">
+          <a href="index.html">
+            <img src="assets/images/logo.svg" alt="parfumshop logo" />
+          </a>
+        </div>
+        <div class="header-actions">
+          <ul>
+            <li>
+              <img class="search-icon" src="assets/images/search.svg" alt="" />
+            </li>
+            <li>
+              <img src="assets/images/cart.svg" alt="" />
+            </li>
+            <li>
+              <a href="/wishlist.html"><img src="assets/images/wishlist.svg" alt="" /></a>
+            </li>
+            <li>
+              <a href="login.html">
+                <img src="assets/images/signin.svg" alt="" />
+                <span>Giriş</span>
+              </a>
+            </li>
+            <li class="menu-icon">
+              <img src="assets/images/menu.svg" alt="" />
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+  <!-- Header section -->
+
+  <!-- Search Form for Mobile -->
+  <div class="mobile-search">
+    <form>
+      <input type="text" placeholder="Nə axtarırsan?" />
+      <img src="assets/images/search.svg" alt="" />
+    </form>
+    <div class="mobile-search__filter">
+      <img src="assets/images/filter.svg" alt="" />
+    </div>
+  </div>
+  <!-- Search Form for Mobile -->
+
+  <!--ORDER STATUS MODAL-->
+  <div class="order-status-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Sifarişim haradadır?</h3>
+        <button class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="product-info">
+          <span class="product-name">La Panthere Edition Soir</span>
+          <span class="product-price">168.00 ₼ / 50 ml</span>
+        </div>
+        <ol class="progress-tracker">
+          <li class="step completed">
+            <div class="icon">
+              <span>&#10003;</span>
+            </div>
+            <div class="text">Sifariş qəbul olundu</div>
+          </li>
+          <li class="step active">
+            <div class="icon"></div>
+            <div class="text">Kuryer sifarişi təhvil aldı</div>
+          </li>
+          <li class="step">
+            <div class="icon"></div>
+            <div class="text">Kuryer yoldadır</div>
+          </li>
+          <li class="step">
+            <div class="icon"></div>
+            <div class="text">Təhvil verildi</div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <!--ORDER STATUS MODAL-->
+
+  <!--ORDER STATUS MODAL WITH ACTIONS-->
+  <div class="order-status-modal-w-actions">
+    <div class="modal-overlay"></div>
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="info">
+          <div>
+            <h3>Sifarişim haradadır?</h3>
+            <p>1/2</p>
+          </div>
+          <div class="product-info">
+            <span class="product-name">La Panthere Edition Soir |</span>
+            <span class="product-price">168.00 ₼ / 50 ml</span>
+          </div>
+        </span>
+        <button class="close-button">&times;</button>
+
+      </div>
+      <div class="modal-body">
+        <ol class="progress-tracker">
+          <li class="step completed">
+            <div class="icon">
+              <span>&#10003;</span>
+            </div>
+            <div class="text">Sifariş qəbul olundu</div>
+          </li>
+          <li class="step active">
+            <div class="icon"></div>
+            <div class="text">Kuryer sifarişi təhvil aldı</div>
+          </li>
+          <li class="step">
+            <div class="icon"></div>
+            <div class="text">Kuryer yoldadır</div>
+          </li>
+          <li class="step">
+            <div class="icon"></div>
+            <div class="text">Təhvil verildi</div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="modal-footer">
+        <button class="regular">Öncəki</button>
+        <button class="next-btn">Növbəti</button>
+      </div>
+    </div>
+  </div>
+  <!--ORDER STATUS MODAL WITH ACTIONS-->
+
+  <main>
+    <div class="container">
+      <div class="cabinet">
+        <div class="cabinet__aside">
+          <div class="cabinet__aside__top">
+            <ul>
+              <li>
+                <a href="">
+                  <img src="assets/images/arrow-left.svg" alt="" />
+                  <span>Geri qayıt</span>
+                </a>
+              </li>
+              <li>
+                <ul>
+                  <li>
+                    <a href="index.html">
+                      <img src="assets/images/home.svg" alt="" />
+                    </a>
+                  </li>
+                  <li>
+                    <img src="assets/images/arrow-right.svg" alt="" />
+                  </li>
+                  <li>
+                    <a href="cabinet.html">Şəxsi kabinet</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="cabinet__aside__nav">
+            <h1>Salam, Rövşən Məmmədov</h1>
+            <ul>
+              <li>
+                <a href="cabinet.html" style="border-bottom: 1px solid #000; color: #000">Hesab məlumatları</a>
+              </li>
+              <li>
+                <a href="personal-info.html">Şəxsi məlumatlar</a>
+              </li>
+              <li>
+                <a href="">Sifarişlərimin tarixçəsi</a>
+              </li>
+              <li>
+                <a href="wishlist.html">Bəyəndiyim ətirlər <span>24</span></a>
+              </li>
+              <li>
+                <a href="comments.html">Rəylərim <span>7</span></a>
+              </li>
+            </ul>
+            <a href="">
+              <img src="assets/images/signin.svg" alt="" />
+              <span>Hesabdan çıx</span>
+            </a>
+          </div>
+        </div>
+        <div class="cabinet__sections">
+          <div class="cabinet__sections__elem bonus">
+            <h2>Hesabınızdakı bonus pul</h2>
+            <p>15,00 AZN</p>
+            <a href="">
+              <img src="assets/images/arrow-bonus.svg" alt="" />
+              <span>Bonus pul tarixçənizə baxın</span>
+            </a>
+          </div>
+          <div class="cabinet__sections__elem last-order">
+            <h2>Son sifarişiniz</h2>
+            <ul>
+              <li>
+                <img src="assets/images/products/parfum.png" alt="" />
+              </li>
+              <li>
+                <h3>Narciso Rodriguez</h3>
+                <h4>Narciso Poudree</h4>
+              </li>
+            </ul>
+            <span>08.11.2021</span>
+          </div>
+          <div class="cabinet__sections__elem order-location">
+            <h2>Sifarişim haradadır?</h2>
+            <p>Sifariş qəbul olundu</p>
+            <ul>
+              <li>
+                <span>La Panthere Edition Soir</span>
+              </li>
+              <li>
+                <span>168.00 ₼ / 50 ml</span>
+              </li>
+            </ul>
+          </div>
+          <div class="cabinet__sections__elem get-birkart">
+            <div class="info">
+              <h3>
+                BirKart əldə edin
+                <svg width="22" height="9" viewBox="0 0 22 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0.648804 4.5L20.6488 4.5" stroke="black" stroke-width="1.2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                  <path d="M17.3931 1.24609L20.6489 4.50191L17.3931 7.75772" stroke="black" stroke-width="1.2"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </h3>
+
+              <span>Kreditlə sifarişdə çətinlik çəkirsinizsə, Birkart sifariş
+                edin.</span>
+            </div>
+
+            <img src="/assets/images/birbank.png" alt="" />
+          </div>
+
+          <div class="cabinet__sections__elem invite-friend">
+            <ul>
+              <li>
+                <h1>Dostunu dəvət et və 17azn bonus qazan! Dəvət göndər</h1>
+                <button id="inviteButton">Dəvət göndər</button>
+              </li>
+              <li>
+                <img src="assets/images/invite.png" alt="" />
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Form Header -->
+  <div class="container">
+    <div class="search-form">
+      <div class="search-close">
+        <img src="assets/images/close.svg" alt="" />
+      </div>
+      <div class="search-form__wrap">
+        <form action="">
+          <input type="text" placeholder="Axtarış" />
+          <img src="assets/images/search.svg" alt="" />
+        </form>
+        <div class="prev-search">
+          <span>Daha öncəki axtarışlarınız</span>
+          <ul>
+            <li>
+              <a href="">
+                <div class="img">
+                  <img src="assets/images/products/parfum.png" alt="" />
+                </div>
+                <div class="content">
+                  <div class="info">
+                    <h1>Cartier La Panthere Edition Soir</h1>
+                    <p>Kişi, Eau de Toilette</p>
+                    <span>199.00 ₼ / <span>100 ml</span></span>
+                  </div>
+                  <div class="category">
+                    <span>Qadın üçün</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a href="">
+                <div class="img">
+                  <img src="assets/images/products/parfum.png" alt="" />
+                </div>
+                <div class="content">
+                  <div class="info">
+                    <h1>Cartier La Panthere Edition Soir</h1>
+                    <p>Kişi, Eau de Toilette</p>
+                    <span>199.00 ₼ / <span>100 ml</span></span>
+                  </div>
+                  <div class="category">
+                    <span>Qadın üçün</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a href="">
+                <div class="img">
+                  <img src="assets/images/products/parfum.png" alt="" />
+                </div>
+                <div class="content">
+                  <div class="info">
+                    <h1>Cartier La Panthere Edition Soir</h1>
+                    <p>Kişi, Eau de Toilette</p>
+                    <span>199.00 ₼ / <span>100 ml</span></span>
+                  </div>
+                  <div class="category">
+                    <span>Qadın üçün</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Search Form Header -->
+
+
+  <!--ARE YOU SURE LOGOUT-->
+  <div class="quit-accaunt-mobile">
+    <span>Hesabdan çıxmaq istədiyinizdən əminsiniz?</span>
+    <div>
+      <button class="yes-btn">Bəli</button>
+      <button class="no-btnn">Xeyr</button>
+    </div>
+  </div>
+  <!--ARE YOU SURE LOGOUT-->
+
+
+  <!-- Sidebar for Mobile -->
+  <div class="mobile-sidebar">
+    <img class="sidebar-close-icon" src="assets/images/close.svg" alt="" />
+    <ul class="mobile-sidebar__nav">
+      <li>
+        <img src="assets/images/filter.svg" alt="filter icon" />
+        <span>Filter</span>
+      </li>
+      <li>
+        <img src="assets/images/brands.svg" alt="filter icon" />
+        <span>Brendlər</span>
+      </li>
+      <li>
+        <img src="assets/images/gift_card.svg" alt="filter icon" />
+        <span>Hədiyyə kartı</span>
+      </li>
+      <li class="terms-link">
+        <img src="assets/images/terms.svg" alt="filter icon" />
+        <span>Qaydalar</span>
+      </li>
+      <li>
+        <img src="assets/images/gift_card.svg" alt="filter icon" />
+        <span>Xidmətlər və şərtlər</span>
+      </li>
+      <li class="terms-link">
+        <img src="assets/images/wishlist.svg" alt="filter icon" />
+        <span>Bəyəndiyim ətirlər</span>
+      </li>
+    </ul>
+    <div class="invite-friend">
+      <h1>Dostunu dəvət et və bonus qazan!</h1>
+      <img src="assets/images/invite.png" alt="" />
+      <button>Dəvət göndər</button>
+    </div>
+  </div>
+  <!-- Sidebar for Mobile -->
+
+  <!-- Invite Modal -->
+  <div id="inviteModal" class="invite-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-header-wrap">
+          <h1>Dostunu dəvət et və bonus qazan!</h1>
+          <div>
+            <img src="assets/images/black-info.svg" alt="" />
+            <span>Lorem ipsum dolor sit amet consectetur. Eu quam dui risus sem
+              facilisi id venenatis nunc sit. Lacus nunc vestibulum tempor
+              ullamcorper eget. Felis aliquet faucibus donec enim. Malesuada
+              quisque sagittis curabitur habitant rhoncus platea lacus egestas
+              ornare.</span>
+          </div>
+        </div>
+        <span class="close">
+          <img src="assets/images/close.svg" alt="" class="close-icon" />
+        </span>
+      </div>
+      <div class="modal-body">
+        <div class="bonus-info">
+          <div class="bonus-nums">
+            <ul>
+              <li>
+                <span>5</span>
+                <p>Dəvət olunub</p>
+              </li>
+              <li>
+                <span>4</span>
+                <p>Sifariş edib</p>
+              </li>
+              <li>
+                <span>400.00 AZN</span>
+                <p>Bonus</p>
+              </li>
+            </ul>
+          </div>
+          <div class="bonus-url">
+            <input type="url" placeholder="https://epg.link.com/egp/merchant/124...." />
+            <button>
+              <img src="assets/images/copy.svg" alt="" />
+            </button>
+          </div>
+          <div class="bonus-shared">
+            <span>Yuxarıdakı linki kopyalayın və ya aşağıdakı kanallardan biri
+              ilə paylaşın.</span>
+            <ul>
+              <li>
+                <img src="assets/images/wp-shared.svg" alt="" />
+              </li>
+              <li>
+                <img src="assets/images/telegram-shared.svg" alt="" />
+              </li>
+              <li>
+                <img src="assets/images/mail-shared.svg" alt="" />
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Invite Modal -->
+
+  <!-- Footer section -->
+  <footer>
+    <div class="container">
+      <div class="footer-all">
+        <div class="left">
+          <a href="">
+            <img src="assets/images/logo.svg" alt="" />
+          </a>
+          <p>ParfumShop.az internet mağazası</p>
+          <p>25 ilin təcrübəsi ilə xidmətinizdə olmaqdan qürur duyuruq!</p>
+          <p>Həyatınızın ən ətirli səhifəsi...</p>
+        </div>
+        <div class="links">
+          <ul>
+            <li>
+              <span>Kateqoriyalar</span>
+            </li>
+            <li>
+              <span>Brendlər</span>
+            </li>
+            <li>
+              <span>Qadın ətirləri</span>
+            </li>
+            <li>
+              <span>Kişi ətirləri</span>
+            </li>
+            <li>
+              <span>Unisex</span>
+            </li>
+            <li>
+              <span>Hamam dəstləri</span>
+            </li>
+            <li>
+              <span>Testerlər</span>
+            </li>
+            <li>
+              <span>Hədiyyə kartı</span>
+            </li>
+            <li>
+              <span>Daxili kredit</span>
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <span>Xidmət saatlarımız</span>
+            </li>
+            <li>
+              <span>9:00 - 19:00. B.e. - Ş.</span>
+              <span>Bazar istirahət günüdür.</span>
+            </li>
+            <li>
+              <span>
+                Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə
+                alınır və iş saatı ərzində baxılır.
+              </span>
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <span>Sualınız yaranıb?</span>
+            </li>
+            <li>
+              <span>(055) 55 10 700</span>
+              <span>(012) 310 22 55</span>
+              <span>info@parfumshop.az</span>
+            </li>
+            <li class="footer-social">
+              <a href="">
+                <img src="assets/images/fb.svg" alt="" />
+              </a>
+              <a href="">
+                <img src="assets/images/instagram.svg" alt="" />
+              </a>
+              <a href="">
+                <img src="assets/images/telegram.svg" alt="" />
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="right">
+          <ul>
+            <li>
+              <img src="assets/images/cards/visa.png" alt="" />
+            </li>
+            <li>
+              <img src="assets/images/cards/master.png" alt="" />
+            </li>
+            <li>
+              <img src="assets/images/cards/m10.png" alt="" />
+            </li>
+            <li>
+              <img src="assets/images/cards/birbank.png" alt="" />
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- Footer section -->
+
+  <script src="assets/js/common.js"></script>
+  <script src="assets/js/cabinet.js"></script>
+  <script src="assets/js/personal.js"></script>
+</body>
+
+</html>

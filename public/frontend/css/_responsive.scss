@@ -1,0 +1,370 @@
+@media screen and (max-width: 768px) {
+  header {
+    display: flex !important;
+
+    .container {
+      width: 100%;
+
+      .logo {
+        img {
+          width: 117px;
+          height: 28px;
+        }
+      }
+
+      .header-actions {
+        ul {
+          gap: 8px !important;
+
+          li {
+            display: none !important;
+
+            &:nth-child(2) {
+              display: flex !important;
+            }
+
+            &:nth-child(5) {
+              display: flex !important;
+            }
+          }
+        }
+      }
+    }
+
+    margin-top: 10px !important;
+  }
+
+  footer {
+    display: block;
+    background-color: #232a38;
+
+    .footer-all {
+      flex-direction: column;
+
+      .left,
+      .links,
+      .right {
+        width: 100%;
+      }
+
+      .left {
+        img {
+          filter: brightness(0) invert(1);
+        }
+
+        p {
+          display: none;
+        }
+      }
+
+      .links {
+        flex-direction: column;
+        gap: 40px;
+        margin-top: 20px;
+
+        ul {
+          width: 100%;
+
+          li {
+            span {
+              color: #fff;
+            }
+          }
+        }
+      }
+
+      .right {
+        margin-top: 40px;
+
+        img {
+          filter: brightness(0) invert(1);
+        }
+      }
+    }
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .modal-content {
+    width: 95% !important;
+
+    .modal-tablinks {
+      button {
+        padding: 10px 8px !important;
+      }
+    }
+  }
+
+  .home-banner {
+    display: none;
+  }
+
+  .home-page {
+    .main-left {
+      display: none;
+    }
+
+    .main-products {
+      width: 100% !important;
+
+      &__top {
+        justify-content: flex-end !important;
+
+        ul {
+          display: none !important;
+        }
+      }
+    }
+  }
+
+  .service-page {
+    &__list {
+      flex-direction: column;
+
+      &__item {
+        width: 100% !important;
+      }
+    }
+  }
+
+  .cabinet {
+    flex-direction: column;
+
+    &__aside {
+      width: 100% !important;
+      margin-bottom: 10px;
+
+      &__nav {
+        display: none !important;
+      }
+    }
+
+    &__sections {
+      flex-direction: column;
+      width: 100% !important;
+      gap: 12px;
+
+      &__elem {
+        width: 100% !important;
+        padding: 16px !important;
+        overflow-x: hidden;
+      }
+
+      .bonus {
+        p {
+          margin: 8px 0 48px !important;
+        }
+      }
+    }
+  }
+
+  .internal-credit {
+    .breadcrumb {
+      display: block !important;
+    }
+
+    &__payment {
+      flex-direction: column;
+      gap: 12px;
+
+      &__method {
+        width: 100% !important;
+        padding: 0 16px !important;
+
+        .image {
+          width: 112px !important;
+          height: 36px !important;
+        }
+
+        .text {
+          width: 55% !important;
+        }
+      }
+    }
+  }
+
+  .product-item {
+    width: 100% !important;
+  }
+
+  .mobile-search {
+    display: flex;
+  }
+
+
+  footer {
+    display: none;
+  }
+
+  .footer-for-mobile {
+    display: block;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    padding: 20px 12px;
+
+
+    .footer-wrapper {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+
+      .column1 {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 20px;
+        /* Added spacing between the elements */
+
+        div {
+          display: flex;
+          align-items: flex-start;
+          gap: 15px;
+          /* Increased gap for better spacing */
+
+          img {
+            width: 30px;
+            /* Adjusted width for better visual balance */
+            height: auto;
+            /* Maintains the aspect ratio */
+          }
+
+          .categories {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            /* Adds spacing between the list items */
+            color: #fff;
+            /* Ensures text is white for visibility */
+
+            h3 {
+              font-family: Roboto, sans-serif;
+              font-size: 12px;
+              /* Increased font size for better readability */
+              font-weight: 500;
+              /* Adjusted weight for better visual emphasis */
+              line-height: 18px;
+              color: #fff;
+              margin-bottom: 8px;
+              /* Added space below the heading */
+            }
+
+            ul {
+              padding: 0;
+              margin: 0;
+              list-style: none;
+              /* Removed default list style */
+
+              li {
+                font-size: 10px;
+                /* Smaller font size for list items */
+                line-height: 18px;
+              }
+            }
+          }
+        }
+
+        .banking-icons {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          /* Increased gap for better separation between icons */
+
+          span {
+            display: flex;
+            gap: 12px;
+            /* Adjusted spacing between icons */
+
+            .visa,
+            .master,
+            .m10,
+            .birbank {
+              width: auto;
+              height: auto;
+              max-width: 50px;
+              /* Ensures logos don't get too big */
+              max-height: 20px;
+              /* Sets a max height for uniformity */
+            }
+          }
+        }
+      }
+
+
+      .column2 {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+
+        h3 {
+          font-family: Roboto;
+          font-size: 12px;
+          font-weight: 700;
+          color: #fff;
+          margin-bottom: 10px;
+        }
+
+        p {
+          font-family: Roboto;
+          font-size: 10px;
+          color: #fff;
+          line-height: 16px;
+          margin: 0;
+        }
+
+        .question {
+          ul {
+            padding: 0;
+            margin: 0;
+            color: #fff;
+            list-style: none;
+
+            li {
+              font-size: 10px;
+              line-height: 16px;
+            }
+          }
+        }
+
+        .icons-wrapper {
+          display: flex;
+          gap: 10px;
+          margin-top: 10px;
+
+          img {
+            width: 24px;
+            height: 24px;
+          }
+        }
+
+        p:last-of-type {
+          margin-top: 15px;
+          font-size: 10px;
+          text-align: center;
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+@media screen and (min-width: 576px) and (max-width: 768px) {
+  .product-item {
+    width: 49% !important;
+  }
+}
+
+@media screen and (min-width: 576px) and (max-width: 1400px) {
+  .container {
+    padding: 0 24px;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 992px) {
+  .product-item {
+    width: 49% !important;
+  }
+}
