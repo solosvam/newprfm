@@ -15,8 +15,9 @@
     <div class="container">
         <div class="header-all">
             <div class="lang">
-                <div class="dropdown ms-3">
-                    <select class="form-select" id="languageSwitcher">
+                <div class="language-select">
+                    <span class="language-select__globe">◎</span>
+                    <select id="languageSwitcher" aria-label="Dil seçimi">
                         <option value="az" @if(App::isLocale('az')) selected @endif>AZ</option>
                         <option value="en" @if(App::isLocale('en')) selected @endif>EN</option>
                         <option value="ru" @if(App::isLocale('ru')) selected @endif>RU</option>
