@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ParfumShop.az - онлайн заказ парфюмерии, мужские женские аро</title>
     <link rel="stylesheet" href="{{ asset('frontend/css/style.css?v=' . filemtime(public_path('frontend/css/style.css'))) }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/app.css?v=' . filemtime(public_path('frontend/css/app.css'))) }}">
     @yield('page-styles')
 </head>
 <body>
