@@ -12,10 +12,10 @@
         $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
         $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
         $initialPrice = (float) ($firstVariant?->price ?? 0);
-        $birbankPeriod = $creditPeriods->firstWhere('month', 6) ?? $creditPeriods->first();
-        $birbankMonth = $birbankPeriod?->month ?? 1;
-        $birbankRate = (float) ($birbankPeriod?->interest_rate ?? 0);
-        $birbankTotal = $initialPrice + (($initialPrice * $birbankRate) / 100);
+        // Birbank taksit kartı ayrıca 6 ay faizsizdir.
+        // Admin paneldəki kredit faizləri yalnız aşağıdakı kredit cədvəlinə tətbiq olunur.
+        $birbankMonth = 6;
+        $birbankTotal = $initialPrice;
     @endphp
     <main id="product-details">
         <div class="container">
