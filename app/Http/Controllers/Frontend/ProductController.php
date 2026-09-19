@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Product\Product;
 use App\Models\Product\ProductReview;
+use App\Models\CreditPeriod;
 use App\Services\SeoUrl;
 use Illuminate\Http\Request;
 
@@ -49,6 +50,11 @@ class ProductController extends Controller
                 ->get();
         }
 
+        $creditPeriods = CreditPeriod::where('active', 1)
+            ->orderBy('sort_order')
+            ->orderBy('month')
+            ->get();
+
         $ratingAverage = round((float) $product->reviews->avg('rating'), 1);
         $ratingCounts = collect(range(1, 5))->mapWithKeys(
             fn ($rating) => [$rating => $product->reviews->where('rating', $rating)->count()]
@@ -58,7 +64,8 @@ class ProductController extends Controller
             'product',
             'similarProducts',
             'ratingAverage',
-            'ratingCounts'
+            'ratingCounts',
+            'creditPeriods'
         ));
     }
 
