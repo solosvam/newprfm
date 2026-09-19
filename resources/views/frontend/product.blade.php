@@ -12,15 +12,10 @@
         $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
         $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
         $initialPrice = (float) ($firstVariant?->price ?? 0);
-        $installmentRates = [
-            3 => 0,
-            6 => 17.6,
-            9 => 25,
-            12 => 33.3,
-            15 => 37,
-            18 => 44.9,
-        ];
-        $initialSixMonthTotal = $initialPrice * 1.176;
+        $birbankPeriod = $creditPeriods->firstWhere('month', 6) ?? $creditPeriods->first();
+        $birbankMonth = $birbankPeriod?->month ?? 1;
+        $birbankRate = (float) ($birbankPeriod?->interest_rate ?? 0);
+        $birbankTotal = $initialPrice + (($initialPrice * $birbankRate) / 100);
     @endphp
     <main id="product-details">
         <div class="container">
@@ -146,9 +141,9 @@
                         <div class="birbank-banner">
                             <img src="{{asset('frontend/images/birbank.png')}}" alt="" />
                             <div>
-                                <h1><span id="birbankMonthly">{{ number_format($initialSixMonthTotal / 6, 2) }}</span> AZN x 6 ay</h1>
+                                <h1><span id="birbankMonthly">{{ number_format($birbankTotal / $birbankMonth, 2) }}</span> AZN x <span id="birbankMonth">{{ $birbankMonth }}</span> ay</h1>
                                 <p>
-                                    Birbank taksit kartı ilə 3, 6, 9, 12, 15 və ya 18 aylıq ödə!
+                                    Birbank taksit kartı ilə aktiv kredit müddətlərindən birini seçərək ödə!
                                 </p>
                             </div>
                         </div>
@@ -163,16 +158,17 @@
                                 </tr>
                                 </thead>
                                 <tbody id="installmentRows">
-                                @foreach($installmentRates as $month => $rate)
+                                @foreach($creditPeriods as $period)
                                     @php
+                                        $rate = (float) $period->interest_rate;
                                         $installmentTotal = $initialPrice + (($initialPrice * $rate) / 100);
-                                        $installmentMonthly = $installmentTotal / $month;
+                                        $installmentMonthly = $installmentTotal / $period->month;
                                     @endphp
-                                    <tr data-month="{{ $month }}" data-rate="{{ $rate }}">
+                                    <tr data-month="{{ $period->month }}" data-rate="{{ $rate }}">
                                         <td class="radio-cell">
-                                            <input type="radio" name="duration" value="{{ $month }}" {{ $loop->first ? 'checked' : '' }} />
+                                            <input type="radio" name="duration" value="{{ $period->month }}" {{ $loop->first ? 'checked' : '' }} />
                                         </td>
-                                        <td>{{ $month }} ay</td>
+                                        <td>{{ $period->month }} ay</td>
                                         <td class="installment-monthly">{{ number_format($installmentMonthly, 2) }} ₼</td>
                                         <td class="installment-total">{{ number_format($installmentTotal, 2) }} ₼</td>
                                     </tr>
