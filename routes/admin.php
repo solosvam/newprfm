@@ -88,18 +88,10 @@ Route::prefix('admin')
                 ->prefix('user')
                 ->name('user.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -114,18 +106,10 @@ Route::prefix('admin')
                 ->prefix('permission')
                 ->name('permission.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'add')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'add')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -140,21 +124,11 @@ Route::prefix('admin')
                 ->prefix('role')
                 ->name('role.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::get('/permissions/{id}', 'permissions')
-                        ->name('permissions');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::get('/permissions/{id}', 'permissions')->name('permissions');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -168,9 +142,7 @@ Route::prefix('admin')
                 ->prefix('ajax')
                 ->name('ajax.')
                 ->group(function () {
-
-                    Route::post('/set-role-permission', 'setRolePermission')
-                        ->name('set-role-permission');
+                    Route::post('/set-role-permission', 'setRolePermission')->name('set-role-permission');
                 });
 
 
@@ -185,18 +157,10 @@ Route::prefix('admin')
                 ->prefix('size')
                 ->name('size.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -211,18 +175,10 @@ Route::prefix('admin')
                 ->prefix('faq')
                 ->name('faq.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -237,18 +193,10 @@ Route::prefix('admin')
                 ->prefix('type')
                 ->name('type.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -263,18 +211,10 @@ Route::prefix('admin')
                 ->prefix('brand')
                 ->name('brand.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -289,18 +229,10 @@ Route::prefix('admin')
                 ->prefix('ingredient')
                 ->name('ingredient.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -315,18 +247,10 @@ Route::prefix('admin')
                 ->prefix('category')
                 ->name('category.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -341,18 +265,10 @@ Route::prefix('admin')
                 ->prefix('banner')
                 ->name('banner.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('add');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('add');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
 
@@ -363,25 +279,16 @@ Route::prefix('admin')
             */
 
             Route::controller(ProductsController::class)
-                ->middleware('can:product.menu')
+                ->middleware('can:products.menu')
                 ->prefix('product')
                 ->name('product.')
                 ->group(function () {
-
-                    Route::get('/list', 'index')
-                        ->name('list');
-
-                    Route::get('/add', 'add')
-                        ->name('add');
-
-                    Route::get('/edit/{id}', 'edit')
-                        ->name('edit');
-
-                    Route::post('/add', 'create')
-                        ->name('create');
-
-                    Route::post('/update/{id}', 'update')
-                        ->name('update');
+                    Route::get('/list', 'index')->name('list');
+                    Route::get('/list-data', 'listData')->name('list.data');
+                    Route::get('/add', 'add')->name('add');
+                    Route::get('/edit/{id}', 'edit')->name('edit');
+                    Route::post('/add', 'create')->name('create');
+                    Route::post('/update/{id}', 'update')->name('update');
                 });
 
         });

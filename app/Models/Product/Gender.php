@@ -15,4 +15,14 @@ class Gender extends Model
         'name_en',
         'name_ru'
     ];
+
+    public function products()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_genders',
+            'gender_id',
+            'product_id'
+        );
+    }
 }

@@ -6,25 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AddProductRequest;
 use App\Models\Product\Brand;
 use App\Models\Product\Category;
+use App\Models\Product\Gender;
 use App\Models\Product\Ingredient;
-use App\Models\Product\ProductCategory;
-use App\Models\Product\ProductGender;
 use App\Models\Product\ProductImage;
-use App\Models\Product\ProductIngredient;
 use App\Models\Product\Product;
-use App\Models\Product\ProductSize;
+use App\Models\Product\ProductVariant;
 use App\Models\Product\Size;
-use App\Models\Product\ProductType;
+use App\Models\Product\Type;
 use App\Services\SeoUrl;
-use Buglinjo\LaravelWebp\Webp;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class ProductsController extends Controller
 {
     public function index()
     {
         $products = Product::paginate(25);
-        return view('backend.product.list',[
+        return view('backend.product_menu.product.list',[
             'products'    => $products,
         ]);
     }
@@ -32,165 +31,261 @@ class ProductsController extends Controller
     public function add()
     {
         $brands = Brand::Where('active',1)->get();
-        $types = ProductType::all();
+        $types = Type::all();
         $sizes = Size::all();
-        $categories = Category::all();
+        $genders = Gender::all();
+        $categories = Category::where('active',1)->get();
         $ingredients = Ingredient::all();
 
-        return view('backend.product.add',[
-            'brands'        => $brands,
-            'types'         => $types,
-            'sizes'         => $sizes,
-            'categories'    => $categories,
-            'ingredients'   => $ingredients,
-        ]);
+        return view('backend.product_menu.product.add',compact('brands','types','genders','categories','ingredients','sizes'));
     }
 
     public function create(AddProductRequest $request)
     {
-        $product = Product::create([
-            'brand_id'      => $request->brand_id,
-            'type_id'       => $request->type_id,
-            'old_id'        => $request->old_id,
-            'name'          => $request->name,
-            'content_az'    => $request->content_az,
-            'content_en'    => $request->content_en,
-            'content_ru'    => $request->content_ru,
-        ]);
+        DB::transaction(function () use ($request) {
 
-        foreach ($request->category as $categoryId) {
-            ProductCategory::create([
-                'product_id'    => $product->id,
-                'category_id'   => $categoryId,
+            $product = Product::create([
+                'brand_id'   => $request->brand_id,
+                'type_id'    => $request->type_id,
+                'old_id'     => $request->old_id,
+                'name'       => $request->name,
+                'content_az' => $request->content_az,
+                'content_en' => $request->content_en,
+                'content_ru' => $request->content_ru,
+                'active'     => 1,
             ]);
-        }
 
-        foreach ($request->gender as $genderId) {
-            ProductGender::create([
-                'product_id'    => $product->id,
-                'gender_id'     => $genderId,
-            ]);
-        }
+            /*
+             * Kateqoriyalar
+             */
+            $product->categories()->sync($request->categories);
 
-        foreach ($request->ingredients as $ingredientId) {
-            ProductIngredient::create([
-                'product_id' => $product->id,
-                'ingredient_id' => $ingredientId,
-            ]);
-        }
+            /*
+             * Cinsiyyət
+             */
+            $product->genders()->sync($request->genders);
 
-        foreach ($request->size as $index => $sizeId) {
-            ProductSize::create([
-                'product_id' => $product->id,
-                'size_id' => $sizeId,
-                'price' => $request->size_price[$index] ?? 0,
-            ]);
-        }
+            /*
+             * İnqrediyentlər
+             */
+            $product->ingredients()->sync(
+                $request->ingredients ?? []
+            );
 
-        foreach ($request->image as $index => $image) {
-            $webp = Webp::make($image);
-            $imageName = SeoUrl::generateImageName([
-                    'id'    => $product->id,
-                    'title' => (rand(111,999)).'-'.$product->name . '-' . ($index + 1)
-                ]).'.webp';
+            /*
+             * Variantlar
+             */
+            foreach ($request->variants as $variant) {
 
-            $path = public_path('frontend/uploads/products/' . $imageName);
-            $webp->save($path);
+                ProductVariant::create([
+                    'product_id' => $product->id,
+                    'size_id'    => $variant['size_id'],
+                    'price'      => $variant['price'],
+                    'active'     => $variant['active'] ?? 0,
+                ]);
+            }
 
-            ProductImage::create([
-                'product_id' => $product->id,
-                'image' => $imageName,
-            ]);
-        }
+            /*
+             * Şəkillər
+             */
+            if ($request->hasFile('images')) {
+                $manager = ImageManager::usingDriver(Driver::class);
 
-        return redirect()->route('product.list')->with('success', 'Məhsul əlavə edildi !');
+                foreach ($request->file('images') as $index => $image) {
+                    $imageName = $this->generateProductImageName($product);
+
+                    $path = public_path('frontend/uploads/products/' . $imageName);
+
+                    $manager
+                        ->decode($image)
+                        ->cover(600, 600)
+                        ->save($path, quality: 82);
+
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image' => $imageName,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()
+            ->route('admin.product.list')
+            ->with('success', 'Məhsul əlavə edildi!');
     }
 
     public function edit($id)
     {
         $product = Product::findOrFail($id);
         $brands = Brand::Where('active',1)->get();
-        $types = ProductType::all();
+        $types = Type::all();
         $sizes = Size::all();
-        $categories = Category::all();
+        $genders = Gender::all();
+        $categories = Category::where('active',1)->get();
         $ingredients = Ingredient::all();
 
-        return view('backend.product.edit',[
-            'product'       => $product,
-            'brands'        => $brands,
-            'types'         => $types,
-            'sizes'         => $sizes,
-            'categories'    => $categories,
-            'ingredients'   => $ingredients,
-        ]);
+        return view('backend.product_menu.product.edit',compact('product','brands','types','genders','categories','ingredients','sizes'));
     }
 
     public function update(AddProductRequest $request, $id)
     {
-        $product = Product::findOrFail($id);
+        DB::transaction(function () use ($request, $id) {
+            $product = Product::findOrFail($id);
 
-        $product->update([
-            'brand_id'      => $request->brand_id,
-            'type_id'       => $request->type_id,
-            'old_id'        => $request->old_id,
-            'name'          => $request->name,
-            'content_az'    => $request->content_az,
-            'content_en'    => $request->content_en,
-            'content_ru'    => $request->content_ru,
-        ]);
+            $product->update([
+                'brand_id'   => $request->brand_id,
+                'type_id'    => $request->type_id,
+                'old_id'     => $request->old_id,
+                'name'       => $request->name,
+                'content_az' => $request->content_az,
+                'content_en' => $request->content_en,
+                'content_ru' => $request->content_ru,
+            ]);
 
-        $product->categories()->sync($request->category);
+            $product->categories()->sync($request->categories);
+            $product->genders()->sync($request->genders);
+            $product->ingredients()->sync($request->ingredients ?? []);
 
-        $product->genders()->sync($request->gender);
+            /*
+             * Variantlar
+             */
+            $currentVariantIds = [];
 
-        $product->ingredients()->sync($request->ingredients);
+            foreach ($request->variants as $variant) {
+                $productVariant = ProductVariant::updateOrCreate(
+                    [
+                        'product_id' => $product->id,
+                        'size_id'    => $variant['size_id'],
+                    ],
+                    [
+                        'price'  => $variant['price'],
+                        'active' => $variant['active'] ?? 0,
+                    ]
+                );
 
-        $currentSizeIds = [];
-        foreach ($request->size as $index => $sizeId) {
-            $size = ProductSize::updateOrCreate(
-                ['product_id' => $product->id, 'size_id' => $sizeId],
-                ['price' => $request->size_price[$index] ?? 0]
-            );
+                $currentVariantIds[] = $productVariant->id;
+            }
 
-            $currentSizeIds[] = $size->id;
-        }
+            ProductVariant::where('product_id', $product->id)
+                ->whereNotIn('id', $currentVariantIds)
+                ->delete();
 
-        ProductSize::Where('product_id', $product->id)
-            ->whereNotIn('id', $currentSizeIds)
-            ->delete();
+            /*
+             * Silinən şəkillər
+             */
+            if ($request->filled('delete_images')) {
+                $images = ProductImage::where('product_id', $product->id)
+                    ->whereIn('id', $request->delete_images)
+                    ->get();
 
-        if ($request->delete_images) {
-            foreach ($request->delete_images as $imageId) {
-                $image = ProductImage::find($imageId);
-                if ($image) {
-                    $path = public_path('frontend/uploads/products/' . $image->image);
+                foreach ($images as $image) {
+                    $path = public_path(
+                        'frontend/uploads/products/' . $image->image
+                    );
+
                     if (file_exists($path)) {
                         unlink($path);
                     }
+
                     $image->delete();
                 }
             }
-        }
 
-        if ($request->hasFile('image')) {
-            foreach ($request->file('image') as $index => $image) {
-                $webp = Webp::make($image);
-                $imageName = SeoUrl::generateImageName([
-                        'id'    => $product->id,
-                        'title' => (rand(100,999)).'-'.$product->name . '-' . ($index + 1)
-                    ]) . '.webp';
+            /*
+             * Yeni şəkillər
+             */
+            if ($request->hasFile('images')) {
+                $manager = ImageManager::usingDriver(Driver::class);
 
-                $path = public_path('frontend/uploads/products/' . $imageName);
-                $webp->save($path);
+                // brand_id dəyişmiş ola bilər, relation-u yenidən oxuyuruq
+                $product->load('brand');
 
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'image' => $imageName,
-                ]);
+                foreach ($request->file('images') as $image) {
+                    $imageName = $this->generateProductImageName($product);
+
+                    $path = public_path(
+                        'frontend/uploads/products/' . $imageName
+                    );
+
+                    $manager
+                        ->decode($image)
+                        ->cover(600, 600)
+                        ->save($path, quality: 82);
+
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image'      => $imageName,
+                    ]);
+                }
             }
-        }
+        });
 
-        return redirect()->route('product.list')->with('success', 'Məhsul yeniləndi!');
+        return redirect()
+            ->route('admin.product.list')
+            ->with('success', 'Məhsul yeniləndi!');
+    }
+
+    public function listData()
+    {
+        $products = Product::with([
+            'brand',
+            'type',
+            'images',
+            'variants',
+            'categories',
+        ])
+            ->orderByDesc('id')
+            ->get();
+
+        return $products->map(function ($product) {
+            $activeVariants = $product->variants
+                ->where('active', 1);
+
+            return [
+                'id' => $product->id,
+
+                'image' => $product->images
+                    ->first()?->image,
+
+                'brand' => $product->brand?->name ?? '-',
+
+                'name' => $product->name,
+
+                'type' => $product->type?->name_az ?? '-',
+
+                'variant_count' => $product->variants->count(),
+
+                'price' => $activeVariants
+                    ->sortBy('price')
+                    ->first()?->price,
+
+                'category_count' => $product->categories->count(),
+
+                'active' => (int) $product->active,
+            ];
+        })->values();
+    }
+
+
+    private function generateProductImageName(Product $product): string
+    {
+        $baseName = SeoUrl::generateImageName([
+            'title' => $product->brand->name . '-' . $product->name,
+        ]);
+
+        $number = 1;
+
+        do {
+            $imageName = $baseName . '-' . $number . '.webp';
+
+            $path = public_path(
+                'frontend/uploads/products/' . $imageName
+            );
+
+            $number++;
+        } while (file_exists($path));
+
+        return $imageName;
     }
 
 }

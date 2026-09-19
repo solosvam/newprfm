@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ingredient extends Model
 {
-    use HasFactory;
     protected $table = 'ingredients';
     public $timestamps = false;
     protected $fillable = [
@@ -16,4 +15,14 @@ class Ingredient extends Model
         'name_en',
         'name_ru',
     ];
+
+    public function products()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_ingredients',
+            'ingredient_id',
+            'product_id'
+        );
+    }
 }

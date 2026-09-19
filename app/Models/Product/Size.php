@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Size extends Model
 {
-    use HasFactory;
     protected $table = 'sizes';
     public $timestamps = false;
     protected $fillable = [
@@ -16,4 +15,14 @@ class Size extends Model
         'name_en',
         'name_ru',
     ];
+
+    public function products()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_sizes',
+            'size_id',
+            'product_id'
+        )->withPivot('price');
+    }
 }

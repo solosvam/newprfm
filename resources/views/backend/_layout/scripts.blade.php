@@ -23,8 +23,6 @@
 <script src="{{asset('backend/js/scripts.js')}}"></script>
 <script src="{{asset('backend/js/vendor/bootstrap-notify.min.js')}}"></script>
 <script src="{{asset('backend/js/pages/dashboard.default.js')}}"></script>
-<script src="{{asset('backend/js/vendor/select2.full.min.js')}}"></script>
-<script src="{{asset('backend/js/forms/controls.select2.js')}}"></script>
 <script src="{{asset('backend/js/forms/controls.datepicker.js')}}"></script>
 <script src="{{asset('backend/js/vendor/datepicker/bootstrap-datepicker.min.js')}}"></script>
 <script src="{{asset('backend/js/vendor/datepicker/locales/bootstrap-datepicker.es.min.js')}}"></script>

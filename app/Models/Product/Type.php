@@ -5,14 +5,19 @@ namespace App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductGender extends Model
+class Type extends Model
 {
-    use HasFactory;
-    protected $table = 'product_genders';
+    protected $table = 'types';
     public $timestamps = false;
     protected $fillable = [
         'id',
-        'product_id',
-        'gender_id'
+        'name_az',
+        'name_en',
+        'name_ru',
     ];
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'type_id');
+    }
 }
