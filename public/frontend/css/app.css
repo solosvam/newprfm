@@ -1,7 +1,7 @@
 @font-face{font-family:Roboto;src:url("../fonts/Roboto-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:Roboto;src:url("../fonts/Roboto-Medium.ttf") format("truetype");font-weight:500;font-style:normal;font-display:swap}
 @font-face{font-family:Roboto;src:url("../fonts/Roboto-Bold.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}
-:root{--text:#111;--muted:#c4c0c0;--soft:#efefef;--dark:#232a38;--container:1440px;--gutter:32px}
+:root{--text:#111;--muted:#c4c0c0;--soft:#efefef;--dark:#232a38}
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{font-family:Roboto,Arial,sans-serif;color:var(--text);background:#fff}
@@ -11,6 +11,6 @@ ul,ol{margin:0;padding:0;list-style:none}
 h1,h2,h3,h4,h5,h6,p{margin:0}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-.container{width:min(calc(100% - (var(--gutter) * 2)),var(--container));margin-inline:auto;padding:0!important}
+.container{}
 .mobile-search-home,.mobile-sidebar,.footer-for-mobile-home{display:none}
-@media(max-width:768px){:root{--gutter:16px}.container{width:calc(100% - 32px)}}
+@media(max-width:768px){}
