@@ -49,17 +49,30 @@ document.addEventListener("DOMContentLoaded", () => {
             if (manat) priceTitle.appendChild(manat);
         }
 
+        const installmentRates = {
+            3: 0,
+            6: 17.6,
+            9: 25,
+            12: 33.3,
+            15: 37,
+            18: 44.9
+        };
+
         if (birbankMonthly) {
-            birbankMonthly.textContent = (price / 6).toFixed(2);
+            const sixMonthTotal = price + ((price * installmentRates[6]) / 100);
+            birbankMonthly.textContent = (sixMonthTotal / 6).toFixed(2);
         }
 
         installmentRows.forEach(row => {
             const month = parseInt(row.dataset.month, 10);
+            const rate = parseFloat(row.dataset.rate ?? installmentRates[month] ?? 0);
+            const totalPrice = price + ((price * rate) / 100);
+            const monthlyPrice = totalPrice / month;
             const monthly = row.querySelector(".installment-monthly");
             const total = row.querySelector(".installment-total");
 
-            if (monthly) monthly.textContent = (price / month).toFixed(2) + " ₼";
-            if (total) total.textContent = price.toFixed(2) + " ₼";
+            if (monthly) monthly.textContent = monthlyPrice.toFixed(2) + " ₼";
+            if (total) total.textContent = totalPrice.toFixed(2) + " ₼";
         });
     }
 
