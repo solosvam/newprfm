@@ -1,157 +1,85 @@
-const tabLinks = document.querySelectorAll(".details-tab .tablinks button");
-const tabContents = document.querySelectorAll(".details-tab .tabcontents div");
+document.addEventListener("DOMContentLoaded", () => {
+    const content1 = document.querySelector(".content1");
+    const content2 = document.querySelector(".content2");
+    const tabButtons = document.querySelectorAll(".details-tab .tablinks button");
 
-const dropdownHeader = document.getElementById("dropdown-header");
-const dropdownOptions = document.getElementById("dropdown-options");
+    if (content1 && content2) {
+        content1.style.display = "flex";
+        content2.style.display = "none";
+        tabButtons.forEach((button, index) => {
+            button.addEventListener("click", () => {
+                tabButtons.forEach(btn => btn.classList.remove("active"));
+                button.classList.add("active");
+                content1.style.display = index === 0 ? "flex" : "none";
+                content2.style.display = index === 1 ? "flex" : "none";
+            });
+        });
+    }
 
-// swithcing between tabs
-const content1 = document.querySelector(".content1");
-const content2 = document.querySelector(".content2");
-const buttons = document.querySelectorAll(".tablinks button");
+    const shippingTooltip = document.querySelector(".shipping-tooltip");
+    const shippingInfoIcon = document.querySelector(".shipping-info-icon");
+    if (shippingTooltip && shippingInfoIcon) {
+        shippingInfoIcon.addEventListener("click", () => shippingTooltip.classList.toggle("active"));
+    }
 
-content1.style.display = "flex";
-content2.style.display = "none";
+    const decrease = document.querySelector("#decrease");
+    const increase = document.querySelector("#increase");
+    const count = document.querySelector(".count");
+    let productCount = 1;
+    if (increase && decrease && count) {
+        increase.addEventListener("click", () => {
+            count.textContent = ++productCount;
+        });
+        decrease.addEventListener("click", () => {
+            productCount = Math.max(1, productCount - 1);
+            count.textContent = productCount;
+        });
+    }
 
-buttons.forEach((button, index) => {
-    button.addEventListener("click", () => {
-        document.querySelector(".tablinks .active")?.classList.remove("active");
-        button.classList.add("active");
-
-        const isContent1 = index === 0;
-        content1.style.display = isContent1 ? "flex" : "none";
-        content2.style.display = isContent1 ? "none" : "flex";
-    });
-});
-
-//dropdown
-dropdownHeader.addEventListener("click", () => {
-    dropdownOptions.style.display =
-        dropdownOptions.style.display === "block" ? "none" : "block";
-
-    const icon = dropdownHeader.querySelector("i");
-    icon.classList.toggle("rotate");
-});
-
-//accardion for mobile
-const accordionHeaders = document.querySelectorAll(".accordion-header");
-
-accordionHeaders.forEach((header) => {
-    header.addEventListener("click", () => {
-        header.classList.toggle("active");
-
-        const content = header.nextElementSibling;
-
-        if (header.classList.contains("active")) {
-            content.style.display = "block";
-        } else {
-            content.style.display = "none";
-        }
-
-        accordionHeaders.forEach((otherHeader) => {
-            if (otherHeader !== header && otherHeader.classList.contains("active")) {
-                otherHeader.classList.remove("active");
-                otherHeader.nextElementSibling.style.display = "none";
+    const priceTitle = document.querySelector(".product-info > h1");
+    document.querySelectorAll(".product-size-amount ul li").forEach(item => {
+        item.addEventListener("click", function () {
+            document.querySelector(".active-size-amount")?.classList.remove("active-size-amount");
+            this.classList.add("active-size-amount");
+            const price = parseFloat(this.dataset.price || "0").toFixed(2);
+            if (priceTitle) {
+                const manat = priceTitle.querySelector("img");
+                priceTitle.firstChild.textContent = price + " ";
+                if (manat && !priceTitle.contains(manat)) priceTitle.appendChild(manat);
             }
         });
     });
-});
 
-// shippping tooltip in product details page
-const shippingTooltip = document.querySelector(".shipping-tooltip");
-const shippingInfoIcon = document.querySelector(".shipping-info-icon");
-
-shippingInfoIcon.onclick = () => {
-    shippingTooltip.classList.toggle("active");
-};
-
-// increase or decrease product amount
-const decrease_amount = document.querySelector("#decrease");
-const increase_amount = document.querySelector("#increase");
-const count = document.querySelector(".count");
-let product_count = 1;
-
-increase_amount.onclick = () => {
-    product_count++;
-    count.innerHTML = product_count;
-};
-
-decrease_amount.onclick = () => {
-    product_count--;
-    if (product_count === 0) {
-        product_count = 1;
-    }
-    count.innerHTML = product_count;
-};
-
-const productSizes = document.querySelectorAll(".product-size-amount ul li");
-
-for (let activeSize of productSizes) {
-    activeSize.onclick = function () {
-        const active = document.querySelector(".active-size-amount");
-        active.classList.remove("active-size-amount");
-        this.classList.add("active-size-amount");
-    };
-}
-
-// Pay by click modal
-const payByClickModal = document.getElementById("payByClickModal");
-const payByClickButton = document.querySelector(
-    ".product-info-actions button:last-child"
-);
-const closeButton = document.querySelector(".modal-header .close");
-
-payByClickButton.addEventListener("click", () => {
-    payByClickModal.style.display = "block";
-});
-
-closeButton.addEventListener("click", () => {
-    payByClickModal.style.display = "none";
-});
-
-window.addEventListener("click", (event) => {
-    if (event.target === payByClickModal) {
-        payByClickModal.style.display = "none";
-    }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    const header = document.getElementById("dropdown-header");
-    const options = document.getElementById("dropdown-options");
-    const headerIcon = header.querySelector(".header-icon");
-
-    header.addEventListener("click", (event) => {
-        event.stopPropagation();
-        options.classList.toggle("show");
-        headerIcon.classList.toggle("active");
-    });
-
-    // // Close dropdown when clicking outside
-    // document.addEventListener('click', () => {
-    //     options.classList.remove('show');
-    //     headerIcon.classList.remove('active');
-
-    // });  basqa yere clickleyib yeniden clickleyende islemir ona gore commente atiram
-
-    // Prevent dropdown from closing when clicking inside options
-    options.addEventListener("click", (event) => {
-        event.stopPropagation();
-    });
-});
-document.addEventListener("DOMContentLoaded", () => {
-    const options = document.querySelectorAll(".dropdown-options .option");
-    options.forEach((option) => {
-        option.addEventListener("click", () => {
-            // Remove 'selected' class from all options
-            options.forEach((opt) => opt.classList.remove("selected"));
-            // Add 'selected' class to the clicked option
-            option.classList.add("selected");
-            option.forEach((opt) => opt.classList.remove("selected"));
-
-            // Toggle the visibility of the check icon
-            const checkIcon = option.querySelector(".check-icon");
-            checkIcon.style.display = option.classList.contains("selected")
-                ? "inline"
-                : "none";
+    document.querySelectorAll(".product-image .left li img").forEach(image => {
+        image.addEventListener("click", () => {
+            const mainImage = document.querySelector(".product-image .main-img");
+            if (mainImage) mainImage.src = image.src;
         });
     });
+
+    const payModal = document.getElementById("payByClickModal");
+    const payButton = document.querySelector(".product-info-actions button:last-child");
+    const payClose = document.querySelector(".pay-modal-close");
+    if (payModal && payButton) payButton.addEventListener("click", () => payModal.style.display = "block");
+    if (payModal && payClose) payClose.addEventListener("click", () => payModal.style.display = "none");
+
+    const reviewModal = document.getElementById("reviewModal");
+    const reviewButton = document.querySelector(".write-review");
+    const reviewClose = document.querySelector(".review-modal__close");
+    if (reviewModal && reviewButton) reviewButton.addEventListener("click", () => reviewModal.classList.add("is-open"));
+    if (reviewModal && reviewClose) reviewClose.addEventListener("click", () => reviewModal.classList.remove("is-open"));
+
+    window.addEventListener("click", event => {
+        if (event.target === payModal) payModal.style.display = "none";
+        if (event.target === reviewModal) reviewModal.classList.remove("is-open");
+    });
+
+    const loadMore = document.getElementById("loadMoreReviews");
+    if (loadMore) {
+        loadMore.addEventListener("click", () => {
+            const hidden = [...document.querySelectorAll(".product-review.review-hidden")];
+            hidden.slice(0, 3).forEach(review => review.classList.remove("review-hidden"));
+            if (document.querySelectorAll(".product-review.review-hidden").length === 0) loadMore.remove();
+        });
+    }
 });
