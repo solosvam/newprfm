@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Banners;
 use App\Models\Faq;
+use App\Models\CreditTerms;
 use App\Models\Product\Product;
 use Illuminate\Http\Request;
 
@@ -103,9 +104,11 @@ class MainController extends Controller
     public function credit()
     {
         $faqs = Faq::all();
+        $creditTerms = CreditTerms::first();
 
         return view('frontend.internal-credit', [
             'faqs' => $faqs,
+            'creditTerms' => $creditTerms,
         ]);
     }
 }
