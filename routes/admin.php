@@ -10,6 +10,7 @@ use App\Http\Controllers\Backend\PermissionsController;
 use App\Http\Controllers\Backend\RolesController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\BannersController;
+use App\Http\Controllers\Backend\CreditController;
 
 use App\Http\Controllers\Backend\Product\BrandsController;
 use App\Http\Controllers\Backend\Product\SizesController;
@@ -129,6 +130,23 @@ Route::prefix('admin')
                     Route::get('/permissions/{id}', 'permissions')->name('permissions');
                     Route::post('/add', 'create')->name('add');
                     Route::post('/update/{id}', 'update')->name('update');
+                });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Credit
+            |--------------------------------------------------------------------------
+            */
+
+            Route::controller(CreditController::class)
+                ->prefix('credit')
+                ->name('credit.')
+                ->group(function () {
+                    Route::get('/periods', 'periods')->name('periods');
+                    Route::post('/periods', 'updatePeriods')->name('periods.update');
+                    Route::get('/terms', 'terms')->name('terms');
+                    Route::post('/terms', 'updateTerms')->name('terms.update');
                 });
 
 
