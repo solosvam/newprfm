@@ -23,28 +23,20 @@
                 <div class="breadcrumb">
                     <ul>
                         <li>
-                            <a href="index.html">
-                                <img src="{{asset('frontend/images/home.svg')}}" alt="" />
+                            <a href="{{ route('home') }}">
+                                <img src="{{ asset('frontend/images/home.svg') }}" alt="Ana səhifə" />
                             </a>
                         </li>
-                        <li>
-                            <img src="{{asset('frontend/images/arrow-right.svg')}}" alt="" />
-                        </li>
-                        <li>
-                            <a href="">Qadın ətirləri</a>
-                        </li>
-                        <li>
-                            <img src="{{asset('frontend/images/arrow-right.svg')}}" alt="" />
-                        </li>
-                        <li>
-                            <a href="">Narciso Rodriguez</a>
-                        </li>
-                        <li>
-                            <img src="{{asset('frontend/images/arrow-right.svg')}}" alt="" />
-                        </li>
-                        <li>
-                            <a href="">Narciso Poudree</a>
-                        </li>
+                        <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
+                        @if($genderName)
+                            <li><span>{{ $genderName }}</span></li>
+                            <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
+                        @endif
+                        @if($product->brand)
+                            <li><span>{{ $product->brand->name }}</span></li>
+                            <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
+                        @endif
+                        <li class="current"><span>{{ $product->name }}</span></li>
                     </ul>
                 </div>
                 <div class="product-title">
