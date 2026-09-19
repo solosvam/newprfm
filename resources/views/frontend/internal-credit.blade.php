@@ -22,6 +22,15 @@
             </div>
             <div class="internal-credit__tabs">
                 <h1>Hissə-hissə müraciət qaydaları</h1>
+                @php
+                    $locale = app()->getLocale();
+                    $termsContent = $creditTerms?->{'content_' . $locale} ?: $creditTerms?->content_az;
+                @endphp
+                @if($termsContent)
+                    <div class="credit-terms-content mb-4">
+                        {!! nl2br(e($termsContent)) !!}
+                    </div>
+                @endif
                 <div class="accordion">
                     @foreach($faqs as $faq)
                     <div class="accordion-item">
