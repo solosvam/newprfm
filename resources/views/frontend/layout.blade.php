@@ -5,7 +5,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ParfumShop.az - онлайн заказ парфюмерии, мужские женские аро</title>
-    <link rel="stylesheet" href="{{asset('frontend/css/style.css?v=1.0.1')}}" />
+    <link rel="stylesheet" href="{{ asset('frontend/css/app.css?v=' . filemtime(public_path('frontend/css/app.css'))) }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/components/header.css?v=' . filemtime(public_path('frontend/css/components/header.css'))) }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/components/sidebar.css?v=' . filemtime(public_path('frontend/css/components/sidebar.css'))) }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/components/footer.css?v=' . filemtime(public_path('frontend/css/components/footer.css'))) }}">
+    @yield('page-styles')
 </head>
 <body>
 <!-- Header section -->
