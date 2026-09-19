@@ -210,6 +210,24 @@
                         </ul>
                     </li>
 
+                    <li>
+                        <a href="#credit_menu" data-href="/admin/credit">
+                            <span class="label">Kredit</span>
+                        </a>
+                        <ul id="credit_menu">
+                            <li>
+                                <a href="{{ route('admin.credit.periods') }}">
+                                    <span class="label">Faizlər</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.credit.terms') }}">
+                                    <span class="label">Şərtlər və qaydalar</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                 </ul>
             </li>
             @endcan
