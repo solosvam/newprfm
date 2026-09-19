@@ -37,16 +37,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const priceTitle = document.querySelector(".product-info > h1");
+    const birbankMonthly = document.getElementById("birbankMonthly");
+    const installmentRows = document.querySelectorAll("#installmentRows tr");
+
+    function updateVariantPrice(rawPrice) {
+        const price = parseFloat(rawPrice || "0");
+
+        if (priceTitle) {
+            const manat = priceTitle.querySelector("img");
+            priceTitle.firstChild.textContent = price.toFixed(2) + " ";
+            if (manat) priceTitle.appendChild(manat);
+        }
+
+        if (birbankMonthly) {
+            birbankMonthly.textContent = (price / 6).toFixed(2);
+        }
+
+        installmentRows.forEach(row => {
+            const month = parseInt(row.dataset.month, 10);
+            const monthly = row.querySelector(".installment-monthly");
+            const total = row.querySelector(".installment-total");
+
+            if (monthly) monthly.textContent = (price / month).toFixed(2) + " ₼";
+            if (total) total.textContent = price.toFixed(2) + " ₼";
+        });
+    }
+
     document.querySelectorAll(".product-size-amount ul li").forEach(item => {
         item.addEventListener("click", function () {
             document.querySelector(".active-size-amount")?.classList.remove("active-size-amount");
             this.classList.add("active-size-amount");
-            const price = parseFloat(this.dataset.price || "0").toFixed(2);
-            if (priceTitle) {
-                const manat = priceTitle.querySelector("img");
-                priceTitle.firstChild.textContent = price + " ";
-                if (manat && !priceTitle.contains(manat)) priceTitle.appendChild(manat);
-            }
+            updateVariantPrice(this.dataset.price);
         });
     });
 
