@@ -1,4 +1,7 @@
 @extends('frontend.layout')
+@section('page-styles')
+    <link rel="stylesheet" href="{{ asset('frontend/css/pages/product.css?v=' . filemtime(public_path('frontend/css/pages/product.css'))) }}">
+@endsection
 @section('content')
     @php
         $locale = app()->getLocale();
@@ -207,30 +210,18 @@
                 <div class="details-tab">
                     <div class="tablinks">
                         <button class="active">Ətir haqqında</button>
-                        <button>Rəylər <span>24</span></button>
+                        <button>Rəylər <span>{{ $product->reviews->count() }}</span></button>
                     </div>
                     <div class="tabcontents">
                         <div class="content1">
-                <span
-                >Narciso Rodriguez tərəfindən hazırlanmış Narciso Eau de
-                  Parfum Poudree, qadınlar üçün şərq çiçəkli bir ətirdir.
-                </span>
-                            <span
-                            >Bu yeni bir ətirdir. Narciso Eau de Parfum Ambrée 2020 -ci
-                  ildə satışa çıxarılmışdır.
-                </span>
-                            <span
-                            >Ətirçi: Aurelien Guichard. Üst notlar: Frangipani,
-                  Ylang-ilanq və Ağ çiçəklər; orta notlar: Musk və Ambergris;
-                  əsas notlar: Cashmeran, Vanilla və Cedar.
-                </span>
+                            {!! nl2br(e($product->{'content_' . $locale} ?: $product->content_az)) !!}
                         </div>
                         <div class="content2">
                             <h4><span>Rəylər</span> Narciso Poudree Narciso Rodriguez</h4>
                             <div class="ratings-container">
                                 <div class="rating-summary">
                                     <div class="average-rating">
-                                        <span class="rating-value">4.8</span>
+                                        <span class="rating-value">{{ number_format($ratingAverage, 1) }}</span>
                                         <div class="stars">
                                             <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
                                             <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
@@ -239,7 +230,7 @@
                                             <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
                                         </div>
                                     </div>
-                                    <button class="write-review">Rəy yaz</button>
+                                    <button class="write-review" type="button">Rəy yaz</button>
                                 </div>
                                 <div class="rating-distribution">
                                     <div class="rating-bar">
@@ -290,252 +281,71 @@
                         <div class="dropdown-container">
                             <div class="header" id="dropdown-header">
                                 <h3>Son rəylər</h3>
-                                <div class="header-icon">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 448 512"
-                                    >
-                                        <path
-                                            d="M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160z"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="dropdown-options" id="dropdown-options">
-                                <div class="option selected">
-                                    <svg
-                                        class="check-icon"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 448 512"
-                                    >
-                                        <path
-                                            d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"
-                                        />
-                                    </svg>
-                                    Son raylor
-                                </div>
-                                <div class="option">
-                                    <svg
-                                        class="check-icon"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 448 512"
-                                    >
-                                        <path
-                                            d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"
-                                        /></svg
-                                    >Əvvəlki rəylər
-                                </div>
-                                <div class="option">
-                                    <svg
-                                        class="check-icon"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 448 512"
-                                    >
-                                        <path
-                                            d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"
-                                        /></svg
-                                    >Müsbət rəylər
-                                </div>
-                                <div class="option">
-                                    <svg
-                                        class="check-icon"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 448 512"
-                                    >
-                                        <path
-                                            d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"
-                                        /></svg
-                                    >Mənfi rəylər
-                                </div>
+                                <div class="header-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160z"/></svg></div>
                             </div>
                         </div>
-                        <hr />
-                        <div class="review">
-                            <p>
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                                do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                            </p>
-                            <div class="review-info">
-                                <div class="stars">
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
+                        <hr>
+                        <div id="reviewsList">
+                            @forelse($product->reviews as $review)
+                                <div class="review product-review {{ $loop->index >= 3 ? 'review-hidden' : '' }}">
+                                    <p>{{ $review->comment }}</p>
+                                    <div class="review-info">
+                                        <div class="stars">
+                                            @for($star = 1; $star <= 5; $star++)
+                                                <img src="{{ asset('frontend/images/' . ($star <= $review->rating ? 'star-filled.svg' : 'star-outlined.svg')) }}" alt="">
+                                            @endfor
+                                        </div>
+                                        <span class="name">{{ $review->customer?->name ?? 'Müştəri' }}</span>
+                                        <span class="date">{{ $review->created_at->format('d.m.Y') }}</span>
+                                    </div>
                                 </div>
-                                <span class="name">Rövşən Məmmədov</span>
-                                <span class="date">4 avqust, 2021</span>
-                            </div>
+                            @empty
+                                <p class="no-reviews">Bu məhsula hələ rəy yazılmayıb.</p>
+                            @endforelse
                         </div>
-                        <div class="review">
-                            <p>
-                                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                                laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                                irure dolor in reprehenderit in voluptate velit esse cillum
-                                dolore eu fugiat nulla pariatur.
-                            </p>
-                            <div class="review-info">
-                                <div class="stars">
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                </div>
-                                <span class="name">Babək Əliyev</span>
-                                <span class="date">21 iyul, 2021</span>
-                            </div>
-                        </div>
-                        <div class="review">
-                            <p>
-                                Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                                laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                                irure dolor in reprehenderit in voluptate velit esse cillum
-                                dolore eu fugiat nulla pariatur.
-                            </p>
-                            <div class="review-info">
-                                <div class="stars">
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                </div>
-                                <span class="name">Aqşin Söhraбоğlu</span>
-                                <span class="date">16 mart, 2021</span>
-                            </div>
-                        </div>
-                        <button class="load-more">Daha çox</button>
+                        @if($product->reviews->count() > 3)
+                            <button class="load-more" type="button" id="loadMoreReviews">Daha çox</button>
+                        @endif
                     </div>
                 </div>
+
                 <div class="similar-products">
                     <h1 class="similar-products__title">Bənzər məhsullar</h1>
                     <div class="similar-products__list">
-                        <div class="product-item">
-                            <div class="product-item__image">
-                                <div class="product-item__image__actions">
-                                    <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" />
+                        @forelse($similarProducts as $similar)
+                            @php
+                                $similarImage = $similar->images->first();
+                                $similarVariant = $similar->variants->first();
+                                $similarGender = $similar->genders->first();
+                                $similarGenderName = $similarGender ? ($similarGender->{'name_' . $locale} ?? $similarGender->name_az) : null;
+                                $similarTypeName = $similar->type ? ($similar->type->{'name_' . $locale} ?? $similar->type->name_az) : null;
+                            @endphp
+                            <div class="product-item">
+                                <div class="product-item__image">
+                                    <div class="product-item__image__actions">
+                                        <img src="{{ asset('frontend/images/share.svg') }}" alt="">
+                                        <img src="{{ asset('frontend/images/product-card-wishlist.svg') }}" alt="">
+                                    </div>
+                                    <a href="{{ route('product', $similar->slug) }}">
+                                        @if($similarImage)
+                                            <img class="product-main-image" src="{{ asset('frontend/uploads/products/' . $similarImage->image) }}" alt="{{ $similar->brand?->name }} {{ $similar->name }}">
+                                        @endif
+                                    </a>
                                 </div>
-                                <a href="product-details.html">
-                                    <img
-                                        class="product-main-image"
-                                        src="{{asset('frontend/images/products/parfum.png')}}"
-                                        alt="product image"
-                                    />
-                                </a>
-                            </div>
-                            <div class="product-item__info">
-                                <div class="title">
-                                    <h1>My Burberry</h1>
-                                    <span>Burberry</span>
-                                    <span>Kişi üçün | Eau De Parfum</span>
-                                    <span class="product-price"
-                                    >50 ml / <span>96.00 ₼ </span></span
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                        <div class="product-item">
-                            <div class="product-item__image">
-                                <div class="product-item__image__actions">
-                                    <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" />
-                                </div>
-                                <a href="product-details.html">
-                                    <img
-                                        class="product-main-image"
-                                        src="{{asset('frontend/images/products/parfum.png')}}"
-                                        alt="product image"
-                                    />
-                                </a>
-                            </div>
-                            <div class="product-item__info">
-                                <div class="title">
-                                    <h1>My Burberry</h1>
-                                    <span>Burberry</span>
-                                    <span>Kişi üçün | Eau De Parfum</span>
-                                    <span class="product-price"
-                                    >50 ml / <span>96.00 ₼ </span></span
-                                    >
+                                <div class="product-item__info">
+                                    <div class="title">
+                                        <h1><a href="{{ route('product', $similar->slug) }}">{{ $similar->name }}</a></h1>
+                                        <span>{{ $similar->brand?->name }}</span>
+                                        <span>{{ $similarGenderName }}{{ $similarGenderName && $similarTypeName ? ' | ' : '' }}{{ $similarTypeName }}</span>
+                                        @if($similarVariant)
+                                            <span class="product-price">{{ $similarVariant->size?->{'name_' . $locale} ?? $similarVariant->size?->name_az }} / <span>{{ number_format($similarVariant->price, 2) }} ₼</span></span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="product-item">
-                            <div class="product-item__image">
-                                <div class="product-item__image__actions">
-                                    <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" />
-                                </div>
-                                <a href="product-details.html">
-                                    <img
-                                        class="product-main-image"
-                                        src="{{asset('frontend/images/products/parfum.png')}}"
-                                        alt="product image"
-                                    />
-                                </a>
-                            </div>
-                            <div class="product-item__info">
-                                <div class="title">
-                                    <h1>My Burberry</h1>
-                                    <span>Burberry</span>
-                                    <span>Kişi üçün | Eau De Parfum</span>
-                                    <span class="product-price"
-                                    >50 ml / <span>96.00 ₼ </span></span
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                        <div class="product-item">
-                            <div class="product-item__image">
-                                <div class="product-item__image__actions">
-                                    <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" />
-                                </div>
-                                <a href="product-details.html">
-                                    <img
-                                        class="product-main-image"
-                                        src="{{asset('frontend/images/products/parfum.png')}}"
-                                        alt="product image"
-                                    />
-                                </a>
-                            </div>
-                            <div class="product-item__info">
-                                <div class="title">
-                                    <h1>My Burberry</h1>
-                                    <span>Burberry</span>
-                                    <span>Kişi üçün | Eau De Parfum</span>
-                                    <span class="product-price"
-                                    >50 ml / <span>96.00 ₼ </span></span
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                        <div class="product-item">
-                            <div class="product-item__image">
-                                <div class="product-item__image__actions">
-                                    <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                    <img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" />
-                                </div>
-                                <a href="product-details.html">
-                                    <img
-                                        class="product-main-image"
-                                        src="{{asset('frontend/images/products/parfum.png')}}"
-                                        alt="product image"
-                                    />
-                                </a>
-                            </div>
-                            <div class="product-item__info">
-                                <div class="title">
-                                    <h1>My Burberry</h1>
-                                    <span>Burberry</span>
-                                    <span>Kişi üçün | Eau De Parfum</span>
-                                    <span class="product-price"
-                                    >50 ml / <span>96.00 ₼ </span></span
-                                    >
-                                </div>
-                            </div>
-                        </div>
+                        @empty
+                            <p>Oxşar tərkibli məhsul tapılmadı.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -576,6 +386,31 @@
         </div>
     </div>
     <!--OTHER SIZES FOR MOBILE-->
+
+    <div id="reviewModal" class="review-modal">
+        <div class="review-modal__box">
+            <button type="button" class="review-modal__close">&times;</button>
+            <h3>Rəy yaz</h3>
+            @auth
+                <form method="POST" action="{{ route('product.review', $product->id) }}">
+                    @csrf
+                    <div class="review-rating">
+                        @for($i = 5; $i >= 1; $i--)
+                            <input type="radio" id="rating{{ $i }}" name="rating" value="{{ $i }}" {{ old('rating') == $i ? 'checked' : '' }}>
+                            <label for="rating{{ $i }}">★</label>
+                        @endfor
+                    </div>
+                    <textarea name="comment" rows="5" maxlength="2000" placeholder="Məhsul haqqında fikrinizi yazın..." required>{{ old('comment') }}</textarea>
+                    @error('rating')<small>{{ $message }}</small>@enderror
+                    @error('comment')<small>{{ $message }}</small>@enderror
+                    <button type="submit">Rəyi göndər</button>
+                </form>
+            @else
+                <p>Rəy yazmaq üçün hesabınıza daxil olun.</p>
+                <a class="review-login" href="{{ route('front.login') }}">Daxil ol</a>
+            @endauth
+        </div>
+    </div>
 
     <!-- Pay by click Modal -->
     <div id="payByClickModal" class="pay-modal">
