@@ -9,6 +9,7 @@ use App\Http\Controllers\Frontend\ProductController;
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
 Route::get('/brands',[BrandsController::class,'index'])->name('brands');
+Route::get('/brand/{brand}',[MainController::class,'brand'])->name('brand.products');
 
 Route::middleware('guest')->group(function(){
     Route::get('/login',[AuthController::class,'login'])->name('front.login');
