@@ -16,15 +16,33 @@
                 <div class="main-products">
                     <div class="main-products__top">
                         <ul>
-                            <li class="active">Bütün ətirlər</li>
-                            <li>Qadın ətirləri</li>
-                            <li>Kişi ətirləri</li>
-                            <li>Unisex ətirlər</li>
+                            <li class="{{ request('gender') ? '' : 'active' }}">
+                                <a href="{{ route('home', array_filter(['sort' => request('sort')])) }}">Bütün ətirlər</a>
+                            </li>
+                            <li class="{{ request('gender') === 'women' ? 'active' : '' }}">
+                                <a href="{{ route('home', array_filter(['gender' => 'women', 'sort' => request('sort')])) }}">Qadın ətirləri</a>
+                            </li>
+                            <li class="{{ request('gender') === 'men' ? 'active' : '' }}">
+                                <a href="{{ route('home', array_filter(['gender' => 'men', 'sort' => request('sort')])) }}">Kişi ətirləri</a>
+                            </li>
+                            <li class="{{ request('gender') === 'unisex' ? 'active' : '' }}">
+                                <a href="{{ route('home', array_filter(['gender' => 'unisex', 'sort' => request('sort')])) }}">Unisex ətirlər</a>
+                            </li>
                         </ul>
 
-                        <select>
-                            <option value="">Sıralama</option>
-                        </select>
+                        <form method="GET" action="{{ route('home') }}" class="product-sort-form">
+                            @if(request('gender'))
+                                <input type="hidden" name="gender" value="{{ request('gender') }}">
+                            @endif
+
+                            <select name="sort" onchange="this.form.submit()">
+                                <option value="">Sıralama</option>
+                                <option value="newest" @selected(request('sort') === 'newest')>Ən yenilər</option>
+                                <option value="oldest" @selected(request('sort') === 'oldest')>Ən köhnələr</option>
+                                <option value="price_asc" @selected(request('sort') === 'price_asc')>Qiymət: aşağıdan yuxarı</option>
+                                <option value="price_desc" @selected(request('sort') === 'price_desc')>Qiymət: yuxarıdan aşağı</option>
+                            </select>
+                        </form>
                     </div>
 
                     <div class="main-products__list">
