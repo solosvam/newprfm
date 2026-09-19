@@ -28,12 +28,10 @@
                             </a>
                         </li>
                         <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
-                        @if($genderName)
-                            <li><span>{{ $genderName }}</span></li>
-                            <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
-                        @endif
                         @if($product->brand)
-                            <li><span>{{ $product->brand->name }}</span></li>
+                            <li>
+                                <a href="{{ route('brand.products', $product->brand->id) }}">{{ $product->brand->name }}</a>
+                            </li>
                             <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
                         @endif
                         <li class="current"><span>{{ $product->name }}</span></li>
