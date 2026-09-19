@@ -16,6 +16,7 @@ Route::middleware('guest')->group(function(){
 
 Route::middleware('auth')->group(function(){
    Route::get('/profile',[AuthController::class,'profile'])->name('profile');
+   Route::post('/product/{product}/review',[ProductController::class,'review'])->name('product.review');
 });
 
 require __DIR__.'/admin.php';
