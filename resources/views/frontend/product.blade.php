@@ -11,6 +11,7 @@
         $firstVariant = $variants->first();
         $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
         $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
+        $initialPrice = (float) ($firstVariant?->price ?? 0);
     @endphp
     <main id="product-details">
         <div class="container">
@@ -136,9 +137,9 @@
                         <div class="birbank-banner">
                             <img src="{{asset('frontend/images/birbank.png')}}" alt="" />
                             <div>
-                                <h1>926.66 AZN x 6 ay</h1>
+                                <h1><span id="birbankMonthly">{{ number_format($initialPrice / 6, 2) }}</span> AZN x 6 ay</h1>
                                 <p>
-                                    Birbank taksit kartı ilə 2, 3 və ya 6 aylıq faizsiz ödə!
+                                    Birbank taksit kartı ilə 3, 6 və ya 9 aylıq faizsiz ödə!
                                 </p>
                             </div>
                         </div>
@@ -152,55 +153,17 @@
                                     <th>Qiymət</th>
                                 </tr>
                                 </thead>
-                                <tbody>
-                                <tr>
-                                    <td class="radio-cell">
-                                        <input type="radio" name="duration" checked />
-                                    </td>
-                                    <td>3 ay</td>
-                                    <td>14.45 ₼</td>
-                                    <td>102 ₼</td>
-                                </tr>
-                                <tr>
-                                    <td class="radio-cell">
-                                        <input type="radio" name="duration" />
-                                    </td>
-                                    <td>6 ay</td>
-                                    <td>18.03 ₼</td>
-                                    <td>167 ₼</td>
-                                </tr>
-                                <tr>
-                                    <td class="radio-cell">
-                                        <input type="radio" name="duration" />
-                                    </td>
-                                    <td>9 ay</td>
-                                    <td>22.67 ₼</td>
-                                    <td>199 ₼</td>
-                                </tr>
-                                <tr>
-                                    <td class="radio-cell">
-                                        <input type="radio" name="duration" />
-                                    </td>
-                                    <td>10 ay</td>
-                                    <td>34.51 ₼</td>
-                                    <td>215 ₼</td>
-                                </tr>
-                                <tr>
-                                    <td class="radio-cell">
-                                        <input type="radio" name="duration" />
-                                    </td>
-                                    <td>12 ay</td>
-                                    <td>43.76 ₼</td>
-                                    <td>236 ₼</td>
-                                </tr>
-                                <tr>
-                                    <td class="radio-cell">
-                                        <input type="radio" name="duration" />
-                                    </td>
-                                    <td>18 ay</td>
-                                    <td>54.12 ₼</td>
-                                    <td>275 ₼</td>
-                                </tr>
+                                <tbody id="installmentRows">
+                                @foreach([3, 6, 9] as $month)
+                                    <tr data-month="{{ $month }}">
+                                        <td class="radio-cell">
+                                            <input type="radio" name="duration" value="{{ $month }}" {{ $loop->first ? 'checked' : '' }} />
+                                        </td>
+                                        <td>{{ $month }} ay</td>
+                                        <td class="installment-monthly">{{ number_format($initialPrice / $month, 2) }} ₼</td>
+                                        <td class="installment-total">{{ number_format($initialPrice, 2) }} ₼</td>
+                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                             <button>Müraciət et</button>
@@ -436,5 +399,5 @@
     <!-- Pay by click Modal -->
 @endsection
 @section('page-scripts')
-    <script src="{{asset('frontend/js/product.js?v=1.1.1')}}"></script>
+    <script src="{{ asset('frontend/js/product.js?v=' . filemtime(public_path('frontend/js/product.js'))) }}"></script>
 @endsection
