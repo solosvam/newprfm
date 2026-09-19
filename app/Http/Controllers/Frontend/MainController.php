@@ -101,6 +101,39 @@ class MainController extends Controller
         ]);
     }
 
+
+    public function brand(\App\Models\Product\Brand $brand, Request $request)
+    {
+        $banners = Banners::where('active', 1)->get();
+
+        $products = Product::with([
+            'brand',
+            'type',
+            'images',
+            'genders',
+            'variants' => function ($query) {
+                $query->where('active', 1)->orderBy('price');
+            },
+            'variants.size',
+        ])
+            ->where('active', 1)
+            ->where('brand_id', $brand->id)
+            ->orderByDesc('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        $formattedBanners = [];
+        foreach ($banners as $banner) {
+            $formattedBanners[$banner->location . $banner->device] = $banner->url;
+        }
+
+        return view('frontend.main', [
+            'banners' => $formattedBanners,
+            'products' => $products,
+            'selectedBrand' => $brand,
+        ]);
+    }
+
     public function credit()
     {
         $faqs = Faq::all();
