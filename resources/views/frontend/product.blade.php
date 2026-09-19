@@ -1,5 +1,14 @@
 @extends('frontend.layout')
 @section('content')
+    @php
+        $locale = app()->getLocale();
+        $gender = $product->genders->first();
+        $firstImage = $product->images->first();
+        $variants = $product->variants->where('active', 1)->sortBy('price')->values();
+        $firstVariant = $variants->first();
+        $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
+        $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
+    @endphp
     <main id="product-details">
         <div class="container">
             <div class="details-page">
@@ -33,7 +42,7 @@
                 <div class="product-title">
                     <h1>{{$product->name}}</h1>
                     <span>{{$product->brand->name}}</span>
-                    <span>{{$product->genders[0]->name_az}} | {{$product->type->name_az}}</span>
+                    <span>{{ $genderName }}{{ $genderName && $typeName ? ' | ' : '' }}{{ $typeName }}</span>
                 </div>
                 <div class="details-wrap">
                     <div class="product-image">
@@ -49,12 +58,14 @@
                                 <img src="{{asset('frontend/images/share.svg')}}" alt="" />
                                 <img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" />
                             </div>
-                            <img class="main-img" src="{{ asset('frontend/uploads/products/' . $product->images[0]->image) }}" alt=""/>
+                            @if($firstImage)
+                                <img class="main-img" src="{{ asset('frontend/uploads/products/' . $firstImage->image) }}" alt="{{ $product->brand?->name }} {{ $product->name }}"/>
+                            @endif
                         </div>
                     </div>
                     <div class="product-info">
                         <h1>
-                            {{$product->sizes[0]->pivot->price}} <img src="{{asset('frontend/images/manat.svg')}}" alt="manat symbol" />
+                            {{ number_format($firstVariant?->price ?? 0, 2) }} <img src="{{asset('frontend/images/manat.svg')}}" alt="manat symbol" />
                         </h1>
                         <div class="product-stars">
                             <ul>
@@ -77,9 +88,11 @@
                         </div>
                         <div class="product-size-amount">
                             <ul>
-                                @foreach($product->sizes as $size)
-                                    <li class="{{ $loop->first ? 'active-size-amount' : '' }}">
-                                        <span>{{$size->name_az}}</span>
+                                @foreach($variants as $variant)
+                                    <li class="{{ $loop->first ? 'active-size-amount' : '' }}"
+                                        data-variant-id="{{ $variant->id }}"
+                                        data-price="{{ $variant->price }}">
+                                        <span>{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
                                     </li>
                                 @endforeach
                             </ul>
