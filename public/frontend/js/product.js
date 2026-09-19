@@ -62,14 +62,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (total) total.textContent = totalPrice.toFixed(2) + " ₼";
         });
 
-        const bannerRow = [...installmentRows].find(row => parseInt(row.dataset.month, 10) === 6)
-            || installmentRows[0];
-
-        if (birbankMonthly && bannerRow) {
-            const month = parseInt(bannerRow.dataset.month, 10);
-            const rate = parseFloat(bannerRow.dataset.rate || "0");
-            const totalPrice = price + ((price * rate) / 100);
-            birbankMonthly.textContent = (totalPrice / month).toFixed(2);
+        // Birbank ayrıca 6 ay faizsizdir; kredit faizləri bu bloka tətbiq edilmir.
+        if (birbankMonthly) {
+            const month = 6;
+            birbankMonthly.textContent = (price / month).toFixed(2);
             if (birbankMonth) birbankMonth.textContent = month;
         }
     }
