@@ -251,3 +251,51 @@
 #product-details .similar-products .product-item__info {
     transform: none !important;
 }
+
+
+/* Similar products: stable card dimensions, image-only hover zoom */
+#product-details .similar-products .product-item {
+    overflow: visible !important;
+}
+
+#product-details .similar-products .product-item__image,
+#product-details .similar-products .product-item:hover .product-item__image,
+#product-details .similar-products .product-item:focus-within .product-item__image {
+    width: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+    border: 1px solid #e4e4e4 !important;
+    transform: none !important;
+    scale: 1 !important;
+}
+
+#product-details .similar-products .product-item__image > a,
+#product-details .similar-products .product-item__image > a:hover {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    transform: none !important;
+    scale: 1 !important;
+}
+
+#product-details .similar-products .product-main-image {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    object-fit: contain !important;
+    transform: scale(1) !important;
+    transition: transform .25s ease !important;
+}
+
+#product-details .similar-products .product-item__image:hover .product-main-image {
+    transform: scale(1.04) !important;
+}
+
+#product-details .similar-products .product-item__info,
+#product-details .similar-products .product-item:hover .product-item__info {
+    width: 100% !important;
+    transform: none !important;
+    scale: 1 !important;
+}
