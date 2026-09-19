@@ -208,3 +208,46 @@
 #product-details .similar-products .product-item__image > a:hover .product-main-image {
     transform: scale(1.04) !important;
 }
+
+
+/* Similar product card interaction - final override */
+#product-details .similar-products .product-item,
+#product-details .similar-products .product-item:hover,
+#product-details .similar-products .product-item:focus-within {
+    transform: none !important;
+    scale: 1 !important;
+    box-shadow: none !important;
+}
+
+#product-details .similar-products .product-item__image {
+    border: 1px solid #ededed !important;
+    background: #fff !important;
+    overflow: hidden !important;
+    transition: border-color .2s ease !important;
+    transform: none !important;
+}
+
+#product-details .similar-products .product-item:hover .product-item__image {
+    border-color: #cfcfcf !important;
+    transform: none !important;
+}
+
+#product-details .similar-products .product-item__image > a {
+    overflow: hidden !important;
+    transform: none !important;
+}
+
+#product-details .similar-products .product-main-image {
+    transform: scale(1) !important;
+    transition: transform .25s ease !important;
+    will-change: transform;
+}
+
+#product-details .similar-products .product-item__image > a:hover .product-main-image {
+    transform: scale(1.04) !important;
+}
+
+#product-details .similar-products .product-item__image__actions,
+#product-details .similar-products .product-item__info {
+    transform: none !important;
+}
