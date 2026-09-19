@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 
 class MainController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $banners = Banners::where('active', 1)->get();
 
-        $products = Product::with([
+        $query = Product::with([
             'brand',
             'type',
             'images',
@@ -25,10 +25,67 @@ class MainController extends Controller
                     ->orderBy('price');
             },
             'variants.size',
-        ])
-            ->where('active', 1)
-            ->orderByDesc('id')
-            ->paginate(12);
+        ])->where('active', 1);
+
+        if ($request->filled('gender')) {
+            $gender = $request->string('gender')->lower()->value();
+
+            $genderNames = [
+                'women' => ['qadın', 'qadin', 'women', 'woman', 'female'],
+                'men' => ['kişi', 'kisi', 'men', 'man', 'male'],
+                'unisex' => ['unisex'],
+            ];
+
+            if (isset($genderNames[$gender])) {
+                $names = $genderNames[$gender];
+
+                $query->whereHas('genders', function ($genderQuery) use ($names) {
+                    $genderQuery->where(function ($nameQuery) use ($names) {
+                        foreach (['name_az', 'name_en', 'name_ru'] as $column) {
+                            foreach ($names as $name) {
+                                $nameQuery->orWhereRaw('LOWER(' . $column . ') LIKE ?', ['%' . $name . '%']);
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+        switch ($request->get('sort')) {
+            case 'newest':
+                $query->orderByDesc('id');
+                break;
+
+            case 'oldest':
+                $query->orderBy('id');
+                break;
+
+            case 'price_asc':
+                $query->orderBy(
+                    Product::selectRaw('MIN(product_variants.price)')
+                        ->join('product_variants', 'product_variants.product_id', '=', 'products.id')
+                        ->whereColumn('products.id', 'product_variants.product_id')
+                        ->where('product_variants.active', 1)
+                );
+                break;
+
+            case 'price_desc':
+                $query->orderByDesc(
+                    Product::selectRaw('MIN(product_variants.price)')
+                        ->join('product_variants', 'product_variants.product_id', '=', 'products.id')
+                        ->whereColumn('products.id', 'product_variants.product_id')
+                        ->where('product_variants.active', 1)
+                );
+                break;
+
+            default:
+                $query->orderByDesc('id');
+                break;
+        }
+
+        $products = $query
+            ->paginate(12)
+            ->withQueryString();
 
         $formattedBanners = [];
 
@@ -46,8 +103,9 @@ class MainController extends Controller
     public function credit()
     {
         $faqs = Faq::all();
-        return view('frontend.internal-credit',[
-            'faqs'  => $faqs
+
+        return view('frontend.internal-credit', [
+            'faqs' => $faqs,
         ]);
     }
 }
