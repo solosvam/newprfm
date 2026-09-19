@@ -149,3 +149,41 @@
         min-width: 220px;
     }
 }
+
+
+/* Keep similar product cards together instead of spreading them across the row */
+#product-details .similar-products__list {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 24px !important;
+    justify-content: start !important;
+}
+
+#product-details .similar-products .product-item {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+@media (max-width: 1200px) {
+    #product-details .similar-products__list {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    #product-details .similar-products__list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    #product-details .similar-products__list {
+        display: flex !important;
+        overflow-x: auto;
+        gap: 12px !important;
+    }
+
+    #product-details .similar-products .product-item {
+        min-width: 220px !important;
+    }
+}
