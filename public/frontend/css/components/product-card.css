@@ -17,6 +17,7 @@ main .home-page .main-products__list .product-item{
 main .home-page .product-item__image{
   height:262px;
   overflow:hidden;
+  background:#fff;
 }
 main .home-page .product-item__image .product-main-image{
   width:180px;
