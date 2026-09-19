@@ -70,6 +70,11 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class, 'product_id');
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class, 'product_id');
+    }
+
     public function activeVariants()
     {
         return $this->hasMany(ProductVariant::class, 'product_id')
