@@ -187,3 +187,24 @@
         min-width: 220px !important;
     }
 }
+
+
+/* Similar products: never scale the whole card; zoom only the product image */
+#product-details .similar-products .product-item,
+#product-details .similar-products .product-item:hover,
+#product-details .similar-products .product-item__image,
+#product-details .similar-products .product-item__image:hover,
+#product-details .similar-products .product-item__info,
+#product-details .similar-products .product-item__info:hover {
+    transform: none !important;
+    scale: 1 !important;
+    box-shadow: none !important;
+}
+
+#product-details .similar-products .product-main-image {
+    transition: transform .25s ease;
+}
+
+#product-details .similar-products .product-item__image > a:hover .product-main-image {
+    transform: scale(1.04) !important;
+}
