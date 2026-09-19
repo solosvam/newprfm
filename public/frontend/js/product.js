@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const priceTitle = document.querySelector(".product-info > h1");
     const birbankMonthly = document.getElementById("birbankMonthly");
+    const birbankMonth = document.getElementById("birbankMonth");
     const installmentRows = document.querySelectorAll("#installmentRows tr");
 
     function updateVariantPrice(rawPrice) {
@@ -49,23 +50,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (manat) priceTitle.appendChild(manat);
         }
 
-        const installmentRates = {
-            3: 0,
-            6: 17.6,
-            9: 25,
-            12: 33.3,
-            15: 37,
-            18: 44.9
-        };
-
-        if (birbankMonthly) {
-            const sixMonthTotal = price + ((price * installmentRates[6]) / 100);
-            birbankMonthly.textContent = (sixMonthTotal / 6).toFixed(2);
-        }
-
         installmentRows.forEach(row => {
             const month = parseInt(row.dataset.month, 10);
-            const rate = parseFloat(row.dataset.rate ?? installmentRates[month] ?? 0);
+            const rate = parseFloat(row.dataset.rate || "0");
             const totalPrice = price + ((price * rate) / 100);
             const monthlyPrice = totalPrice / month;
             const monthly = row.querySelector(".installment-monthly");
@@ -74,6 +61,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (monthly) monthly.textContent = monthlyPrice.toFixed(2) + " ₼";
             if (total) total.textContent = totalPrice.toFixed(2) + " ₼";
         });
+
+        const bannerRow = [...installmentRows].find(row => parseInt(row.dataset.month, 10) === 6)
+            || installmentRows[0];
+
+        if (birbankMonthly && bannerRow) {
+            const month = parseInt(bannerRow.dataset.month, 10);
+            const rate = parseFloat(bannerRow.dataset.rate || "0");
+            const totalPrice = price + ((price * rate) / 100);
+            birbankMonthly.textContent = (totalPrice / month).toFixed(2);
+            if (birbankMonth) birbankMonth.textContent = month;
+        }
     }
 
     document.querySelectorAll(".product-size-amount ul li").forEach(item => {
