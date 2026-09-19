@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Front\AuthController;
-use App\Http\Controllers\Front\MainController;
-use App\Http\Controllers\Front\BrandsController;
-use App\Http\Controllers\Front\ProductController;
+use App\Http\Controllers\Frontend\AuthController;
+use App\Http\Controllers\Frontend\MainController;
+use App\Http\Controllers\Frontend\BrandsController;
+use App\Http\Controllers\Frontend\ProductController;
 
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
@@ -19,6 +19,5 @@ Route::middleware('auth')->group(function(){
 });
 
 require __DIR__.'/admin.php';
-require __DIR__.'/courier.php';
 
 Route::get('/{slug}',[ProductController::class,'product'])->name('product');

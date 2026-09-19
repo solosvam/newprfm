@@ -4,6 +4,8 @@ use App\Http\Middleware\setLangMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,6 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(setLangMiddleware::class);
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('admin') || $request->is('admin/*')) {
+                return route('admin.login.form');
+            }
+
+            return route('front.login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
