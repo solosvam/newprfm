@@ -22,7 +22,7 @@ class AuthController extends Controller
     {
         $mobile = $this->normalizeMobile($request->input('mobile'));
 
-        if (strlen($mobile) !== 9) {
+        if (strlen($mobile) !== 12) {
             throw ValidationException::withMessages(['mobile' => 'Telefon nömrəsini düzgün daxil edin.']);
         }
 
@@ -54,7 +54,7 @@ class AuthController extends Controller
 
         $request->merge(['mobile' => $mobile]);
         $request->validate([
-            'mobile' => ['required', 'digits:9'],
+            'mobile' => ['required', 'digits:12'],
             'password' => ['required', 'string'],
         ]);
 
@@ -76,7 +76,7 @@ class AuthController extends Controller
 
         $request->merge(['mobile' => $mobile]);
         $request->validate([
-            'mobile' => ['required', 'digits:9'],
+            'mobile' => ['required', 'digits:12'],
             'otp' => ['required', 'digits:6'],
         ]);
 
@@ -98,7 +98,7 @@ class AuthController extends Controller
 
         $request->merge(['mobile' => $mobile]);
         $request->validate([
-            'mobile' => ['required', 'digits:9'],
+            'mobile' => ['required', 'digits:12'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
@@ -164,12 +164,14 @@ class AuthController extends Controller
             $mobile = substr($mobile, 3);
         }
 
-        return ltrim($mobile, '0');
+        $mobile = ltrim($mobile, '0');
+
+        return '994'.substr($mobile, 0, 9);
     }
 
     private function maskedMobile(string $mobile): string
     {
-        return '+994 '.substr($mobile, 0, 2).' *** ** '.substr($mobile, -2);
+        return '+994 '.substr($mobile, 3, 2).' *** ** '.substr($mobile, -2);
     }
 
     private function otpKey(string $mobile): string
