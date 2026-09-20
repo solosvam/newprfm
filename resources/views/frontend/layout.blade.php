@@ -34,8 +34,11 @@
                     <li>
                         <img class="search-icon" src="{{asset('frontend/images/search.svg')}}" alt="" />
                     </li>
-                    <li>
-                        <img src="{{asset('frontend/images/cart.svg')}}" alt="" />
+                    <li class="header-cart">
+                        <a href="{{ route('cart') }}" class="header-cart__link" aria-label="Səbət">
+                            <img src="{{asset('frontend/images/cart.svg')}}" alt="Səbət" />
+                            <span class="header-cart__count is-empty" id="headerCartCount">0</span>
+                        </a>
                     </li>
                     <li>
                         <a href="/wishlist.html"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="" /></a>
@@ -269,6 +272,15 @@
 </div>
 <!-- Search Form for Mobile -->
 
+<div class="container">
+    <div class="cart-success-notice" id="cartSuccessNotice">
+        <div class="cart-success-notice__message">
+            <span class="cart-success-notice__check">✓</span>
+            <span>Məhsul səbətə əlavə olundu</span>
+        </div>
+        <a href="{{ route('cart') }}">Ətraflı bax</a>
+    </div>
+</div>
 @yield('content')
 
 <footer>
