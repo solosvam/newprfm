@@ -57,11 +57,10 @@ header .language-select select {
 }
 
 .header-cart__link{position:relative;display:inline-flex;align-items:center;justify-content:center}
-.header-cart__count{position:absolute;top:-9px;right:-10px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#111;color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center}
+.header-cart__count{position:absolute;top:-18px;right:-18px;width:40px;height:40px;border-radius:50%;background:#20cf55;color:#fff;font-size:17px;font-weight:700;line-height:40px;text-align:center;z-index:2}
 .header-cart__count.is-empty{display:none}
-.cart-success-notice{display:flex;align-items:center;justify-content:space-between;gap:24px;background:#5bc64a;color:#fff;min-height:84px;padding:0 28px;margin:22px 0 0;opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .2s ease,transform .2s ease,visibility .2s;position:relative;z-index:20}
-.cart-success-notice.is-visible{opacity:1;visibility:visible;transform:translateY(0)}
-.cart-success-notice__message{display:flex;align-items:center;gap:16px;font-size:22px;font-weight:500}
-.cart-success-notice__check{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#f1ffd9;color:#55bd45;font-size:18px;font-weight:700}
-.cart-success-notice a{font-size:18px;font-weight:700;color:#fff;text-decoration:none}
-@media(max-width:768px){.cart-success-notice{min-height:64px;padding:0 16px;gap:12px}.cart-success-notice__message{font-size:14px;gap:9px}.cart-success-notice__check{width:22px;height:22px;font-size:14px}.cart-success-notice a{font-size:13px;white-space:nowrap}}
+
+
+.notifyjs-parfumshop-success-base{background:#20c95a;color:#fff;border:0;border-radius:4px;box-shadow:0 5px 20px rgba(0,0,0,.14);padding:14px 18px;min-width:280px;font-size:15px;font-weight:500}
+.notifyjs-parfumshop-success-base .ps-notify{display:flex;align-items:center;gap:10px}
+.notifyjs-parfumshop-success-base .ps-notify__check{display:flex;align-items:center;justify-content:center;width:23px;height:23px;border-radius:50%;background:#fff;color:#20c95a;font-weight:800}
