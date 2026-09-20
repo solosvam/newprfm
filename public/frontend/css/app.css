@@ -194,3 +194,13 @@ main .cabinet__personal .form__submit{
 .checkout-grid input[type="text"]:focus,
 .checkout-grid select:focus,
 .checkout-grid textarea:focus{border-color:#c4c4c4!important;outline:none!important}
+
+/* Checkout address fields: mirror cabinet personal form structure */
+.checkout-fields{display:flex!important;justify-content:space-between!important;flex-wrap:wrap!important;gap:0!important;row-gap:16px!important;margin-top:18px!important}
+.checkout-field{box-sizing:border-box;width:calc(50% - 8px)!important;height:48px!important;border:1px solid #c4c4c4!important;padding:17px 12px!important;display:flex!important;align-items:center!important;background:#fff!important}
+.checkout-field input[type="text"]{width:100%!important;height:auto!important;line-height:normal!important;border:0!important;padding:0!important;margin:0!important;background:transparent!important;outline:0!important;box-shadow:none!important;font-size:16px!important;color:#111!important}
+.checkout-field input[type="text"]::placeholder{color:#767676!important;opacity:1!important}
+.checkout-field--textarea{width:100%!important;height:122px!important;margin-top:16px!important;padding:17px 12px!important;align-items:flex-start!important}
+.checkout-field--textarea textarea{width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;outline:0!important;box-shadow:none!important;resize:vertical!important;font-size:16px!important;line-height:1.45!important;color:#111!important}
+.checkout-field--textarea textarea::placeholder{color:#767676!important;opacity:1!important}
+@media(max-width:800px){.checkout-field{width:100%!important}}
