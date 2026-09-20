@@ -7,18 +7,17 @@
                 <h1>Şəxsi kabinet</h1>
                 <form class="login-page__wrap__form" id="customerLoginForm">
                     @csrf
-                    <input type="tel" id="loginMobile" placeholder="Telefon nömrəsi" autocomplete="tel" />
+                    <input type="tel" id="loginMobile" placeholder="994 __ ___ __ __" autocomplete="tel" inputmode="numeric" />
                     <div id="passwordArea" class="hide-form">
                         <input type="password" id="loginPassword" placeholder="Şifrə" autocomplete="current-password" />
                     </div>
                     <p class="error-message hide-form" id="loginError"></p>
-                    <div class="actions">
-                        <button type="submit" id="loginSubmitBtn">Davam et</button>
+                    <div class="actions hide-form" id="passwordActions">
+                        <button type="submit" id="loginSubmitBtn">Daxil ol</button>
                     </div>
                 </form>
-                <div class="login-register-link">
-                    <span>Hesabınız yoxdur?</span>
-                    <a href="#" id="registerBtn">Qeydiyyat</a>
+                <div class="actions login-register-link">
+                    <button type="button" id="registerBtn">Qeydiyyat</button>
                 </div>
             </div>
         </div>
@@ -69,5 +68,6 @@ window.customerAuth = {
     registerUrl: '#'
 };
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
 <script src="{{ asset('frontend/js/login.js?v=' . filemtime(public_path('frontend/js/login.js'))) }}"></script>
 @endsection
