@@ -10,6 +10,8 @@ Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
 Route::get('/brands',[BrandsController::class,'index'])->name('brands');
 Route::get('/brand/{slug}',[BrandsController::class,'products'])->name('brand.products');
+Route::view('/cart', 'frontend.cart')->name('cart');
+Route::get('/cart/products',[ProductController::class,'cartProducts'])->name('cart.products');
 
 Route::middleware('guest')->group(function(){
     Route::get('/login',[AuthController::class,'login'])->name('front.login');
