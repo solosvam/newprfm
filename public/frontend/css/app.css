@@ -123,12 +123,21 @@ header .language-select select {
 .profile-success{padding:14px 18px;background:#eaf8ee;margin-bottom:20px}.profile-errors{color:#c62828;margin:15px 0}
 @media(max-width:768px){.cabinet-review{grid-template-columns:1fr}.cabinet-content-empty,.cabinet-reviews{padding:20px 0}}
 
-/* Personal info form grid fix */
-.cabinet__personal .form__non-credit{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:30px 30px!important;align-items:stretch}
-.cabinet__personal .form__non-credit__container{width:100%!important;margin:0!important;display:block!important}
-.cabinet__personal .form__non-credit__container input{box-sizing:border-box!important;width:100%!important;height:72px!important;margin:0!important;padding:0 22px!important;border:1px solid #bdbdbd!important;background:#fff!important;font-size:18px!important}
-.cabinet__personal .form__non-credit__container input:disabled{background:#f8f8f8!important;color:#555!important}
-.cabinet__personal .form__submit{width:calc(50% - 15px)!important;margin-top:55px!important}
-.cabinet__personal .form__submit button{width:100%!important;height:70px!important}
-.cabinet__personal .form__non-credit__container--empty{visibility:hidden}
-@media(max-width:768px){.cabinet__personal .form__non-credit{grid-template-columns:1fr!important;gap:16px!important}.cabinet__personal .form__non-credit__container--empty{display:none!important}.cabinet__personal .form__submit{width:100%!important;margin-top:25px!important}}
+/* Personal info - keep original cabinet form geometry */
+main .cabinet__personal .form__non-credit__container:nth-child(7){
+  border:1px solid #c4c4c4!important;
+  justify-content:space-between!important;
+  width:calc(50% - 8px)!important;
+}
+main .cabinet__personal .form__non-credit__container input{
+  outline:none;
+  background:transparent;
+}
+main .cabinet__personal .form__non-credit__container input:disabled{
+  color:#767676;
+  -webkit-text-fill-color:#767676;
+  opacity:1;
+}
+main .cabinet__personal .form__submit{
+  margin-top:44px;
+}
