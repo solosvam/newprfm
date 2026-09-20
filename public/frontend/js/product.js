@@ -85,6 +85,33 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    const addToCartButton = document.getElementById("addToCartButton");
+    if (addToCartButton) {
+        addToCartButton.addEventListener("click", () => {
+            const selectedVariant = document.querySelector(".product-size-amount li.active-size-amount");
+            if (!selectedVariant) return;
+
+            const cart = JSON.parse(localStorage.getItem("parfumshop_cart") || "[]");
+            const variantId = parseInt(selectedVariant.dataset.variantId, 10);
+            const existing = cart.find(item => item.variant_id === variantId);
+
+            if (existing) {
+                existing.quantity += productCount;
+            } else {
+                cart.push({
+                    product_id: parseInt(addToCartButton.dataset.productId, 10),
+                    variant_id: variantId,
+                    quantity: productCount
+                });
+            }
+
+            localStorage.setItem("parfumshop_cart", JSON.stringify(cart));
+            window.dispatchEvent(new CustomEvent("parfumshop:cart-updated", { detail: cart }));
+            addToCartButton.textContent = "Səbətə əlavə edildi";
+            setTimeout(() => addToCartButton.textContent = "Səbətə at", 1200);
+        });
+    }
+
     const payModal = document.getElementById("payByClickModal");
     const payButton = document.querySelector(".product-info-actions button:last-child");
     const payClose = document.querySelector(".pay-modal-close");
