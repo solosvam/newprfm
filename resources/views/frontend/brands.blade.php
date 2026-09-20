@@ -36,7 +36,11 @@
                         <h2>{{ $letter }}</h2>
                         <ul>
                             @foreach ($group as $brand)
-                                <li>{{ $brand->name }}</li>
+                                <li>
+                                    <a href="{{ route('brand.products', \App\Services\SeoUrl::generateSlug(['id' => $brand->id, 'title' => $brand->name])) }}">
+                                        {{ $brand->name }}
+                                    </a>
+                                </li>
                             @endforeach
                         </ul>
                     </div>
