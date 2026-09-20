@@ -111,11 +111,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 passwordActions.classList.remove('hide-form');
                 password.focus();
             } else if (data.status === 'otp') {
-                loginBox.classList.add('hide-form');
+                loginBox.style.display = 'none';
                 otpSection.classList.remove('hide-form');
+                otpSection.style.display = 'block';
                 otpMessage.textContent = 'OTP kod ' + data.mobile + ' nömrəsinə göndərildi.';
                 startTimer();
-                otpInput.focus();
+                requestAnimationFrame(() => otpInput.focus());
             }
         } catch (e) {
             lastCheckedMobile = '';
@@ -196,7 +197,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('backBtn').addEventListener('click', function () {
         otpSection.classList.add('hide-form');
+        otpSection.style.display = 'none';
         loginBox.classList.remove('hide-form');
+        loginBox.style.display = '';
         mode = 'check';
         mobile.disabled = false;
         passwordArea.classList.add('hide-form');
