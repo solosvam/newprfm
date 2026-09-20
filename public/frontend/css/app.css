@@ -204,3 +204,27 @@ main .cabinet__personal .form__submit{
 .checkout-field--textarea textarea{width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;outline:0!important;box-shadow:none!important;resize:vertical!important;font-size:16px!important;line-height:1.45!important;color:#111!important}
 .checkout-field--textarea textarea::placeholder{color:#767676!important;opacity:1!important}
 @media(max-width:800px){.checkout-field{width:100%!important}}
+
+/* jQuery Notify error - same geometry as success, stronger red */
+.notifyjs-bootstrap-error{
+  box-sizing:border-box!important;
+  min-width:280px!important;
+  max-width:420px!important;
+  padding:14px 18px!important;
+  border:0!important;
+  border-radius:4px!important;
+  background:#d82436!important;
+  background-image:none!important;
+  color:#fff!important;
+  text-shadow:none!important;
+  box-shadow:0 5px 20px rgba(0,0,0,.14)!important;
+  font-family:Roboto,Arial,sans-serif!important;
+  font-size:15px!important;
+  font-weight:500!important;
+  line-height:1.4!important;
+  white-space:normal!important;
+}
+.notifyjs-bootstrap-error span{
+  color:#fff!important;
+  text-shadow:none!important;
+}
