@@ -107,8 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             localStorage.setItem("parfumshop_cart", JSON.stringify(cart));
             window.dispatchEvent(new CustomEvent("parfumshop:cart-updated", { detail: cart }));
-            addToCartButton.textContent = "Səbətə əlavə edildi";
-            setTimeout(() => addToCartButton.textContent = "Səbətə at", 1200);
+            window.showCartSuccess?.();
         });
     }
 
