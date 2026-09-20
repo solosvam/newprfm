@@ -161,3 +161,36 @@ main .cabinet__personal .form__submit{
 .checkout-summary #checkoutItems>div span{display:flex;flex-direction:column;gap:5px}
 .checkout-summary #checkoutItems>div span b{font-weight:500}
 .checkout-summary #checkoutItems>div span small{font-size:13px;color:#888;font-weight:400}
+
+/* Checkout fields - same visual language as personal cabinet */
+.checkout-fields{gap:16px!important}
+.checkout-grid input[type="text"],
+.checkout-grid select{
+  height:48px!important;
+  padding:0 12px!important;
+  border:1px solid #c4c4c4!important;
+  border-radius:0!important;
+  background:#fff!important;
+  font-family:inherit!important;
+  font-size:16px!important;
+  font-weight:400!important;
+  line-height:48px!important;
+  color:#111!important;
+  box-shadow:none!important;
+}
+.checkout-grid textarea{
+  padding:17px 12px!important;
+  border:1px solid #c4c4c4!important;
+  border-radius:0!important;
+  background:#fff!important;
+  font-family:inherit!important;
+  font-size:16px!important;
+  font-weight:400!important;
+  color:#111!important;
+  box-shadow:none!important;
+}
+.checkout-grid input[type="text"]::placeholder,
+.checkout-grid textarea::placeholder{color:#767676!important;opacity:1}
+.checkout-grid input[type="text"]:focus,
+.checkout-grid select:focus,
+.checkout-grid textarea:focus{border-color:#c4c4c4!important;outline:none!important}
