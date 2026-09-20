@@ -60,11 +60,26 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(checkMobileAutomatically, 0);
     });
 
+    function mobileCompleted() {
+        const digits = String(mobile.value || '').replace(/\D/g, '');
+        return digits.length === 12 && digits.startsWith('994');
+    }
+
     mobile.addEventListener('input', function () {
-        checkMobileAutomatically();
+        if (mobileCompleted()) checkMobileAutomatically();
     });
 
-    mobile.addEventListener('complete', checkMobileAutomatically);
+    mobile.addEventListener('keyup', function () {
+        if (mobileCompleted()) checkMobileAutomatically();
+    });
+
+    mobile.addEventListener('blur', function () {
+        if (mobileCompleted()) checkMobileAutomatically();
+    });
+
+    if (mobile.inputmask) {
+        mobile.inputmask.opts.oncomplete = checkMobileAutomatically;
+    }
 
     async function checkMobileAutomatically() {
         if (mode === 'password' || checkingMobile) return;
