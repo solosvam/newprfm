@@ -272,15 +272,6 @@
 </div>
 <!-- Search Form for Mobile -->
 
-<div class="container">
-    <div class="cart-success-notice" id="cartSuccessNotice">
-        <div class="cart-success-notice__message">
-            <span class="cart-success-notice__check">✓</span>
-            <span>Məhsul səbətə əlavə olundu</span>
-        </div>
-        <a href="{{ route('cart') }}">Ətraflı bax</a>
-    </div>
-</div>
 @yield('content')
 
 <footer>
@@ -446,6 +437,8 @@
     </a>
 </div>
 @yield('modal')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js"></script>
 <script src="{{asset('frontend/js/main.js')}}"></script>
 @yield('page-scripts')
 </body>
