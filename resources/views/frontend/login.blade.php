@@ -2,118 +2,72 @@
 @section('content')
 <main>
     <div class="login-container">
-        <!-- Login Section (show initially) -->
-        <div class="login-page">
-            <div class="login-page-close-icon">
-                <img src="{{asset('frontend/images/filter-close.svg')}}" alt="" />
-            </div>
+        <div class="login-page" id="loginBox">
             <div class="login-page__wrap">
                 <h1>Şəxsi kabinet</h1>
-                <form class="login-page__wrap__form" id="loginForm">
-                    <input type="tel" id="phoneInput" placeholder="Telefon nömrəsi" />
+                <form class="login-page__wrap__form" id="customerLoginForm">
+                    @csrf
+                    <input type="tel" id="loginMobile" placeholder="Telefon nömrəsi" autocomplete="tel" />
+                    <div id="passwordArea" class="hide-form">
+                        <input type="password" id="loginPassword" placeholder="Şifrə" autocomplete="current-password" />
+                    </div>
+                    <p class="error-message hide-form" id="loginError"></p>
                     <div class="actions">
-                        <button type="button" id="submitBtn">Daxil olun</button>
-                        <button class="gmail-btn">
-                            <img src="{{asset('frontend/images/gmail.svg')}}" alt="gmail icon" />
-                            <span>Gmail ilə daxil olun</span>
-                        </button>
+                        <button type="submit" id="loginSubmitBtn">Davam et</button>
                     </div>
                 </form>
+                <div class="login-register-link">
+                    <span>Hesabınız yoxdur?</span>
+                    <a href="#" id="registerBtn">Qeydiyyat</a>
+                </div>
             </div>
         </div>
 
-        <!-- OTP Section (hidden initially) -->
         <div id="otpSection" class="hide-form">
-            <div class="otpSection-close-icon">
-                <img src="{{asset('frontend/images/filter-close.svg')}}" alt="" />
-            </div>
             <div class="otpSection-wrapper">
                 <div class="headers">
-                    <h1>Şəxsi kabinet</h1>
-                    <span class="otp-sent-message">OTP kod +994 50 345 54 67 nömrəsinə göndərilmişdir</span>
-                    <input type="text" id="otpInput" class="regular-otp-input" placeholder="OTP kodu" />
-
-                    <div class="field-with-error">
-                        <input type="text" id="otpInput" placeholder="OTP kodu" />
-                        <p class="error-message">Yanlış kod</p>
-                    </div>
+                    <h1>Hesabı təsdiqlə</h1>
+                    <span class="otp-sent-message" id="otpMessage"></span>
+                    <input type="text" id="otpInput" inputmode="numeric" maxlength="6" placeholder="OTP kodu" />
+                    <p class="error-message hide-form" id="otpError"></p>
                 </div>
-
                 <div class="otp-section-form-label">
-                    <span class="seconds">00:58</span>
-                    <span class="send-again-text">Yenidən göndər</span>
+                    <span class="seconds" id="otpTimer">01:00</span>
+                    <button type="button" class="send-again-text" id="resendOtp" disabled>Yenidən göndər</button>
                 </div>
-
                 <div class="actions">
                     <button type="button" id="backBtn">Geriyə</button>
-                    <button type="button" id="otpSubmitBtn">Daxil olun</button>
+                    <button type="button" id="otpSubmitBtn">Təsdiqlə</button>
                 </div>
             </div>
         </div>
 
-        <!-- SUCCESS-LOGIN -->
-        <div id="success-login" class="hide-form">
-            <div class="success-login-close-icon">
-                <img src="{{asset('frontend/images/filter-close.svg')}}" alt="" />
+        <div id="setPasswordSection" class="hide-form">
+            <div class="otpSection-wrapper">
+                <div class="headers">
+                    <h1>Şifrə təyin et</h1>
+                    <input type="password" id="newPassword" placeholder="Yeni şifrə" autocomplete="new-password" />
+                    <input type="password" id="newPasswordConfirmation" placeholder="Şifrənin təkrarı" autocomplete="new-password" />
+                    <p class="error-message hide-form" id="passwordError"></p>
+                </div>
+                <div class="actions">
+                    <button type="button" id="setPasswordBtn">Şifrəni yadda saxla</button>
+                </div>
             </div>
-
-            <img src="{{asset('frontend/images/success.svg')}}" alt="" />
-            <h3>Təşəkkür edirik!</h3>
-
-            <h4>Sizin qeydiyyatınız uğurla tamamlandı.</h4>
-
-            <span>Məlumatlarınızı
-          <a href="./cabinet.html" class="link-personal-cabinet">şəxsi kabinetdə</a>
-          əlavə edə bilərsiniz</span>
-        </div>
-    </div>
-</main>
-<main class="login-page-mobile">
-    <!-- LOGIN-PAGE-LAYOUT -->
-    <div class="login-page">
-        <span><img src="{{asset('frontend/images/close.svg')}}" alt="" /></span>
-        <h1>Şəxsi kabinet</h1>
-
-        <form action="" class="login-page__wrap__form" id="loginForm">
-            <input type="tel" id="phoneInput" placeholder="Telefon nömrəsi" />
-        </form>
-
-        <div class="actions">
-            <button type="button" id="submitBtn">Daxil olun</button>
-            <button class="gmail-btn">
-                <img src="{{asset('frontend/images/gmail.svg')}}" alt="gmail icon" />
-                <span>Gmail ilə daxil olun</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- OTP-SECTION-LAYOUT -->
-    <div id="otp-section-mobile">
-        <span><img src="{{asset('frontend/images/close.svg')}}" alt="" /></span>
-
-        <h1>Şəxsi kabinet</h1>
-
-        <div class="headers">
-            <span class="otp-sent-message">OTP kod +994 50 345 54 67 nömrəsinə göndərilmişdir</span>
-            <input type="text" id="otpInput" class="regular-otp-input" placeholder="OTP kodu" />
-
-            <div class="field-with-error">
-                <input type="text" id="otpInput" placeholder="OTP kodu" />
-                <p class="error-message">Yanlış kod</p>
-            </div>
-        </div>
-
-        <div class="otp-section-form-label">
-            <span class="seconds">00:58</span>
-            <span class="send-again-text">Yenidən göndər</span>
-        </div>
-
-        <div class="actions">
-            <button type="button" id="submitBtn">Daxil olun</button>
         </div>
     </div>
 </main>
 @endsection
 @section('page-scripts')
-    <script src="{{asset('frontend/js/login.js')}}"></script>
+<script>
+window.customerAuth = {
+    checkUrl: @json(route('front.login.check')),
+    passwordUrl: @json(route('front.login.password')),
+    otpUrl: @json(route('front.login.otp')),
+    resendUrl: @json(route('front.login.otp.resend')),
+    setPasswordUrl: @json(route('front.login.set-password')),
+    registerUrl: '#'
+};
+</script>
+<script src="{{ asset('frontend/js/login.js?v=' . filemtime(public_path('frontend/js/login.js'))) }}"></script>
 @endsection
