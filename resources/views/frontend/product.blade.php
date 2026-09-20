@@ -104,7 +104,7 @@
                             </div>
                         </div>
                         <div class="product-info-actions">
-                            <button>Səbətə at</button>
+                            <button type="button" id="addToCartButton" data-product-id="{{ $product->id }}">Səbətə at</button>
                             <div>
                                 <span></span>
                                 <p>və ya</p>
