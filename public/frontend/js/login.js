@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fullMobile() {
-        const local = normalizeForInput(mobile.inputmask.unmaskedvalue());
+        const digits = String(mobile.inputmask.unmaskedvalue() || '').replace(/\D/g, '');
+        const local = digits.startsWith('994') ? digits.substring(3) : normalizeForInput(digits);
         return local.length === 9 ? '994' + local : '';
     }
 
@@ -54,7 +55,14 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(checkMobileAutomatically, 0);
     });
 
-    mobile.addEventListener('input', checkMobileAutomatically);
+    mobile.addEventListener('input', function () {
+        const digits = String(mobile.inputmask.unmaskedvalue() || '').replace(/\D/g, '');
+        if (digits.length > 12 || (digits.length >= 10 && !digits.startsWith('994'))) {
+            const local = normalizeForInput(digits);
+            mobile.inputmask.setValue('994' + local);
+        }
+        checkMobileAutomatically();
+    });
 
     async function checkMobileAutomatically() {
         if (mode === 'password' || checkingMobile) return;
