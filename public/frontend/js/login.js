@@ -22,9 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let lastCheckedMobile = '';
 
     Inputmask({
-        mask: '994 99 999 99 99',
+        mask: '\\9\\9\\4 99 999 99 99',
         placeholder: '_',
         showMaskOnHover: false,
+        showMaskOnFocus: true,
         clearIncomplete: false
     }).mask(mobile);
 
