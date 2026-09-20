@@ -140,6 +140,58 @@ class AuthController extends Controller
         return view('frontend.profile');
     }
 
+    public function personal()
+    {
+        return view('frontend.personal');
+    }
+
+    public function updatePersonal(Request $request)
+    {
+        $customer = $request->user();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:30'],
+            'surname' => ['required', 'string', 'max:30'],
+            'email' => ['required', 'email', 'max:50', 'unique:customers,email,'.$customer->id],
+            'password' => ['nullable', 'string'],
+            'new_password' => ['nullable', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        if (!empty($data['new_password'])) {
+            if (empty($data['password']) || !Hash::check($data['password'], $customer->password)) {
+                throw ValidationException::withMessages(['password' => 'Cari şifrə yanlışdır.']);
+            }
+            $customer->password = Hash::make($data['new_password']);
+        }
+
+        $customer->name = $data['name'];
+        $customer->surname = $data['surname'];
+        $customer->email = $data['email'];
+        $customer->save();
+
+        return back()->with('success', 'Məlumatlar yeniləndi.');
+    }
+
+    public function orders()
+    {
+        return view('frontend.orders');
+    }
+
+    public function wishlist()
+    {
+        return view('frontend.wishlist');
+    }
+
+    public function reviews()
+    {
+        $reviews = \App\Models\ProductReview::with(['product.brand', 'product.images'])
+            ->where('customer_id', auth()->id())
+            ->latest()
+            ->get();
+
+        return view('frontend.reviews', compact('reviews'));
+    }
+
     private function sendOtp(string $mobile, SmsService $sms): void
     {
         $throttleKey = 'login-otp-throttle:'.$mobile;
