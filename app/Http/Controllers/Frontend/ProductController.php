@@ -90,4 +90,32 @@ class ProductController extends Controller
 
         return back()->with('review_success', 'Rəyiniz əlavə edildi.');
     }
+    public function cartProducts(\Illuminate\Http\Request $request)
+    {
+        $variantIds = collect(explode(',', (string) $request->query('variants')))
+            ->filter()->map(fn ($id) => (int) $id)->unique()->values();
+
+        return \App\Models\Product\ProductVariant::with(['product.brand','product.images','product.genders','product.type','size'])
+            ->whereIn('id', $variantIds)
+            ->where('active', 1)
+            ->get()
+            ->map(function ($variant) {
+                $product = $variant->product;
+                $locale = app()->getLocale();
+                $gender = $product?->genders?->first();
+                $image = $product?->images?->first();
+                return [
+                    'variant_id' => $variant->id,
+                    'product_id' => $product?->id,
+                    'name' => $product?->name,
+                    'brand' => $product?->brand?->name,
+                    'gender' => $gender ? ($gender->{'name_'.$locale} ?? $gender->name_az) : null,
+                    'type' => $product?->type ? ($product->type->{'name_'.$locale} ?? $product->type->name_az) : null,
+                    'size' => $variant->size ? ($variant->size->{'name_'.$locale} ?? $variant->size->name_az) : null,
+                    'price' => (float) $variant->price,
+                    'image' => $image ? asset('frontend/uploads/products/'.$image->image) : null,
+                ];
+            })->values();
+    }
+
 }
