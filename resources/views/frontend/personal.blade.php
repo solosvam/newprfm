@@ -11,7 +11,8 @@
 <div class="form__non-credit__container"><input value="{{ auth()->user()->mobile }}" placeholder="Telefon nömrəniz" disabled></div>
 <div class="form__non-credit__container"><input type="password" name="password" placeholder="Cari şifrəniz"></div>
 <div class="form__non-credit__container"><input type="password" name="new_password" placeholder="Yeni şifrəniz"></div>
-<div class="form__non-credit__container"><input type="password" name="new_password_confirmation" placeholder="Yeni şifrə təkrar"></div></div>
+<div class="form__non-credit__container"><input type="password" name="new_password_confirmation" placeholder="Yeni şifrə təkrar"></div>
+<div class="form__non-credit__container form__non-credit__container--empty"></div></div>
 @if($errors->any())<div class="profile-errors">{{ $errors->first() }}</div>@endif
 <div class="form__submit"><button type="submit">Məlumatları yenilə</button></div>
 </form></div></div></div></main>
