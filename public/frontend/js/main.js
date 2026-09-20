@@ -63,3 +63,10 @@ document.getElementById('languageSwitcher').addEventListener('change', function(
         }
     }
 });
+
+function getParfumshopCart(){try{return JSON.parse(localStorage.getItem("parfumshop_cart")||"[]")}catch(e){return []}}
+function updateHeaderCartCount(cart=getParfumshopCart()){const badge=document.getElementById("headerCartCount");if(!badge)return;const count=cart.reduce((sum,item)=>sum+(parseInt(item.quantity,10)||0),0);badge.textContent=count;badge.classList.toggle("is-empty",count===0)}
+window.showCartSuccess=function(){const notice=document.getElementById("cartSuccessNotice");if(!notice)return;notice.classList.add("is-visible");clearTimeout(window.cartSuccessTimer);window.cartSuccessTimer=setTimeout(()=>notice.classList.remove("is-visible"),4000)}
+document.addEventListener("DOMContentLoaded",()=>updateHeaderCartCount());
+window.addEventListener("parfumshop:cart-updated",event=>updateHeaderCartCount(event.detail));
+window.addEventListener("storage",event=>{if(event.key==="parfumshop_cart")updateHeaderCartCount()});
