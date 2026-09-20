@@ -24,6 +24,11 @@ class ProductController extends Controller
             'reviews' => fn ($query) => $query->with('customer')->latest(),
         ])->findOrFail(SeoUrl::decodeSlug($slug));
 
+        $canonicalSlug = $product->slug;
+        if ($slug !== $canonicalSlug) {
+            return redirect()->route('product', $canonicalSlug, 301);
+        }
+
         $ingredientIds = $product->ingredients->pluck('id');
 
         $similarProducts = collect();
