@@ -108,3 +108,17 @@ header .language-select select {
 .send-again-text{border:0;background:transparent;padding:0;text-decoration:underline;cursor:pointer;font-size:15px}
 .send-again-text:disabled{opacity:.45;cursor:default}
 @media(max-width:600px){.login-container{padding:55px 20px;min-height:520px}.login-page__wrap h1,.otpSection-wrapper h1{font-size:30px;margin-bottom:35px}.login-page,.login-container #otpSection,.login-container #setPasswordSection{max-width:100%}}
+
+/* Cabinet Laravel refinements */
+.cabinet__aside__nav .cabinet-active{border-bottom:1px solid #000!important;color:#000!important}
+.cabinet-logout-form{margin:0;padding:0}
+.cabinet-logout{appearance:none;-webkit-appearance:none;border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin:0;color:#7b7d82;display:flex!important;align-items:center;gap:10px;font:inherit;cursor:pointer;width:auto!important;height:auto!important}
+.cabinet-logout img{width:24px;height:24px;opacity:.75}
+.cabinet-logout:hover{background:transparent!important;color:#000}
+.cabinet-content-empty,.cabinet-reviews{flex:1;padding:20px 30px;min-height:420px}
+.cabinet-content-empty h2{font-size:24px;margin:0 0 18px}
+.cabinet-content-empty p{font-size:18px;color:#777}
+.cabinet-review{display:grid;grid-template-columns:260px 1fr;gap:40px;background:#f3f3f3;padding:30px;margin-bottom:24px}
+.cabinet-review small{display:block;color:#999;margin-top:5px}.review-stars{margin-top:14px;letter-spacing:4px}
+.profile-success{padding:14px 18px;background:#eaf8ee;margin-bottom:20px}.profile-errors{color:#c62828;margin:15px 0}
+@media(max-width:768px){.cabinet-review{grid-template-columns:1fr}.cabinet-content-empty,.cabinet-reviews{padding:20px 0}}
