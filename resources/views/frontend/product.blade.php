@@ -30,7 +30,7 @@
                         <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
                         @if($product->brand)
                             <li>
-                                <a href="{{ route('brand.products', \App\Services\SeoUrl::generateSlug(['id' => $product->brand->id, 'title' => $product->brand->name])) }}">{{ $product->brand->name }}</a>
+                                <a href="{{ route('brand.products', \App\Services\SeoUrl::generateImageName(['id' => $product->brand->id, 'title' => $product->brand->name])) }}">{{ $product->brand->name }}</a>
                             </li>
                             <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
                         @endif
