@@ -7,6 +7,8 @@ use App\Models\Banners;
 use App\Models\Faq;
 use App\Models\CreditTerms;
 use App\Models\Product\Product;
+use App\Models\Product\Brand;
+use App\Services\SeoUrl;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
@@ -102,8 +104,21 @@ class MainController extends Controller
     }
 
 
-    public function brand(\App\Models\Product\Brand $brand, Request $request)
+    public function brand(string $slug, Request $request)
     {
+        $brandId = (int) SeoUrl::decodeSlug($slug);
+        $brand = Brand::where('id', $brandId)->where('active', 1)->firstOrFail();
+
+        if ($slug !== SeoUrl::generateSlug([
+            'id' => $brand->id,
+            'title' => $brand->name,
+        ])) {
+            return redirect()->route('brand.products', SeoUrl::generateSlug([
+                'id' => $brand->id,
+                'title' => $brand->name,
+            ]), 301);
+        }
+
         $banners = Banners::where('active', 1)->get();
 
         $products = Product::with([
