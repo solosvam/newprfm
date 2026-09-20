@@ -57,7 +57,7 @@ if(addressSelect){
 document.getElementById('placeOrder').onclick=async function(){const b=this;b.disabled=true;const isNew=!addressSelect||addressSelect.value==='new';const val=id=>document.getElementById(id)?.value||null;const body={cart:getCheckoutCart(),address_mode:isNew?'new':'existing',address_id:isNew?null:Number(addressSelect.value),title:val('addressTitle'),city:val('city'),district:val('district'),address:val('address'),building:val('building'),entrance:val('entrance'),floor:val('floor'),apartment:val('apartment'),address_note:val('addressNote'),payment_method_id:Number(document.querySelector('[name=payment_method]:checked')?.value),gift_wrap:document.getElementById('giftWrap').checked?1:0,customer_note:val('customerNote')};try{const r=await fetch(checkoutStore,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf},body:JSON.stringify(body)});const d=await r.json();if(!r.ok){
     document.querySelectorAll('.checkout-field.is-invalid').forEach(el=>el.classList.remove('is-invalid'));
     if(d.errors){
-        const fieldMap={city:'city',address:'address'};
+        const fieldMap={title:'addressTitle',city:'city',address:'address'};
         Object.keys(d.errors).forEach(key=>{
             const input=document.getElementById(fieldMap[key]||key);
             if(input) input.closest('.checkout-field')?.classList.add('is-invalid');
