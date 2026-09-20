@@ -84,3 +84,27 @@ header .language-select select {
   position:relative;
   z-index:99999;
 }
+
+
+/* Customer login */
+.login-container{min-height:630px;background:#f4f4f4;display:flex;align-items:flex-start;justify-content:center;padding:90px 20px}
+.login-page,.login-container #otpSection,.login-container #setPasswordSection{width:100%;max-width:500px}
+.login-page__wrap,.otpSection-wrapper{width:100%}
+.login-page__wrap h1,.otpSection-wrapper h1{text-align:center;font-size:36px;font-weight:500;margin:0 0 50px;color:#171717}
+.login-page__wrap__form{display:flex;flex-direction:column;gap:18px}
+.login-page__wrap__form input,.otpSection-wrapper input{box-sizing:border-box;width:100%;height:64px;border:1px solid #c9c9c9;background:#fff;padding:0 22px;font-size:18px;outline:none;border-radius:0}
+.login-page__wrap__form input:focus,.otpSection-wrapper input:focus{border-color:#171717}
+.login-container .actions{width:100%;margin-top:16px}
+.login-container .actions button{box-sizing:border-box;width:100%;height:58px;border:1px solid #171717;background:#171717;color:#fff;font-size:18px;font-weight:500;cursor:pointer;border-radius:0;transition:.2s}
+.login-container .actions button:hover{background:#333}
+.login-container .login-register-link{margin-top:14px}
+.login-container .login-register-link button{background:#fff;color:#171717}
+.login-container .login-register-link button:hover{background:#f8f8f8}
+.login-container .error-message{font-size:15px;line-height:1.45;color:#d62828;margin:0}
+.login-container .hide-form{display:none!important}
+.otpSection-wrapper .headers{display:flex;flex-direction:column;gap:18px}
+.otp-sent-message{font-size:16px;line-height:1.5;text-align:center}
+.otp-section-form-label{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.send-again-text{border:0;background:transparent;padding:0;text-decoration:underline;cursor:pointer;font-size:15px}
+.send-again-text:disabled{opacity:.45;cursor:default}
+@media(max-width:600px){.login-container{padding:55px 20px;min-height:520px}.login-page__wrap h1,.otpSection-wrapper h1{font-size:30px;margin-bottom:35px}.login-page,.login-container #otpSection,.login-container #setPasswordSection{max-width:100%}}
