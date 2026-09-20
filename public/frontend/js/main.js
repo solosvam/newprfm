@@ -66,7 +66,7 @@ document.getElementById('languageSwitcher').addEventListener('change', function(
 
 function getParfumshopCart(){try{return JSON.parse(localStorage.getItem("parfumshop_cart")||"[]")}catch(e){return []}}
 function updateHeaderCartCount(cart=getParfumshopCart()){const badge=document.getElementById("headerCartCount");if(!badge)return;const count=cart.reduce((sum,item)=>sum+(parseInt(item.quantity,10)||0),0);badge.textContent=count;badge.classList.toggle("is-empty",count===0)}
-window.showCartSuccess=function(){const notice=document.getElementById("cartSuccessNotice");if(!notice)return;notice.classList.add("is-visible");clearTimeout(window.cartSuccessTimer);window.cartSuccessTimer=setTimeout(()=>notice.classList.remove("is-visible"),4000)}
+window.showCartSuccess=function(){if(!window.jQuery||!jQuery.notify)return;jQuery.notify.addStyle("parfumshop-success",{html:'<div><div class="ps-notify"><span class="ps-notify__check">✓</span><span data-notify-text></span></div></div>'});jQuery.notify("Məhsul səbətə əlavə olundu",{style:"parfumshop-success",className:"success",globalPosition:"top right",autoHideDelay:3000,showAnimation:"fadeIn",hideAnimation:"fadeOut"})}
 document.addEventListener("DOMContentLoaded",()=>updateHeaderCartCount());
 window.addEventListener("parfumshop:cart-updated",event=>updateHeaderCartCount(event.detail));
 window.addEventListener("storage",event=>{if(event.key==="parfumshop_cart")updateHeaderCartCount()});
