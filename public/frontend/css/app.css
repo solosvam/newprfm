@@ -122,3 +122,13 @@ header .language-select select {
 .cabinet-review small{display:block;color:#999;margin-top:5px}.review-stars{margin-top:14px;letter-spacing:4px}
 .profile-success{padding:14px 18px;background:#eaf8ee;margin-bottom:20px}.profile-errors{color:#c62828;margin:15px 0}
 @media(max-width:768px){.cabinet-review{grid-template-columns:1fr}.cabinet-content-empty,.cabinet-reviews{padding:20px 0}}
+
+/* Personal info form grid fix */
+.cabinet__personal .form__non-credit{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:30px 30px!important;align-items:stretch}
+.cabinet__personal .form__non-credit__container{width:100%!important;margin:0!important;display:block!important}
+.cabinet__personal .form__non-credit__container input{box-sizing:border-box!important;width:100%!important;height:72px!important;margin:0!important;padding:0 22px!important;border:1px solid #bdbdbd!important;background:#fff!important;font-size:18px!important}
+.cabinet__personal .form__non-credit__container input:disabled{background:#f8f8f8!important;color:#555!important}
+.cabinet__personal .form__submit{width:calc(50% - 15px)!important;margin-top:55px!important}
+.cabinet__personal .form__submit button{width:100%!important;height:70px!important}
+.cabinet__personal .form__non-credit__container--empty{visibility:hidden}
+@media(max-width:768px){.cabinet__personal .form__non-credit{grid-template-columns:1fr!important;gap:16px!important}.cabinet__personal .form__non-credit__container--empty{display:none!important}.cabinet__personal .form__submit{width:100%!important;margin-top:25px!important}}
