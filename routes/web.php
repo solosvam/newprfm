@@ -15,7 +15,14 @@ Route::get('/cart/products',[ProductController::class,'cartProducts'])->name('ca
 
 Route::middleware('guest')->group(function(){
     Route::get('/login',[AuthController::class,'login'])->name('front.login');
+    Route::post('/login/check',[AuthController::class,'checkMobile'])->name('front.login.check');
+    Route::post('/login/password',[AuthController::class,'passwordLogin'])->name('front.login.password');
+    Route::post('/login/otp',[AuthController::class,'verifyOtp'])->name('front.login.otp');
+    Route::post('/login/otp/resend',[AuthController::class,'resendOtp'])->name('front.login.otp.resend');
+    Route::post('/login/set-password',[AuthController::class,'setPassword'])->name('front.login.set-password');
 });
+
+Route::post('/logout',[AuthController::class,'logout'])->middleware('auth')->name('front.logout');
 
 Route::middleware('auth')->group(function(){
    Route::get('/profile',[AuthController::class,'profile'])->name('profile');
