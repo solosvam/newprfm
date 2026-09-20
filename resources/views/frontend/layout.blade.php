@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>ParfumShop.az - онлайн заказ парфюмерии, мужские женские аро</title>
     <link rel="stylesheet" href="{{ asset('frontend/css/style.css?v=' . filemtime(public_path('frontend/css/style.css'))) }}">
     <link rel="stylesheet" href="{{ asset('frontend/css/app.css?v=' . filemtime(public_path('frontend/css/app.css'))) }}">
@@ -43,11 +44,18 @@
                     <li>
                         <a href="/wishlist.html"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="" /></a>
                     </li>
-                    <li>
-                        <a href="{{route('front.login')}}">
-                            <img src="{{asset('frontend/images/signin.svg')}}" alt="" />
-                            <span>{{__('login')}}</span>
-                        </a>
+                    <li class="header-account">
+                        @auth
+                            <a href="{{ route('profile') }}" class="header-account__user">
+                                <img src="{{ asset('frontend/images/signin.svg') }}" alt="" />
+                                <span>{{ auth()->user()->name }} {{ auth()->user()->surname }}</span>
+                            </a>
+                        @else
+                            <a href="{{ route('front.login') }}">
+                                <img src="{{ asset('frontend/images/signin.svg') }}" alt="" />
+                                <span>{{ __('login') }}</span>
+                            </a>
+                        @endauth
                     </li>
                     <li class="menu-icon">
                         <img src="{{asset('frontend/images/menu.svg')}}" alt="" />
