@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const password = document.getElementById('loginPassword');
     const loginError = document.getElementById('loginError');
     const submit = document.getElementById('loginSubmitBtn');
+    const passwordActions = document.getElementById('passwordActions');
     const loginBox = document.getElementById('loginBox');
     const otpSection = document.getElementById('otpSection');
     const otpInput = document.getElementById('otpInput');
@@ -17,6 +18,87 @@ document.addEventListener('DOMContentLoaded', function () {
     let mode = 'check';
     let currentMobile = '';
     let timer = null;
+    let checkingMobile = false;
+    let lastCheckedMobile = '';
+
+    Inputmask({
+        mask: '994 99 999 99 99',
+        placeholder: '_',
+        showMaskOnHover: false,
+        clearIncomplete: false
+    }).mask(mobile);
+
+    function normalizeForInput(value) {
+        let digits = String(value || '').replace(/\D/g, '');
+
+        if (digits.startsWith('994')) {
+            digits = digits.substring(3);
+        }
+
+        if (digits.startsWith('0')) {
+            digits = digits.substring(1);
+        }
+
+        return digits.substring(0, 9);
+    }
+
+    function fullMobile() {
+        const local = normalizeForInput(mobile.inputmask.unmaskedvalue());
+        return local.length === 9 ? '994' + local : '';
+    }
+
+    mobile.addEventListener('paste', function (e) {
+        e.preventDefault();
+        const local = normalizeForInput((e.clipboardData || window.clipboardData).getData('text'));
+        mobile.inputmask.setValue('994' + local);
+        setTimeout(checkMobileAutomatically, 0);
+    });
+
+    mobile.addEventListener('input', checkMobileAutomatically);
+
+    async function checkMobileAutomatically() {
+        if (mode === 'password' || checkingMobile) return;
+
+        const normalized = fullMobile();
+
+        if (normalized.length !== 12) {
+            lastCheckedMobile = '';
+            error(loginError, '');
+            return;
+        }
+
+        if (normalized === lastCheckedMobile) return;
+
+        checkingMobile = true;
+        lastCheckedMobile = normalized;
+        currentMobile = normalized;
+        error(loginError, '');
+
+        try {
+            const data = await post(window.customerAuth.checkUrl, {mobile: currentMobile});
+
+            if (data.status === 'not_found') {
+                error(loginError, 'Bu nömrə ilə hesab tapılmadı. Qeydiyyatdan keçin.');
+            } else if (data.status === 'password') {
+                mode = 'password';
+                mobile.disabled = true;
+                passwordArea.classList.remove('hide-form');
+                passwordActions.classList.remove('hide-form');
+                password.focus();
+            } else if (data.status === 'otp') {
+                loginBox.classList.add('hide-form');
+                otpSection.classList.remove('hide-form');
+                otpMessage.textContent = 'OTP kod ' + data.mobile + ' nömrəsinə göndərildi.';
+                startTimer();
+                otpInput.focus();
+            }
+        } catch (e) {
+            lastCheckedMobile = '';
+            error(loginError, e.message);
+        } finally {
+            checkingMobile = false;
+        }
+    }
 
     async function post(url, data) {
         const response = await fetch(url, {
@@ -39,33 +121,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
+
+        if (mode !== 'password') return;
+
         error(loginError, '');
         submit.disabled = true;
 
         try {
-            if (mode === 'password') {
-                const data = await post(window.customerAuth.passwordUrl, {mobile: currentMobile, password: password.value});
-                location.href = data.redirect;
-                return;
-            }
-
-            currentMobile = mobile.value;
-            const data = await post(window.customerAuth.checkUrl, {mobile: currentMobile});
-
-            if (data.status === 'not_found') {
-                error(loginError, 'Bu nömrə ilə hesab tapılmadı. Qeydiyyatdan keçin.');
-            } else if (data.status === 'password') {
-                mode = 'password';
-                passwordArea.classList.remove('hide-form');
-                password.focus();
-                submit.textContent = 'Daxil ol';
-            } else if (data.status === 'otp') {
-                loginBox.classList.add('hide-form');
-                otpSection.classList.remove('hide-form');
-                otpMessage.textContent = 'OTP kod ' + data.mobile + ' nömrəsinə göndərildi.';
-                startTimer();
-                otpInput.focus();
-            }
+            const data = await post(window.customerAuth.passwordUrl, {
+                mobile: currentMobile,
+                password: password.value
+            });
+            location.href = data.redirect;
         } catch (e) {
             error(loginError, e.message);
         } finally {
@@ -106,8 +173,12 @@ document.addEventListener('DOMContentLoaded', function () {
         otpSection.classList.add('hide-form');
         loginBox.classList.remove('hide-form');
         mode = 'check';
+        mobile.disabled = false;
         passwordArea.classList.add('hide-form');
+        passwordActions.classList.add('hide-form');
         password.value = '';
+        lastCheckedMobile = '';
+        mobile.focus();
         clearInterval(timer);
     });
 
