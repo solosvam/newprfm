@@ -27,7 +27,15 @@
 const checkoutStore=@json(route('checkout.store')),cartProducts=@json(route('cart.products')),csrf=@json(csrf_token());
 const getCheckoutCart=()=>{try{return JSON.parse(localStorage.getItem('parfumshop_cart')||'[]')}catch(e){return[]}};
 const addressSelect=document.getElementById('addressSelect'),newAddressBox=document.getElementById('newAddress');
-if(addressSelect&&addressSelect.tagName==='SELECT')addressSelect.addEventListener('change',()=>newAddressBox.classList.toggle('checkout-hidden',addressSelect.value!=='new'));
+function syncAddressForm(){
+    if(!addressSelect || !newAddressBox) return;
+    newAddressBox.classList.toggle('checkout-hidden', addressSelect.value !== 'new');
+}
+if(addressSelect){
+    addressSelect.addEventListener('change', syncAddressForm);
+    addressSelect.addEventListener('input', syncAddressForm);
+    syncAddressForm();
+}
 (async()=>{const cart=getCheckoutCart();if(!cart.length){location.href=@json(route('cart'));return}const r=await fetch(cartProducts+'?variants='+cart.map(x=>x.variant_id).join(','));const ps=await r.json();let total=0;ps.forEach(p=>{const x=cart.find(i=>i.variant_id===p.variant_id),line=p.price*x.quantity;total+=line;document.getElementById('checkoutItems').insertAdjacentHTML('beforeend','<div><span><b>'+((p.brand ? p.brand+\' \' : \'\')+p.name)+'</b><small>'+((p.size ? p.size+\' · \' : \'\')+\'× \'+x.quantity)+'</small></span><strong>'+line.toFixed(2)+' ₼</strong></div>')});document.getElementById('checkoutTotal').textContent=total.toFixed(2)+' ₼'})();
 document.getElementById('placeOrder').onclick=async function(){const b=this;b.disabled=true;const isNew=!addressSelect||addressSelect.value==='new';const val=id=>document.getElementById(id)?.value||null;const body={cart:getCheckoutCart(),address_mode:isNew?'new':'existing',address_id:isNew?null:Number(addressSelect.value),title:val('addressTitle'),city:val('city'),district:val('district'),address:val('address'),building:val('building'),entrance:val('entrance'),floor:val('floor'),apartment:val('apartment'),address_note:val('addressNote'),payment_method_id:Number(document.querySelector('[name=payment_method]:checked')?.value),gift_wrap:document.getElementById('giftWrap').checked?1:0,customer_note:val('customerNote')};try{const r=await fetch(checkoutStore,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.message||'Xəta baş verdi');localStorage.removeItem('parfumshop_cart');location.href=d.redirect}catch(e){document.getElementById('checkoutError').textContent=e.message;b.disabled=false}};
 </script>
