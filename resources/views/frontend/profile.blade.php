@@ -4,44 +4,7 @@
 <main>
     <div class="container">
         <div class="cabinet">
-            <div class="cabinet__aside">
-                <div class="cabinet__aside__top">
-                    <ul>
-                        <li>
-                            <a href="{{ url()->previous() }}">
-                                <img src="{{ asset('frontend/images/arrow-left.svg') }}" alt="">
-                                <span>Geri qayıt</span>
-                            </a>
-                        </li>
-                        <li>
-                            <ul>
-                                <li><a href="{{ route('home') }}"><img src="{{ asset('frontend/images/home.svg') }}" alt=""></a></li>
-                                <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt=""></li>
-                                <li><a href="{{ route('profile') }}">Şəxsi kabinet</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="cabinet__aside__nav">
-                    <h1>Salam, {{ auth()->user()->name }} {{ auth()->user()->surname }}</h1>
-                    <ul>
-                        <li><a href="{{ route('profile') }}" style="border-bottom:1px solid #000;color:#000">Hesab məlumatları</a></li>
-                        <li><a href="#">Şəxsi məlumatlar</a></li>
-                        <li><a href="#">Sifarişlərimin tarixçəsi</a></li>
-                        <li><a href="#">Bəyəndiyim ətirlər <span>0</span></a></li>
-                        <li><a href="#">Rəylərim <span>0</span></a></li>
-                    </ul>
-                    <form method="POST" action="{{ route('front.logout') }}">
-                        @csrf
-                        <button type="submit" class="cabinet-logout">
-                            <img src="{{ asset('frontend/images/signin.svg') }}" alt="">
-                            <span>Hesabdan çıx</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-
+            @include('frontend.partials.cabinet-sidebar')
             <div class="cabinet__sections">
                 <div class="cabinet__sections__elem bonus">
                     <h2>Hesabınızdakı bonus pul</h2>
