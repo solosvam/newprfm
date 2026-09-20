@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'parfumshop_sms' => [
+        'url' => env('PARFUMSHOP_SMS_URL', 'http://apps.lsim.az/quicksms/v1/send'),
+        'login' => env('PARFUMSHOP_SMS_LOGIN'),
+        'password' => env('PARFUMSHOP_SMS_PASSWORD'),
+        'sender' => env('PARFUMSHOP_SMS_SENDER', 'ParfumShop'),
+    ],
+
 ];
