@@ -7,8 +7,6 @@ use App\Models\Banners;
 use App\Models\Faq;
 use App\Models\CreditTerms;
 use App\Models\Product\Product;
-use App\Models\Product\Brand;
-use App\Services\SeoUrl;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
@@ -103,51 +101,6 @@ class MainController extends Controller
         ]);
     }
 
-
-    public function brand(string $slug, Request $request)
-    {
-        $brandId = (int) SeoUrl::decodeSlug($slug);
-        $brand = Brand::where('id', $brandId)->where('active', 1)->firstOrFail();
-
-        if ($slug !== SeoUrl::generateSlug([
-            'id' => $brand->id,
-            'title' => $brand->name,
-        ])) {
-            return redirect()->route('brand.products', SeoUrl::generateSlug([
-                'id' => $brand->id,
-                'title' => $brand->name,
-            ]), 301);
-        }
-
-        $banners = Banners::where('active', 1)->get();
-
-        $products = Product::with([
-            'brand',
-            'type',
-            'images',
-            'genders',
-            'variants' => function ($query) {
-                $query->where('active', 1)->orderBy('price');
-            },
-            'variants.size',
-        ])
-            ->where('active', 1)
-            ->where('brand_id', $brand->id)
-            ->orderByDesc('id')
-            ->paginate(12)
-            ->withQueryString();
-
-        $formattedBanners = [];
-        foreach ($banners as $banner) {
-            $formattedBanners[$banner->location . $banner->device] = $banner->url;
-        }
-
-        return view('frontend.main', [
-            'banners' => $formattedBanners,
-            'products' => $products,
-            'selectedBrand' => $brand,
-        ]);
-    }
 
     public function credit()
     {
