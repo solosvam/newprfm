@@ -6,7 +6,7 @@ class SeoUrl
 {
     public static function generateSlug($array)
     {
-        return self::generate($array) . ".html";
+        return self::generate($array);
     }
 
     public static function generateImageName($array)
