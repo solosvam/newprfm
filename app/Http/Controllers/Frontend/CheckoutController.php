@@ -29,7 +29,13 @@ class CheckoutController extends Controller {
    if($data['address_mode']==='existing'){
     $address=$customer->addresses()->findOrFail($data['address_id']);
    }else{
-    validator($data,['city'=>['required'],'address'=>['required']])->validate();
+    validator($data,[
+     'city'=>['required'],
+     'address'=>['required'],
+    ],[
+     'city.required'=>'Şəhər daxil edilməlidir.',
+     'address.required'=>'Küçə və ünvan daxil edilməlidir.',
+    ])->validate();
     $address=$customer->addresses()->create(['title'=>$data['title']??null,'city'=>$data['city'],'district'=>$data['district']??null,'address'=>$data['address'],'building'=>$data['building']??null,'entrance'=>$data['entrance']??null,'floor'=>$data['floor']??null,'apartment'=>$data['apartment']??null,'note'=>$data['address_note']??null,'is_default'=>$customer->addresses()->count()===0]);
    }
    $cart=collect($data['cart'])->keyBy('variant_id');
