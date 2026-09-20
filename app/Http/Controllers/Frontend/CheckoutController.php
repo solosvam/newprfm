@@ -30,9 +30,11 @@ class CheckoutController extends Controller {
     $address=$customer->addresses()->findOrFail($data['address_id']);
    }else{
     validator($data,[
+     'title'=>['required','string','max:50'],
      'city'=>['required'],
      'address'=>['required'],
     ],[
+     'title.required'=>'Ünvan adı daxil edilməlidir.',
      'city.required'=>'Şəhər daxil edilməlidir.',
      'address.required'=>'Küçə və ünvan daxil edilməlidir.',
     ])->validate();
