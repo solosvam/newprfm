@@ -52,22 +52,5 @@
     </div>
 </main>
 
-<div id="inviteModal" class="invite-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-header-wrap">
-                <h1>Dostunu dəvət et və bonus qazan!</h1>
-                <div>
-                    <img src="{{ asset('frontend/images/black-info.svg') }}" alt="">
-                    <span>Dəvət sisteminin şərtləri burada göstəriləcək.</span>
-                </div>
-            </div>
-            <span class="close"><img src="{{ asset('frontend/images/close.svg') }}" alt="" class="close-icon"></span>
-        </div>
-    </div>
-</div>
 @endsection
 
-@section('page-scripts')
-<script src="{{ asset('frontend/js/cabinet.js?v=' . filemtime(public_path('frontend/js/cabinet.js'))) }}"></script>
-@endsection
