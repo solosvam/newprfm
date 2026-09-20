@@ -5,6 +5,7 @@ use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\Frontend\MainController;
 use App\Http\Controllers\Frontend\BrandsController;
 use App\Http\Controllers\Frontend\ProductController;
+use App\Http\Controllers\Frontend\CheckoutController;
 
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
@@ -25,6 +26,9 @@ Route::middleware('guest')->group(function(){
 Route::post('/logout',[AuthController::class,'logout'])->middleware('auth')->name('front.logout');
 
 Route::middleware('auth')->group(function(){
+   Route::get('/checkout',[CheckoutController::class,'index'])->name('checkout');
+   Route::post('/checkout',[CheckoutController::class,'store'])->name('checkout.store');
+   Route::get('/checkout/success/{order}',[CheckoutController::class,'success'])->name('checkout.success');
    Route::get('/profile',[AuthController::class,'profile'])->name('profile');
    Route::get('/profile/personal',[AuthController::class,'personal'])->name('profile.personal');
    Route::post('/profile/personal',[AuthController::class,'updatePersonal'])->name('profile.personal.update');
