@@ -228,3 +228,8 @@ main .cabinet__personal .form__submit{
   color:#fff!important;
   text-shadow:none!important;
 }
+
+/* Checkout validation */
+.checkout-field.is-invalid{border-color:#d82436!important}
+.checkout-field.is-invalid input,.checkout-field.is-invalid textarea{color:#d82436!important}
+.checkout-field.is-invalid input::placeholder,.checkout-field.is-invalid textarea::placeholder{color:#d82436!important}
