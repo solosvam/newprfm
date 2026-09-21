@@ -209,20 +209,21 @@
                             @endcan
                         </ul>
                     </li>
+                    @can('system.sms')
                     <li>
                         <a href="{{ route('admin.sms-template.index') }}">
                             <span class="label">SMS şablonları</span>
                         </a>
                     </li>
-                    @can('credit.menu')
-                    @can('system.settings')
-                    <li>
-                        <a href="{{ route('admin.settings.index') }}">
-                            <span class="label">Ayarlar</span>
-                        </a>
-                    </li>
                     @endcan
-
+                    @can('system.settings')
+                        <li>
+                            <a href="{{ route('admin.settings.index') }}">
+                                <span class="label">Ayarlar</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('credit.menu')
                     <li>
                         <a href="#credit_menu" data-href="/admin/credit">
                             <span class="label">Kredit</span>
