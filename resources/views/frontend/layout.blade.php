@@ -239,6 +239,12 @@
             <img src="{{asset('frontend/images/filter.svg')}}" alt="filter icon" />
             <span>Filter</span>
         </li>
+        @foreach(\App\Models\Product\Category::where('active', 1)->orderBy('id')->get() as $menuCategory)
+        <li>
+            <img src="{{asset('frontend/images/terms.svg')}}" alt="category icon" />
+            <a href="{{ route('home', ['category' => $menuCategory->id]) }}"><span>{{ $menuCategory->{'name_'.app()->getLocale()} ?: $menuCategory->name_az }}</span></a>
+        </li>
+        @endforeach
         <li>
             <img src="{{asset('frontend/images/brands.svg')}}" alt="brand icon" />
             <a href="{{route('brands')}}"><span>Brendlər</span></a>
