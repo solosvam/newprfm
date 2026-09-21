@@ -20,7 +20,7 @@ use Throwable;
 
 class ImportOldParfumshopCategory extends Command
 {
-    protected $signature = 'parfumshop:import-category {path : Köhnə saytdakı category path} {--category-id= : Yeni saytdakı category ID} {--dry-run : DB və fayllara yazma} {--limit= : Import ediləcək maksimum məhsul sayı}';
+    protected $signature = 'parfumshop:import-category {path : Köhnə saytdakı category path} {--category-id= : Yeni saytdakı category ID} {--dry-run : DB və fayllara yazma} {--limit= : Import ediləcək maksimum məhsul sayı} {--from-page=1 : Importa başlanacaq səhifə} {--to-page= : Importun bitəcəyi səhifə}';
     protected $description = 'Köhnə ParfumShop kateqoriyasındakı məhsulları yeni sistemə import edir';
 
     private string $base = 'https://www.parfumshop.az';
@@ -28,7 +28,7 @@ class ImportOldParfumshopCategory extends Command
     public function handle(): int
     {
         $path = (string) $this->argument('path');
-        $urls = $this->productUrls($path);
+        $urls = $this->productUrls($path, max(1, (int) $this->option('from-page')), $this->option('to-page') !== null ? max(1, (int) $this->option('to-page')) : null);
 
         if ($this->option('limit') !== null) {
             $limit = max(1, (int) $this->option('limit'));
@@ -62,11 +62,11 @@ class ImportOldParfumshopCategory extends Command
         return self::SUCCESS;
     }
 
-    private function productUrls(string $path): array
+    private function productUrls(string $path, int $fromPage = 1, ?int $toPage = null): array
     {
         $url = $this->base.'/index.php?route=product/category&path='.urlencode($path);
         $xpath = $this->xpath($this->get($url));
-        $urls = $this->productLinksFromGrid($xpath);
+        $urls = [];
 
         // Köhnə tema bütün səhifə nömrələrini pagination linklərində göstərmir.
         // "Göstərilir 1 dən 20 cəmi 905 (səhifə sayı 46)" mətnindən total/page count çıxarırıq.
@@ -91,9 +91,12 @@ class ImportOldParfumshopCategory extends Command
             $maxPage = max($pages);
         }
 
-        for ($page = 2; $page <= $maxPage; $page++) {
+        $toPage = $toPage === null ? $maxPage : min($toPage, $maxPage);
+        $fromPage = min($fromPage, $toPage);
+
+        for ($page = $fromPage; $page <= $toPage; $page++) {
             $this->line('Səhifə '.$page.'/'.$maxPage.' oxunur...');
-            $pageXpath = $this->xpath($this->get($url.'&page='.$page));
+            $pageXpath = $page === 1 ? $xpath : $this->xpath($this->get($url.'&page='.$page));
             $urls = array_merge($urls, $this->productLinksFromGrid($pageXpath));
         }
 
