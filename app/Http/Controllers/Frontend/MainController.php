@@ -109,7 +109,6 @@ class MainController extends Controller
             'banners' => $formattedBanners,
             'products' => $products,
             'selectedCategory' => $selectedCategory,
-            'selectedCategory' => $selectedCategory,
         ]);
     }
 
