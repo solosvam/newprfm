@@ -37,4 +37,9 @@ class Customer extends Authenticatable
     public function addresses(){ return $this->hasMany(CustomerAddress::class); }
     public function orders(){ return $this->hasMany(Order::class); }
     public function bonusTransactions(){ return $this->hasMany(CustomerBonusTransaction::class); }
+    public function favoriteProducts()
+    {
+        return $this->belongsToMany(\App\Models\Product\Product::class, 'product_favorites', 'customer_id', 'product_id')
+            ->withPivot('created_at');
+    }
 }
