@@ -14,7 +14,9 @@
     }
   }, 500);
 
-  window.addEventListener('DOMContentLoaded', (event) => {
+  window.addEventListener('DOMContentLoaded', () => {
     isContentLoaded = true;
+    clearTimeout(timeoutId);
+    document.body.classList.remove('spinner');
   });
 })();
