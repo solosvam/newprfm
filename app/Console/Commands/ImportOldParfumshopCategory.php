@@ -68,17 +68,31 @@ class ImportOldParfumshopCategory extends Command
         $xpath = $this->xpath($this->get($url));
         $urls = $this->productLinksFromGrid($xpath);
 
-        // Yalnız səhifədə real pagination linkləri varsa onları gəz.
-        $pages = [1];
-        foreach ($xpath->query('//ul[contains(@class,"pagination")]//a[@href]') as $a) {
-            $href = html_entity_decode($a->getAttribute('href'));
-            if (preg_match('/[?&]page=(\\d+)/', $href, $m)) {
-                $pages[] = (int) $m[1];
-            }
+        // Köhnə tema bütün səhifə nömrələrini pagination linklərində göstərmir.
+        // "Göstərilir 1 dən 20 cəmi 905 (səhifə sayı 46)" mətnindən total/page count çıxarırıq.
+        $pageText = trim(preg_replace('/\\s+/u', ' ', $xpath->document->textContent));
+        $maxPage = 1;
+
+        if (preg_match('/səhifə\\s+sayı\\s+(\\d+)/iu', $pageText, $m)) {
+            $maxPage = (int) $m[1];
+        } elseif (preg_match('/cəmi\\s+(\\d+)/iu', $pageText, $m)) {
+            $maxPage = (int) ceil(((int) $m[1]) / 20);
         }
 
-        $maxPage = max($pages);
+        // Fallback: pagination-da görünən ən böyük page nömrəsi.
+        if ($maxPage === 1) {
+            $pages = [1];
+            foreach ($xpath->query('//ul[contains(@class,"pagination")]//a[@href]') as $a) {
+                $href = html_entity_decode($a->getAttribute('href'));
+                if (preg_match('/[?&]page=(\\d+)/', $href, $m)) {
+                    $pages[] = (int) $m[1];
+                }
+            }
+            $maxPage = max($pages);
+        }
+
         for ($page = 2; $page <= $maxPage; $page++) {
+            $this->line('Səhifə '.$page.'/'.$maxPage.' oxunur...');
             $pageXpath = $this->xpath($this->get($url.'&page='.$page));
             $urls = array_merge($urls, $this->productLinksFromGrid($pageXpath));
         }
