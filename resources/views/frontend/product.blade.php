@@ -54,7 +54,7 @@
                         <div class="main">
                             <div class="main__actions">
                                 <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                <img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" />
+                                <button type="button" class="favorite-toggle" data-product-id="{{ $product->id }}" aria-label="Bəyəndiyim ətirlərə əlavə et"><img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" /></button>
                             </div>
                             @if($firstImage)
                                 <img class="main-img" src="{{ asset('frontend/uploads/products/' . $firstImage->image) }}" alt="{{ $product->brand?->name }} {{ $product->name }}"/>
