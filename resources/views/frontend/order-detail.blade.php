@@ -1,34 +1,79 @@
 @extends('frontend.layout')
 @section('content')
+<style>
+.order-detail{width:100%}
+.order-detail__header{margin-bottom:28px}
+.order-detail__header h2{font-size:28px;margin:0 0 5px}
+.order-detail__header p{color:#666;margin:0}
+.order-table{width:100%;border-collapse:collapse;background:#fff}
+.order-table th{padding:15px 18px;background:#f3f3f3;text-align:left;font-size:14px;color:#555;font-weight:600;border-bottom:1px solid #ddd}
+.order-table td{padding:18px;border-bottom:1px solid #e5e5e5;vertical-align:middle}
+.order-table th:not(:first-child),.order-table td:not(:first-child){text-align:center}
+.order-product{display:flex;align-items:center;gap:14px}
+.order-product__image{width:65px;height:75px;display:flex;align-items:center;justify-content:center}
+.order-product__image img{width:100%;height:100%;object-fit:contain}
+.order-product__name{font-weight:600;margin-bottom:4px}
+.order-product__meta{font-size:13px;color:#999}
+.order-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}
+.order-info-box{border:1px solid #e2e2e2;border-radius:8px;overflow:hidden}
+.order-info-box h3{font-size:17px;margin:0;padding:15px 20px;background:#f5f5f5;border-bottom:1px solid #e2e2e2}
+.order-info-box__body{padding:18px 20px;line-height:1.8}
+.order-summary-row{display:flex;justify-content:space-between;gap:20px;padding:7px 0}
+.order-summary-row.total{font-size:20px;font-weight:700;border-top:1px solid #ddd;margin-top:8px;padding-top:15px}
+.order-summary-row.bonus{font-weight:600}
+@media(max-width:800px){.order-info-grid{grid-template-columns:1fr}.order-table{font-size:13px}.order-table th,.order-table td{padding:10px}.order-product__image{width:45px;height:55px}}
+</style>
 <main><div class="container"><div class="cabinet">
 @include('frontend.partials.cabinet-sidebar',['pageTitle'=>'Sifariş detalları'])
-<div class="cabinet-orders" style="display:block">
- <h2>Sifariş {{ $order->order_no }}</h2>
- <p>{{ $order->created_at->format('d.m.Y, H:i') }} · {{ $order->status?->name_az ?? $order->status?->name }}</p>
- <div class="cabinet-orders-list">
- @foreach($order->items as $item)
-  <div class="cabinet-order">
-   <div class="first">
-    @php($image=$item->product?->images?->first())
-    @if($image)<img src="{{ asset('frontend/uploads/products/'.$image->image) }}" alt="">@endif
-    <span><p>{{ $item->product?->name ?? 'Məhsul' }}</p><span>{{ $item->product?->brand?->name }} · {{ $item->variant?->size?->name_az }}</span></span>
-   </div>
-   <hr width="1" size="50"><div>{{ $item->quantity }} ədəd</div>
-   <hr width="1" size="50"><div>{{ number_format($item->unit_price,2) }} ₼</div>
-   <hr width="1" size="50"><div>{{ number_format($item->total,2) }} ₼</div>
-  </div>
- @endforeach
+<div class="order-detail">
+ <div class="order-detail__header">
+  <h2>Sifariş {{ $order->order_no }}</h2>
+  <p>{{ $order->created_at->format('d.m.Y, H:i') }} · {{ $order->status?->name_az ?? $order->status?->name }}</p>
  </div>
- <div style="margin-top:35px;line-height:2">
-  <p><strong>Ünvan:</strong> {{ $order->address?->label ?? '-' }}</p>
-  @if($order->address?->building)<p><strong>Bina:</strong> {{ $order->address->building }} @if($order->address->entrance) · Giriş {{ $order->address->entrance }} @endif @if($order->address->floor) · Mərtəbə {{ $order->address->floor }} @endif @if($order->address->apartment) · Mənzil {{ $order->address->apartment }} @endif</p>@endif
-  <p><strong>Ödəniş:</strong> {{ $order->paymentMethod?->name ?? '-' }}</p>
-  @if($order->customer_note)<p><strong>Qeyd:</strong> {{ $order->customer_note }}</p>@endif
-  <p><strong>Ara cəm:</strong> {{ number_format($order->subtotal,2) }} ₼</p>
-  @if($order->discount>0)<p><strong>Endirim:</strong> -{{ number_format($order->discount,2) }} ₼</p>@endif
-  @if($order->bonus_used>0)<p><strong>Bonusla ödənilib:</strong> {{ number_format($order->bonus_used,2) }} ₼</p>@endif
-  <p><strong>Qazanılan bonus:</strong> +{{ number_format($order->bonus_earned,2) }} ₼</p>
-  <p style="font-size:22px"><strong>Toplam:</strong> {{ number_format($order->total,2) }} ₼</p>
+
+ <table class="order-table">
+  <thead><tr><th>Məhsul</th><th>Ölçü</th><th>Say</th><th>Vahid qiymət</th><th>Cəm</th></tr></thead>
+  <tbody>
+  @foreach($order->items as $item)
+   @php($image=$item->product?->images?->first())
+   <tr>
+    <td><div class="order-product">
+     <div class="order-product__image">@if($image)<img src="{{ asset('frontend/uploads/products/'.$image->image) }}" alt="{{ $item->product?->name }}">@endif</div>
+     <div><div class="order-product__name">{{ $item->product?->name ?? 'Məhsul' }}</div><div class="order-product__meta">{{ $item->product?->brand?->name }}</div></div>
+    </div></td>
+    <td>{{ $item->variant?->size?->name_az ?? '-' }}</td>
+    <td>{{ $item->quantity }} ədəd</td>
+    <td>{{ number_format($item->unit_price,2) }} ₼</td>
+    <td><strong>{{ number_format($item->total,2) }} ₼</strong></td>
+   </tr>
+  @endforeach
+  </tbody>
+ </table>
+
+ <div class="order-info-grid">
+  <div class="order-info-box">
+   <h3>Çatdırılma məlumatları</h3>
+   <div class="order-info-box__body">
+    <div><strong>Ünvan:</strong> {{ $order->address?->label ?? '-' }}</div>
+    @if($order->address?->building)<div><strong>Bina:</strong> {{ $order->address->building }}</div>@endif
+    @if($order->address?->entrance)<div><strong>Giriş:</strong> {{ $order->address->entrance }}</div>@endif
+    @if($order->address?->floor)<div><strong>Mərtəbə:</strong> {{ $order->address->floor }}</div>@endif
+    @if($order->address?->apartment)<div><strong>Mənzil:</strong> {{ $order->address->apartment }}</div>@endif
+    @if($order->customer_note)<div><strong>Qeyd:</strong> {{ $order->customer_note }}</div>@endif
+   </div>
+  </div>
+
+  <div class="order-info-box">
+   <h3>Ödəniş məlumatları</h3>
+   <div class="order-info-box__body">
+    <div class="order-summary-row"><span>Ödəniş üsulu</span><strong>{{ $order->paymentMethod?->name ?? '-' }}</strong></div>
+    <div class="order-summary-row"><span>Ara cəm</span><span>{{ number_format($order->subtotal,2) }} ₼</span></div>
+    @if($order->discount>0)<div class="order-summary-row"><span>Endirim</span><span>-{{ number_format($order->discount,2) }} ₼</span></div>@endif
+    @if($order->bonus_used>0)<div class="order-summary-row"><span>Bonusla ödənilib</span><span>-{{ number_format($order->bonus_used,2) }} ₼</span></div>@endif
+    <div class="order-summary-row bonus"><span>Qazanılan bonus</span><span>+{{ number_format($order->bonus_earned,2) }} ₼</span></div>
+    <div class="order-summary-row total"><span>Toplam</span><span>{{ number_format($order->total,2) }} ₼</span></div>
+   </div>
+  </div>
  </div>
 </div>
 </div></div></main>
