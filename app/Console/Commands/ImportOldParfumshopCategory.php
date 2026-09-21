@@ -44,6 +44,14 @@ class ImportOldParfumshopCategory extends Command
 
         foreach ($urls as $i => $url) {
             try {
+                preg_match('/product_id=(\\d+)/', html_entity_decode($url), $id);
+                $oldId = isset($id[1]) ? (int) $id[1] : 0;
+
+                if (!$this->option('dry-run') && $oldId && Product::where('old_id', $oldId)->exists()) {
+                    $this->line('['.($i + 1).'/'.count($urls).'] old_id: '.$oldId.' — SKIP (artıq import olunub)');
+                    continue;
+                }
+
                 $data = $this->parseProduct($url);
                 $this->line('['.($i + 1).'/'.count($urls).'] '.$data['brand'].' — '.$data['name'].' (old_id: '.$data['old_id'].')');
 
