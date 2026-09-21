@@ -292,3 +292,14 @@ main .cabinet__personal .form__submit{
   top:50%!important;
   transform:translate(-50%,-50%)!important;
 }
+
+/* Favorite icon alignment fix: SVG itself has uneven internal whitespace */
+main .product-item .favorite-toggle.is-favorite img,
+main .wishlist-card .favorite-toggle.is-favorite img{
+  width:25px!important;
+  height:25px!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%) translateY(-1px)!important;
+  object-fit:contain!important;
+}
