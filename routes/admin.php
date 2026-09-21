@@ -11,6 +11,7 @@ use App\Http\Controllers\Backend\RolesController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\BannersController;
 use App\Http\Controllers\Backend\CreditController;
+use App\Http\Controllers\Backend\SettingsController;
 
 use App\Http\Controllers\Backend\Product\BrandsController;
 use App\Http\Controllers\Backend\Product\SizesController;
@@ -147,6 +148,16 @@ Route::prefix('admin')
                     Route::post('/periods', 'updatePeriods')->name('periods.update');
                     Route::get('/terms', 'terms')->name('terms');
                     Route::post('/terms', 'updateTerms')->name('terms.update');
+                });
+
+
+            Route::controller(SettingsController::class)
+                ->middleware('can:system.settings')
+                ->prefix('settings')
+                ->name('settings.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/', 'update')->name('update');
                 });
 
 
