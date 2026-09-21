@@ -28,6 +28,7 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public $timestamps = false;
     protected function casts(): array
     {
         return [
