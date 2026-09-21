@@ -16,8 +16,6 @@ use DOMXPath;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 use Throwable;
 
 class ImportOldParfumshopCategory extends Command
@@ -190,14 +188,13 @@ class ImportOldParfumshopCategory extends Command
         if (!$urls) return;
         $dir = public_path('frontend/uploads/products');
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        $manager = ImageManager::usingDriver(Driver::class);
         $base = SeoUrl::generateImageName(['title'=>$product->brand->name.'-'.$product->name]);
 
         foreach ($urls as $i => $url) {
             try {
                 $bytes = Http::timeout(30)->retry(2, 500)->get($url)->throw()->body();
                 $name = $base.'-'.($i + 1).'.webp';
-                $manager->make($bytes)->fit(600, 600)->encode('webp', 82)->save($dir.'/'.$name);
+                file_put_contents($dir.'/'.$name, $bytes);
                 ProductImage::create(['product_id'=>$product->id,'image'=>$name]);
             } catch (Throwable $e) {
                 $this->warn('  Şəkil yüklənmədi: '.$url);
