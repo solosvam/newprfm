@@ -1,7 +1,7 @@
 <div class="nav-content d-flex">
     <!-- Logo Start -->
     <div class="logo position-relative">
-        <a href="/">
+        <a href="/admin">
             <div class="img"></div>
         </a>
     </div>

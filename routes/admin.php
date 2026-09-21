@@ -154,6 +154,7 @@ Route::prefix('admin')
 
 
             Route::controller(SmsTemplateController::class)
+                ->middleware('can:system.sms')
                 ->prefix('sms-template')
                 ->name('sms-template.')
                 ->group(function () {
