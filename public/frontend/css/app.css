@@ -258,3 +258,8 @@ main .cabinet__personal .form__submit{
 .wishlist-empty{padding:35px 0;color:#777;font-size:17px}
 @media(max-width:1100px){.wishlist-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:768px){.wishlist-page{padding-top:25px}.wishlist-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}.wishlist-card__image{height:220px}.wishlist-page__title{font-size:24px}}
+
+.header-wishlist__link{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.header-wishlist__count{position:absolute;top:-9px;right:-10px;width:24px;height:24px;border-radius:50%;background:#20cf55;color:#fff;font-size:12px;font-weight:700;line-height:24px;text-align:center;z-index:2}
+.header-wishlist__count.is-empty{display:none}
+.wishlist-card__image{background:#fff!important}
