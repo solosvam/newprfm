@@ -129,9 +129,12 @@
                 <span>{{__('filter')}}</span>
             </li>
             @foreach(\App\Models\Product\Category::where('active', 1)->orderBy('id')->get() as $menuCategory)
-            <li>
+            @php
+                $menuCategoryName = $menuCategory->{'name_'.app()->getLocale()} ?: $menuCategory->name_az;
+            @endphp
+            <li class="{{ isset($selectedCategory) && $selectedCategory?->id === $menuCategory->id ? 'active' : '' }}">
                 <img src="{{asset('frontend/images/terms.svg')}}" alt="category icon" />
-                <a href="{{ route('home', ['category' => $menuCategory->id]) }}"><span>{{ $menuCategory->{'name_'.app()->getLocale()} ?: $menuCategory->name_az }}</span></a>
+                <a href="{{ route('category', ['category' => $menuCategory->id, 'slug' => \Illuminate\Support\Str::slug($menuCategoryName)]) }}"><span>{{ $menuCategoryName }}</span></a>
             </li>
             @endforeach
             <li class="left-links-brands">
