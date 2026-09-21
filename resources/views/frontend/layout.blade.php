@@ -42,7 +42,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link header-wishlist__link"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="Bəyəndiyim ətirlər" /><span class="header-wishlist__count is-empty" id="headerWishlistCount">0</span></a>
+                        <a href="{{ auth()->check() ? route('profile.wishlist') : route('wishlist') }}" class="wishlist-page-link header-wishlist__link"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="Bəyəndiyim ətirlər" /><span class="header-wishlist__count is-empty" id="headerWishlistCount">0</span></a>
                     </li>
                     <li class="header-account">
                         @auth
@@ -259,7 +259,7 @@
         </li>
         <li class="terms-link">
             <img src="{{asset('frontend/images/wishlist.svg')}}" alt="wishlist icon" />
-            <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link"><span>Bəyəndiyim ətirlər</span></a>
+            <a href="{{ auth()->check() ? route('profile.wishlist') : route('wishlist') }}" class="wishlist-page-link"><span>Bəyəndiyim ətirlər</span></a>
         </li>
     </ul>
 </div>
