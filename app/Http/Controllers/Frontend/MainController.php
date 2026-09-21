@@ -28,6 +28,11 @@ class MainController extends Controller
             'variants.size',
         ])->where('active', 1);
 
+        if ($request->filled('category')) {
+            $categoryId = (int) $request->input('category');
+            $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->where('categories.id', $categoryId));
+        }
+
         if ($request->filled('gender')) {
             $gender = $request->string('gender')->lower()->value();
 
