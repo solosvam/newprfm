@@ -51,7 +51,7 @@ class ImportOldParfumshopCategory extends Command
                 $this->line('['.($i + 1).'/'.count($urls).'] '.$data['brand'].' — '.$data['name'].' (old_id: '.$data['old_id'].')');
 
                 if ($this->option('dry-run')) {
-                    $this->line('  '.$data['type'].' | '.$data['gender'].' | '.implode(', ', array_map(fn ($v) => $v['size'].' = '.$v['price'].' AZN', $data['variants'])).' | '.count($data['images']).' şəkil');
+                    $this->line('  '.$data['type'].' | '.$data['gender'].' | '.implode(', ', array_map(fn ($v) => $v['size_az'].' = '.$v['price'].' AZN', $data['variants'])).' | '.count($data['images']).' şəkil');
                     continue;
                 }
 
@@ -137,13 +137,15 @@ class ImportOldParfumshopCategory extends Command
 
         return [
             'old_id' => (int) $p['old_id'],
-            'brand' => trim((string) ($p['brand']['name'] ?? '')),
+            'brand' => trim((string) ($p['brand']['name_az'] ?? $p['brand']['name'] ?? '')),
             'name' => trim((string) ($p['model'] ?? $p['name'] ?? '')),
             'type' => trim((string) ($p['type'] ?? '')),
             'gender' => trim(str_replace(' üçün', '', (string) ($p['gender'] ?? ''))),
-            'description' => (string) ($p['description'] ?? ''),
+            'description_az' => (string) ($p['description_az'] ?? $p['description'] ?? ''),
+            'description_ru' => (string) ($p['description_ru'] ?? ''),
             'variants' => array_map(fn ($v) => [
-                'size' => trim((string) ($v['size'] ?? 'Standart')),
+                'size_az' => trim((string) ($v['size_az'] ?? $v['size'] ?? 'Standart')) ?: 'Standart',
+                'size_ru' => trim((string) ($v['size_ru'] ?? $v['size_az'] ?? $v['size'] ?? 'Стандарт')) ?: 'Стандарт',
                 'price' => (float) ($v['price'] ?? 0),
             ], $p['variants'] ?? []),
             'images' => array_values(array_filter(array_map(
@@ -163,14 +165,14 @@ class ImportOldParfumshopCategory extends Command
 
             $product = Product::updateOrCreate(['old_id'=>$data['old_id']], [
                 'brand_id'=>$brand->id, 'type_id'=>$type->id, 'name'=>$data['name'],
-                'content_az'=>$data['description'], 'active'=>1,
+                'content_az'=>$data['description_az'], 'content_ru'=>$data['description_ru'], 'content_en'=>null, 'active'=>1,
             ]);
 
             $product->categories()->syncWithoutDetaching([$category->id]);
             if ($gender) $product->genders()->syncWithoutDetaching([$gender->id]);
 
             foreach ($data['variants'] as $variant) {
-                $size = Size::firstOrCreate(['name_az'=>$variant['size']], ['name_en'=>$variant['size'],'name_ru'=>$variant['size']]);
+                $size = Size::firstOrCreate(['name_az'=>$variant['size_az']], ['name_en'=>$variant['size_az'],'name_ru'=>$variant['size_ru']]);
                 ProductVariant::updateOrCreate(
                     ['product_id'=>$product->id,'size_id'=>$size->id],
                     ['price'=>$variant['price'],'active'=>1]
