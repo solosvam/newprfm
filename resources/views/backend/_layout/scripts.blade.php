@@ -19,7 +19,6 @@
 <!-- Template Base Scripts End -->
 <!-- Page Specific Scripts Start -->
 
-<script src="{{asset('backend/js/custom.js')}}"></script>
 <script src="{{asset('backend/js/common.js')}}"></script>
 <script src="{{asset('backend/js/scripts.js')}}"></script>
 <script src="{{asset('backend/js/vendor/bootstrap-notify.min.js')}}"></script>
@@ -29,6 +28,7 @@
 <script src="{{asset('backend/js/vendor/datepicker/locales/bootstrap-datepicker.es.min.js')}}"></script>
 <!-- Page Specific Scripts End -->
 @yield('js_page')
+<script src="{{asset('backend/js/custom.js')}}"></script>
 <script>
     let urls = {
         assets: "{{ asset('backend/') }}",
