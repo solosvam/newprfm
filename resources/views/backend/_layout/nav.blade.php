@@ -210,6 +210,14 @@
                         </ul>
                     </li>
                     @can('credit.menu')
+                    @can('system.settings')
+                    <li>
+                        <a href="{{ route('admin.settings.index') }}">
+                            <span class="label">Ayarlar</span>
+                        </a>
+                    </li>
+                    @endcan
+
                     <li>
                         <a href="#credit_menu" data-href="/admin/credit">
                             <span class="label">Kredit</span>
