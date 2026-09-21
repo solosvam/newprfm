@@ -2,6 +2,13 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use App\Console\Commands\ImportOldParfumshopCategory;
+
+Artisan::starting(function ($artisan) {
+    $artisan->resolveCommands([
+        ImportOldParfumshopCategory::class,
+    ]);
+});
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
