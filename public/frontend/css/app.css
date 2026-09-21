@@ -303,3 +303,14 @@ main .wishlist-card .favorite-toggle.is-favorite img{
   transform:translate(-50%,-50%) translateY(-1px)!important;
   object-fit:contain!important;
 }
+
+/* Product detail favorite uses its own optical center */
+.details-page .details-wrap .product-image__main__actions .favorite-toggle.is-favorite img{
+  position:absolute!important;
+  width:25px!important;
+  height:25px!important;
+  left:44%!important;
+  top:54%!important;
+  transform:translate(-50%,-50%)!important;
+  object-fit:contain!important;
+}
