@@ -117,7 +117,7 @@ class ImportOldParfumshopCategory extends Command
     {
         preg_match('/product_id=(\\d+)/', html_entity_decode($url), $id);
         if (empty($id[1])) {
-            throw new \\RuntimeException('product_id tapılmadı: '.$url);
+            throw new \RuntimeException('product_id tapılmadı: '.$url);
         }
 
         $response = Http::acceptJson()
@@ -130,7 +130,7 @@ class ImportOldParfumshopCategory extends Command
             ->json();
 
         if (!($response['success'] ?? false) || empty($response['product'])) {
-            throw new \\RuntimeException('Migration API məhsulu qaytarmadı: '.$id[1]);
+            throw new \RuntimeException('Migration API məhsulu qaytarmadı: '.$id[1]);
         }
 
         $p = $response['product'];
