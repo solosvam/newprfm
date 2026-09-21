@@ -22,7 +22,7 @@ use Throwable;
 
 class ImportOldParfumshopCategory extends Command
 {
-    protected $signature = 'parfumshop:import-category {path : Köhnə saytdakı category path} {--category-id= : Yeni saytdakı category ID} {--dry-run : DB və fayllara yazma}';
+    protected $signature = 'parfumshop:import-category {path : Köhnə saytdakı category path} {--category-id= : Yeni saytdakı category ID} {--dry-run : DB və fayllara yazma} {--limit= : Import ediləcək maksimum məhsul sayı}';
     protected $description = 'Köhnə ParfumShop kateqoriyasındakı məhsulları yeni sistemə import edir';
 
     private string $base = 'https://www.parfumshop.az';
@@ -31,6 +31,11 @@ class ImportOldParfumshopCategory extends Command
     {
         $path = (string) $this->argument('path');
         $urls = $this->productUrls($path);
+
+        if ($this->option('limit') !== null) {
+            $limit = max(1, (int) $this->option('limit'));
+            $urls = array_slice($urls, 0, $limit);
+        }
 
         if (!$urls) {
             $this->error('Kateqoriyada məhsul tapılmadı.');
