@@ -288,8 +288,8 @@ main .cabinet__personal .form__submit{
 }
 .favorite-toggle.is-favorite img{
   position:absolute!important;
-  left:50%!important;
-  top:50%!important;
+  left:44%!important;
+  top:54%!important;
   transform:translate(-50%,-50%)!important;
 }
 
