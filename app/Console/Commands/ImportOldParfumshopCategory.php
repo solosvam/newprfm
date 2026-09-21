@@ -225,7 +225,7 @@ class ImportOldParfumshopCategory extends Command
         if (!$urls) return;
         $dir = public_path('frontend/uploads/products');
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        $base = SeoUrl::generateImageName(['title'=>$product->brand->name.'-'.$product->name]);
+        $base = SeoUrl::prepareSlug($product->brand->name.'-'.$product->name);
 
         foreach ($urls as $i => $url) {
             try {
