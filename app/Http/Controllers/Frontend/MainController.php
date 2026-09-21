@@ -8,7 +8,6 @@ use App\Models\Faq;
 use App\Models\CreditTerms;
 use App\Models\Product\Product;
 use App\Models\Product\Category;
-use App\Models\Product\Category;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
