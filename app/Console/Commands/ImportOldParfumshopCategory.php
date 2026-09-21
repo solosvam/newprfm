@@ -115,60 +115,43 @@ class ImportOldParfumshopCategory extends Command
 
     private function parseProduct(string $url): array
     {
-        $html = $this->get($url);
-        $xpath = $this->xpath($html);
-        preg_match('/product_id=(\d+)/', html_entity_decode($url), $id);
-
-        $text = trim(preg_replace('/\s+/u', ' ', $xpath->document->textContent));
-        $brand = $this->labelValue($text, 'Brend:', ['Model:']);
-        $name = $this->labelValue($text, 'Model:', ['Say', 'Həcmi']);
-        $type = $this->firstMatchingText($xpath, ['Eau De Parfum','Eau De Toilette','Extrait De Parfum','Parfum','Cologne']);
-        $gender = str_contains($text, 'Qadın üçün') ? 'Qadın' : (str_contains($text, 'Kişi üçün') ? 'Kişi' : (str_contains($text, 'Unisex') ? 'Unisex' : ''));
-
-        $description = '';
-        foreach ($xpath->query('//*[contains(@id,"tab-description") or contains(@class,"tab-description")]') as $node) {
-            $description = trim($node->textContent);
-            if ($description) break;
+        preg_match('/product_id=(\\d+)/', html_entity_decode($url), $id);
+        if (empty($id[1])) {
+            throw new \\RuntimeException('product_id tapılmadı: '.$url);
         }
-        if (!$description && preg_match('/Açıqlama\s+(.*?)\s+Şərh yaz/su', $text, $m)) $description = trim($m[1]);
 
-        $variants = $this->variants($xpath, $text);
-        $images = $this->images($xpath);
+        $response = Http::acceptJson()
+            ->timeout(30)
+            ->retry(3, 500)
+            ->get($this->base.'/migration-product.php', [
+                'product_id' => (int) $id[1],
+            ])
+            ->throw()
+            ->json();
 
-        if (!$id || !$brand || !$name) throw new \RuntimeException('Məhsul məlumatı tam oxunmadı: '.$url);
-
-        return compact('brand','name','type','gender','description','variants','images') + ['old_id'=>(int)$id[1], 'url'=>$url];
-    }
-
-    private function variants(DOMXPath $xpath, string $text): array
-    {
-        $sizes = [];
-        foreach ($xpath->query('//select[contains(@name,"option") or contains(@id,"input-option")]//option[@value]') as $option) {
-            $label = trim(preg_replace('/\s+/u', ' ', $option->textContent));
-            if (!$option->getAttribute('value') || preg_match('/seç/i', $label)) continue;
-            $label = preg_replace('/\s*\([+-]?\s*[\d.,]+\s*AZN\)\s*/iu', '', $label);
-            if ($label) $sizes[] = $label;
+        if (!($response['success'] ?? false) || empty($response['product'])) {
+            throw new \\RuntimeException('Migration API məhsulu qaytarmadı: '.$id[1]);
         }
-        $sizes = array_values(array_unique($sizes));
 
-        preg_match_all('/([\d]+(?:[.,]\d{1,2})?)\s*AZN/u', $text, $prices);
-        $price = isset($prices[1][0]) ? (float)str_replace(',', '.', $prices[1][0]) : 0;
+        $p = $response['product'];
 
-        if (!$sizes) $sizes = ['Standart'];
-        return array_map(fn ($size) => ['size'=>$size, 'price'=>$price], $sizes);
-    }
-
-    private function images(DOMXPath $xpath): array
-    {
-        $images = [];
-        foreach ($xpath->query('//a[@href] | //img[@src]') as $node) {
-            $src = $node->hasAttribute('href') ? $node->getAttribute('href') : $node->getAttribute('src');
-            $src = html_entity_decode($src);
-            if (!preg_match('/\.(jpe?g|png|webp)(\?.*)?$/i', $src)) continue;
-            if (!preg_match('~(?:catalog|cache).*(?:product|perfume|parfum|image)~i', $src)) continue;
-            $images[] = $this->absoluteUrl($src);
-        }
-        return array_values(array_unique($images));
+        return [
+            'old_id' => (int) $p['old_id'],
+            'brand' => trim((string) ($p['brand']['name'] ?? '')),
+            'name' => trim((string) ($p['model'] ?? $p['name'] ?? '')),
+            'type' => trim((string) ($p['type'] ?? '')),
+            'gender' => trim(str_replace(' üçün', '', (string) ($p['gender'] ?? ''))),
+            'description' => (string) ($p['description'] ?? ''),
+            'variants' => array_map(fn ($v) => [
+                'size' => trim((string) ($v['size'] ?? 'Standart')),
+                'price' => (float) ($v['price'] ?? 0),
+            ], $p['variants'] ?? []),
+            'images' => array_values(array_filter(array_map(
+                fn ($image) => $image['url'] ?? null,
+                $p['images'] ?? []
+            ))),
+            'url' => $url,
+        ];
     }
 
     private function storeProduct(array $data, Category $category): void
