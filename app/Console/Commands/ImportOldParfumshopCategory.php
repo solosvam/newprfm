@@ -93,17 +93,17 @@ class ImportOldParfumshopCategory extends Command
     {
         $urls = [];
 
-        // Köhnə tema standart OpenCart product-layout class istifadə etmir.
-        // Məhsul detail linklərini götürürük, amma yalnız əsas content hissəsindən;
-        // footer/menu linklərində product_id olmadığı üçün onlar avtomatik kənarda qalır.
+        // Kateqoriya məhsullarının detail düyməsi köhnə temada "ƏTRAFLI" mətnidir.
+        // Şəkil/ad linkləri səhifədə əlavə bloklarda da təkrarlana bildiyi üçün yalnız
+        // bu düymələri götürürük.
         foreach ($xpath->query('//a[@href]') as $a) {
-            $href = html_entity_decode($a->getAttribute('href'));
-
-            if (!preg_match('/[?&]product_id=(\\d+)/', $href)) {
+            $label = mb_strtoupper(trim(preg_replace('/\\s+/u', ' ', $a->textContent)), 'UTF-8');
+            if ($label !== 'ƏTRAFLI') {
                 continue;
             }
 
-            if (!preg_match('/[?&]route=(?:product\\/product|product%2Fproduct)/i', $href)) {
+            $href = html_entity_decode($a->getAttribute('href'));
+            if (!preg_match('/[?&]product_id=(\\d+)/', $href)) {
                 continue;
             }
 
