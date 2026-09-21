@@ -67,26 +67,50 @@ class ImportOldParfumshopCategory extends Command
 
     private function productUrls(string $path): array
     {
-        $urls = [];
-        for ($page = 1; $page <= 100; $page++) {
-            $url = $this->base.'/index.php?route=product/category&path='.urlencode($path).'&page='.$page;
-            $xpath = $this->xpath($this->get($url));
-            $found = [];
+        $url = $this->base.'/index.php?route=product/category&path='.urlencode($path);
+        $xpath = $this->xpath($this->get($url));
+        $urls = $this->productLinksFromGrid($xpath);
 
-            foreach ($xpath->query('//a[contains(@href,"route=product/product") or contains(@href,"route=product%2Fproduct")]') as $a) {
+        // Yalnız səhifədə real pagination linkləri varsa onları gəz.
+        $pages = [1];
+        foreach ($xpath->query('//ul[contains(@class,"pagination")]//a[@href]') as $a) {
+            $href = html_entity_decode($a->getAttribute('href'));
+            if (preg_match('/[?&]page=(\\d+)/', $href, $m)) {
+                $pages[] = (int) $m[1];
+            }
+        }
+
+        $maxPage = max($pages);
+        for ($page = 2; $page <= $maxPage; $page++) {
+            $pageXpath = $this->xpath($this->get($url.'&page='.$page));
+            $urls = array_merge($urls, $this->productLinksFromGrid($pageXpath));
+        }
+
+        return array_values(array_unique($urls));
+    }
+
+    private function productLinksFromGrid(DOMXPath $xpath): array
+    {
+        $urls = [];
+
+        // OpenCart məhsul kartlarının daxilindəki linklər. Menyu, related və s. daxil edilmir.
+        $queries = [
+            '//div[contains(concat(" ",normalize-space(@class)," ")," product-layout ")]//a[@href]',
+            '//div[contains(concat(" ",normalize-space(@class)," ")," product-thumb ")]//a[@href]',
+        ];
+
+        foreach ($queries as $query) {
+            foreach ($xpath->query($query) as $a) {
                 $href = html_entity_decode($a->getAttribute('href'));
-                if (preg_match('/(?:product_id=)(\d+)/', $href)) {
-                    $found[] = $this->absoluteUrl($href);
+                if (!preg_match('/(?:[?&]|&amp;)product_id=(\\d+)/', $href)) {
+                    continue;
                 }
+                $urls[] = $this->absoluteUrl($href);
             }
 
-            $found = array_values(array_unique($found));
-            if (!$found) break;
-
-            $new = array_values(array_diff($found, $urls));
-            if (!$new) break;
-            $urls = array_merge($urls, $new);
+            if ($urls) break;
         }
+
         return array_values(array_unique($urls));
     }
 
