@@ -153,6 +153,7 @@ class ImportOldParfumshopCategory extends Command
                 'size_ru' => trim((string) ($v['size_ru'] ?? $v['size_az'] ?? $v['size'] ?? 'Стандарт')) ?: 'Стандарт',
                 'price' => (float) ($v['price'] ?? 0),
             ], $p['variants'] ?? []),
+            'categories' => $p['categories'] ?? [],
             'images' => array_values(array_filter(array_map(
                 fn ($image) => $image['url'] ?? null,
                 $p['images'] ?? []
@@ -173,7 +174,9 @@ class ImportOldParfumshopCategory extends Command
                 'content_az'=>$data['description_az'], 'content_ru'=>$data['description_ru'], 'content_en'=>null, 'active'=>1,
             ]);
 
-            $product->categories()->syncWithoutDetaching([$category->id]);
+            $categoryMap = [35=>1, 36=>2, 37=>3, 39=>4, 55=>5, 41=>6, 44=>7];
+            $categoryIds = collect($data['categories'] ?? [])->pluck('old_id')->map(fn ($oldId) => $categoryMap[(int) $oldId] ?? null)->filter()->unique()->values()->all();
+            if ($categoryIds) $product->categories()->syncWithoutDetaching($categoryIds);
             if ($gender) $product->genders()->syncWithoutDetaching([$gender->id]);
 
             foreach ($data['variants'] as $variant) {
