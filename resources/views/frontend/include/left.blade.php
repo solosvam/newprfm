@@ -132,13 +132,17 @@
                 <img src="{{asset('frontend/images/brands.svg')}}" alt="brand icon" />
                 <a href="{{route('brands')}}"> <span>{{__('brands')}}</span></a>
             </li>
-            <li>
-                <img src="{{asset('frontend/images/gift_card.svg')}}" alt="gift icon" />
-                <span>{{__('gift_card')}}</span>
-            </li>
             <li class="terms-link">
                 <img src="{{asset('frontend/images/terms.svg')}}" alt="terms icon" />
                 <span>{{__('rules')}}</span>
+            </li>
+            <li>
+                <img src="{{asset('frontend/images/gift_card.svg')}}" alt="services icon" />
+                <span>Xidmətlər və şərtlər</span>
+            </li>
+            <li>
+                <img src="{{asset('frontend/images/wishlist.svg')}}" alt="wishlist icon" />
+                <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link"><span>Bəyəndiyim ətirlər</span></a>
             </li>
         </ul>
         <div class="internal-credit-btn">
