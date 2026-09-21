@@ -17,7 +17,12 @@
                             <label class="form-check-label">Aktiv</label>
                         </div>
                     </div>
-                    <textarea name="template" rows="4" class="form-control" required>{{ old('template',$template->template) }}</textarea>
+                    <textarea name="template" rows="4" class="form-control sms-template-text" maxlength="1000" required>{{ old('template',$template->template) }}</textarea>
+                    <div class="d-flex gap-3 mt-2 small">
+                        <span>Simvol sayı: <strong class="sms-char-count">0</strong></span>
+                        <span>SMS sayı: <strong class="sms-part-count">1</strong></span>
+                        <span class="sms-limit-warning text-warning d-none">160 simvol keçildi — 2-ci SMS-ə keçdi.</span>
+                    </div>
                     @error('template')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                     <div class="form-text mt-2">
                         Dəyişənlər:
@@ -32,4 +37,31 @@
         @endforeach
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.sms-template-text').forEach(function (textarea) {
+        const form = textarea.closest('form');
+        const charCount = form.querySelector('.sms-char-count');
+        const partCount = form.querySelector('.sms-part-count');
+        const warning = form.querySelector('.sms-limit-warning');
+
+        function updateSmsCounter() {
+            const length = Array.from(textarea.value).length;
+            const parts = Math.max(1, Math.ceil(length / 160));
+            charCount.textContent = length;
+            partCount.textContent = parts;
+
+            if (length > 160) {
+                warning.classList.remove('d-none');
+                warning.textContent = '160 simvol keçildi — ' + parts + '-ci SMS-ə keçdi.';
+            } else {
+                warning.classList.add('d-none');
+            }
+        }
+
+        textarea.addEventListener('input', updateSmsCounter);
+        updateSmsCounter();
+    });
+});
+</script>
 @endsection
