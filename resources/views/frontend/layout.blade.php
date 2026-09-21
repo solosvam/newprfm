@@ -42,7 +42,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/wishlist.html"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="" /></a>
+                        <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="Bəyəndiyim ətirlər" /></a>
                     </li>
                     <li class="header-account">
                         @auth
@@ -243,10 +243,6 @@
             <img src="{{asset('frontend/images/brands.svg')}}" alt="brand icon" />
             <a href="{{route('brands')}}"><span>Brendlər</span></a>
         </li>
-        <li>
-            <img src="{{asset('frontend/images/gift_card.svg')}}" alt="gift icon" />
-            <span>Hədiyyə kartı</span>
-        </li>
         <li class="terms-link">
             <img src="{{asset('frontend/images/terms.svg')}}" alt="terms icon" />
             <span>Qaydalar</span>
@@ -257,14 +253,9 @@
         </li>
         <li class="terms-link">
             <img src="{{asset('frontend/images/wishlist.svg')}}" alt="wishlist icon" />
-            <span>Bəyəndiyim ətirlər</span>
+            <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link"><span>Bəyəndiyim ətirlər</span></a>
         </li>
     </ul>
-    <div class="invite-friend">
-        <h1>Dostunu dəvət et və bonus qazan!</h1>
-        <img src="{{asset('frontend/images/invite.png')}}" alt="" />
-        <button>Dəvət göndər</button>
-    </div>
 </div>
 <!-- Sidebar for Mobile -->
 
@@ -281,6 +272,15 @@
 <!-- Search Form for Mobile -->
 
 @yield('content')
+<script>
+window.parfumshopFavoriteConfig = {
+    authenticated: @json(auth()->check()),
+    idsUrl: @json(auth()->check() ? route('favorites.ids') : null),
+    syncUrl: @json(auth()->check() ? route('favorites.sync') : null),
+    storeUrl: @json(auth()->check() ? url('/favorites') : null),
+    csrf: @json(csrf_token())
+};
+</script>
 
 <footer>
     <div class="container">
@@ -316,9 +316,7 @@
                     <li>
                         <span>Testerlər</span>
                     </li>
-                    <li>
-                        <span>Hədiyyə kartı</span>
-                    </li>
+                    
                     <li>
                         <span>Daxili kredit</span>
                     </li>
@@ -396,7 +394,7 @@
                         <li>Unisex</li>
                         <li>Hamam dəstləri</li>
                         <li>Testerlər</li>
-                        <li>Hədiyyə kartı</li>
+                        
                         <li>Daxili kredit</li>
                     </ul>
                 </div>
