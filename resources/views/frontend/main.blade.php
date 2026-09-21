@@ -74,10 +74,9 @@
                                             data-url="{{ route('product', $product->slug) }}"
                                         />
 
-                                        <img
-                                            src="{{ asset('frontend/images/product-card-wishlist.svg') }}"
-                                            alt="Seçilmişlər"
-                                        />
+                                        <button type="button" class="favorite-toggle" data-product-id="{{ $product->id }}" aria-label="Bəyəndiyim ətirlərə əlavə et">
+                                            <img src="{{ asset('frontend/images/product-card-wishlist.svg') }}" alt="Seçilmişlər" />
+                                        </button>
                                     </div>
 
                                     <a href="{{ route('product', $product->slug) }}">
