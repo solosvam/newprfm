@@ -90,6 +90,26 @@ class ProductController extends Controller
 
         return back()->with('review_success', 'Rəyiniz əlavə edildi.');
     }
+    public function wishlistProducts(\Illuminate\Http\Request $request)
+    {
+        $ids = collect(explode(',', (string) $request->query('ids')))
+            ->filter()->map(fn ($id) => (int) $id)->unique()->values();
+
+        return Product::with(['brand', 'images'])
+            ->whereIn('id', $ids)
+            ->where('active', 1)
+            ->get()
+            ->sortBy(fn ($product) => $ids->search($product->id))
+            ->values()
+            ->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'brand' => $product->brand?->name,
+                'url' => route('product', $product->slug),
+                'image' => $product->images->first() ? asset('frontend/uploads/products/'.$product->images->first()->image) : null,
+            ]);
+    }
+
     public function cartProducts(\Illuminate\Http\Request $request)
     {
         $variantIds = collect(explode(',', (string) $request->query('variants')))
