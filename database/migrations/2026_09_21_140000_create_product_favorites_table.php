@@ -9,10 +9,12 @@ return new class extends Migration {
     {
         Schema::create('product_favorites', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->integer('customer_id');
+            $table->integer('product_id');
             $table->timestamp('created_at')->useCurrent();
             $table->unique(['customer_id', 'product_id']);
+            $table->foreign('customer_id')->references('id')->on('customers')->cascadeOnDelete();
+            $table->foreign('product_id')->references('id')->on('products')->cascadeOnDelete();
         });
     }
 
