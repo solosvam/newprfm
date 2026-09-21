@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 
 class FavoriteController extends Controller
 {
+    public function guest()
+    {
+        return view('frontend.wishlist-guest');
+    }
+
     public function index(Request $request)
     {
         $products = $request->user()->favoriteProducts()
