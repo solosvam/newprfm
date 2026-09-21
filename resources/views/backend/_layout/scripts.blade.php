@@ -1,5 +1,5 @@
-<!-- Vendor Scripts Start -->
-<script src="{{asset('backend/js/vendor/jquery-3.5.1.min.js')}}"></script>
+
+<!-- Vendor Scripts Start --><script src="{{asset('backend/js/vendor/jquery-3.5.1.min.js')}}"></script>
 <script src="{{asset('backend/js/vendor/bootstrap.bundle.min.js')}}"></script>
 <script src="{{asset('backend/js/vendor/OverlayScrollbars.min.js')}}"></script>
 <script src="{{asset('backend/js/vendor/autoComplete.min.js')}}"></script>
@@ -8,6 +8,7 @@
 <script src="{{asset('backend/icon/acorn-icons.js')}}"></script>
 <script src="{{asset('backend/icon/acorn-icons-interface.js')}}"></script>
 <script src="{{asset('backend/icon/acorn-icons-commerce.js')}}"></script>
+<script src="{{asset('backend/icon/acorn-icons-medical.js')}}"></script>
 @yield('js_vendor')
 <!-- Vendor Scripts End -->
 <!-- Template Base Scripts Start -->
@@ -22,13 +23,16 @@
 <script src="{{asset('backend/js/common.js')}}"></script>
 <script src="{{asset('backend/js/scripts.js')}}"></script>
 <script src="{{asset('backend/js/vendor/bootstrap-notify.min.js')}}"></script>
+<script src="{{asset('backend/js/cs/scrollspy.js')}}"></script>
 <script src="{{asset('backend/js/pages/dashboard.default.js')}}"></script>
+<script src="{{asset('backend/js/vendor/select2.full.min.js')}}"></script>
+<script src="{{asset('backend/js/forms/controls.select2.js')}}"></script>
 <script src="{{asset('backend/js/forms/controls.datepicker.js')}}"></script>
 <script src="{{asset('backend/js/vendor/datepicker/bootstrap-datepicker.min.js')}}"></script>
 <script src="{{asset('backend/js/vendor/datepicker/locales/bootstrap-datepicker.es.min.js')}}"></script>
-<!-- Page Specific Scripts End -->
+
 @yield('js_page')
-<script src="{{asset('backend/js/custom.js')}}"></script>
+<script src="{{ asset('backend/js/custom.js?v=' . time()) }}"></script>
 <script>
     let urls = {
         assets: "{{ asset('backend/') }}",
