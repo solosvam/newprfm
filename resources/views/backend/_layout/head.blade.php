@@ -19,4 +19,4 @@
 <link rel="stylesheet" href="{{asset('backend/css/styles.css?v=1')}}"/>
 <link rel="stylesheet" href="{{asset('backend/css/main.css')}}"/>
 <!-- Template Base Styles End -->
-<script src="{{ asset('backend/js/base/loader.js?v=1') }}"></script>
+<script src="{{ asset('backend/js/base/loader.js?v=1.1') }}"></script>
