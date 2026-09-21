@@ -10,7 +10,7 @@
 <body class="h-100">
 <div id="root" class="h-100">
     <!-- Background Start -->
-    <div class="{{ (Route::current()->uri == 'admin/login') ? 'fixed-background' : 'courier-background' }}"></div>
+    <div class="fixed-background"></div>
 
     <!-- Background End -->
 

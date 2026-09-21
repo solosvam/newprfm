@@ -61,7 +61,7 @@
                     <div class="mb-3 filled form-group tooltip-end-top">
                         <i data-acorn-icon="email"></i>
                         <input class="form-control" placeholder="Email" name="email" value="{{old('email')}}" />
-                        @if ($errors->has('email'))
+                        @if($errors->has('email'))
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $errors->first('login') }}</strong>
                             </span>
