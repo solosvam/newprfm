@@ -76,7 +76,7 @@ const FAVORITES_KEY = 'parfumshop_favorites';
 function getLocalFavorites(){try{return [...new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]').map(Number).filter(Boolean))]}catch(e){return []}}
 function setLocalFavorites(ids){localStorage.setItem(FAVORITES_KEY,JSON.stringify([...new Set(ids.map(Number).filter(Boolean))]))}
 function updateFavoriteCount(ids){const count=[...new Set(ids.map(Number).filter(Boolean))].length;const badge=document.getElementById('headerWishlistCount');if(badge){badge.textContent=count;badge.classList.toggle('is-empty',count===0)}const cabinet=document.getElementById('cabinetWishlistCount');if(cabinet)cabinet.textContent=count}
-function paintFavorites(ids){const set=new Set(ids.map(Number));document.querySelectorAll('.favorite-toggle').forEach(btn=>{const active=set.has(Number(btn.dataset.productId));btn.classList.toggle('is-favorite',active);btn.setAttribute('aria-pressed',active?'true':'false')});updateFavoriteCount([...set])}
+window.paintFavorites=function(ids){const set=new Set(ids.map(Number));document.querySelectorAll('.favorite-toggle').forEach(btn=>{const active=set.has(Number(btn.dataset.productId));btn.classList.toggle('is-favorite',active);btn.setAttribute('aria-pressed',active?'true':'false')});updateFavoriteCount([...set])}
 function showFavoriteNotice(added){if(window.jQuery&&jQuery.notify){if(!jQuery.notify.getStyle('parfumshop-success'))jQuery.notify.addStyle('parfumshop-success',{html:'<div><div class="ps-notify"><span class="ps-notify__check">✓</span><span data-notify-text></span></div></div>'});jQuery.notify(added?'Bəyəndiyim ətirlərə əlavə olundu':'Bəyəndiyim ətirlərdən silindi',{style:'parfumshop-success',className:'success',globalPosition:'top right',autoHideDelay:2500,showAnimation:'fadeIn',hideAnimation:'fadeOut'})}}
 async function favoriteRequest(url,method='GET',body=null){const cfg=window.parfumshopFavoriteConfig||{};const res=await fetch(url,{method,headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':cfg.csrf||''},body:body?JSON.stringify(body):null});if(!res.ok)throw new Error('Favorite request failed');return res.json()}
 async function initFavorites(){
@@ -99,5 +99,5 @@ document.addEventListener('click',async e=>{
         let ids=getLocalFavorites();ids=active?ids.filter(x=>x!==id):[...ids,id];setLocalFavorites(ids);paintFavorites(ids);showFavoriteNotice(!active);
     }
 });
-document.addEventListener('click',e=>{const link=e.target.closest('.wishlist-page-link');const cfg=window.parfumshopFavoriteConfig||{};if(link&&!cfg.authenticated){e.preventDefault();const ids=getLocalFavorites();if(!ids.length){alert('Hələ bəyəndiyiniz ətir yoxdur.');return}document.querySelector('[data-product-id="'+ids[0]+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}});
+
 document.addEventListener('DOMContentLoaded',()=>{initFavorites().catch(()=>{})});
