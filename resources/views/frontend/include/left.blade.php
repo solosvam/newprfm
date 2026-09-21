@@ -128,6 +128,12 @@
                 <img src="{{asset('frontend/images/filter.svg')}}" alt="filter icon" />
                 <span>{{__('filter')}}</span>
             </li>
+            @foreach(\App\Models\Product\Category::where('active', 1)->orderBy('id')->get() as $menuCategory)
+            <li>
+                <img src="{{asset('frontend/images/terms.svg')}}" alt="category icon" />
+                <a href="{{ route('home', ['category' => $menuCategory->id]) }}"><span>{{ $menuCategory->{'name_'.app()->getLocale()} ?: $menuCategory->name_az }}</span></a>
+            </li>
+            @endforeach
             <li class="left-links-brands">
                 <img src="{{asset('frontend/images/brands.svg')}}" alt="brand icon" />
                 <a href="{{route('brands')}}"> <span>{{__('brands')}}</span></a>
@@ -189,10 +195,5 @@
                 <span>Mont Blanc Explorer</span>
             </li>
         </ul>
-    </div>
-    <div class="invite-friend">
-        <h1>Dostunu dəvət et və 17azn bonus qazan! Dəvət göndər</h1>
-        <img src="{{asset('frontend/images/invite.png')}}" alt="" />
-        <button>Dəvət göndər</button>
     </div>
 </div>
