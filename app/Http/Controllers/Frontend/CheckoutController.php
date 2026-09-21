@@ -43,10 +43,10 @@ class CheckoutController extends Controller {
     $address=$customer->addresses()->create(['title'=>$data['title']??null,'city'=>$data['city'],'district'=>$data['district']??null,'address'=>$data['address'],'building'=>$data['building']??null,'entrance'=>$data['entrance']??null,'floor'=>$data['floor']??null,'apartment'=>$data['apartment']??null,'note'=>$data['address_note']??null,'is_default'=>$customer->addresses()->count()===0]);
    }
    $cart=collect($data['cart'])->keyBy('variant_id');
-   $variants=ProductVariant::with(['product.brand','size'])->whereIn('id',$cart->keys())->where('active',1)->get();
+   $variants=ProductVariant::whereIn('id',$cart->keys())->where('active',1)->get();
    abort_if($variants->count()!==$cart->count(),422,'Səbətdə mövcud olmayan məhsul var.');
    $subtotal=0;$items=[];
-   foreach($variants as $v){$qty=(int)$cart[$v->id]['quantity'];$line=round((float)$v->price*$qty,2);$subtotal+=$line;$items[]=['product_id'=>$v->product_id,'product_variant_id'=>$v->id,'product_name'=>$v->product->name,'brand_name'=>$v->product->brand?->name,'size_name'=>$v->size?->name_az,'unit_price'=>$v->price,'quantity'=>$qty,'total'=>$line];}
+   foreach($variants as $v){$qty=(int)$cart[$v->id]['quantity'];$line=round((float)$v->price*$qty,2);$subtotal+=$line;$items[]=['product_id'=>$v->product_id,'product_variant_id'=>$v->id,'unit_price'=>$v->price,'quantity'=>$qty,'total'=>$line];}
    $order=Order::create(['order_no'=>'PS'.now()->format('ymd').str_pad((string)((Order::max('id')??0)+1),6,'0',STR_PAD_LEFT),'customer_id'=>$customer->id,'customer_address_id'=>$address->id,'payment_method_id'=>$data['payment_method_id'],'source'=>'website','order_status_id'=>$initialStatus->id,'gift_wrap'=>(bool)($data['gift_wrap']??false),'customer_note'=>$data['customer_note']??null,'subtotal'=>$subtotal,'discount'=>0,'total'=>$subtotal]);
    $order->items()->createMany($items);DB::table('order_status_logs')->insert(['order_id'=>$order->id,'status_id'=>$initialStatus->id,'created_at'=>now(),'updated_at'=>now()]);
    return response()->json(['ok'=>true,'order_no'=>$order->order_no,'redirect'=>route('checkout.success',$order)]);
