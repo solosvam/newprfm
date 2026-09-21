@@ -189,6 +189,22 @@ class AuthController extends Controller
         return view('frontend.orders', compact('orders'));
     }
 
+    public function order(Order $order)
+    {
+        abort_unless($order->customer_id === auth()->id(), 403);
+
+        $order->load([
+            'items.product.brand',
+            'items.product.images',
+            'items.variant.size',
+            'paymentMethod',
+            'status',
+            'address',
+        ]);
+
+        return view('frontend.order-detail', compact('order'));
+    }
+
     public function wishlist()
     {
         return view('frontend.wishlist');
