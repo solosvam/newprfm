@@ -28,7 +28,7 @@ class AdminCreateRequest extends FormRequest
             'name'      => 'required|string|min:3|max:20',
             'surname'   => 'required|string|min:3|max:20',
             'mobile'    => 'required|regex:/^[0-9]{12}$/',
-            'email'     => 'required|email|unique:admins,email',
+            'email'     => 'required|email|unique:users,email',
             'password'  => 'required|string|min:6|max:20',
         ];
     }
