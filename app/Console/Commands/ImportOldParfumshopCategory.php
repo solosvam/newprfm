@@ -93,22 +93,21 @@ class ImportOldParfumshopCategory extends Command
     {
         $urls = [];
 
-        // OpenCart məhsul kartlarının daxilindəki linklər. Menyu, related və s. daxil edilmir.
-        $queries = [
-            '//div[contains(concat(" ",normalize-space(@class)," ")," product-layout ")]//a[@href]',
-            '//div[contains(concat(" ",normalize-space(@class)," ")," product-thumb ")]//a[@href]',
-        ];
+        // Köhnə tema standart OpenCart product-layout class istifadə etmir.
+        // Məhsul detail linklərini götürürük, amma yalnız əsas content hissəsindən;
+        // footer/menu linklərində product_id olmadığı üçün onlar avtomatik kənarda qalır.
+        foreach ($xpath->query('//a[@href]') as $a) {
+            $href = html_entity_decode($a->getAttribute('href'));
 
-        foreach ($queries as $query) {
-            foreach ($xpath->query($query) as $a) {
-                $href = html_entity_decode($a->getAttribute('href'));
-                if (!preg_match('/(?:[?&]|&amp;)product_id=(\\d+)/', $href)) {
-                    continue;
-                }
-                $urls[] = $this->absoluteUrl($href);
+            if (!preg_match('/[?&]product_id=(\\d+)/', $href)) {
+                continue;
             }
 
-            if ($urls) break;
+            if (!preg_match('/[?&]route=(?:product\\/product|product%2Fproduct)/i', $href)) {
+                continue;
+            }
+
+            $urls[] = $this->absoluteUrl($href);
         }
 
         return array_values(array_unique($urls));
