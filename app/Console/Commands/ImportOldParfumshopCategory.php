@@ -193,7 +193,17 @@ class ImportOldParfumshopCategory extends Command
             $html = $decoded;
         }
 
-        return $html;
+        // HTML strukturunu tam silirik, yalnız oxunaqlı düz mətn saxlayırıq.
+        $html = preg_replace('~<br\\s*/?>~i', "\n", $html);
+        $html = preg_replace('~</p\\s*>~i', "\n\n", $html);
+        $html = preg_replace('~<li[^>]*>~i', '• ', $html);
+        $html = preg_replace('~</li\\s*>~i', "\n", $html);
+        $text = strip_tags($html);
+        $text = preg_replace("/[ \\t]+/u", ' ', $text);
+        $text = preg_replace("/ *\\n */u", "\n", $text);
+        $text = preg_replace("/\\n{3,}/u", "\n\n", $text);
+
+        return trim($text);
     }
 
     private function downloadImages(Product $product, array $urls): void
