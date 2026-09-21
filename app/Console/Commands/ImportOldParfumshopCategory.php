@@ -165,7 +165,7 @@ class ImportOldParfumshopCategory extends Command
 
             $product = Product::updateOrCreate(['old_id'=>$data['old_id']], [
                 'brand_id'=>$brand->id, 'type_id'=>$type->id, 'name'=>$data['name'],
-                'content_az'=>$data['description_az'], 'content_ru'=>$data['description_ru'], 'content_en'=>null, 'active'=>1,
+                'content_az'=>$data['description_az'], 'content_ru'=>$data['description_ru'], 'content_en'=>'', 'active'=>1,
             ]);
 
             $categoryMap = [35=>1, 36=>2, 37=>3, 39=>4, 55=>5, 41=>6, 44=>7];
