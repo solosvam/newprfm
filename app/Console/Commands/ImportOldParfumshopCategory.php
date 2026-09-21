@@ -197,7 +197,7 @@ class ImportOldParfumshopCategory extends Command
             try {
                 $bytes = Http::timeout(30)->retry(2, 500)->get($url)->throw()->body();
                 $name = $base.'-'.($i + 1).'.webp';
-                $manager->read($bytes)->cover(600, 600)->toWebp(82)->save($dir.'/'.$name);
+                $manager->make($bytes)->fit(600, 600)->encode('webp', 82)->save($dir.'/'.$name);
                 ProductImage::create(['product_id'=>$product->id,'image'=>$name]);
             } catch (Throwable $e) {
                 $this->warn('  Şəkil yüklənmədi: '.$url);
