@@ -185,23 +185,33 @@ class ImportOldParfumshopCategory extends Command
 
     private function decodeHtml(string $html): string
     {
-        // Köhnə sistemdə mətn bəzən bir neçə dəfə entity encode olunub.
-        // HTML teqlərini saxlayıb yalnız entity-ləri UTF-8 simvollara çeviririk.
-        for ($i = 0; $i < 3; $i++) {
+        // Köhnə sistemdə bir neçə dəfə encode olunmuş entity-ləri aç.
+        for ($i = 0; $i < 5; $i++) {
             $decoded = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            if ($decoded === $html) break;
+
+            if ($decoded === $html) {
+                break;
+            }
+
             $html = $decoded;
         }
 
-        // HTML strukturunu tam silirik, yalnız oxunaqlı düz mətn saxlayırıq.
+        // Non-breaking space-i adi boşluğa çevir.
+        $html = str_replace("\xC2\xA0", ' ', $html);
+
+        // Məna daşıyan HTML elementlərini sətir sonuna çevir.
         $html = preg_replace('~<br\\s*/?>~i', "\n", $html);
-        $html = preg_replace('~</p\\s*>~i', "\n\n", $html);
+        $html = preg_replace('~</p\\s*>~i', "\n", $html);
         $html = preg_replace('~<li[^>]*>~i', '• ', $html);
         $html = preg_replace('~</li\\s*>~i', "\n", $html);
+
+        // Qalan bütün HTML tag-larını sil.
         $text = strip_tags($html);
-        $text = preg_replace("/[ \\t]+/u", ' ', $text);
-        $text = preg_replace("/ *\\n */u", "\n", $text);
-        $text = preg_replace("/\\n{3,}/u", "\n\n", $text);
+
+        // Artıq boşluqları və boş sətirləri təmizlə.
+        $text = preg_replace('/[ \\t]+/u', ' ', $text);
+        $text = preg_replace('/ *\\n */u', "\n", $text);
+        $text = preg_replace('/\\n+/u', "\n", $text);
 
         return trim($text);
     }
