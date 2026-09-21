@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function(){
    Route::post('/profile/personal',[AuthController::class,'updatePersonal'])->name('profile.personal.update');
    Route::get('/profile/orders',[AuthController::class,'orders'])->name('profile.orders');
    Route::get('/profile/orders/{order}',[AuthController::class,'order'])->name('profile.orders.show');
+   Route::get('/profile/bonuses',[AuthController::class,'bonuses'])->name('profile.bonuses');
    Route::get('/profile/wishlist',[AuthController::class,'wishlist'])->name('profile.wishlist');
    Route::get('/profile/reviews',[AuthController::class,'reviews'])->name('profile.reviews');
    Route::post('/product/{product}/review',[ProductController::class,'review'])->name('product.review');
