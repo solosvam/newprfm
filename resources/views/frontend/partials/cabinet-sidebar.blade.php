@@ -9,6 +9,7 @@
             <li><a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'cabinet-active' : '' }}">Hesab məlumatları</a></li>
             <li><a href="{{ route('profile.personal') }}" class="{{ request()->routeIs('profile.personal*') ? 'cabinet-active' : '' }}">Şəxsi məlumatlar</a></li>
             <li><a href="{{ route('profile.orders') }}" class="{{ request()->routeIs('profile.orders') ? 'cabinet-active' : '' }}">Sifarişlərimin tarixçəsi</a></li>
+            <li><a href="{{ route('profile.bonuses') }}" class="{{ request()->routeIs('profile.bonuses') ? 'cabinet-active' : '' }}">Bonus tarixçəsi <span>{{ number_format(auth()->user()->bonus_balance ?? 0, 2) }} ₼</span></a></li>
             <li><a href="{{ route('profile.wishlist') }}" class="{{ request()->routeIs('profile.wishlist') ? 'cabinet-active' : '' }}">Bəyəndiyim ətirlər <span>0</span></a></li>
             <li><a href="{{ route('profile.reviews') }}" class="{{ request()->routeIs('profile.reviews') ? 'cabinet-active' : '' }}">Rəylərim</a></li>
         </ul>
