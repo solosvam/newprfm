@@ -201,6 +201,7 @@ class ImportOldParfumshopCategory extends Command
                 ProductImage::create(['product_id'=>$product->id,'image'=>$name]);
             } catch (Throwable $e) {
                 $this->warn('  Şəkil yüklənmədi: '.$url);
+                $this->warn('  Səbəb: '.$e->getMessage());
             }
         }
     }
