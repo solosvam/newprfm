@@ -6,6 +6,7 @@
 @endsection
 
 @section('content')
+    @php($selectedCategory = $selectedCategory ?? null)
     <main>
         <div class="container">
             @include('frontend.banners')
