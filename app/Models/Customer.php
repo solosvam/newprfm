@@ -19,6 +19,7 @@ class Customer extends Authenticatable
         'mobile',
         'password',
         'active',
+        'bonus_balance',
     ];
 
     protected $hidden = [
@@ -35,4 +36,5 @@ class Customer extends Authenticatable
     }
     public function addresses(){ return $this->hasMany(CustomerAddress::class); }
     public function orders(){ return $this->hasMany(Order::class); }
+    public function bonusTransactions(){ return $this->hasMany(CustomerBonusTransaction::class); }
 }
