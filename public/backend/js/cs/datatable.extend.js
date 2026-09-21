@@ -111,25 +111,39 @@ class DatatableExtend {
     }
   }
 
-  _onRowClick(event) {
-    event.preventDefault();
-    if (!this.datatable.data().any()) {
-      // Only no data warning row available at this point
-      return;
+    _onRowClick(event) {
+        if (!this.datatable.data().any()) return;
+
+        const currentTarget = event.target.closest('tr');
+        const link = event.target.closest('a');
+
+        // əməliyyat sütunundakı linklər normal işləsin
+        if (link && event.target.closest('td:last-child')) {
+            event.stopPropagation();
+            return;
+        }
+
+        // ancaq xüsusi edit link olsa modal aç
+        if (link && link.classList.contains('edit-row-link')) {
+            event.preventDefault();
+            this.unCheckAllRows();
+            if (typeof this.settings.editRowCallback === 'function') {
+                this.settings.editRowCallback(this.datatable.row(currentTarget));
+            }
+            return;
+        }
+
+        event.preventDefault();
+        currentTarget.classList.toggle('selected');
+
+        const checkbox = currentTarget.querySelector('.form-check input');
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event('change'));
+        }
+
+        this.controlCheckAll();
     }
-    const currentTarget = event.target.closest('tr');
-    if (event.target.tagName === 'A') {
-      // Title clicked. Showing the edit view.
-      this.unCheckAllRows();
-      this.settings.editRowCallback(this.datatable.row(currentTarget));
-      return true;
-    }
-    currentTarget.classList.toggle('selected');
-    const checkbox = currentTarget.querySelector('.form-check input');
-    checkbox.checked = !checkbox.checked;
-    checkbox.dispatchEvent(new Event('change'));
-    this.controlCheckAll();
-  }
 
   _onCheckAllChange(event) {
     const isCheckedAll = document.getElementById('datatableCheckAll').checked;

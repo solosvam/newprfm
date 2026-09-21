@@ -7,14 +7,14 @@
  **/
 
 (function () {
-    let isContentLoaded = false;
-    const timeoutId = setTimeout(() => {
-        if (!isContentLoaded) {
-            document.body.classList.add('spinner');
-        }
-    }, 500);
+  let isContentLoaded = false;
+  const timeoutId = setTimeout(() => {
+    if (!isContentLoaded) {
+      document.body.classList.add('spinner');
+    }
+  }, 500);
 
-    window.addEventListener('DOMContentLoaded', (event) => {
-        isContentLoaded = true;
-    });
+  window.addEventListener('DOMContentLoaded', (event) => {
+    isContentLoaded = true;
+  });
 })();

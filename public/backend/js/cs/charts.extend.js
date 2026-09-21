@@ -187,9 +187,6 @@ class ChartsExtend {
         type: 'line',
         options: {
           events: ['mousemove', 'touchmove', 'touchstart'],
-          plugins: {
-            crosshair: false,
-          },
           hover: {
             mode: 'index',
             intersect: false,
