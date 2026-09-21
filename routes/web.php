@@ -3,14 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\Frontend\MainController;
+use App\Http\Controllers\Frontend\CategoryController;
 use App\Http\Controllers\Frontend\BrandsController;
 use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\FavoriteController;
 
 Route::get('/',[MainController::class,'index'])->name('home');
-Route::get('/category/{category}/{slug?}',[MainController::class,'category'])->name('category');
-Route::get('/category/{category}/{slug?}',[MainController::class,'category'])->name('category');
+Route::get('/category/{category}/{slug?}',[CategoryController::class,'show'])->name('category');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
 Route::get('/brands',[BrandsController::class,'index'])->name('brands');
 Route::get('/brand/{slug}',[BrandsController::class,'products'])->name('brand.products');
