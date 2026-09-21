@@ -141,6 +141,7 @@ Route::prefix('admin')
             */
 
             Route::controller(CreditController::class)
+                ->middleware('can:credit.menu')
                 ->prefix('credit')
                 ->name('credit.')
                 ->group(function () {

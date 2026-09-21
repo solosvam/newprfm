@@ -19,6 +19,7 @@
 <!-- Template Base Scripts End -->
 <!-- Page Specific Scripts Start -->
 
+<script src="{{asset('backend/js/custom.js')}}"></script>
 <script src="{{asset('backend/js/common.js')}}"></script>
 <script src="{{asset('backend/js/scripts.js')}}"></script>
 <script src="{{asset('backend/js/vendor/bootstrap-notify.min.js')}}"></script>
