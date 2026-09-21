@@ -19,3 +19,6 @@
 .main-products__top li a:hover{color:#111}
 .main-products__top .product-sort-form{margin:0}
 .main-products__top .product-sort-form select{border:0;background:#fff;color:#c4c0c0;font-size:16px;outline:none;cursor:pointer}
+
+.main-left__links li.active > a span{color:#111;font-weight:600}
+.main-left__links li.active > img{filter:brightness(0)}
