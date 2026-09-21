@@ -42,13 +42,7 @@ class ImportOldParfumshopCategory extends Command
             return self::FAILURE;
         }
 
-        $category = $this->resolveCategory($path);
-        if (!$category && !$this->option('dry-run')) {
-            $this->error('Yeni saytda uyğun kateqoriya tapılmadı. --category-id=ID ver.');
-            return self::FAILURE;
-        }
-
-        $this->info(count($urls).' məhsul tapıldı'.($category ? ' → '.$category->name_az : '').'.');
+        $this->info(count($urls).' məhsul tapıldı.');
 
         foreach ($urls as $i => $url) {
             try {
@@ -60,7 +54,7 @@ class ImportOldParfumshopCategory extends Command
                     continue;
                 }
 
-                $this->storeProduct($data, $category);
+                $this->storeProduct($data);
             } catch (Throwable $e) {
                 $this->error('  Xəta: '.$e->getMessage());
             }
@@ -162,9 +156,9 @@ class ImportOldParfumshopCategory extends Command
         ];
     }
 
-    private function storeProduct(array $data, Category $category): void
+    private function storeProduct(array $data): void
     {
-        DB::transaction(function () use ($data, $category) {
+        DB::transaction(function () use ($data) {
             $brand = Brand::firstOrCreate(['name'=>$data['brand']], ['active'=>1]);
             $type = Type::firstOrCreate(['name_az'=>$data['type'] ?: 'Digər'], ['name_en'=>$data['type'] ?: 'Other','name_ru'=>$data['type'] ?: 'Другое']);
             $gender = $data['gender'] ? Gender::firstOrCreate(['name_az'=>$data['gender']], ['name_en'=>$data['gender'],'name_ru'=>$data['gender']]) : null;
