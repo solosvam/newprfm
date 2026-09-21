@@ -123,13 +123,6 @@ class MainController extends Controller
     }
 
 
-    public function category(Request $request, Category $category, ?string $slug = null)
-    {
-        abort_unless($category->active, 404);
-        $request->merge(['category' => $category->id]);
-        return $this->index($request);
-    }
-
     public function credit()
     {
         $faqs = Faq::all();
