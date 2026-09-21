@@ -14,6 +14,7 @@ Route::get('/brands',[BrandsController::class,'index'])->name('brands');
 Route::get('/brand/{slug}',[BrandsController::class,'products'])->name('brand.products');
 Route::view('/cart', 'frontend.cart')->name('cart');
 Route::get('/cart/products',[ProductController::class,'cartProducts'])->name('cart.products');
+Route::get('/wishlist',[FavoriteController::class,'guest'])->name('wishlist');
 
 Route::middleware('guest')->group(function(){
     Route::get('/login',[AuthController::class,'login'])->name('front.login');
