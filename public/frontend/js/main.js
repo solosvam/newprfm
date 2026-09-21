@@ -70,3 +70,32 @@ window.showCartSuccess=function(){if(!window.jQuery||!jQuery.notify)return;jQuer
 document.addEventListener("DOMContentLoaded",()=>updateHeaderCartCount());
 window.addEventListener("parfumshop:cart-updated",event=>updateHeaderCartCount(event.detail));
 window.addEventListener("storage",event=>{if(event.key==="parfumshop_cart")updateHeaderCartCount()});
+
+
+const FAVORITES_KEY = 'parfumshop_favorites';
+function getLocalFavorites(){try{return [...new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]').map(Number).filter(Boolean))]}catch(e){return []}}
+function setLocalFavorites(ids){localStorage.setItem(FAVORITES_KEY,JSON.stringify([...new Set(ids.map(Number).filter(Boolean))]))}
+function paintFavorites(ids){const set=new Set(ids.map(Number));document.querySelectorAll('.favorite-toggle').forEach(btn=>{const active=set.has(Number(btn.dataset.productId));btn.classList.toggle('is-favorite',active);btn.setAttribute('aria-pressed',active?'true':'false')})}
+async function favoriteRequest(url,method='GET',body=null){const cfg=window.parfumshopFavoriteConfig||{};const res=await fetch(url,{method,headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':cfg.csrf||''},body:body?JSON.stringify(body):null});if(!res.ok)throw new Error('Favorite request failed');return res.json()}
+async function initFavorites(){
+    const cfg=window.parfumshopFavoriteConfig||{};
+    let local=getLocalFavorites();
+    if(cfg.authenticated){
+        if(local.length){const synced=await favoriteRequest(cfg.syncUrl,'POST',{product_ids:local});local=(synced.ids||[]).map(Number);localStorage.removeItem(FAVORITES_KEY)}
+        else{const data=await favoriteRequest(cfg.idsUrl);local=(data.ids||[]).map(Number)}
+    }
+    paintFavorites(local);
+}
+document.addEventListener('click',async e=>{
+    const btn=e.target.closest('.favorite-toggle'); if(!btn)return;
+    e.preventDefault();e.stopPropagation();
+    const id=Number(btn.dataset.productId),cfg=window.parfumshopFavoriteConfig||{};
+    const active=btn.classList.contains('is-favorite');
+    if(cfg.authenticated){
+        try{await favoriteRequest(cfg.storeUrl+'/'+id,active?'DELETE':'POST');btn.classList.toggle('is-favorite',!active);btn.setAttribute('aria-pressed',!active?'true':'false');if(active&&location.pathname.includes('/profile/wishlist'))btn.closest('.product-item')?.remove()}catch(e){}
+    }else{
+        let ids=getLocalFavorites();ids=active?ids.filter(x=>x!==id):[...ids,id];setLocalFavorites(ids);paintFavorites(ids);
+    }
+});
+document.addEventListener('click',e=>{const link=e.target.closest('.wishlist-page-link');const cfg=window.parfumshopFavoriteConfig||{};if(link&&!cfg.authenticated){e.preventDefault();const ids=getLocalFavorites();if(!ids.length){alert('Hələ bəyəndiyiniz ətir yoxdur.');return}document.querySelector('[data-product-id="'+ids[0]+'"]')?.scrollIntoView({behavior:'smooth',block:'center'})}});
+document.addEventListener('DOMContentLoaded',()=>{initFavorites().catch(()=>{})});
