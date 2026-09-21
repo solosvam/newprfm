@@ -42,7 +42,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="Bəyəndiyim ətirlər" /></a>
+                        <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link header-wishlist__link"><img src="{{asset('frontend/images/wishlist.svg')}}" alt="Bəyəndiyim ətirlər" /><span class="header-wishlist__count is-empty" id="headerWishlistCount">0</span></a>
                     </li>
                     <li class="header-account">
                         @auth
