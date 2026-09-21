@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\Order;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -174,7 +175,18 @@ class AuthController extends Controller
 
     public function orders()
     {
-        return view('frontend.orders');
+        $orders = Order::with([
+            'items.product.brand',
+            'items.product.images',
+            'items.variant.size',
+            'paymentMethod',
+            'status',
+        ])
+            ->where('customer_id', auth()->id())
+            ->latest()
+            ->paginate(10);
+
+        return view('frontend.orders', compact('orders'));
     }
 
     public function wishlist()
