@@ -6,6 +6,7 @@ use App\Http\Controllers\Frontend\MainController;
 use App\Http\Controllers\Frontend\BrandsController;
 use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CheckoutController;
+use App\Http\Controllers\Frontend\FavoriteController;
 
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
@@ -35,7 +36,11 @@ Route::middleware('auth')->group(function(){
    Route::get('/profile/orders',[AuthController::class,'orders'])->name('profile.orders');
    Route::get('/profile/orders/{order}',[AuthController::class,'order'])->name('profile.orders.show');
    Route::get('/profile/bonuses',[AuthController::class,'bonuses'])->name('profile.bonuses');
-   Route::get('/profile/wishlist',[AuthController::class,'wishlist'])->name('profile.wishlist');
+   Route::get('/profile/wishlist',[FavoriteController::class,'index'])->name('profile.wishlist');
+   Route::get('/favorites/ids',[FavoriteController::class,'ids'])->name('favorites.ids');
+   Route::post('/favorites/sync',[FavoriteController::class,'sync'])->name('favorites.sync');
+   Route::post('/favorites/{product}',[FavoriteController::class,'store'])->name('favorites.store');
+   Route::delete('/favorites/{product}',[FavoriteController::class,'destroy'])->name('favorites.destroy');
    Route::get('/profile/reviews',[AuthController::class,'reviews'])->name('profile.reviews');
    Route::post('/product/{product}/review',[ProductController::class,'review'])->name('product.review');
 });
