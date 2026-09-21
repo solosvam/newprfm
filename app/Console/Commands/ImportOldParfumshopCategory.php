@@ -138,8 +138,8 @@ class ImportOldParfumshopCategory extends Command
             'name' => trim((string) ($p['model'] ?? $p['name'] ?? '')),
             'type' => trim((string) ($p['type'] ?? '')),
             'gender' => trim(str_replace(' üçün', '', (string) ($p['gender'] ?? ''))),
-            'description_az' => (string) ($p['description_az'] ?? $p['description'] ?? ''),
-            'description_ru' => (string) ($p['description_ru'] ?? ''),
+            'description_az' => $this->decodeHtml((string) ($p['description_az'] ?? $p['description'] ?? '')),
+            'description_ru' => $this->decodeHtml((string) ($p['description_ru'] ?? '')),
             'variants' => array_map(fn ($v) => [
                 'size_az' => trim((string) ($v['size_az'] ?? $v['size'] ?? 'Standart')) ?: 'Standart',
                 'size_ru' => trim((string) ($v['size_ru'] ?? $v['size_az'] ?? $v['size'] ?? 'Стандарт')) ?: 'Стандарт',
