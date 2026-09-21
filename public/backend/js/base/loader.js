@@ -1,28 +1,20 @@
 /**
+ *
  * Loader
- * Shows the spinner only while the document is still loading.
- */
+ * Adds a spinner class to the body if the DOMContentLoaded is not fired for 500 ms.
+ * This prevents seeing a spinner on an already visited page.
+ *
+ **/
+
 (function () {
-  let timeoutId = null;
-
-  const removeSpinner = () => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    document.body.classList.remove('spinner');
-  };
-
-  if (document.readyState === 'loading') {
-    timeoutId = setTimeout(() => {
-      if (document.readyState === 'loading') {
-        document.body.classList.add('spinner');
-      }
+    let isContentLoaded = false;
+    const timeoutId = setTimeout(() => {
+        if (!isContentLoaded) {
+            document.body.classList.add('spinner');
+        }
     }, 500);
 
-    document.addEventListener('DOMContentLoaded', removeSpinner, { once: true });
-  } else {
-    removeSpinner();
-  }
-
-  window.addEventListener('pageshow', removeSpinner);
+    window.addEventListener('DOMContentLoaded', (event) => {
+        isContentLoaded = true;
+    });
 })();
