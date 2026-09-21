@@ -15,6 +15,9 @@
 
                 <div class="main-products">
                     <div class="main-products__top">
+                        @if($selectedCategory)
+                            <h1 style="font-size: 20px; font-weight: 500; margin: 0;">{{ $selectedCategory->{'name_'.app()->getLocale()} ?: $selectedCategory->name_az }}</h1>
+                        @else
                         <ul>
                             <li class="{{ request('gender') ? '' : 'active' }}">
                                 <a href="{{ route('home', array_filter(['sort' => request('sort')])) }}">Bütün ətirlər</a>
@@ -29,8 +32,9 @@
                                 <a href="{{ route('home', array_filter(['gender' => 'unisex', 'sort' => request('sort')])) }}">Unisex ətirlər</a>
                             </li>
                         </ul>
+                        @endif
 
-                        <form method="GET" action="{{ route('home') }}" class="product-sort-form">
+                        <form method="GET" action="{{ $selectedCategory ? route('category', ['category' => $selectedCategory->id, 'slug' => \Illuminate\Support\Str::slug($selectedCategory->{'name_'.app()->getLocale()} ?: $selectedCategory->name_az)]) : route('home') }}" class="product-sort-form">
                             @if(request('gender'))
                                 <input type="hidden" name="gender" value="{{ request('gender') }}">
                             @endif
