@@ -8,6 +8,7 @@ use App\Models\Faq;
 use App\Models\CreditTerms;
 use App\Models\Product\Product;
 use App\Models\Product\Category;
+use App\Models\Product\Category;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
@@ -15,6 +16,7 @@ class MainController extends Controller
     public function index(Request $request)
     {
         $banners = Banners::where('active', 1)->get();
+        $selectedCategory = null;
         $selectedCategory = null;
 
         $query = Product::with([
@@ -32,6 +34,7 @@ class MainController extends Controller
 
         if ($request->filled('category')) {
             $categoryId = (int) $request->input('category');
+            $selectedCategory = Category::where('active', 1)->find($categoryId);
             $selectedCategory = Category::where('active', 1)->find($categoryId);
             $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->where('categories.id', $categoryId));
         }
@@ -107,6 +110,7 @@ class MainController extends Controller
             'banners' => $formattedBanners,
             'products' => $products,
             'selectedCategory' => $selectedCategory,
+            'selectedCategory' => $selectedCategory,
         ]);
     }
 
@@ -120,6 +124,13 @@ class MainController extends Controller
         return $this->index($request);
     }
 
+
+    public function category(Request $request, Category $category, ?string $slug = null)
+    {
+        abort_unless($category->active, 404);
+        $request->merge(['category' => $category->id]);
+        return $this->index($request);
+    }
 
     public function credit()
     {
