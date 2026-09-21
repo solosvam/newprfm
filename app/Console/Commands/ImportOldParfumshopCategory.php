@@ -196,6 +196,9 @@ class ImportOldParfumshopCategory extends Command
             $html = $decoded;
         }
 
+        // Bütün sətir sonlarını əvvəlcə Unix formatına sal.
+        $html = str_replace(["\r\n", "\r"], "\n", $html);
+
         // Non-breaking space-i adi boşluğa çevir.
         $html = str_replace("\xC2\xA0", ' ', $html);
 
@@ -209,6 +212,7 @@ class ImportOldParfumshopCategory extends Command
         $text = strip_tags($html);
 
         // Artıq boşluqları və boş sətirləri təmizlə.
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
         $text = preg_replace('/[ \\t]+/u', ' ', $text);
         $text = preg_replace('/ *\\n */u', "\n", $text);
         $text = preg_replace('/\\n+/u', "\n", $text);
