@@ -205,6 +205,16 @@ class AuthController extends Controller
         return view('frontend.order-detail', compact('order'));
     }
 
+    public function bonuses()
+    {
+        $transactions = auth()->user()->bonusTransactions()
+            ->with('order')
+            ->latest()
+            ->paginate(20);
+
+        return view('frontend.bonuses', compact('transactions'));
+    }
+
     public function wishlist()
     {
         return view('frontend.wishlist');
