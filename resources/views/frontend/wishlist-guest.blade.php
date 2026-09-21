@@ -16,13 +16,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     const grid = document.getElementById('guestWishlist'), empty = document.getElementById('guestWishlistEmpty');
     if (!ids.length) { empty.style.display = 'block'; return; }
     try {
-        const res = await fetch('{{ route('cart.products') }}?ids=' + encodeURIComponent(ids.join(',')), {headers:{'Accept':'application/json'}});
+        const res = await fetch('{{ route('wishlist.products') }}?ids=' + encodeURIComponent(ids.join(',')), {headers:{'Accept':'application/json'}});
         const data = await res.json();
         const products = data.products || data || [];
         grid.innerHTML = products.map(p => {
-            const image = p.image_url || p.image || '';
-            const url = p.url || ('/' + (p.slug || ''));
-            const brand = p.brand_name || (p.brand && p.brand.name) || '';
+            const image = p.image || '';
+            const url = p.url || '#';
+            const brand = p.brand || '';
             return '<article class="wishlist-card product-item" data-product-id="'+p.id+'"><div class="wishlist-card__image"><button type="button" class="favorite-toggle is-favorite" data-product-id="'+p.id+'" aria-pressed="true"><img src="{{ asset('frontend/images/product-card-wishlist.svg') }}" alt=""></button><a href="'+url+'">'+(image?'<img class="product-main-image" src="'+image+'" alt="">':'')+'</a></div><div class="wishlist-card__info"><h3><a href="'+url+'">'+(p.name||'')+'</a></h3><p>'+brand+'</p></div></article>';
         }).join('');
         if (!products.length) empty.style.display = 'block';
