@@ -1,5 +1,7 @@
 <?php
 
+use App\Console\Commands\ImportOldParfumshopCategory;
+
 use App\Http\Middleware\setLangMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withCommands([
-        __DIR__.'/../app/Console/Commands',
+        ImportOldParfumshopCategory::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(setLangMiddleware::class);
