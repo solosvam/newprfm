@@ -183,6 +183,19 @@ class ImportOldParfumshopCategory extends Command
         });
     }
 
+    private function decodeHtml(string $html): string
+    {
+        // Köhnə sistemdə mətn bəzən bir neçə dəfə entity encode olunub.
+        // HTML teqlərini saxlayıb yalnız entity-ləri UTF-8 simvollara çeviririk.
+        for ($i = 0; $i < 3; $i++) {
+            $decoded = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if ($decoded === $html) break;
+            $html = $decoded;
+        }
+
+        return $html;
+    }
+
     private function downloadImages(Product $product, array $urls): void
     {
         if (!$urls) return;
