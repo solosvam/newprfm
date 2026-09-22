@@ -179,9 +179,12 @@ Route::prefix('admin')
                 ->name('crm.')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
+                    Route::get('/search', 'search')->name('search');
                     Route::get('/customer/{customer}', 'show')->name('show');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
+                    Route::post('/customer/{customer}', 'update')->name('update');
                     Route::post('/customer/{customer}/reset-password', 'resetPassword')->name('reset-password');
+                    Route::get('/customer/{customer}/sms', 'sms')->name('sms');
                 });
 
 

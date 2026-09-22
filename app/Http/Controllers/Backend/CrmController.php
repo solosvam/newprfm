@@ -4,30 +4,38 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Services\SmsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CrmController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Customer::query()->latest('id');
-        $search = trim((string) $request->query('q'));
+        return view('backend.crm.index');
+    }
 
-        if ($search !== '') {
-            $query->where(function ($customers) use ($search) {
-                $customers
-                    ->where('name', 'like', "%{$search}%")
-                    ->orWhere('surname', 'like', "%{$search}%")
-                    ->orWhere('mobile', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
+    public function search(Request $request): JsonResponse
+    {
+        $number = preg_replace('/\D+/', '', (string) $request->query('number'));
+
+        if (strlen($number) !== 9) {
+            return response()->json(['message' => 'Telefon nömrəsi 9 rəqəm olmalıdır.'], 422);
         }
 
-        return view('backend.crm.index', [
-            'customers' => $query->paginate(20)->withQueryString(),
-            'search' => $search,
+        $customer = Customer::where('mobile', '994' . $number)->first();
+
+        if (!$customer) {
+            return response()->json(['found' => false]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'url' => route('admin.crm.show', $customer),
         ]);
     }
 
@@ -47,12 +55,7 @@ class CrmController extends Controller
                     ->latest()
                     ->paginate(10),
             ]),
-            'payments' => view('backend.crm.tabs.payments', [
-                'orders' => $customer->orders()
-                    ->with(['paymentMethod', 'status'])
-                    ->latest()
-                    ->paginate(10),
-            ]),
+            'payments' => view('backend.crm.tabs.payments'),
             'bonuses' => view('backend.crm.tabs.bonuses', [
                 'customer' => $customer,
                 'transactions' => $customer->bonusTransactions()
@@ -67,12 +70,69 @@ class CrmController extends Controller
         };
     }
 
-    public function resetPassword(Customer $customer): RedirectResponse
+    public function update(Customer $customer, Request $request): RedirectResponse
     {
-        $customer->forceFill(['password' => null])->save();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:30'],
+            'surname' => ['required', 'string', 'max:30'],
+            'mobile' => ['required', 'digits:12', 'unique:customers,mobile,' . $customer->id],
+            'email' => ['nullable', 'email', 'max:50', 'unique:customers,email,' . $customer->id],
+            'active' => ['nullable', 'boolean'],
+        ]);
+
+        $customer->update([
+            'name' => $data['name'],
+            'surname' => $data['surname'],
+            'mobile' => $data['mobile'],
+            'email' => $data['email'] ?? null,
+            'active' => $request->boolean('active'),
+        ]);
 
         return redirect()
             ->route('admin.crm.show', $customer)
-            ->with('success', 'Müştərinin şifrəsi sıfırlandı. Növbəti girişdə OTP ilə yeni şifrə təyin edəcək.');
+            ->with('success', 'Müştəri məlumatları yeniləndi.');
+    }
+
+    public function resetPassword(Customer $customer, SmsService $sms): RedirectResponse
+    {
+        if (!$customer->mobile) {
+            return redirect()
+                ->route('admin.crm.show', $customer)
+                ->with('error', 'Müştərinin telefon nömrəsi olmadığı üçün şifrə yenilənmədi.');
+        }
+
+        try {
+            $newPassword = Str::upper(Str::random(4)) . random_int(100000, 999999);
+            $sms->send($customer->mobile, "ParfumShop: yeni şifrəniz {$newPassword}");
+            $customer->forceFill(['password' => Hash::make($newPassword)])->save();
+        } catch (\RuntimeException $exception) {
+            return redirect()
+                ->route('admin.crm.show', $customer)
+                ->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.crm.show', $customer)
+            ->with('success', 'Yeni şifrə SMS ilə müştərinin nömrəsinə göndərildi.');
+    }
+
+    public function sms(Customer $customer, SmsService $sms): View
+    {
+        if (!$customer->mobile) {
+            return view('backend.crm.sms', [
+                'messages' => [],
+                'error' => 'Müştərinin telefon nömrəsi qeyd edilməyib.',
+            ]);
+        }
+
+        try {
+            $messages = $sms->history($customer->mobile);
+            $error = null;
+        } catch (\RuntimeException $exception) {
+            $messages = [];
+            $error = $exception->getMessage();
+        }
+
+        return view('backend.crm.sms', compact('messages', 'error'));
     }
 }

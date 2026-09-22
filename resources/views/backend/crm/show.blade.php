@@ -17,6 +17,9 @@
         .crm-avatar { width: 112px; height: 112px; font-size: 2rem; }
         .crm-profile-card { min-height: 320px; }
         .crm-tab-content { min-height: 330px; }
+        .crm-tabs { border-bottom: 1px solid var(--separator); flex-wrap: nowrap; overflow-x: auto; }
+        .crm-tabs .nav-link { border: 0 !important; border-bottom: 3px solid transparent !important; border-radius: 0 !important; color: var(--foreground) !important; padding: 1rem 1.15rem; white-space: nowrap; }
+        .crm-tabs .nav-link.active { background: transparent !important; border-bottom-color: var(--primary) !important; color: var(--primary) !important; }
     </style>
 @endsection
 
@@ -26,6 +29,50 @@
             const tabs = document.getElementById('crmTabs');
             const tabContent = document.getElementById('crmTabContent');
             const tabUrl = tabs.dataset.tabUrl;
+            const searchInput = document.getElementById('crm-search');
+            const searchResult = document.getElementById('crm-search-result');
+            let searchedNumber = '';
+
+            searchInput.addEventListener('input', function () {
+                let number = searchInput.value.replace(/\D/g, '');
+
+                if (number.indexOf('994') === 0) {
+                    number = number.substring(3);
+                }
+
+                searchInput.value = number.substring(0, 9);
+                searchResult.innerHTML = '';
+                searchedNumber = '';
+
+                if (searchInput.value.length !== 9) {
+                    return;
+                }
+
+                const searchNumber = searchInput.value;
+                searchedNumber = searchNumber;
+
+                fetch('{{ route('admin.crm.search') }}?number=' + encodeURIComponent(searchNumber), {
+                    headers: {'Accept': 'application/json'}
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (searchedNumber !== searchNumber) {
+                            return;
+                        }
+
+                        if (data.found) {
+                            window.location.href = data.url;
+                            return;
+                        }
+
+                        searchResult.innerHTML = '<div class="text-danger small mt-1">Müştəri tapılmadı.</div>';
+                    })
+                    .catch(function () {
+                        searchResult.innerHTML = '<div class="text-danger small mt-1">Axtarış zamanı xəta yarandı.</div>';
+                    });
+            });
 
             function loadTab(tab, url) {
                 tabContent.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
@@ -75,6 +122,30 @@
                 loadTab(null, page.href);
             });
 
+            const smsModal = document.getElementById('smsModal');
+
+            smsModal.addEventListener('show.bs.modal', function () {
+                const body = document.getElementById('smsModalBody');
+                body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+
+                fetch(smsModal.dataset.url, {
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error();
+                        }
+
+                        return response.text();
+                    })
+                    .then(function (html) {
+                        body.innerHTML = html;
+                    })
+                    .catch(function () {
+                        body.innerHTML = '<div class="text-danger">SMS tarixçəsi yüklənə bilmədi.</div>';
+                    });
+            });
+
             loadTab('orders');
         });
     </script>
@@ -89,12 +160,11 @@
                     @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
                 </div>
                 <div class="col-12 col-md-5 mt-3 mt-md-0">
-                    <form method="GET" action="{{ route('admin.crm.index') }}" class="input-group">
-                        <input class="form-control" name="q" placeholder="Müştəri axtar">
-                        <button class="btn btn-outline-primary" type="submit">
-                            <i data-acorn-icon="search" data-acorn-size="16"></i>
-                        </button>
-                    </form>
+                    <div class="input-group">
+                        <span class="input-group-text">994</span>
+                        <input id="crm-search" class="form-control" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="Müştəri nömrəsi">
+                    </div>
+                    <div id="crm-search-result"></div>
                 </div>
             </div>
         </div>
@@ -151,7 +221,7 @@
             <div class="col-xl-9">
                 <div class="card h-100">
                     <div class="card-body p-0">
-                        <ul class="nav nav-tabs nav-tabs-line-title responsive-tabs px-3 pt-3" id="crmTabs"
+                        <ul class="nav crm-tabs px-3" id="crmTabs"
                             data-tab-url="{{ route('admin.crm.tab', ['customer' => $customer->id, 'tab' => '__TAB__']) }}">
                             <li class="nav-item">
                                 <a class="nav-link active" href="#" data-tab="orders">
@@ -190,7 +260,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    {{ $fullName }} növbəti girişdə OTP ilə yeni şifrə təyin edəcək. Davam edək?
+                    Yeni şifrə yaradılacaq və {{ $customer->mobile }} nömrəsinə SMS ilə göndəriləcək. Davam edək?
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Ləğv et</button>
@@ -203,16 +273,15 @@
         </div>
     </div>
 
-    <div class="modal fade" id="smsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="smsModal" tabindex="-1" aria-hidden="true"
+         data-url="{{ route('admin.crm.sms', $customer) }}">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">SMS-lər</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-muted">
-                    SMS tarixçəsi və göndəriş bu bölməyə növbəti mərhələdə əlavə olunacaq.
-                </div>
+                <div class="modal-body" id="smsModalBody"></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Bağla</button>
                 </div>
