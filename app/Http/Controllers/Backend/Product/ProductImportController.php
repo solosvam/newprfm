@@ -7,6 +7,7 @@ use App\Models\Product\Brand;
 use App\Models\Product\Gender;
 use App\Models\Product\Ingredient;
 use App\Services\FragranticaImportService;
+use App\Services\OpenAiPerfumeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,11 +18,33 @@ class ProductImportController extends Controller
     public function preview(Request $request, FragranticaImportService $fragrantica): JsonResponse
     {
         $request->validate([
-            'url' => ['required', 'url', 'max:2048'],
+            'url' => ['required', 'url', 'max:2048', 'regex:/^https:\/\/(www\.)?fragrantica\.com\/perfume\//i'],
         ]);
 
         try {
             $product = $fragrantica->import($request->string('url')->toString());
+
+            return response()->json([
+                'product' => $product,
+                'matches' => [
+                    'brand_id' => $this->findBrand($product['brand']),
+                    'gender_ids' => $this->findGenders($product['gender']),
+                    'ingredient_ids' => $this->findIngredients($product['notes']),
+                ],
+            ]);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function generateWithAi(Request $request, OpenAiPerfumeService $openAi): JsonResponse
+    {
+        $request->validate([
+            'url' => ['required', 'url', 'max:2048', 'regex:/^https:\/\/(www\.)?fragrantica\.com\/perfume\//i'],
+        ]);
+
+        try {
+            $product = $openAi->generateFromFragrantica($request->string('url')->toString());
 
             return response()->json([
                 'product' => $product,
@@ -46,7 +69,7 @@ class ProductImportController extends Controller
     private function findGenders(?string $gender): array
     {
         $needles = match ($gender) {
-            'women and men' => ['unisex', 'uniseks'],
+            'women and men', 'unisex' => ['unisex', 'uniseks'],
             'women' => ['women', 'woman', 'qadın'],
             'men' => ['men', 'man', 'kişi'],
             default => [],

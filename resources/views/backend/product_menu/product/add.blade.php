@@ -24,6 +24,7 @@
             const imageArea = document.querySelector('.image_area');
             const fragranticaImportUrl = document.getElementById('fragrantica_import_url');
             const fragranticaImportButton = document.getElementById('fragranticaImportButton');
+            const aiGenerateButton = document.getElementById('aiGenerateButton');
             const fragranticaImportResult = document.getElementById('fragranticaImportResult');
             const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
@@ -96,6 +97,65 @@
                 } finally {
                     fragranticaImportButton.disabled = false;
                     fragranticaImportButton.textContent = 'Məlumatları gətir';
+                }
+            });
+
+            aiGenerateButton.addEventListener('click', async function () {
+                const url = fragranticaImportUrl.value.trim();
+
+                if (!url) {
+                    fragranticaImportResult.innerHTML = '<div class="alert alert-warning mb-0">Əvvəlcə Fragrantica linkini daxil edin.</div>';
+                    return;
+                }
+
+                aiGenerateButton.disabled = true;
+                aiGenerateButton.textContent = 'AI yazır...';
+                fragranticaImportResult.innerHTML = '';
+
+                try {
+                    const response = await fetch('{{ route('admin.product.import.ai-generate') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({url}),
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'AI məlumatları hazırlaya bilmədi.');
+                    }
+
+                    document.getElementById('name').value = data.product.name || '';
+                    document.querySelector('textarea[name="content_az"]').value = data.product.description_az || '';
+                    document.querySelector('textarea[name="content_en"]').value = data.product.description_en || '';
+                    document.querySelector('textarea[name="content_ru"]').value = data.product.description_ru || '';
+
+                    if (data.matches.brand_id) {
+                        $('#brand_id').val(String(data.matches.brand_id)).trigger('change');
+                    }
+
+                    if (data.matches.gender_ids.length) {
+                        $('#gender').val(data.matches.gender_ids.map(String)).trigger('change');
+                    }
+
+                    if (data.matches.ingredient_ids.length) {
+                        $('#ingredients').val(data.matches.ingredient_ids.map(String)).trigger('change');
+                    }
+
+                    fragranticaImportResult.innerHTML = `
+                        <div class="alert alert-success mb-0">
+                            <strong>AI məlumatları və 3 dildə təsvir hazırdır.</strong><br>
+                            ${escapeHtml(data.product.brand)} — ${escapeHtml(data.product.name)}
+                            <div class="small mt-2">İl: ${escapeHtml(data.product.year ?? 'tapılmadı')} · Parfümer: ${escapeHtml(data.product.perfumer ?? 'tapılmadı')}</div>
+                        </div>`;
+                } catch (error) {
+                    fragranticaImportResult.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(error.message)}</div>`;
+                } finally {
+                    aiGenerateButton.disabled = false;
+                    aiGenerateButton.textContent = 'AI ilə məlumat və təsvir yarat';
                 }
             });
 
@@ -176,6 +236,7 @@
                                     <input type="url" id="fragrantica_import_url" class="form-control" placeholder="https://www.fragrantica.com/perfume/...">
                                     <button class="btn btn-outline-primary" type="button" id="fragranticaImportButton">Məlumatları gətir</button>
                                 </div>
+                                <button class="btn btn-primary mt-2" type="button" id="aiGenerateButton">AI ilə məlumat və təsvir yarat</button>
                                 <div class="form-text">Linkdən məhsul adı, brend, cinsiyyət, notlar və əsas şəkil çıxarılır. Heç nə yadda saxlanmır; əvvəlcə sən yoxlayırsan.</div>
                                 <div id="fragranticaImportResult" class="mt-3"></div>
                             </div>
