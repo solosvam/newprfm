@@ -333,6 +333,7 @@ Route::prefix('admin')
                     Route::get('/edit/{id}', 'edit')->name('edit');
                     Route::post('/add', 'create')->name('create');
                     Route::post('/update/{id}', 'update')->name('update');
+                    Route::post('/delete/{id}', 'destroy')->name('destroy');
                 });
 
         });

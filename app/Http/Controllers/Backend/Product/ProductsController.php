@@ -13,6 +13,7 @@ use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
 use App\Models\Product\Size;
 use App\Models\Product\Type;
+use App\Models\OrderItem;
 use App\Services\SeoUrl;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -300,6 +301,44 @@ class ProductsController extends Controller
         return redirect()
             ->route('admin.product.list')
             ->with('success', 'Məhsul yeniləndi!');
+    }
+
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
+
+        if (OrderItem::where('product_id', $product->id)->exists()) {
+            return redirect()
+                ->route('admin.product.edit', $product->id)
+                ->with('error', 'Bu məhsul sifarişdə olduğu üçün silinə bilməz.');
+        }
+
+        $imageNames = DB::transaction(function () use ($product) {
+            $imageNames = $product->images()->pluck('image')->all();
+
+            $product->categories()->detach();
+            $product->genders()->detach();
+            $product->ingredients()->detach();
+            $product->reviews()->delete();
+            $product->variants()->delete();
+            $product->images()->delete();
+            DB::table('product_favorites')->where('product_id', $product->id)->delete();
+            $product->delete();
+
+            return $imageNames;
+        });
+
+        foreach ($imageNames as $imageName) {
+            $path = public_path('frontend/uploads/products/' . $imageName);
+
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+
+        return redirect()
+            ->route('admin.product.list')
+            ->with('success', 'Məhsul və ona aid məlumatlar silindi.');
     }
 
     public function listData()

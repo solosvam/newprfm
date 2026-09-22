@@ -391,9 +391,19 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-4">
+                                <div class="mt-4 d-flex gap-2">
                                     <button type="submit" class="btn btn-primary">Yadda saxla</button>
+                                    <button type="submit"
+                                            form="delete-product-form"
+                                            class="btn btn-danger"
+                                            onclick="return confirm('Məhsul tamamilə silinəcək. Davam edək?')">
+                                        Məhsulu sil
+                                    </button>
                                 </div>
+                            </form>
+
+                            <form id="delete-product-form" method="POST" action="{{ route('admin.product.destroy', $product->id) }}">
+                                @csrf
                             </form>
                         </div>
                     </div>
