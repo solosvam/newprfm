@@ -46,7 +46,7 @@ class OpenAiPerfumeService
             throw new RuntimeException('OpenAI gözlənilən JSON cavabını qaytarmadı.');
         }
 
-        return $data;
+        return $this->sanitizeDescriptions($data);
     }
 
     private function prompt(string $url): string
@@ -63,7 +63,8 @@ Qaydalar:
 - gender yalnız "women", "men" və ya "unisex" olsun.
 - notes və accords yalnız qısa adlardan ibarət massiv olsun.
 - source_description İngiliscə 2-4 cümləlik faktiki xülasə olsun; mənbəni sözbəsöz uzun köçürmə.
-- description_az, description_en və description_ru hərəsi 80-120 söz olsun. Satış dilində, təbii, təkrarsız yaz. Fragrantica adını və istifadəçi rəylərini qeyd etmə.
+- description_az, description_en və description_ru hərəsi 80-120 söz olsun. Satış dilində, təbii, təkrarsız yaz.
+- Bu üç description sahəsində Fragrantica, heç bir başqa sayt adı, URL, Markdown linki, citation, mənbə qeydi və ya "according to" tipli ifadə qətiyyən yazma.
 - Məhsulun davamlılığı, yayılması və mövsümü barədə təsdiqlənmiş məlumat yoxdursa qəti iddia yazma.
 - Yalnız göstərilən JSON sxeminə uyğun cavab ver.
 PROMPT;
@@ -107,5 +108,19 @@ PROMPT;
         }
 
         throw new RuntimeException('OpenAI cavabında mətn tapılmadı.');
+    }
+
+    private function sanitizeDescriptions(array $data): array
+    {
+        foreach (['description_az', 'description_en', 'description_ru'] as $field) {
+            $description = (string) ($data[$field] ?? '');
+            $description = preg_replace('/\s*\[[^\]]*\]\(https?:\/\/[^)]+\)/iu', '', $description);
+            $description = preg_replace('/\s*https?:\/\/\S+/iu', '', $description);
+            $description = preg_replace('/\s*cite[^]*/u', '', $description);
+            $description = preg_replace('/\bfragrantica(?:\.com)?\b/iu', '', $description);
+            $data[$field] = trim(preg_replace('/\s{2,}/u', ' ', $description));
+        }
+
+        return $data;
     }
 }
