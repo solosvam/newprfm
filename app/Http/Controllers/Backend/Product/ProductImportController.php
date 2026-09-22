@@ -8,7 +8,7 @@ use App\Models\Product\Gender;
 use App\Models\Product\Ingredient;
 use App\Services\FragranticaImportService;
 use App\Services\OpenAiPerfumeService;
-use App\Services\SerpApiImageSearchService;
+use App\Services\SerperImageSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -64,14 +64,14 @@ class ProductImportController extends Controller
         }
     }
 
-    public function searchImages(Request $request, SerpApiImageSearchService $serpApi): JsonResponse
+    public function searchImages(Request $request, SerperImageSearchService $serper): JsonResponse
     {
         $request->validate([
             'query' => ['required', 'string', 'max:255'],
         ]);
 
         try {
-            $images = $serpApi->search($request->string('query')->toString());
+            $images = $serper->search($request->string('query')->toString());
 
             $images = collect($images)
                 ->map(fn (array $image, int $index) => ['id' => $index] + $image)

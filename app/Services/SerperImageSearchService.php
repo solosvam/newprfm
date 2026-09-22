@@ -5,34 +5,36 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
-class SerpApiImageSearchService
+class SerperImageSearchService
 {
     public function search(string $query): array
     {
-        $apiKey = config('services.serpapi.api_key');
+        $apiKey = config('services.serper.api_key');
 
         if (!$apiKey) {
-            throw new RuntimeException('SERPAPI_KEY .env faylında təyin edilməyib.');
+            throw new RuntimeException('SERPER_API_KEY .env faylında təyin edilməyib.');
         }
 
         $response = Http::timeout(30)
             ->acceptJson()
-            ->get('https://serpapi.com/search.json', [
-                'engine' => 'google_images',
+            ->withHeaders([
+                'X-API-KEY' => $apiKey,
+            ])
+            ->post('https://google.serper.dev/images', [
                 'q' => $query,
-                'api_key' => $apiKey,
-                'ijn' => 0,
+                'num' => 8,
+                'autocorrect' => false,
             ]);
 
         if (!$response->successful()) {
-            $message = data_get($response->json(), 'error', 'Şəkil axtarışı uğursuz oldu.');
+            $message = data_get($response->json(), 'message', 'Şəkil axtarışı uğursuz oldu.');
             throw new RuntimeException($message);
         }
 
-        return collect($response->json('images_results', []))
+        return collect($response->json('images', []))
             ->map(function (array $image) {
-                $original = $image['original'] ?? null;
-                $thumbnail = $image['thumbnail'] ?? $original;
+                $original = $image['imageUrl'] ?? null;
+                $thumbnail = $image['thumbnailUrl'] ?? $original;
 
                 if (!$this->isHttpsUrl($original) || !$this->isHttpsUrl($thumbnail)) {
                     return null;
@@ -42,7 +44,7 @@ class SerpApiImageSearchService
                     'original_url' => $original,
                     'thumbnail_url' => $thumbnail,
                     'title' => strip_tags((string) ($image['title'] ?? 'Məhsul şəkli')),
-                    'source' => strip_tags((string) ($image['source'] ?? '')), 
+                    'source' => strip_tags((string) ($image['source'] ?? '')),
                 ];
             })
             ->filter()
