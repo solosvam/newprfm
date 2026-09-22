@@ -213,20 +213,38 @@
                                     <label class="border rounded p-2 d-block h-100">
                                         <img src="${escapeHtml(image.thumbnail_url)}" alt="${escapeHtml(image.title)}" class="img-fluid mb-2" style="width: 100%; height: 150px; object-fit: contain">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" form="productForm" name="remote_image_ids[]" value="${image.id}">
+                                            <input class="form-check-input remote-image-checkbox" type="checkbox" form="productForm" name="remote_image_ids[]" value="${image.id}">
                                             <span class="form-check-label">Seç</span>
+                                        </div>
+                                        <div class="form-check mt-1">
+                                            <input class="form-check-input remote-primary-image" type="radio" form="productForm" name="remote_primary_image_id" value="${image.id}">
+                                            <span class="form-check-label">Əsas şəkil</span>
                                         </div>
                                         <div class="small text-muted mt-1 text-truncate">${escapeHtml(image.source)}</div>
                                     </label>
                                 </div>
                             `).join('')}
                         </div>
-                        <div class="form-text mt-2">Ən çox 5 şəkil seç. Məhsulu yadda saxlayanda seçilənlər serverə yüklənəcək.</div>`;
+                        <div class="form-text mt-2">Ən çox 5 şəkil seç. “Əsas şəkil” seçdiyin foto məhsulda birinci görünəcək.</div>`;
                 } catch (error) {
                     imageSearchResult.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(error.message)}</div>`;
                 } finally {
                     imageSearchButton.disabled = false;
                     imageSearchButton.textContent = 'Şəkilləri tap';
+                }
+            });
+
+            imageSearchResult.addEventListener('change', function (event) {
+                if (event.target.classList.contains('remote-primary-image')) {
+                    event.target.closest('label').querySelector('.remote-image-checkbox').checked = true;
+                }
+
+                if (event.target.classList.contains('remote-image-checkbox') && !event.target.checked) {
+                    const primary = event.target.closest('label').querySelector('.remote-primary-image');
+
+                    if (primary.checked) {
+                        primary.checked = false;
+                    }
                 }
             });
 

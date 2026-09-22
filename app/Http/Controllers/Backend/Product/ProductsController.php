@@ -86,11 +86,15 @@ class ProductsController extends Controller
                 ]);
             }
 
+            $manager = ImageManager::usingDriver(Driver::class);
+
+            $this->storeSelectedRemoteImages($product, $request, $manager);
+
             /*
-             * Şəkillər
+             * Əl ilə yüklənən şəkillər
              */
             if ($request->hasFile('images')) {
-                $manager = ImageManager::usingDriver(Driver::class);
+                $sortOrder = $this->nextImageSortOrder($product);
 
                 foreach ($request->file('images') as $index => $image) {
                     $imageName = $this->generateProductImageName($product);
@@ -105,11 +109,10 @@ class ProductsController extends Controller
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image' => $imageName,
+                        'sort_order' => $sortOrder++,
                     ]);
                 }
             }
-
-            $this->storeSelectedRemoteImages($product, $request, $manager ?? ImageManager::usingDriver(Driver::class));
         });
 
         return redirect()
@@ -132,13 +135,21 @@ class ProductsController extends Controller
 
     private function storeSelectedRemoteImages(Product $product, AddProductRequest $request, ImageManager $manager): void
     {
-        $selectedIds = $request->input('remote_image_ids', []);
+        $selectedIds = array_map('intval', $request->input('remote_image_ids', []));
+        $primaryId = $request->filled('remote_primary_image_id')
+            ? (int) $request->input('remote_primary_image_id')
+            : null;
 
         if (!$selectedIds) {
             return;
         }
 
+        if ($primaryId !== null && in_array($primaryId, $selectedIds, true)) {
+            $selectedIds = array_values(array_unique(array_merge([$primaryId], $selectedIds)));
+        }
+
         $candidates = $request->session()->get('product_image_candidates', []);
+        $sortOrder = $this->nextImageSortOrder($product);
 
         foreach ($selectedIds as $id) {
             $candidate = $candidates[$id] ?? null;
@@ -169,8 +180,14 @@ class ProductsController extends Controller
             ProductImage::create([
                 'product_id' => $product->id,
                 'image' => $imageName,
+                'sort_order' => $sortOrder++,
             ]);
         }
+    }
+
+    private function nextImageSortOrder(Product $product): int
+    {
+        return ((int) $product->images()->max('sort_order')) + 1;
     }
 
     public function update(AddProductRequest $request, $id)
@@ -242,6 +259,7 @@ class ProductsController extends Controller
              */
             if ($request->hasFile('images')) {
                 $manager = ImageManager::usingDriver(Driver::class);
+                $sortOrder = $this->nextImageSortOrder($product);
 
                 // brand_id dəyişmiş ola bilər, relation-u yenidən oxuyuruq
                 $product->load('brand');
@@ -261,6 +279,7 @@ class ProductsController extends Controller
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image'      => $imageName,
+                        'sort_order' => $sortOrder++,
                     ]);
                 }
             }

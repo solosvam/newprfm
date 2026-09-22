@@ -128,6 +128,12 @@ class AddProductRequest extends FormRequest
                 'distinct',
                 'min:0',
             ],
+
+            'remote_primary_image_id' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
         ];
     }
 
