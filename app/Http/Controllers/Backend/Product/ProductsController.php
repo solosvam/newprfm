@@ -190,6 +190,15 @@ class ProductsController extends Controller
         return ((int) $product->images()->max('sort_order')) + 1;
     }
 
+    private function updateImageOrder(Product $product, array $imageIds): void
+    {
+        foreach (array_values(array_unique(array_map('intval', $imageIds))) as $index => $imageId) {
+            ProductImage::where('product_id', $product->id)
+                ->whereKey($imageId)
+                ->update(['sort_order' => $index + 1]);
+        }
+    }
+
     public function update(AddProductRequest $request, $id)
     {
         DB::transaction(function () use ($request, $id) {
@@ -253,6 +262,9 @@ class ProductsController extends Controller
                     $image->delete();
                 }
             }
+
+            // Formda sürüklənmiş mövcud şəkillərin sırasını saxlayırıq.
+            $this->updateImageOrder($product, $request->input('image_order', []));
 
             /*
              * Yeni şəkillər

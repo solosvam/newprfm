@@ -134,6 +134,17 @@ class AddProductRequest extends FormRequest
                 'integer',
                 'min:0',
             ],
+
+            'image_order' => [
+                'nullable',
+                'array',
+            ],
+
+            'image_order.*' => [
+                'integer',
+                'distinct',
+                'min:1',
+            ],
         ];
     }
 
@@ -190,6 +201,7 @@ class AddProductRequest extends FormRequest
             'images.*.max' => 'Şəklin həcmi maksimum 10 MB ola bilər.',
 
             'remote_image_ids.max' => 'Ən çox 5 şəkil seçə bilərsiniz.',
+            'image_order.*.distinct' => 'Eyni şəkil sıralamada bir neçə dəfə ola bilməz.',
         ];
     }
 }

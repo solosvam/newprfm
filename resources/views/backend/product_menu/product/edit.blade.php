@@ -39,6 +39,10 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2.min.css') }}"/>
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2-bootstrap4.min.css') }}"/>
+    <style>
+        .existing-image-item { cursor: grab; }
+        .existing-image-item.dragging { opacity: .45; }
+    </style>
 @endsection
 
 @section('js_page')
@@ -99,6 +103,55 @@
                     e.target.closest('.image-row').remove();
                 }
             });
+
+            const existingImages = document.getElementById('existing-images');
+
+            if (existingImages) {
+                let draggedItem = null;
+
+                function refreshImagePositions() {
+                    existingImages.querySelectorAll('.existing-image-item').forEach(function (item, index) {
+                        item.querySelector('.image-position').textContent = index + 1;
+                    });
+                }
+
+                existingImages.addEventListener('dragstart', function (e) {
+                    draggedItem = e.target.closest('.existing-image-item');
+
+                    if (!draggedItem) {
+                        return;
+                    }
+
+                    draggedItem.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                existingImages.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+
+                    const target = e.target.closest('.existing-image-item');
+
+                    if (!draggedItem || !target || target === draggedItem) {
+                        return;
+                    }
+
+                    const bounds = target.getBoundingClientRect();
+                    const insertAfter = e.clientY > bounds.top + (bounds.height / 2);
+
+                    existingImages.insertBefore(draggedItem, insertAfter ? target.nextSibling : target);
+                });
+
+                existingImages.addEventListener('dragend', function () {
+                    if (draggedItem) {
+                        draggedItem.classList.remove('dragging');
+                    }
+
+                    draggedItem = null;
+                    refreshImagePositions();
+                });
+
+                refreshImagePositions();
+            }
 
             reindexVariants();
         });
@@ -290,9 +343,11 @@
 
                                     <div class="tab-pane fade" id="product-images" role="tabpanel">
                                         @if($product->images->count())
-                                            <div class="row g-3 mt-1 mb-4">
+                                            <p class="text-muted mt-3 mb-1">Şəkilləri sürükləyib sırala. 1-ci şəkil məhsulun əsas şəklidir.</p>
+                                            <div class="row g-3 mt-1 mb-4" id="existing-images">
                                                 @foreach($product->images as $image)
-                                                    <div class="col-6 col-md-3 col-lg-2">
+                                                    <div class="col-6 col-md-3 col-lg-2 existing-image-item" draggable="true">
+                                                        <input type="hidden" name="image_order[]" value="{{ $image->id }}">
                                                         <div class="card h-100">
                                                             <img src="{{ asset('frontend/uploads/products/' . $image->image) }}"
                                                                  class="card-img-top"
@@ -300,6 +355,7 @@
                                                                  style="height:150px; object-fit:cover;">
 
                                                             <div class="card-body p-2">
+                                                                <div class="small text-muted mb-2">Sıra: <span class="image-position">{{ $loop->iteration }}</span></div>
                                                                 <div class="form-check">
                                                                     <input class="form-check-input"
                                                                            type="checkbox"
