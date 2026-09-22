@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class FragranticaImportService
@@ -66,10 +67,18 @@ class FragranticaImportService
             $notes = $this->splitNotes($matches[6] ?? '');
         }
 
-        if ((!$name || !$brand) && preg_match('/^(.+?)\s+(.+?)\s+for\s+(women and men|women|men)$/i', $title, $matches)) {
-            $name = $this->clean($matches[1]);
-            $brand = $this->clean($matches[2]);
-            $gender = strtolower($matches[3]);
+        if (preg_match('/(?:perfume\s*-\s*)?a\s+fragrance\s+for\s+(women and men|women|men)/i', $title . ' ' . $text, $matches)) {
+            $gender ??= strtolower($matches[1]);
+        }
+
+        if (!$notes) {
+            $notes = $this->extractNotesFromLinks($html);
+        }
+
+        if (!$name || !$brand) {
+            [$urlName, $urlBrand] = $this->productFromUrl($sourceUrl);
+            $name ??= $urlName;
+            $brand ??= $urlBrand;
         }
 
         if (!$name || !$brand) {
@@ -127,6 +136,34 @@ class FragranticaImportService
             fn (string $note) => $this->clean($note),
             preg_split('/,\s*/', $notes) ?: []
         )));
+    }
+
+    private function extractNotesFromLinks(string $html): array
+    {
+        preg_match_all('/<a[^>]+href=["\'][^"\']*\/notes\/[^"\']+["\'][^>]*>(.*?)<\/a>/is', $html, $matches);
+
+        return collect($matches[1] ?? [])
+            ->map(fn (string $note) => $this->clean($note))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function productFromUrl(string $url): array
+    {
+        $segments = array_values(array_filter(explode('/', parse_url($url, PHP_URL_PATH) ?? '')));
+        $perfumeIndex = array_search('perfume', $segments, true);
+
+        if ($perfumeIndex === false || !isset($segments[$perfumeIndex + 1], $segments[$perfumeIndex + 2])) {
+            return [null, null];
+        }
+
+        $brand = Str::of(urldecode($segments[$perfumeIndex + 1]))->replace('-', ' ')->squish()->title()->toString();
+        $productSlug = preg_replace('/-\d+\.html$/i', '', urldecode($segments[$perfumeIndex + 2]));
+        $name = Str::of($productSlug)->replace('-', ' ')->squish()->title()->toString();
+
+        return [$name ?: null, $brand ?: null];
     }
 
     private function firstMatch(string $pattern, string $value): ?string
