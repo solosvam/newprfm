@@ -85,6 +85,8 @@ class FragranticaImportService
             throw new RuntimeException('Məhsul məlumatları səhifədən çıxarıla bilmədi.');
         }
 
+        $sourceDescription = $this->extractSourceDescription($text, $name, $brand);
+
         return [
             'source_url' => $sourceUrl,
             'name' => $name,
@@ -94,6 +96,7 @@ class FragranticaImportService
             'perfumer' => $perfumer ?: null,
             'notes' => $notes,
             'accords' => $this->extractAccords($text),
+            'source_description' => $sourceDescription,
             'image_url' => $this->extractProductImage($html) ?? $this->safeImageUrl($this->metaContent($html, 'og:image')),
         ];
     }
@@ -118,14 +121,46 @@ class FragranticaImportService
 
     private function extractAccords(string $text): array
     {
-        if (!preg_match('/main accords\s+(.+?)\s+User Ratings/is', $text, $matches)) {
+        if (!preg_match('/main accords\s+(.+?)(?:\s+User Ratings|\s+Rating|\s+When To Wear|\s+Perfume rating)/is', $text, $matches)) {
             return [];
         }
 
-        return array_values(array_filter(array_map(
-            fn (string $accord) => $this->clean($accord),
-            preg_split('/\s{2,}|(?<=\pL)\s+(?=\pL)/u', trim($matches[1])) ?: []
-        )));
+        $accords = preg_split('/\s{2,}|(?<=\pL)\s+(?=\pL)/u', trim($matches[1])) ?: [];
+
+        return array_values(array_filter(array_map(fn (string $accord) => $this->clean($accord), $accords)));
+    }
+
+    private function extractSourceDescription(string $text, string $name, string $brand): ?string
+    {
+        $start = stripos($text, $name . ' by ' . $brand . ' is ');
+
+        if ($start === false) {
+            return null;
+        }
+
+        $description = substr($text, $start);
+        $endMarkers = [
+            'Read about this perfume in other languages:',
+            '### Perfumer',
+            'Perfumer Fragram Photos',
+            'Fragram Photos',
+            'Fragrance Composition',
+        ];
+
+        foreach ($endMarkers as $marker) {
+            $position = stripos($description, $marker);
+
+            if ($position !== false) {
+                $description = substr($description, 0, $position);
+                break;
+            }
+        }
+
+        return Str::of($description)
+            ->squish()
+            ->limit(4000, '')
+            ->trim()
+            ->toString() ?: null;
     }
 
     private function splitNotes(string $notes): array

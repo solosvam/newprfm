@@ -73,6 +73,9 @@
 
                     const notes = data.product.notes.length ? data.product.notes.map(escapeHtml).join(', ') : 'tapılmadı';
                     const accords = data.product.accords.length ? data.product.accords.map(escapeHtml).join(', ') : 'tapılmadı';
+                    const sourceDescription = data.product.source_description
+                        ? `<details class="mt-2"><summary>Mənbədən çıxarılan izah</summary><div class="small mt-2">${escapeHtml(data.product.source_description)}</div></details>`
+                        : '';
                     const image = data.product.image_url
                         ? `<img src="${escapeHtml(data.product.image_url)}" class="img-thumbnail mt-2" style="width: 100px; height: 100px; object-fit: contain" alt="${escapeHtml(data.product.name)}">`
                         : '';
@@ -85,6 +88,7 @@
                             Notlar: ${notes}<br>
                             Akkordlar: ${accords}
                             ${image}
+                            ${sourceDescription}
                             <div class="small mt-2">Uyğun gələn brend, cinsiyyət və notlar formda avtomatik seçildi. Yoxlayıb düzəldə bilərsən.</div>
                         </div>`;
                 } catch (error) {
