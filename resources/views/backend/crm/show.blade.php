@@ -1,331 +1,204 @@
 @php
     $html_tag_data = [];
-    $fullName = trim($customer->name . ' ' . $customer->surname);
     $title = 'Müştəri profili';
-    $breadcrumbs = [
-        '/admin' => 'ParfumShop',
-        route('admin.crm.index') => 'CRM',
-        '#' => $fullName,
-    ];
-    $initials = mb_strtoupper(mb_substr($customer->name, 0, 1) . mb_substr($customer->surname, 0, 1));
+    $breadcrumbs = ["/admin"=> "ParfumShop", route('admin.crm.index') => "CRM", "#"=> $customer->fullname]
 @endphp
-
-@extends('backend.layout', ['title' => $title])
-
+@extends('backend.layout',[ 'title'=>$title])
 @section('css')
-    <style>
-        .crm-avatar { width: 112px; height: 112px; font-size: 2rem; }
-        .crm-profile-card { min-height: 320px; }
-        .crm-tab-content { min-height: 330px; }
-        .crm-tabs { border-bottom: 1px solid #e5e7eb; flex-wrap: nowrap; overflow-x: auto; }
-        .crm-tabs .nav-link { border: 0 !important; border-bottom: 4px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: #5a5a5a !important; font-size: 1.15rem; padding: 1.2rem 1.35rem 1rem; white-space: nowrap; }
-        .crm-tabs .nav-link:hover { color: #1fa9e6 !important; }
-        .crm-tabs .nav-link.active { border-bottom-color: #20a9e5 !important; color: #20a9e5 !important; }
-    </style>
+    <link rel="stylesheet" href="{{asset('backend/css/vendor/select2.min.css')}}"/>
+    <link rel="stylesheet" href="{{asset('backend/css/vendor/select2-bootstrap4.min.css')}}"/>
+        <style>
+            .crm-avatar { width: 80px; height: 80px; font-size: 1.5rem; }
+        </style>
 @endsection
 
 @section('js_page')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const tabs = document.getElementById('crmTabs');
-            const tabContent = document.getElementById('crmTabContent');
-            const tabUrl = tabs.dataset.tabUrl;
-            const searchInput = document.getElementById('crm-search');
-            const searchResult = document.getElementById('crm-search-result');
-            let searchedNumber = '';
-
-            searchInput.addEventListener('input', function () {
-                let number = searchInput.value.replace(/\D/g, '');
-
-                if (number.indexOf('994') === 0) {
-                    number = number.substring(3);
-                }
-
-                searchInput.value = number.substring(0, 9);
-                searchResult.innerHTML = '';
-                searchedNumber = '';
-
-                if (searchInput.value.length !== 9) {
-                    return;
-                }
-
-                const searchNumber = searchInput.value;
-                searchedNumber = searchNumber;
-
-                fetch('{{ route('admin.crm.search') }}?number=' + encodeURIComponent(searchNumber), {
-                    headers: {'Accept': 'application/json'}
-                })
-                    .then(function (response) {
-                        return response.json();
-                    })
-                    .then(function (data) {
-                        if (searchedNumber !== searchNumber) {
-                            return;
-                        }
-
-                        if (data.found) {
-                            window.location.href = data.url;
-                            return;
-                        }
-
-                        searchResult.innerHTML = '<div class="text-danger small mt-1">Müştəri tapılmadı.</div>';
-                    })
-                    .catch(function () {
-                        searchResult.innerHTML = '<div class="text-danger small mt-1">Axtarış zamanı xəta yarandı.</div>';
-                    });
-            });
-
-            function loadTab(tab, url) {
-                tabContent.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-
-                fetch(url || tabUrl.replace('__TAB__', tab), {
-                    headers: {'X-Requested-With': 'XMLHttpRequest'}
-                })
-                    .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error();
-                        }
-
-                        return response.text();
-                    })
-                    .then(function (html) {
-                        tabContent.innerHTML = html;
-                        new AcornIcons().replace();
-                    })
-                    .catch(function () {
-                        tabContent.innerHTML = '<div class="text-center text-danger py-5">Məlumatları yükləmək mümkün olmadı.</div>';
-                    });
-            }
-
-            tabs.addEventListener('click', function (event) {
-                const tab = event.target.closest('[data-tab]');
-
-                if (!tab) {
-                    return;
-                }
-
-                event.preventDefault();
-                tabs.querySelectorAll('[data-tab]').forEach(function (item) {
-                    item.classList.remove('active');
-                });
-                tab.classList.add('active');
-                loadTab(tab.dataset.tab);
-            });
-
-            tabContent.addEventListener('click', function (event) {
-                const page = event.target.closest('.pagination a');
-
-                if (!page) {
-                    return;
-                }
-
-                event.preventDefault();
-                loadTab(null, page.href);
-            });
-
-            const smsModal = document.getElementById('smsModal');
-
-            smsModal.addEventListener('show.bs.modal', function () {
-                const body = document.getElementById('smsModalBody');
-                body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
-
-                fetch(smsModal.dataset.url, {
-                    headers: {'X-Requested-With': 'XMLHttpRequest'}
-                })
-                    .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error();
-                        }
-
-                        return response.text();
-                    })
-                    .then(function (html) {
-                        body.innerHTML = html;
-                    })
-                    .catch(function () {
-                        body.innerHTML = '<div class="text-danger">SMS tarixçəsi yüklənə bilmədi.</div>';
-                    });
-            });
-
-            const orderModal = document.getElementById('orderModal');
-
-            orderModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const body = document.getElementById('orderModalBody');
-
-                body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
-
-                fetch(button.dataset.url, {
-                    headers: {'X-Requested-With': 'XMLHttpRequest'}
-                })
-                    .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error();
-                        }
-
-                        return response.text();
-                    })
-                    .then(function (html) {
-                        body.innerHTML = html;
-                    })
-                    .catch(function () {
-                        body.innerHTML = '<div class="text-danger">Sifariş detalları yüklənə bilmədi.</div>';
-                    });
-            });
-
-            loadTab('orders');
-        });
-    </script>
+    <script src="{{asset('backend/js/vendor/select2.full.min.js')}}"></script>
+    <script src="{{asset('backend/js/forms/controls.select2.js')}}"></script>
+    <script src="{{asset('backend/js/crm.js')}}"></script>
+    <script src="{{asset('backend/js/international/crm.int.js')}}"></script>
 @endsection
-
 @section('content')
     <div class="container">
+        <!-- Title and Top Buttons Start -->
         <div class="page-title-container">
             <div class="row">
+                <!-- Title Start -->
                 <div class="col-12 col-md-7">
-                    <h1 class="mb-0 pb-0 display-4">{{ $title }}</h1>
-                    @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
+                    <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
+                    @include('backend._layout.breadcrumb',['breadcrumbs'=>$breadcrumbs])
                 </div>
-                <div class="col-12 col-md-5 mt-3 mt-md-0">
-                    <div class="input-group">
-                        <span class="input-group-text">994</span>
-                        <input id="crm-search" class="form-control" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="Müştəri nömrəsi">
-                    </div>
-                    <div id="crm-search-result"></div>
+                <!-- Title End -->
+
+                <!-- Top Buttons Start -->
+                <div class="col-12 col-md-5 d-flex align-items-start justify-content-end">
+
                 </div>
+                <!-- Top Buttons End -->
             </div>
         </div>
+        <!-- Title and Top Buttons End -->
 
-        <div class="card mb-4">
-            <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <div>
-                    <span class="h4 mb-0">#{{ $customer->id }} {{ $fullName }}</span>
-                    <span class="badge bg-{{ $customer->active ? 'success' : 'secondary' }} ms-2">
-                        {{ $customer->active ? 'Aktiv' : 'Deaktiv' }}
-                    </span>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#smsModal">
-                        <i data-acorn-icon="message" class="me-1" data-acorn-size="16"></i>
-                        SMS-lər
-                    </button>
-                    <button class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
-                        <i data-acorn-icon="lock-off" class="me-1" data-acorn-size="16"></i>
-                        Şifrə yenilə
-                    </button>
-                </div>
-            </div>
-        </div>
+        <div class="row gx-4 gy-3">
 
-        <div class="row g-4">
-            <div class="col-xl-3">
-                <div class="card crm-profile-card h-100">
-                    <div class="card-body text-center d-flex flex-column align-items-center">
-                        <div class="crm-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-3">
-                            {{ $initials ?: '?' }}
-                        </div>
-                        <h4 class="mb-1">#{{ $customer->id }} {{ $fullName }}</h4>
-                        <div class="text-muted mb-1">{{ $customer->mobile ?: 'Telefon qeyd edilməyib' }}</div>
-                        <div class="text-muted text-break">{{ $customer->email ?: 'E-poçt qeyd edilməyib' }}</div>
-                        <div class="row w-100 mt-auto pt-4">
-                            <div class="col-6">
-                                <div class="border rounded p-2">
-                                    <div class="text-muted small">Sifariş</div>
-                                    <div class="fw-bold">{{ $customer->orders_count }}</div>
-                                </div>
+            {{-- Action Buttons --}}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <h5 class="mb-0 fw-bold">{{ $customer->fullname }}</h5>
+                                @if($customer->active)
+                                    <span class="badge bg-success">Aktiv</span>
+                                @else
+                                    <span class="badge bg-danger">Deaktiv</span>
+                                @endif
                             </div>
-                            <div class="col-6">
-                                <div class="border rounded p-2">
-                                    <div class="text-muted small">Bonus</div>
-                                    <div class="fw-bold text-success">{{ number_format((float) $customer->bonus_balance, 2) }} ₼</div>
-                                </div>
+                            <div class="d-flex flex-wrap gap-2">
+
+                                <button class="btn btn-sm btn-outline-warning" id="resetPasswordBtn"
+                                        data-url="">
+                                    <i data-acorn-icon="lock-off" data-acorn-size="15" class="me-1"></i> Şifrə yenilə
+                                </button>
+
+                                <button class="btn btn-sm btn-outline-info"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#smsModal"
+                                        data-url="{{ route('admin.crm.sms', $customer->id) }}">
+                                    <i data-acorn-icon="message" data-acorn-size="15" class="me-1"></i> SMS-lər
+                                </button>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-9">
-                <div class="card h-100">
+            {{-- Sol Panel --}}
+            <div class="col-12 col-xl-3">
+
+                {{-- Avatar + Balans --}}
+                <div class="card mb-3">
+                    <div class="card-body text-center pb-2">
+                        <div class="position-relative d-inline-block mb-2">
+                            <div class="crm-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-3">
+                                Rİ
+                            </div>
+                        </div>
+                        <h6 class="fw-bold mb-0">{{ $customer->fullname }}</h6>
+                        <small class="text-muted d-block">
+                            <i data-acorn-icon="mobile" data-acorn-size="13" class="me-1"></i>{{ $customer->mobile }}
+                        </small>
+
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-outline-success flex-fill balance-tab-btn">
+                                <div class="small text-muted">BONUS</div>
+                                <div class="fw-bold">{{ $customer->bonus_balance }} ₼</div>
+                            </button>
+                            <button class="btn btn-outline-primary flex-fill balance-tab-btn">
+                                <div class="small text-muted">SİFARİŞ</div>
+                                <div class="fw-bold"> 0 </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Ətraflı məlumatlar --}}
+                <div class="card">
                     <div class="card-body p-0">
-                        <ul class="nav crm-tabs px-3" id="crmTabs"
-                            data-tab-url="{{ route('admin.crm.tab', ['customer' => $customer->id, 'tab' => '__TAB__']) }}">
-                            <li class="nav-item">
-                                <a class="nav-link active" href="#" data-tab="orders">
-                                    <i data-acorn-icon="cart" class="me-1" data-acorn-size="16"></i>Sifarişlər
-                                    <span class="badge bg-primary ms-1">{{ $customer->orders_count }}</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-tab="payments">
-                                    <i data-acorn-icon="dollar" class="me-1" data-acorn-size="16"></i>Ödənişlər
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-tab="bonuses">
-                                    <i data-acorn-icon="gift" class="me-1" data-acorn-size="16"></i>Bonus balansı
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-tab="settings">
-                                    <i data-acorn-icon="gear" class="me-1" data-acorn-size="16"></i>Tənzimləmələr
-                                </a>
-                            </li>
-                        </ul>
-                        <div class="crm-tab-content" id="crmTabContent"></div>
+                        <div class="accordion accordion-flush" id="customerDetails">
+                            <div class="accordion-item border-0">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed px-3 py-2" type="button"
+                                            style="font-size:13px;"
+                                            data-bs-toggle="collapse" data-bs-target="#detailsCollapse">
+                                        <i data-acorn-icon="user" data-acorn-size="14" class="me-2"></i> Ətraflı
+                                        məlumatlar
+                                    </button>
+                                </h2>
+                                <div id="detailsCollapse" class="accordion-collapse collapse">
+                                    <div class="accordion-body pt-0 px-3 pb-3">
+                                        <div class="row g-2">
+                                            @foreach([
+                                                ['FIN',             $customer->fin],
+                                                ['Email',           $customer->email],
+                                                ['Qeydiyyat',       $customer->created_at->format('d.m.Y H:i')],
+                                            ] as [$label, $value])
+                                                <div class="col-12">
+                                                    <div style="font-size:11px;" class="text-muted">{{ $label }}</div>
+                                                    <div style="font-size:13px;" class="fw-medium">{{ $value }}</div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- Sağ Panel --}}
+            <div class="col-12 col-xl-9">
+                <div class="card">
+                    <div class="card-body p-0">
+
+                        {{-- Tab Menyu --}}
+                        <div class="border-bottom px-3 pt-3">
+                            <ul class="nav nav-tabs nav-tabs-line border-0 flex-nowrap overflow-auto" id="customerTabs"
+                                data-customer-id="{{ $customer->id }}">
+                                @php
+                                    $tabs = [
+                                        'orders'        => ['icon' => 'cart',            'label' => 'Sifarişlər',   'count' => null],
+                                        'balance'      => ['icon' => 'dollar',          'label' => 'Bonus balansı',    'count' => null],
+                                        'payments'      => ['icon' => 'dollar',          'label' => 'Onlayn ödəmələr',    'count' => null],
+                                        'settings'      => ['icon' => 'settings-1',      'label' => 'Tənzimləmələr','count' => null],
+                                    ];
+                                @endphp
+                                @foreach($tabs as $key => $tab)
+                                    <li class="nav-item">
+                                        <a class="nav-link text-nowrap {{ $loop->first ? 'active' : '' }}"
+                                           href="#" data-tab="{{ $key }}" data-type="int">
+                                            <i data-acorn-icon="{{ $tab['icon'] }}" data-acorn-size="15"
+                                               class="me-1"></i>
+                                            {{ $tab['label'] }}
+                                            @if(!empty($tab['count']))
+                                                <span class="badge bg-secondary ms-1">{{ $tab['count'] }}</span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+
+                        {{-- Tab Content --}}
+                        <div class="p-3" id="tabContent">
+                            <div class="text-center text-muted py-5">
+                                <i data-acorn-icon="loading" data-acorn-size="30"></i>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Şifrəni yenilə</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    Yeni şifrə yaradılacaq və {{ $customer->mobile }} nömrəsinə SMS ilə göndəriləcək. Davam edək?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Ləğv et</button>
-                    <form method="POST" action="{{ route('admin.crm.reset-password', $customer) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-warning">Şifrəni sıfırla</button>
-                    </form>
-                </div>
-            </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="smsModal" tabindex="-1" aria-hidden="true"
-         data-url="{{ route('admin.crm.sms', $customer) }}">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">SMS-lər</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="smsModalBody"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Bağla</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Sifariş detalları</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="orderModalBody"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Bağla</button>
+        {{-- SMS Modal --}}
+        <div class="modal fade modal-close-out" id="smsModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header p-3">
+                        <h5 class="modal-title">SMS tarixçəsi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="smsModalBody">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

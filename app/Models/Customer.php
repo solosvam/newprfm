@@ -42,4 +42,9 @@ class Customer extends Authenticatable
         return $this->belongsToMany(\App\Models\Product\Product::class, 'product_favorites', 'customer_id', 'product_id')
             ->withPivot('created_at');
     }
+
+    public function getFullNameAttribute()
+    {
+        return $this->name.' '.$this->surname;
+    }
 }

@@ -36,9 +36,15 @@
 <script>
     let urls = {
         assets: "{{ asset('backend/') }}",
-        ajaxurls: {
-            setRolePermission: "{{ route('admin.ajax.set-role-permission') }}"
-        }
+    }
+    let ajax_url = {
+        search:{
+            customer:{
+                crm: "{{ route('admin.ajax.search.customer.crm') }}",
+            },
+        },
+        rolePermission: "{{ route('admin.ajax.set-role-permission') }}",
+        customerTab: "{{ route('admin.crm.tab', [':id', ':tab']) }}",
     }
 
     @if(session('success') || session('error'))

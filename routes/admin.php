@@ -179,7 +179,6 @@ Route::prefix('admin')
                 ->name('crm.')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
-                    Route::get('/search', 'search')->name('search');
                     Route::get('/customer/{customer}', 'show')->name('show');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
@@ -199,6 +198,7 @@ Route::prefix('admin')
                 ->prefix('ajax')
                 ->name('ajax.')
                 ->group(function () {
+                    Route::get('search-customer/crm',   'searchCustomerCrm')->name('search.customer.crm');
                     Route::post('/set-role-permission', 'setRolePermission')->name('set-role-permission');
                 });
 

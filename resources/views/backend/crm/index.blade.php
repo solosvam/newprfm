@@ -10,83 +10,57 @@
 @extends('backend.layout', ['title' => $title])
 
 @section('js_page')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const input = document.getElementById('crm-search');
-            const result = document.getElementById('crm-search-result');
-            let searchedNumber = '';
-
-            input.addEventListener('input', function () {
-                let number = input.value.replace(/\D/g, '');
-
-                if (number.indexOf('994') === 0) {
-                    number = number.substring(3);
-                }
-
-                input.value = number.substring(0, 9);
-                result.innerHTML = '';
-                searchedNumber = '';
-
-                if (input.value.length !== 9) {
-                    return;
-                }
-
-                const searchNumber = input.value;
-                searchedNumber = searchNumber;
-                result.innerHTML = '<div class="text-muted mt-2">Müştəri axtarılır...</div>';
-
-                fetch('{{ route('admin.crm.search') }}?number=' + encodeURIComponent(searchNumber), {
-                    headers: {'Accept': 'application/json'}
-                })
-                    .then(function (response) {
-                        return response.json();
-                    })
-                    .then(function (data) {
-                        if (searchedNumber !== searchNumber) {
-                            return;
-                        }
-
-                        if (data.found) {
-                            window.location.href = data.url;
-                            return;
-                        }
-
-                        result.innerHTML = '<div class="text-danger mt-2">Bu nömrə ilə müştəri tapılmadı.</div>';
-                    })
-                    .catch(function () {
-                        result.innerHTML = '<div class="text-danger mt-2">Axtarış zamanı xəta yarandı.</div>';
-                    });
-            });
-        });
-    </script>
+    <script src="{{asset('backend/js/crm.js')}}"></script>
 @endsection
 
 @section('content')
     <div class="container">
+        <!-- Title and Top Buttons Start -->
         <div class="page-title-container">
             <div class="row">
-                <div class="col-12">
-                    <h1 class="mb-0 pb-0 display-4">{{ $title }}</h1>
-                    @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
+                <!-- Title Start -->
+                <div class="col-12 col-md-7">
+                    <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
+                    @include('backend._layout.breadcrumb',['breadcrumbs'=>$breadcrumbs])
                 </div>
+                <!-- Title End -->
+
+                <!-- Top Buttons Start -->
+                <div class="col-12 col-md-5 d-flex align-items-start justify-content-end">
+
+                </div>
+                <!-- Top Buttons End -->
             </div>
         </div>
+        <!-- Title and Top Buttons End -->
 
-        <div class="card">
-            <div class="card-body py-5">
-                <div class="col-lg-7 col-xl-6 mx-auto">
-                    <label for="crm-search" class="form-label fw-bold">Telefon nömrəsi ilə axtar</label>
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text">994</span>
-                        <input id="crm-search"
-                               class="form-control"
-                               inputmode="numeric"
-                               autocomplete="off"
-                               maxlength="9"
-                               placeholder="50 123 45 67">
+        <div class="row gx-4 gy-5">
+            <div class="col-12">
+                <!-- Biography Start -->
+                <div class="card mb-5">
+                    <div class="card-body">
+                        <div class="position-relative">
+                            <input type="text"
+                                   id="crm-search"
+                                   class="form-control form-control-lg"
+                                   placeholder="Mobil no, Ad Soyad, .FIN"
+                                   autocomplete="off"
+                                   data-bs-toggle="popover"
+                                   data-bs-placement="bottom"
+                                   data-bs-trigger="focus"
+                                   data-bs-html="true"
+                                   data-bs-content="
+                                   <ul class='mb-0 ps-3 small'>
+                                       <li><b>Mobil no:</b> 0 ilə başlayan 10 rəqəm (0103227575)</li>
+                                       <li><b>Ad Soyad:</b> boşluqla ayır (Ruf Ibr)</li>
+                                       <li><b>FİN:</b> nöqtə ilə başlayan 8 simvol (.A1B2C34)</li>
+                                   </ul>
+                                   ">
+                            <div id="search-results"
+                                 class="position-absolute w-100 bg-white border rounded shadow-sm z-3"
+                                 style="display:none; top: 100%; left:0; max-height: 300px; overflow-y: auto;z-index:1"></div>
+                        </div>
                     </div>
-                    <div class="form-text">9 rəqəmi yazan kimi müştəri profili avtomatik açılacaq.</div>
-                    <div id="crm-search-result"></div>
                 </div>
             </div>
         </div>
