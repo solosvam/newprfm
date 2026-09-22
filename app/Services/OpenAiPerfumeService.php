@@ -20,8 +20,16 @@ class OpenAiPerfumeService
             ->acceptJson()
             ->post('https://api.openai.com/v1/responses', [
                 'model' => config('services.openai.model'),
+                'reasoning' => [
+                    'effort' => 'low',
+                ],
                 'tools' => [
-                    ['type' => 'web_search'],
+                    [
+                        'type' => 'web_search',
+                        'filters' => [
+                            'allowed_domains' => ['fragrantica.com'],
+                        ],
+                    ],
                 ],
                 'input' => $this->prompt($url),
                 'text' => [
