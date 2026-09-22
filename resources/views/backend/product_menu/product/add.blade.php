@@ -109,7 +109,7 @@
                 aiGenerateButton.disabled = true;
                 aiGenerateButton.textContent = 'AI yazır...';
                 const startedAt = performance.now();
-                fragranticaImportResult.innerHTML = '<div class="alert alert-info mb-0">AI sahələri və 3 dildə təsviri hazırlayır... <strong id="aiGenerationTimer">0.0 saniyə</strong></div>';
+                fragranticaImportResult.innerHTML = '<div class="alert alert-info mb-0">AI 3 dildə təsvir hazırlayır... <strong id="aiGenerationTimer">0.0 saniyə</strong></div>';
                 const timer = window.setInterval(function () {
                     const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
                     const timerElement = document.getElementById('aiGenerationTimer');
@@ -132,31 +132,17 @@
                     const data = await response.json();
 
                     if (!response.ok) {
-                        throw new Error(data.message || 'AI sahələri və təsvirləri hazırlaya bilmədi.');
+                        throw new Error(data.message || 'AI təsvirləri hazırlaya bilmədi.');
                     }
 
-                    document.getElementById('name').value = data.product.name || '';
                     document.querySelector('textarea[name="content_az"]').value = data.product.description_az || '';
                     document.querySelector('textarea[name="content_en"]').value = data.product.description_en || '';
                     document.querySelector('textarea[name="content_ru"]').value = data.product.description_ru || '';
 
-                    if (data.matches.brand_id) {
-                        $('#brand_id').val(String(data.matches.brand_id)).trigger('change');
-                    }
-
-                    if (data.matches.gender_ids.length) {
-                        $('#gender').val(data.matches.gender_ids.map(String)).trigger('change');
-                    }
-
-                    if (data.matches.ingredient_ids.length) {
-                        $('#ingredients').val(data.matches.ingredient_ids.map(String)).trigger('change');
-                    }
-
                     const duration = (Number(data.meta?.duration_ms || 0) / 1000).toFixed(1);
                     fragranticaImportResult.innerHTML = `
                         <div class="alert alert-success mb-0">
-                            <strong>3 dildə təsvir hazırdır.</strong><br>
-                            ${escapeHtml(data.product.brand)} — ${escapeHtml(data.product.name)}
+                            <strong>3 dildə təsvir hazırdır.</strong>
                             <div class="small mt-2">Hazırlanma vaxtı: ${duration} saniyə</div>
                         </div>`;
                 } catch (error) {
@@ -164,7 +150,7 @@
                 } finally {
                     window.clearInterval(timer);
                     aiGenerateButton.disabled = false;
-                aiGenerateButton.textContent = 'AI ilə 3 dildə təsvir yarat';
+                    aiGenerateButton.textContent = 'AI ilə 3 dildə təsvir yarat';
                 }
             });
 
@@ -173,7 +159,7 @@
                 const brand = document.getElementById('brand_id').selectedOptions[0]?.text.trim() || '';
 
                 if (!name) {
-                    imageSearchResult.innerHTML = '<div class="alert alert-warning mb-0">Əvvəlcə ətirin adını daxil edin və ya AI ilə sahələri doldurun.</div>';
+                    imageSearchResult.innerHTML = '<div class="alert alert-warning mb-0">Əvvəlcə ətirin adını daxil edin və ya Fragrantica-dan məlumatları gətirin.</div>';
                     return;
                 }
 
