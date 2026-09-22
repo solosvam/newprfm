@@ -22,6 +22,78 @@
         document.addEventListener('DOMContentLoaded', function () {
             const variantArea = document.querySelector('.variant_area');
             const imageArea = document.querySelector('.image_area');
+            const fragranticaImportUrl = document.getElementById('fragrantica_import_url');
+            const fragranticaImportButton = document.getElementById('fragranticaImportButton');
+            const fragranticaImportResult = document.getElementById('fragranticaImportResult');
+            const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
+            }[character]));
+
+            fragranticaImportButton.addEventListener('click', async function () {
+                const url = fragranticaImportUrl.value.trim();
+
+                if (!url) {
+                    fragranticaImportResult.innerHTML = '<div class="alert alert-warning mb-0">Əvvəlcə Fragrantica linkini daxil edin.</div>';
+                    return;
+                }
+
+                fragranticaImportButton.disabled = true;
+                fragranticaImportButton.textContent = 'Məlumatlar alınır...';
+                fragranticaImportResult.innerHTML = '';
+
+                try {
+                    const response = await fetch('{{ route('admin.product.import.fragrantica-preview') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({url}),
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Məlumatlar alına bilmədi.');
+                    }
+
+                    document.getElementById('name').value = data.product.name || '';
+
+                    if (data.matches.brand_id) {
+                        $('#brand_id').val(String(data.matches.brand_id)).trigger('change');
+                    }
+
+                    if (data.matches.gender_ids.length) {
+                        $('#gender').val(data.matches.gender_ids.map(String)).trigger('change');
+                    }
+
+                    if (data.matches.ingredient_ids.length) {
+                        $('#ingredients').val(data.matches.ingredient_ids.map(String)).trigger('change');
+                    }
+
+                    const notes = data.product.notes.length ? data.product.notes.map(escapeHtml).join(', ') : 'tapılmadı';
+                    const accords = data.product.accords.length ? data.product.accords.map(escapeHtml).join(', ') : 'tapılmadı';
+                    const image = data.product.image_url
+                        ? `<img src="${escapeHtml(data.product.image_url)}" class="img-thumbnail mt-2" style="width: 100px; height: 100px; object-fit: contain" alt="${escapeHtml(data.product.name)}">`
+                        : '';
+
+                    fragranticaImportResult.innerHTML = `
+                        <div class="alert alert-success mb-0">
+                            <strong>${escapeHtml(data.product.brand)} — ${escapeHtml(data.product.name)}</strong><br>
+                            ${data.product.year ? `Buraxılış ili: ${data.product.year}<br>` : ''}
+                            ${data.product.perfumer ? `Parfümer: ${data.product.perfumer}<br>` : ''}
+                            Notlar: ${notes}<br>
+                            Akkordlar: ${accords}
+                            ${image}
+                            <div class="small mt-2">Uyğun gələn brend, cinsiyyət və notlar formda avtomatik seçildi. Yoxlayıb düzəldə bilərsən.</div>
+                        </div>`;
+                } catch (error) {
+                    fragranticaImportResult.innerHTML = `<div class="alert alert-danger mb-0">${error.message}</div>`;
+                } finally {
+                    fragranticaImportButton.disabled = false;
+                    fragranticaImportButton.textContent = 'Məlumatları gətir';
+                }
+            });
 
             function reindexVariants() {
                 variantArea.querySelectorAll('.variant-row').forEach(function (row, index) {
@@ -94,6 +166,16 @@
                 <section class="scroll-section" id="hover">
                     <div class="card mb-5">
                         <div class="card-body">
+                            <div class="border rounded p-3 mb-4 bg-light">
+                                <label for="fragrantica_import_url" class="form-label fw-bold">Fragrantica-dan məlumat gətir</label>
+                                <div class="input-group">
+                                    <input type="url" id="fragrantica_import_url" class="form-control" placeholder="https://www.fragrantica.com/perfume/...">
+                                    <button class="btn btn-outline-primary" type="button" id="fragranticaImportButton">Məlumatları gətir</button>
+                                </div>
+                                <div class="form-text">Linkdən məhsul adı, brend, cinsiyyət, notlar və əsas şəkil çıxarılır. Heç nə yadda saxlanmır; əvvəlcə sən yoxlayırsan.</div>
+                                <div id="fragranticaImportResult" class="mt-3"></div>
+                            </div>
+
                             <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title responsive-tabs" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active" data-bs-toggle="tab" href="#product-info" role="tab">Məhsul məlumatları</a>

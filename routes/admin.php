@@ -20,6 +20,7 @@ use App\Http\Controllers\Backend\Product\TypesController;
 use App\Http\Controllers\Backend\Product\IngredientController;
 use App\Http\Controllers\Backend\Product\CategoriesController;
 use App\Http\Controllers\Backend\Product\ProductsController;
+use App\Http\Controllers\Backend\Product\ProductImportController;
 
 
 /*
@@ -326,6 +327,7 @@ Route::prefix('admin')
                     Route::get('/list', 'index')->name('list');
                     Route::get('/list-data', 'listData')->name('list.data');
                     Route::get('/add', 'add')->name('add');
+                    Route::post('/import/fragrantica-preview', [ProductImportController::class, 'preview'])->name('import.fragrantica-preview');
                     Route::get('/edit/{id}', 'edit')->name('edit');
                     Route::post('/add', 'create')->name('create');
                     Route::post('/update/{id}', 'update')->name('update');
