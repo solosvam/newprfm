@@ -16,7 +16,7 @@ use RuntimeException;
 
 class ProductImportController extends Controller
 {
-    public function preview(Request $request, FragranticaImportService $fragrantica): JsonResponse
+    public function preview(Request $request, FragranticaImportService $fragrantica, OpenAiPerfumeService $openAi): JsonResponse
     {
         $request->validate([
             'url' => ['required', 'url', 'max:2048', 'regex:/^https:\/\/(www\.)?fragrantica\.com\/perfume\//i'],
@@ -24,18 +24,22 @@ class ProductImportController extends Controller
 
         try {
             $product = $fragrantica->import($request->string('url')->toString());
-
-            return response()->json([
-                'product' => $product,
-                'matches' => [
-                    'brand_id' => $this->findBrand($product['brand']),
-                    'gender_ids' => $this->findGenders($product['gender']),
-                    'ingredient_ids' => $this->findIngredients($product['notes']),
-                ],
-            ]);
         } catch (RuntimeException $exception) {
-            return response()->json(['message' => $exception->getMessage()], 422);
+            try {
+                $product = $openAi->factsFromFragrantica($request->string('url')->toString());
+            } catch (RuntimeException $fallbackException) {
+                return response()->json(['message' => $fallbackException->getMessage()], 422);
+            }
         }
+
+        return response()->json([
+            'product' => $product,
+            'matches' => [
+                'brand_id' => $this->findBrand($product['brand']),
+                'gender_ids' => $this->findGenders($product['gender']),
+                'ingredient_ids' => $this->findIngredients($product['notes']),
+            ],
+        ]);
     }
 
     public function generateWithAi(Request $request, OpenAiPerfumeService $openAi): JsonResponse

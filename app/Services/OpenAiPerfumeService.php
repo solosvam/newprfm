@@ -9,6 +9,16 @@ class OpenAiPerfumeService
 {
     public function generateFromFragrantica(string $url): array
     {
+        return $this->request($this->prompt($url), $this->schema(), true);
+    }
+
+    public function factsFromFragrantica(string $url): array
+    {
+        return $this->request($this->factsPrompt($url), $this->factsSchema());
+    }
+
+    private function request(string $prompt, array $schema, bool $sanitizeDescriptions = false): array
+    {
         $apiKey = config('services.openai.api_key');
 
         if (!$apiKey) {
@@ -31,13 +41,13 @@ class OpenAiPerfumeService
                         ],
                     ],
                 ],
-                'input' => $this->prompt($url),
+                'input' => $prompt,
                 'text' => [
                     'format' => [
                         'type' => 'json_schema',
                         'name' => 'perfume_product_content',
                         'strict' => true,
-                        'schema' => $this->schema(),
+                        'schema' => $schema,
                     ],
                 ],
             ]);
@@ -54,7 +64,7 @@ class OpenAiPerfumeService
             throw new RuntimeException('OpenAI gözlənilən JSON cavabını qaytarmadı.');
         }
 
-        return $this->sanitizeDescriptions($data);
+        return $sanitizeDescriptions ? $this->sanitizeDescriptions($data) : $data;
     }
 
     private function prompt(string $url): string
@@ -74,6 +84,21 @@ Qaydalar:
 - description_az, description_en və description_ru hərəsi 80-120 söz olsun. Satış dilində, təbii, təkrarsız yaz.
 - Bu üç description sahəsində Fragrantica, heç bir başqa sayt adı, URL, Markdown linki, citation, mənbə qeydi və ya "according to" tipli ifadə qətiyyən yazma.
 - Məhsulun davamlılığı, yayılması və mövsümü barədə təsdiqlənmiş məlumat yoxdursa qəti iddia yazma.
+- Yalnız göstərilən JSON sxeminə uyğun cavab ver.
+PROMPT;
+    }
+
+    private function factsPrompt(string $url): string
+    {
+        return <<<PROMPT
+Bu Fragrantica məhsul səhifəsini web axtarışından oxu və yalnız təsdiqlənən faktları qaytar:
+{$url}
+
+Qaydalar:
+- name, brand, gender, year, perfumer, notes və accords bu konkret məhsula aid olsun.
+- Məlumat tapılmırsa null, notes və accords üçün boş massiv qaytar; təxmin etmə.
+- gender yalnız "women", "men" və ya "unisex" olsun.
+- source_description İngiliscə qısa faktiki xülasə olsun; mənbə adı, URL və ya link yazma.
 - Yalnız göstərilən JSON sxeminə uyğun cavab ver.
 PROMPT;
     }
@@ -101,6 +126,29 @@ PROMPT;
                 'description_az' => ['type' => 'string'],
                 'description_en' => ['type' => 'string'],
                 'description_ru' => ['type' => 'string'],
+            ],
+        ];
+    }
+
+    private function factsSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'required' => [
+                'source_url', 'name', 'brand', 'gender', 'year', 'perfumer',
+                'notes', 'accords', 'source_description',
+            ],
+            'properties' => [
+                'source_url' => ['type' => 'string'],
+                'name' => ['type' => 'string'],
+                'brand' => ['type' => 'string'],
+                'gender' => ['type' => ['string', 'null']],
+                'year' => ['type' => ['integer', 'null']],
+                'perfumer' => ['type' => ['string', 'null']],
+                'notes' => ['type' => 'array', 'items' => ['type' => 'string']],
+                'accords' => ['type' => 'array', 'items' => ['type' => 'string']],
+                'source_description' => ['type' => ['string', 'null']],
             ],
         ];
     }
