@@ -296,6 +296,15 @@
                 </ul>
             </li>
 
+            @can('crm')
+            <li>
+                <a href="{{ route('admin.crm.index') }}">
+                    <i data-acorn-icon="user" class="icon" data-acorn-size="18"></i>
+                    <span class="label">CRM</span>
+                </a>
+            </li>
+            @endcan
+
             @can('site.menu')
             <li>
                 <a href="#site-parameters" data-href="/site-parameters">
