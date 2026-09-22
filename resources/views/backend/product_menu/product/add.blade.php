@@ -155,16 +155,16 @@
                     const duration = (Number(data.meta?.duration_ms || 0) / 1000).toFixed(1);
                     fragranticaImportResult.innerHTML = `
                         <div class="alert alert-success mb-0">
-                            <strong>Məhsul sahələri və 3 dildə təsvir hazırdır.</strong><br>
+                            <strong>3 dildə təsvir hazırdır.</strong><br>
                             ${escapeHtml(data.product.brand)} — ${escapeHtml(data.product.name)}
-                            <div class="small mt-2">İl: ${escapeHtml(data.product.year ?? 'tapılmadı')} · Parfümer: ${escapeHtml(data.product.perfumer ?? 'tapılmadı')} · Hazırlanma vaxtı: ${duration} saniyə</div>
+                            <div class="small mt-2">Hazırlanma vaxtı: ${duration} saniyə</div>
                         </div>`;
                 } catch (error) {
                     fragranticaImportResult.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(error.message)}</div>`;
                 } finally {
                     window.clearInterval(timer);
                     aiGenerateButton.disabled = false;
-                aiGenerateButton.textContent = 'AI ilə sahələri doldur və 3 dildə təsvir yarat';
+                aiGenerateButton.textContent = 'AI ilə 3 dildə təsvir yarat';
                 }
             });
 
@@ -321,7 +321,7 @@
                                     <input type="url" id="fragrantica_import_url" class="form-control" placeholder="https://www.fragrantica.com/perfume/...">
                                     <button class="btn btn-outline-primary" type="button" id="fragranticaImportButton">Məlumatları gətir</button>
                                 </div>
-                                <button class="btn btn-primary mt-2" type="button" id="aiGenerateButton">AI ilə sahələri doldur və 3 dildə təsvir yarat</button>
+                                <button class="btn btn-primary mt-2" type="button" id="aiGenerateButton">AI ilə 3 dildə təsvir yarat</button>
                                 <button class="btn btn-outline-primary mt-2" type="button" id="imageSearchButton">Şəkilləri tap</button>
                                 <div class="form-text">Linkdən məhsul adı, brend, cinsiyyət, notlar, il və parfümer çıxarılır. Şəkilləri ayrıca “Şəkilləri tap” düyməsi ilə seçirsən.</div>
                                 <div id="fragranticaImportResult" class="mt-3"></div>
