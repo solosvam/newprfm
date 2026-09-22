@@ -329,6 +329,7 @@ Route::prefix('admin')
                     Route::get('/add', 'add')->name('add');
                     Route::post('/import/fragrantica-preview', [ProductImportController::class, 'preview'])->name('import.fragrantica-preview');
                     Route::post('/import/ai-generate', [ProductImportController::class, 'generateWithAi'])->name('import.ai-generate');
+                    Route::post('/import/image-search', [ProductImportController::class, 'searchImages'])->name('import.image-search');
                     Route::get('/edit/{id}', 'edit')->name('edit');
                     Route::post('/add', 'create')->name('create');
                     Route::post('/update/{id}', 'update')->name('update');

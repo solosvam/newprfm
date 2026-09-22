@@ -25,7 +25,9 @@
             const fragranticaImportUrl = document.getElementById('fragrantica_import_url');
             const fragranticaImportButton = document.getElementById('fragranticaImportButton');
             const aiGenerateButton = document.getElementById('aiGenerateButton');
+            const imageSearchButton = document.getElementById('imageSearchButton');
             const fragranticaImportResult = document.getElementById('fragranticaImportResult');
+            const imageSearchResult = document.getElementById('imageSearchResult');
             const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
             }[character]));
@@ -170,6 +172,64 @@
                 }
             });
 
+            imageSearchButton.addEventListener('click', async function () {
+                const name = document.getElementById('name').value.trim();
+                const brand = document.getElementById('brand_id').selectedOptions[0]?.text.trim() || '';
+
+                if (!name) {
+                    imageSearchResult.innerHTML = '<div class="alert alert-warning mb-0">Əvvəlcə ətirin adını daxil edin və ya AI ilə məlumatları yaradın.</div>';
+                    return;
+                }
+
+                imageSearchButton.disabled = true;
+                imageSearchButton.textContent = 'Şəkillər axtarılır...';
+                imageSearchResult.innerHTML = '';
+
+                try {
+                    const response = await fetch('{{ route('admin.product.import.image-search') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({query: `${brand} ${name} perfume bottle`}),
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Şəkillər tapılmadı.');
+                    }
+
+                    if (!data.images.length) {
+                        imageSearchResult.innerHTML = '<div class="alert alert-warning mb-0">Uyğun şəkil tapılmadı.</div>';
+                        return;
+                    }
+
+                    imageSearchResult.innerHTML = `
+                        <div class="row g-3 mt-1">
+                            ${data.images.map((image) => `
+                                <div class="col-6 col-md-3">
+                                    <label class="border rounded p-2 d-block h-100">
+                                        <img src="${escapeHtml(image.thumbnail_url)}" alt="${escapeHtml(image.title)}" class="img-fluid mb-2" style="width: 100%; height: 150px; object-fit: contain">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" form="productForm" name="remote_image_ids[]" value="${image.id}">
+                                            <span class="form-check-label">Seç</span>
+                                        </div>
+                                        <div class="small text-muted mt-1 text-truncate">${escapeHtml(image.source)}</div>
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="form-text mt-2">Ən çox 5 şəkil seç. Məhsulu yadda saxlayanda seçilənlər serverə yüklənəcək.</div>`;
+                } catch (error) {
+                    imageSearchResult.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(error.message)}</div>`;
+                } finally {
+                    imageSearchButton.disabled = false;
+                    imageSearchButton.textContent = 'Şəkilləri tap';
+                }
+            });
+
             function reindexVariants() {
                 variantArea.querySelectorAll('.variant-row').forEach(function (row, index) {
                     row.querySelector('.variant-size').name = `variants[${index}][size_id]`;
@@ -248,8 +308,10 @@
                                     <button class="btn btn-outline-primary" type="button" id="fragranticaImportButton">Məlumatları gətir</button>
                                 </div>
                                 <button class="btn btn-primary mt-2" type="button" id="aiGenerateButton">AI ilə məlumat və təsvir yarat</button>
+                                <button class="btn btn-outline-primary mt-2" type="button" id="imageSearchButton">Şəkilləri tap</button>
                                 <div class="form-text">Linkdən məhsul adı, brend, cinsiyyət, notlar və əsas şəkil çıxarılır. Heç nə yadda saxlanmır; əvvəlcə sən yoxlayırsan.</div>
                                 <div id="fragranticaImportResult" class="mt-3"></div>
+                                <div id="imageSearchResult" class="mt-3"></div>
                             </div>
 
                             <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title responsive-tabs" role="tablist">
@@ -264,7 +326,7 @@
                                 </li>
                             </ul>
 
-                            <form method="POST" action="{{ route('admin.product.add') }}" enctype="multipart/form-data">
+                            <form id="productForm" method="POST" action="{{ route('admin.product.add') }}" enctype="multipart/form-data">
                                 @csrf
 
                                 <div class="tab-content">

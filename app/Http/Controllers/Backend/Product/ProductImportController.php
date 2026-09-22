@@ -8,6 +8,7 @@ use App\Models\Product\Gender;
 use App\Models\Product\Ingredient;
 use App\Services\FragranticaImportService;
 use App\Services\OpenAiPerfumeService;
+use App\Services\SerpApiImageSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -58,6 +59,27 @@ class ProductImportController extends Controller
                     'ingredient_ids' => $this->findIngredients($product['notes']),
                 ],
             ]);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function searchImages(Request $request, SerpApiImageSearchService $serpApi): JsonResponse
+    {
+        $request->validate([
+            'query' => ['required', 'string', 'max:255'],
+        ]);
+
+        try {
+            $images = $serpApi->search($request->string('query')->toString());
+
+            $images = collect($images)
+                ->map(fn (array $image, int $index) => ['id' => $index] + $image)
+                ->all();
+
+            $request->session()->put('product_image_candidates', $images);
+
+            return response()->json(['images' => $images]);
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }

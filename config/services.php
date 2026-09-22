@@ -47,4 +47,8 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-5-mini'),
     ],
 
+    'serpapi' => [
+        'api_key' => env('SERPAPI_KEY'),
+    ],
+
 ];

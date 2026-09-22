@@ -15,6 +15,7 @@ use App\Models\Product\Size;
 use App\Models\Product\Type;
 use App\Services\SeoUrl;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 
@@ -107,6 +108,8 @@ class ProductsController extends Controller
                     ]);
                 }
             }
+
+            $this->storeSelectedRemoteImages($product, $request, $manager ?? ImageManager::usingDriver(Driver::class));
         });
 
         return redirect()
@@ -125,6 +128,49 @@ class ProductsController extends Controller
         $ingredients = Ingredient::all();
 
         return view('backend.product_menu.product.edit',compact('product','brands','types','genders','categories','ingredients','sizes'));
+    }
+
+    private function storeSelectedRemoteImages(Product $product, AddProductRequest $request, ImageManager $manager): void
+    {
+        $selectedIds = $request->input('remote_image_ids', []);
+
+        if (!$selectedIds) {
+            return;
+        }
+
+        $candidates = $request->session()->get('product_image_candidates', []);
+
+        foreach ($selectedIds as $id) {
+            $candidate = $candidates[$id] ?? null;
+            $url = $candidate['original_url'] ?? null;
+
+            if (!$url) {
+                continue;
+            }
+
+            $response = Http::timeout(20)
+                ->connectTimeout(5)
+                ->withoutRedirecting()
+                ->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; ParfumShopImageImporter/1.0)'])
+                ->get($url);
+
+            if (!$response->successful() || strlen($response->body()) > 10 * 1024 * 1024) {
+                continue;
+            }
+
+            $imageName = $this->generateProductImageName($product);
+            $path = public_path('frontend/uploads/products/' . $imageName);
+
+            $manager
+                ->decode($response->body())
+                ->cover(600, 600)
+                ->save($path, quality: 82);
+
+            ProductImage::create([
+                'product_id' => $product->id,
+                'image' => $imageName,
+            ]);
+        }
     }
 
     public function update(AddProductRequest $request, $id)
