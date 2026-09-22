@@ -94,7 +94,7 @@ class FragranticaImportService
             'perfumer' => $perfumer ?: null,
             'notes' => $notes,
             'accords' => $this->extractAccords($text),
-            'image_url' => $this->safeImageUrl($this->metaContent($html, 'og:image')),
+            'image_url' => $this->extractProductImage($html) ?? $this->safeImageUrl($this->metaContent($html, 'og:image')),
         ];
     }
 
@@ -178,8 +178,34 @@ class FragranticaImportService
 
     private function safeImageUrl(?string $url): ?string
     {
+        if ($url && str_starts_with($url, '//')) {
+            $url = 'https:' . $url;
+        }
+
         return $url && filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, PHP_URL_SCHEME) === 'https'
             ? $url
             : null;
+    }
+
+    private function extractProductImage(string $html): ?string
+    {
+        preg_match_all('/<img\b[^>]*>/i', $html, $tags);
+
+        foreach ($tags[0] ?? [] as $tag) {
+            preg_match('/\balt=["\']([^"\']*)["\']/i', $tag, $alt);
+
+            if (!str_contains(Str::lower($alt[1] ?? ''), 'perfume')) {
+                continue;
+            }
+
+            preg_match('/\b(?:src|data-src)=["\']([^"\']+)["\']/i', $tag, $src);
+            $url = $this->safeImageUrl(html_entity_decode($src[1] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+            if ($url) {
+                return $url;
+            }
+        }
+
+        return null;
     }
 }
