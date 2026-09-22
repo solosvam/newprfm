@@ -44,10 +44,14 @@ class ProductImportController extends Controller
         ]);
 
         try {
+            $startedAt = microtime(true);
             $product = $openAi->generateFromFragrantica($request->string('url')->toString());
 
             return response()->json([
                 'product' => $product,
+                'meta' => [
+                    'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+                ],
                 'matches' => [
                     'brand_id' => $this->findBrand($product['brand']),
                     'gender_ids' => $this->findGenders($product['gender']),

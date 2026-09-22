@@ -145,11 +145,12 @@
                         $('#ingredients').val(data.matches.ingredient_ids.map(String)).trigger('change');
                     }
 
+                    const duration = (Number(data.meta?.duration_ms || 0) / 1000).toFixed(1);
                     fragranticaImportResult.innerHTML = `
                         <div class="alert alert-success mb-0">
                             <strong>AI məlumatları və 3 dildə təsvir hazırdır.</strong><br>
                             ${escapeHtml(data.product.brand)} — ${escapeHtml(data.product.name)}
-                            <div class="small mt-2">İl: ${escapeHtml(data.product.year ?? 'tapılmadı')} · Parfümer: ${escapeHtml(data.product.perfumer ?? 'tapılmadı')}</div>
+                            <div class="small mt-2">İl: ${escapeHtml(data.product.year ?? 'tapılmadı')} · Parfümer: ${escapeHtml(data.product.perfumer ?? 'tapılmadı')} · Hazırlanma vaxtı: ${duration} saniyə</div>
                         </div>`;
                 } catch (error) {
                     fragranticaImportResult.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(error.message)}</div>`;
