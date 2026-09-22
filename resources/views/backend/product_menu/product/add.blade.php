@@ -110,7 +110,16 @@
 
                 aiGenerateButton.disabled = true;
                 aiGenerateButton.textContent = 'AI yazır...';
-                fragranticaImportResult.innerHTML = '';
+                const startedAt = performance.now();
+                fragranticaImportResult.innerHTML = '<div class="alert alert-info mb-0">AI məlumatları hazırlayır... <strong id="aiGenerationTimer">0.0 saniyə</strong></div>';
+                const timer = window.setInterval(function () {
+                    const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
+                    const timerElement = document.getElementById('aiGenerationTimer');
+
+                    if (timerElement) {
+                        timerElement.textContent = `${seconds} saniyə`;
+                    }
+                }, 100);
 
                 try {
                     const response = await fetch('{{ route('admin.product.import.ai-generate') }}', {
@@ -155,6 +164,7 @@
                 } catch (error) {
                     fragranticaImportResult.innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(error.message)}</div>`;
                 } finally {
+                    window.clearInterval(timer);
                     aiGenerateButton.disabled = false;
                     aiGenerateButton.textContent = 'AI ilə məlumat və təsvir yarat';
                 }
@@ -270,6 +280,7 @@
                                                     <div class="col-md-9">
                                                         <label for="brand_id">Brend</label>
                                                         <select class="form-select select2" id="brand_id" name="brand_id" required>
+                                                            <option value="" @selected(!old('brand_id'))>Seçin</option>
                                                             @foreach($brands as $brand)
                                                                 <option value="{{ $brand->id }}" @selected(old('brand_id') == $brand->id)>
                                                                     {{ $brand->name }}
