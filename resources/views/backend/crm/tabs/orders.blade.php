@@ -12,6 +12,7 @@
                     <th>Ödəniş üsulu</th>
                     <th>Status</th>
                     <th class="text-end">Yekun</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -27,6 +28,13 @@
                         <td>{{ $order->paymentMethod?->name ?? '—' }}</td>
                         <td><span class="badge bg-light text-dark">{{ $order->status?->name ?? '—' }}</span></td>
                         <td class="text-end fw-semibold">{{ number_format((float) $order->total, 2) }} ₼</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-primary crm-order-detail"
+                                    data-url="{{ route('admin.crm.order', ['customer' => $order->customer_id, 'order' => $order->id]) }}"
+                                    data-bs-toggle="modal" data-bs-target="#orderModal" title="Sifariş detalları">
+                                <i data-acorn-icon="info-circle" data-acorn-size="15"></i>
+                            </button>
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>

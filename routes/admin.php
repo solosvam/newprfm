@@ -182,6 +182,7 @@ Route::prefix('admin')
                     Route::get('/search', 'search')->name('search');
                     Route::get('/customer/{customer}', 'show')->name('show');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
+                    Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}', 'update')->name('update');
                     Route::post('/customer/{customer}/reset-password', 'resetPassword')->name('reset-password');
                     Route::get('/customer/{customer}/sms', 'sms')->name('sms');

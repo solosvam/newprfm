@@ -17,9 +17,10 @@
         .crm-avatar { width: 112px; height: 112px; font-size: 2rem; }
         .crm-profile-card { min-height: 320px; }
         .crm-tab-content { min-height: 330px; }
-        .crm-tabs { border-bottom: 1px solid var(--separator); flex-wrap: nowrap; overflow-x: auto; }
-        .crm-tabs .nav-link { border: 0 !important; border-bottom: 3px solid transparent !important; border-radius: 0 !important; color: var(--foreground) !important; padding: 1rem 1.15rem; white-space: nowrap; }
-        .crm-tabs .nav-link.active { background: transparent !important; border-bottom-color: var(--primary) !important; color: var(--primary) !important; }
+        .crm-tabs { border-bottom: 1px solid #e5e7eb; flex-wrap: nowrap; overflow-x: auto; }
+        .crm-tabs .nav-link { border: 0 !important; border-bottom: 4px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: #5a5a5a !important; font-size: 1.15rem; padding: 1.2rem 1.35rem 1rem; white-space: nowrap; }
+        .crm-tabs .nav-link:hover { color: #1fa9e6 !important; }
+        .crm-tabs .nav-link.active { border-bottom-color: #20a9e5 !important; color: #20a9e5 !important; }
     </style>
 @endsection
 
@@ -143,6 +144,32 @@
                     })
                     .catch(function () {
                         body.innerHTML = '<div class="text-danger">SMS tarixçəsi yüklənə bilmədi.</div>';
+                    });
+            });
+
+            const orderModal = document.getElementById('orderModal');
+
+            orderModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const body = document.getElementById('orderModalBody');
+
+                body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+
+                fetch(button.dataset.url, {
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error();
+                        }
+
+                        return response.text();
+                    })
+                    .then(function (html) {
+                        body.innerHTML = html;
+                    })
+                    .catch(function () {
+                        body.innerHTML = '<div class="text-danger">Sifariş detalları yüklənə bilmədi.</div>';
                     });
             });
 
@@ -282,6 +309,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="smsModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Bağla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sifariş detalları</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="orderModalBody"></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Bağla</button>
                 </div>
