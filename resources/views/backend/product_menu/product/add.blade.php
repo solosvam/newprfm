@@ -79,9 +79,6 @@
                     const sourceDescription = data.product.source_description
                         ? `<details class="mt-2"><summary>Mənbədən çıxarılan izah</summary><div class="small mt-2">${escapeHtml(data.product.source_description)}</div></details>`
                         : '';
-                    const image = data.product.image_url
-                        ? `<img src="${escapeHtml(data.product.image_url)}" class="img-thumbnail mt-2" style="width: 100px; height: 100px; object-fit: contain" alt="${escapeHtml(data.product.name)}">`
-                        : '';
 
                     fragranticaImportResult.innerHTML = `
                         <div class="alert alert-success mb-0">
@@ -90,7 +87,6 @@
                             ${data.product.perfumer ? `Parfümer: ${data.product.perfumer}<br>` : ''}
                             Notlar: ${notes}<br>
                             Akkordlar: ${accords}
-                            ${image}
                             ${sourceDescription}
                             <div class="small mt-2">Uyğun gələn brend, cinsiyyət və notlar formda avtomatik seçildi. Yoxlayıb düzəldə bilərsən.</div>
                         </div>`;
@@ -113,7 +109,7 @@
                 aiGenerateButton.disabled = true;
                 aiGenerateButton.textContent = 'AI yazır...';
                 const startedAt = performance.now();
-                fragranticaImportResult.innerHTML = '<div class="alert alert-info mb-0">AI məlumatları hazırlayır... <strong id="aiGenerationTimer">0.0 saniyə</strong></div>';
+                fragranticaImportResult.innerHTML = '<div class="alert alert-info mb-0">AI sahələri və 3 dildə təsviri hazırlayır... <strong id="aiGenerationTimer">0.0 saniyə</strong></div>';
                 const timer = window.setInterval(function () {
                     const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
                     const timerElement = document.getElementById('aiGenerationTimer');
@@ -136,7 +132,7 @@
                     const data = await response.json();
 
                     if (!response.ok) {
-                        throw new Error(data.message || 'AI məlumatları hazırlaya bilmədi.');
+                        throw new Error(data.message || 'AI sahələri və təsvirləri hazırlaya bilmədi.');
                     }
 
                     document.getElementById('name').value = data.product.name || '';
@@ -159,7 +155,7 @@
                     const duration = (Number(data.meta?.duration_ms || 0) / 1000).toFixed(1);
                     fragranticaImportResult.innerHTML = `
                         <div class="alert alert-success mb-0">
-                            <strong>AI məlumatları və 3 dildə təsvir hazırdır.</strong><br>
+                            <strong>Məhsul sahələri və 3 dildə təsvir hazırdır.</strong><br>
                             ${escapeHtml(data.product.brand)} — ${escapeHtml(data.product.name)}
                             <div class="small mt-2">İl: ${escapeHtml(data.product.year ?? 'tapılmadı')} · Parfümer: ${escapeHtml(data.product.perfumer ?? 'tapılmadı')} · Hazırlanma vaxtı: ${duration} saniyə</div>
                         </div>`;
@@ -168,7 +164,7 @@
                 } finally {
                     window.clearInterval(timer);
                     aiGenerateButton.disabled = false;
-                    aiGenerateButton.textContent = 'AI ilə məlumat və təsvir yarat';
+                aiGenerateButton.textContent = 'AI ilə sahələri doldur və 3 dildə təsvir yarat';
                 }
             });
 
@@ -177,7 +173,7 @@
                 const brand = document.getElementById('brand_id').selectedOptions[0]?.text.trim() || '';
 
                 if (!name) {
-                    imageSearchResult.innerHTML = '<div class="alert alert-warning mb-0">Əvvəlcə ətirin adını daxil edin və ya AI ilə məlumatları yaradın.</div>';
+                    imageSearchResult.innerHTML = '<div class="alert alert-warning mb-0">Əvvəlcə ətirin adını daxil edin və ya AI ilə sahələri doldurun.</div>';
                     return;
                 }
 
@@ -325,9 +321,9 @@
                                     <input type="url" id="fragrantica_import_url" class="form-control" placeholder="https://www.fragrantica.com/perfume/...">
                                     <button class="btn btn-outline-primary" type="button" id="fragranticaImportButton">Məlumatları gətir</button>
                                 </div>
-                                <button class="btn btn-primary mt-2" type="button" id="aiGenerateButton">AI ilə məlumat və təsvir yarat</button>
+                                <button class="btn btn-primary mt-2" type="button" id="aiGenerateButton">AI ilə sahələri doldur və 3 dildə təsvir yarat</button>
                                 <button class="btn btn-outline-primary mt-2" type="button" id="imageSearchButton">Şəkilləri tap</button>
-                                <div class="form-text">Linkdən məhsul adı, brend, cinsiyyət, notlar və əsas şəkil çıxarılır. Heç nə yadda saxlanmır; əvvəlcə sən yoxlayırsan.</div>
+                                <div class="form-text">Linkdən məhsul adı, brend, cinsiyyət, notlar, il və parfümer çıxarılır. Şəkilləri ayrıca “Şəkilləri tap” düyməsi ilə seçirsən.</div>
                                 <div id="fragranticaImportResult" class="mt-3"></div>
                                 <div id="imageSearchResult" class="mt-3"></div>
                             </div>

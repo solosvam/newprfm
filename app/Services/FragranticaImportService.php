@@ -97,7 +97,6 @@ class FragranticaImportService
             'notes' => $notes,
             'accords' => $this->extractAccords($text),
             'source_description' => $sourceDescription,
-            'image_url' => $this->extractProductImage($html) ?? $this->safeImageUrl($this->metaContent($html, 'og:image')),
         ];
     }
 
