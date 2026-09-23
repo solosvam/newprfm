@@ -56,7 +56,7 @@ class CrmController extends Controller
                     ->paginate(10),
             ]),
             'payments' => view('backend.crm.tabs.payments'),
-            'bonuses' => view('backend.crm.tabs.bonuses', [
+            'balance' => view('backend.crm.tabs.balance', [
                 'customer' => $customer,
                 'transactions' => $customer->bonusTransactions()
                     ->with('order')
