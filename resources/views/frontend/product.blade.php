@@ -12,8 +12,6 @@
         $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
         $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
         $initialPrice = (float) ($firstVariant?->price ?? 0);
-        // Birbank taksit kartı ayrıca 6 ay faizsizdir.
-        // Admin paneldəki kredit faizləri yalnız aşağıdakı kredit cədvəlinə tətbiq olunur.
         $birbankMonth = 6;
         $birbankTotal = $initialPrice;
     @endphp
@@ -113,18 +111,8 @@
                             <button>1 kliklə sifariş</button>
                         </div>
                         <div class="product-shipping-info">
-                            <img
-                                class="shipping-info-icon"
-                                src="{{asset('frontend/images/info.svg')}}"
-                                alt=""
-                            />
-                            <span
-                            >Bakı şəhər daxili çatdırılma ödənişsizdir
-                  <span class="shipping-tooltip"
-                  >Ünvandan asılı olaraq çatdırılma 30 dəqiqədən 2 saata qədər
-                    dəyişə bilər</span
-                  >
-                </span>
+                            <img class="shipping-info-icon" src="{{asset('frontend/images/info.svg')}}" alt=""/>
+                            <span>Bakı şəhər daxili çatdırılma ödənişsizdir <span class="shipping-tooltip">Ünvandan asılı olaraq çatdırılma 30 dəqiqədən 2 saata qədərdəyişə bilər</span></span>
                         </div>
                     </div>
                     <div class="product-taksit-table">
@@ -158,7 +146,7 @@
                                         <td class="radio-cell">
                                             <input type="radio" name="duration" value="{{ $period->month }}" {{ $loop->first ? 'checked' : '' }} />
                                         </td>
-                                        <td>{{ $period->month }} ay</td>
+                                        <td>{{ $period->month }} ay @if($period->interest_rate == 0) Faizsiz @endif </td>
                                         <td class="installment-monthly">{{ number_format($installmentMonthly, 2) }} ₼</td>
                                         <td class="installment-total">{{ number_format($installmentTotal, 2) }} ₼</td>
                                     </tr>
@@ -315,8 +303,6 @@
     </main>
 @endsection
 @section('modal')
-
-
     <!--OTHER SIZES FOR MOBILE-->
     <div class="other-sizes-container-mobile">
         <div class="other-sizes-overlay"></div>

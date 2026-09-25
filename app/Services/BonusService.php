@@ -1,8 +1,9 @@
 <?php
 namespace App\Services;
-use App\Models\Customer;
+use App\Models\Customer\Customer;
 use App\Models\Order;
 use App\Models\Setting;
+
 class BonusService {
  public function earnForOrder(Customer $customer, Order $order, float $paidAmount): float {
   $percent=(float) Setting::valueOf('order_bonus_percent',5);

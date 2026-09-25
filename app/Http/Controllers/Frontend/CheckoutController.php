@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
-use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\OrderStatus;
 use App\Models\PaymentMethod;

@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Customer;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Order;
+use App\Models\Product\Product;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class Customer extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use Notifiable;
 
     protected $guard = 'web';
 
@@ -34,13 +35,24 @@ class Customer extends Authenticatable
             'active' => 'boolean',
         ];
     }
-    public function addresses(){ return $this->hasMany(CustomerAddress::class); }
-    public function orders(){ return $this->hasMany(Order::class); }
-    public function bonusTransactions(){ return $this->hasMany(CustomerBonusTransaction::class); }
+    public function addresses(){
+        return $this->hasMany(CustomerAddress::class);
+    }
+    public function orders(){
+        return $this->hasMany(Order::class);
+    }
+    public function bonusTransactions(){
+        return $this->hasMany(CustomerBonusTransaction::class);
+    }
     public function favoriteProducts()
     {
-        return $this->belongsToMany(\App\Models\Product\Product::class, 'product_favorites', 'customer_id', 'product_id')
+        return $this->belongsToMany(Product::class, 'product_favorites', 'customer_id', 'product_id')
             ->withPivot('created_at');
+    }
+
+    public function creditProfile()
+    {
+        return $this->hasOne(CustomerCreditProfile::class);
     }
 
     public function getFullNameAttribute()

@@ -109,24 +109,37 @@
                         <div class="accordion accordion-flush" id="customerDetails">
                             <div class="accordion-item border-0">
                                 <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed px-3 py-2" type="button"
-                                            style="font-size:13px;"
-                                            data-bs-toggle="collapse" data-bs-target="#detailsCollapse">
-                                        <i data-acorn-icon="user" data-acorn-size="14" class="me-2"></i> Ətraflı
-                                        məlumatlar
+                                    <button class="accordion-button collapsed px-3 py-2" type="button" style="font-size:13px;" data-bs-toggle="collapse" data-bs-target="#detailsCollapse">
+                                        <i data-acorn-icon="user" data-acorn-size="14" class="me-2"></i> Hissəli ödəniş məlumatları
                                     </button>
                                 </h2>
                                 <div id="detailsCollapse" class="accordion-collapse collapse">
                                     <div class="accordion-body pt-0 px-3 pb-3">
                                         <div class="row g-2">
+                                            @php
+                                                $creditProfile = $customer->creditProfile;
+                                            @endphp
                                             @foreach([
-                                                ['FIN',             $customer->fin],
-                                                ['Email',           $customer->email],
-                                                ['Qeydiyyat',       $customer->created_at->format('d.m.Y H:i')],
-                                            ] as [$label, $value])
+                                                    ['ATA ADI', $creditProfile?->father_name],
+                                                    ['CİNSİYYƏT', $creditProfile?->gender],
+                                                    ['FİN', $creditProfile?->fin],
+
+                                                    ['1-Cİ QOHUMUN ADI', $creditProfile?->relative_1_name],
+                                                    ['1-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_1_phone],
+
+                                                    ['2-Cİ QOHUMUN ADI', $creditProfile?->relative_2_name],
+                                                    ['2-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_2_phone],
+
+                                                    ['ŞƏXSİYYƏT VƏSİQƏSİ (ÖN)', $creditProfile?->id_card_front],
+                                                    ['ŞƏXSİYYƏT VƏSİQƏSİ (ARXA)', $creditProfile?->id_card_back],
+
+                                                    ['İŞ YERİNİN ADI', $creditProfile?->workplace_name],
+                                                    ['ƏMƏK HAQQI', $creditProfile?->salary],
+                                                    ['VƏZİFƏ', $creditProfile?->position],
+                                                ] as [$label, $value])
                                                 <div class="col-12">
                                                     <div style="font-size:11px;" class="text-muted">{{ $label }}</div>
-                                                    <div style="font-size:13px;" class="fw-medium">{{ $value }}</div>
+                                                    <div style="font-size:13px;" class="fw-medium">{{ $value ?: '-' }}</div>
                                                 </div>
                                             @endforeach
                                         </div>

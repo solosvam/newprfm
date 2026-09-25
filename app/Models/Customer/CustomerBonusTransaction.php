@@ -1,6 +1,8 @@
 <?php
-namespace App\Models;
+namespace App\Models\Customer;
+use App\Models\Order;
 use Illuminate\Database\Eloquent\Model;
+
 class CustomerBonusTransaction extends Model {
  protected $guarded=[];
  protected function casts():array{return ['amount'=>'decimal:2'];}
