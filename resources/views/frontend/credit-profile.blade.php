@@ -6,6 +6,11 @@
 .credit-field input{width:100%;padding:12px;border:1px solid #ddd;border-radius:6px}
 .credit-field input.is-invalid{border-color:#dc3545}.invalid-feedback{display:none;color:#dc3545;font-size:12px}
 .is-invalid + .invalid-feedback{display:block}.credit-form .form__submit{margin-top:22px}
+.credit-photo{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid #ddd;border-radius:8px;flex-wrap:wrap}
+.credit-photo img{width:135px;height:95px;object-fit:contain;border-radius:5px;background:#f5f5f5}
+.credit-photo button{padding:10px 16px;border:1px solid #333;border-radius:5px;background:white;cursor:pointer}
+.credit-photo .credit-file{display:none}.credit-photo .credit-file.is-visible{display:block;width:100%}
+.credit-photo .credit-empty{font-size:13px;color:#666}
 @media(max-width:700px){.credit-form .credit-grid{grid-template-columns:1fr}}
 </style>
 @endsection
@@ -26,9 +31,17 @@
 <div class="credit-field"><label for="salary">Əmək haqqı (AZN) *</label><input id="salary" name="salary" type="number" step="0.01" min="0.01" value="{{ old('salary', $profile?->salary) }}" required><div class="invalid-feedback" data-error="salary"></div></div>
 <div class="credit-field"><label for="position">Vəzifə *</label><input id="position" name="position" type="text"  value="{{ old('position', $profile?->position) }}" required><div class="invalid-feedback" data-error="position"></div></div>
 @foreach(['id_card_front'=>'Şəxsiyyət vəsiqəsinin ön şəkli','id_card_back'=>'Şəxsiyyət vəsiqəsinin arxa şəkli'] as $field=>$label)
-<div class="credit-field"><label for="{{ $field }}">{{ $label }} * @if($profile?->{$field}) (yüklənib) @endif</label>
-<input id="{{ $field }}" name="{{ $field }}" type="file" accept="image/jpeg,image/png,image/webp" @if(!$profile?->{$field}) required @endif>
-<div class="invalid-feedback" data-error="{{ $field }}"></div></div>
+@php $side = $field === 'id_card_front' ? 'front' : 'back'; $hasImage = (bool) $profile?->{$field}; @endphp
+<div class="credit-field">
+<label for="{{ $field }}">{{ $label }} *</label>
+<div class="credit-photo" data-photo="{{ $field }}">
+<img class="credit-preview" src="{{ $hasImage ? route('profile.credit.image', ['side' => $side]) : '' }}" alt="{{ $label }}" @if(!$hasImage) hidden @endif>
+<span class="credit-empty" @if($hasImage) hidden @endif>Şəkil yüklənməyib</span>
+<button type="button" class="credit-change">{{ $hasImage ? 'Dəyişdir' : 'Şəkil seç' }}</button>
+<input class="credit-file" id="{{ $field }}" name="{{ $field }}" type="file" accept="image/jpeg,image/png,image/webp" @if(!$hasImage) required @endif>
+<div class="invalid-feedback" data-error="{{ $field }}"></div>
+</div>
+</div>
 @endforeach
 </div><div class="form__submit"><button type="submit" id="creditSubmit">Yadda saxla</button></div></form></div>
 </div></div></main>
@@ -37,11 +50,39 @@
 <script>
 $(function(){
  const form=$('#creditProfileForm');
+ form.find('.credit-change').on('click',function(){
+   const input=$(this).closest('.credit-photo').find('input[type=file]');
+   input.addClass('is-visible').trigger('click');
+ });
+ form.find('.credit-file').on('change',function(){
+   const file=this.files?.[0];if(!file)return;
+   const card=$(this).closest('.credit-photo');
+   const preview=card.find('.credit-preview');
+   const previous=preview.data('objectUrl');
+   if(previous)URL.revokeObjectURL(previous);
+   const objectUrl=URL.createObjectURL(file);
+   preview.attr('src',objectUrl).data('objectUrl',objectUrl).prop('hidden',false);
+   card.find('.credit-empty').prop('hidden',true);
+   card.find('.credit-change').text('Dəyişdir');
+ });
  form.on('submit',function(e){
   e.preventDefault();form.find('.is-invalid').removeClass('is-invalid');form.find('.invalid-feedback').text('');
   const btn=$('#creditSubmit').prop('disabled',true);
   $.ajax({url:form.attr('action'),type:'POST',data:new FormData(this),processData:false,contentType:false,
-   success:function(r){$.notify(r.message,'success');},
+   success:function(r){
+     $.each(r.images||{},function(field,url){
+       if(!url)return;
+       const card=form.find('[data-photo="'+field+'"]');
+       const preview=card.find('.credit-preview');
+       const previous=preview.data('objectUrl');
+       if(previous){URL.revokeObjectURL(previous);preview.removeData('objectUrl');}
+       preview.attr('src',url+'?v='+Date.now()).prop('hidden',false);
+       card.find('.credit-empty').prop('hidden',true);
+       card.find('.credit-change').text('Dəyişdir');
+       card.find('.credit-file').val('').prop('required',false).removeClass('is-visible');
+     });
+     $.notify(r.message,'success');
+   },
    error:function(xhr){
     if(xhr.status===422&&xhr.responseJSON?.errors){
      const errors=xhr.responseJSON.errors;
