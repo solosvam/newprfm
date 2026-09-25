@@ -3,20 +3,20 @@
 <main>
     <div class="container">
         <div class="cabinet">
-            @include('frontend.partials.cabinet-sidebar',['pageTitle'=>__('Bəyəndiyim ətirlər')])
+            @include('frontend.partials.cabinet-sidebar',['pageTitle'=>__('wishlist_my_favorites')])
 
             <section class="wishlist-page">
-                <h2 class="wishlist-page__title">{{ __('Bəyəndiyim ətirlər') }}</h2>
+                <h2 class="wishlist-page__title">{{ __('wishlist_my_favorites') }}</h2>
 
                 @if($products->isEmpty())
-                    <div class="wishlist-empty">{{ __('Hələ bəyəndiyiniz ətir yoxdur.') }}</div>
+                    <div class="wishlist-empty">{{ __('wishlist_you_have_no_favorites_yet') }}</div>
                 @else
                     <div class="wishlist-grid">
                         @foreach($products as $product)
                             @php($image = $product->images->first())
                             <article class="wishlist-card product-item" data-product-id="{{ $product->id }}">
                                 <div class="wishlist-card__image">
-                                    <button type="button" class="favorite-toggle is-favorite" data-product-id="{{ $product->id }}" aria-label="{{ __('Bəyəndiyim ətirlərdən sil') }}" aria-pressed="true">
+                                    <button type="button" class="favorite-toggle is-favorite" data-product-id="{{ $product->id }}" aria-label="{{ __('wishlist_remove_from_favorites') }}" aria-pressed="true">
                                         <img src="{{ asset('frontend/images/product-card-wishlist.svg') }}" alt="">
                                     </button>
                                     <a href="{{ route('product', $product->slug) }}">
