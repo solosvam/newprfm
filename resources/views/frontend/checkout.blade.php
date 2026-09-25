@@ -1,25 +1,25 @@
 @extends('frontend.layout')
 @section('content')
 <main><div class="container"><div class="checkout-page">
-<h1>Sifarişi rəsmiləşdir</h1><div class="checkout-grid"><section>
-<h2>Çatdırılma ünvanı</h2>
-@if($addresses->isNotEmpty())<select id="addressSelect">@foreach($addresses as $a)<option value="{{ $a->id }}">{{ $a->label }}</option>@endforeach<option value="new">+ Yeni ünvan əlavə et</option></select>@else<input type="hidden" id="addressSelect" value="new">@endif
+<h1>{{ __('Sifarişi rəsmiləşdir') }}</h1><div class="checkout-grid"><section>
+<h2>{{ __('Çatdırılma ünvanı') }}</h2>
+@if($addresses->isNotEmpty())<select id="addressSelect">@foreach($addresses as $a)<option value="{{ $a->id }}">{{ $a->label }}</option>@endforeach<option value="new">{{ __('+ Yeni ünvan əlavə et') }}</option></select>@else<input type="hidden" id="addressSelect" value="new">@endif
 <div id="newAddress" class="{{ $addresses->isNotEmpty() ? 'checkout-hidden' : '' }}">
 <div class="checkout-fields">
-<div class="checkout-field"><input type="text" id="addressTitle" placeholder="Ünvan adı (Ev, İş...)"></div>
-<div class="checkout-field"><input type="text" id="city" placeholder="Şəhər *"></div>
-<div class="checkout-field"><input type="text" id="district" placeholder="Rayon"></div>
-<div class="checkout-field"><input type="text" id="address" placeholder="Küçə və ünvan *"></div>
-<div class="checkout-field"><input type="text" id="building" placeholder="Bina"></div>
-<div class="checkout-field"><input type="text" id="entrance" placeholder="Blok"></div>
-<div class="checkout-field"><input type="text" id="floor" placeholder="Mərtəbə"></div>
-<div class="checkout-field"><input type="text" id="apartment" placeholder="Mənzil"></div>
+<div class="checkout-field"><input type="text" id="addressTitle" placeholder="{{ __('Ünvan adı (Ev, İş...)') }}"></div>
+<div class="checkout-field"><input type="text" id="city" placeholder="{{ __('Şəhər *') }}"></div>
+<div class="checkout-field"><input type="text" id="district" placeholder="{{ __('Rayon') }}"></div>
+<div class="checkout-field"><input type="text" id="address" placeholder="{{ __('Küçə və ünvan *') }}"></div>
+<div class="checkout-field"><input type="text" id="building" placeholder="{{ __('Bina') }}"></div>
+<div class="checkout-field"><input type="text" id="entrance" placeholder="{{ __('Blok') }}"></div>
+<div class="checkout-field"><input type="text" id="floor" placeholder="{{ __('Mərtəbə') }}"></div>
+<div class="checkout-field"><input type="text" id="apartment" placeholder="{{ __('Mənzil') }}"></div>
 </div>
-<div class="checkout-field checkout-field--textarea"><textarea id="addressNote" placeholder="Ünvan qeydi"></textarea></div>
+<div class="checkout-field checkout-field--textarea"><textarea id="addressNote" placeholder="{{ __('Ünvan qeydi') }}"></textarea></div>
 </div>
-<h2>Ödəniş üsulu</h2><div class="checkout-payment">@foreach($paymentMethods as $m)<label><input type="radio" name="payment_method" value="{{ $m->id }}" @checked($loop->first)> <span>{{ $m->name }}</span></label>@endforeach</div>
-<h2>Əlavə seçimlər</h2><label class="checkout-check"><input type="checkbox" id="giftWrap" value="1"><span>Sifariş hədiyyəlik bükülsün</span></label><textarea id="customerNote" placeholder="Sifarişlə bağlı qeydiniz"></textarea><div id="checkoutError" class="profile-errors"></div>
-</section><aside class="checkout-summary"><h2>Sifarişiniz</h2><div id="checkoutItems"></div><div class="checkout-total"><span>Yekun</span><strong id="checkoutTotal">0.00 ₼</strong></div><button id="placeOrder">Sifarişi təsdiqlə</button></aside></div>
+<h2>{{ __('Ödəniş üsulu') }}</h2><div class="checkout-payment">@foreach($paymentMethods as $m)<label><input type="radio" name="payment_method" value="{{ $m->id }}" @checked($loop->first)> <span>{{ $m->name }}</span></label>@endforeach</div>
+<h2>{{ __('Əlavə seçimlər') }}</h2><label class="checkout-check"><input type="checkbox" id="giftWrap" value="1"><span>{{ __('Sifariş hədiyyəlik bükülsün') }}</span></label><textarea id="customerNote" placeholder="{{ __('Sifarişlə bağlı qeydiniz') }}"></textarea><div id="checkoutError" class="profile-errors"></div>
+</section><aside class="checkout-summary"><h2>{{ __('Sifarişiniz') }}</h2><div id="checkoutItems"></div><div class="checkout-total"><span>{{ __('Yekun') }}</span><strong id="checkoutTotal">0.00 ₼</strong></div><button id="placeOrder">{{ __('Sifarişi təsdiqlə') }}</button></aside></div>
 </div></div></main>
 @endsection
 @section('page-scripts')
