@@ -9,21 +9,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class setLangMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        $subdomain = explode('.',$request->getHost())[0];
-        $langugages = config()->get('lang');
+        $locale = $request->hasSession()
+            ? $request->session()->get('locale', config('app.locale'))
+            : config('app.locale');
 
-        if(array_key_exists($subdomain,$langugages)){
-            App::setLocale($subdomain);
-        }else{
-            App::setLocale(config('app.locale'));
-        }
+        App::setLocale(in_array($locale, ['az', 'en', 'ru'], true)
+            ? $locale
+            : config('app.locale'));
 
         return $next($request);
     }
