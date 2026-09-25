@@ -35,11 +35,11 @@
                     @foreach($faqs as $faq)
                     <div class="accordion-item">
                         <div class="accordion-header">
-                            {{$faq->title_az}}
+                            {{ $faq->{'title_' . $locale} ?: $faq->title_az }}
                             <span class="accordion-icon">+</span>
                         </div>
                         <div class="accordion-body">
-                            {{$faq->content_az}}
+                            {{ $faq->{'content_' . $locale} ?: $faq->content_az }}
                         </div>
                     </div>
                     @endforeach
