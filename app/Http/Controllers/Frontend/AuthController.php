@@ -25,7 +25,7 @@ class AuthController extends Controller
         $mobile = $this->normalizeMobile($request->input('mobile'));
 
         if (strlen($mobile) !== 12) {
-            throw ValidationException::withMessages(['mobile' => __('Telefon nömrəsini düzgün daxil edin.')]);
+            throw ValidationException::withMessages(['mobile' => __('validation_enter_a_valid_phone_number')]);
         }
 
         $customer = Customer::where('mobile', $mobile)->first();
@@ -63,7 +63,7 @@ class AuthController extends Controller
         $customer = Customer::where('mobile', $mobile)->where('active', 1)->first();
 
         if (!$customer || !$customer->password || !Hash::check($request->password, $customer->password)) {
-            throw ValidationException::withMessages(['password' => __('Telefon nömrəsi və ya şifrə yanlışdır.')]);
+            throw ValidationException::withMessages(['password' => __('validation_incorrect_phone_number_or_password')]);
         }
 
         Auth::login($customer, true);
@@ -85,7 +85,7 @@ class AuthController extends Controller
         $data = Cache::get($this->otpKey($mobile));
 
         if (!$data || !Hash::check((string) $request->otp, $data['code'])) {
-            throw ValidationException::withMessages(['otp' => __('OTP kod yanlışdır və ya vaxtı bitib.')]);
+            throw ValidationException::withMessages(['otp' => __('validation_incorrect_or_expired_otp_code')]);
         }
 
         Cache::put($this->verifiedKey($mobile), true, now()->addMinutes(10));
@@ -105,7 +105,7 @@ class AuthController extends Controller
         ], LocalizedValidation::messages(), LocalizedValidation::attributes());
 
         if (!Cache::pull($this->verifiedKey($mobile))) {
-            throw ValidationException::withMessages(['otp' => __('OTP təsdiqi tapılmadı. Yenidən cəhd edin.')]);
+            throw ValidationException::withMessages(['otp' => __('validation_otp_verification_not_found_please_try_again')]);
         }
 
         $customer = Customer::where('mobile', $mobile)->where('active', 1)->firstOrFail();
@@ -161,7 +161,7 @@ class AuthController extends Controller
 
         if (!empty($data['new_password'])) {
             if (empty($data['password']) || !Hash::check($data['password'], $customer->password)) {
-                throw ValidationException::withMessages(['password' => __('Cari şifrə yanlışdır.')]);
+                throw ValidationException::withMessages(['password' => __('validation_incorrect_current_password')]);
             }
             $customer->password = Hash::make($data['new_password']);
         }
@@ -171,7 +171,7 @@ class AuthController extends Controller
         $customer->email = $data['email'];
         $customer->save();
 
-        return back()->with('success', __('Məlumatlar yeniləndi.'));
+        return back()->with('success', __('validation_your_details_have_been_updated'));
     }
 
     public function orders()
@@ -236,7 +236,7 @@ class AuthController extends Controller
         $throttleKey = 'login-otp-throttle:'.$mobile;
 
         if (Cache::has($throttleKey)) {
-            throw ValidationException::withMessages(['mobile' => __('OTP artıq göndərilib. Bir az sonra yenidən cəhd edin.')]);
+            throw ValidationException::withMessages(['mobile' => __('validation_an_otp_has_already_been_sent_please_try_again_shortly')]);
         }
 
         $code = (string) random_int(100000, 999999);
