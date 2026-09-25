@@ -1,19 +1,19 @@
 @extends('frontend.layout')
 @section('content')
 <main><div class="container"><div class="cart-page">
-    <div class="cart-breadcrumb"><a href="{{ route('home') }}">← {{ __('Geri qayıt') }}</a><h1>{{ __('Səbət') }}</h1></div>
+    <div class="cart-breadcrumb"><a href="{{ route('home') }}">← {{ __('cart_go_back') }}</a><h1>{{ __('cart_cart') }}</h1></div>
     <div class="cart-layout">
         <div id="cartItems" class="cart-items"></div>
         <aside class="cart-summary">
             <div id="cartSummaryLines"></div>
             <hr>
-            <div><span>{{ __('Ümumi məbləğ:') }}</span><strong id="cartSubtotal">0.00 ₼</strong></div>
-            <div><span>{{ __('Endirim məbləği:') }}</span><strong>0.00 ₼</strong></div>
-            <div class="cart-summary__total"><span>{{ __('Yekun məbləğ:') }}</span><strong id="cartTotal">0.00 ₼</strong></div>
-            @auth<a class="cart-checkout-button" href="{{ route('checkout') }}">{{ __('Sifarişi rəsmiləşdir') }}</a>@else<a class="cart-checkout-button" href="{{ route('front.login', ['redirect' => route('checkout')]) }}">{{ __('Sifarişi rəsmiləşdir') }}</a>@endauth
+            <div><span>{{ __('cart_subtotal') }}</span><strong id="cartSubtotal">0.00 ₼</strong></div>
+            <div><span>{{ __('cart_discount') }}</span><strong>0.00 ₼</strong></div>
+            <div class="cart-summary__total"><span>{{ __('cart_total') }}</span><strong id="cartTotal">0.00 ₼</strong></div>
+            @auth<a class="cart-checkout-button" href="{{ route('checkout') }}">{{ __('cart_checkout') }}</a>@else<a class="cart-checkout-button" href="{{ route('front.login', ['redirect' => route('checkout')]) }}">{{ __('cart_checkout') }}</a>@endauth
         </aside>
     </div>
-    <div id="cartEmpty" class="cart-empty"><p>{{ __('Səbətiniz boşdur.') }}</p><a href="{{ route('home') }}">{{ __('Məhsullara bax') }}</a></div>
+    <div id="cartEmpty" class="cart-empty"><p>{{ __('cart_your_cart_is_empty') }}</p><a href="{{ route('home') }}">{{ __('cart_browse_products') }}</a></div>
 </div></div></main>
 @endsection
 @section('page-styles')
@@ -24,7 +24,7 @@
 @section('page-scripts')
 <script>
 const cartProductUrl = @json(route('cart.products'));
-const cartMessages = {remove: @json(__('Səbətdən sil'))};
+const cartMessages = {remove: @json(__('cart_remove_from_cart'))};
 function getCart(){try{return JSON.parse(localStorage.getItem('parfumshop_cart')||'[]')}catch(e){return []}}
 function saveCart(cart){localStorage.setItem('parfumshop_cart',JSON.stringify(cart));window.dispatchEvent(new CustomEvent('parfumshop:cart-updated',{detail:cart}));renderCart()}
 async function renderCart(){
