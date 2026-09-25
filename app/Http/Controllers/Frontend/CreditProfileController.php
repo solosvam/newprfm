@@ -14,6 +14,25 @@ class CreditProfileController extends Controller
         return view('frontend.credit-profile', ['profile' => $request->user()->creditProfile]);
     }
 
+    public function image(Request $request, string $side)
+    {
+        abort_unless(in_array($side, ['front', 'back'], true), 404);
+        $field = $side === 'front' ? 'id_card_front' : 'id_card_back';
+        $path = $request->user()->creditProfile?->{$field};
+        abort_unless($path, 404);
+
+        $prefix = 'backend/uploads/customers/'.$request->user()->id.'/';
+        if (str_starts_with($path, $prefix) && basename($path) === substr($path, strlen($prefix))) {
+            $file = public_path($path);
+        } elseif (str_starts_with($path, 'credit-profiles/'.$request->user()->id.'/') && basename($path) === substr($path, strlen('credit-profiles/'.$request->user()->id.'/'))) {
+            $file = Storage::disk('local')->path($path);
+        } else {
+            abort(404);
+        }
+        abort_unless(is_file($file), 404);
+        return response()->file($file, ['Cache-Control' => 'private, no-store, max-age=0', 'X-Content-Type-Options' => 'nosniff']);
+    }
+
     public function update(Request $request)
     {
         $profile = $request->user()->creditProfile;
@@ -137,6 +156,11 @@ class CreditProfileController extends Controller
             }
         }
 
-        return response()->json(['message'=>'Hissəli ödəniş məlumatları yadda saxlanıldı.']);
+        return response()->json(['message'=>'Hissəli ödəniş məlumatları yadda saxlanıldı.',
+            'images' => [
+                'id_card_front' => $request->user()->creditProfile?->id_card_front ? route('profile.credit.image', ['side' => 'front']) : null,
+                'id_card_back' => $request->user()->creditProfile?->id_card_back ? route('profile.credit.image', ['side' => 'back']) : null,
+            ],
+        ]);
     }
 }
