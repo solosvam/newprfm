@@ -59,7 +59,7 @@ class CreditProfileController extends Controller
             }
 
             if (!is_dir($uploadDirectory) && !mkdir($uploadDirectory, 0755, true) && !is_dir($uploadDirectory)) {
-                throw new \\RuntimeException('Şəkil qovluğu yaradıla bilmədi.');
+                throw new \RuntimeException('Şəkil qovluğu yaradıla bilmədi.');
             }
 
             $filename = Str::uuid().'.webp';
@@ -70,7 +70,7 @@ class CreditProfileController extends Controller
                     ->scaleDown(width: 1024, height: 1024)
                     ->toWebp(quality: 80)
                     ->save($absolutePath);
-            } catch (\\Throwable $e) {
+            } catch (\Throwable $e) {
                 foreach ($images as $saved) {
                     @unlink(public_path($saved));
                 }
@@ -82,7 +82,7 @@ class CreditProfileController extends Controller
 
         try {
             $request->user()->creditProfile()->updateOrCreate([], array_merge($data, $images));
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             foreach ($images as $saved) {
                 @unlink(public_path($saved));
             }
