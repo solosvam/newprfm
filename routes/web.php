@@ -8,6 +8,7 @@ use App\Http\Controllers\Frontend\BrandsController;
 use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\FavoriteController;
+use App\Http\Controllers\Frontend\CreditProfileController;
 
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/category/{category}/{slug?}',[CategoryController::class,'show'])->name('category');
@@ -35,6 +36,8 @@ Route::middleware('auth')->group(function(){
    Route::post('/checkout',[CheckoutController::class,'store'])->name('checkout.store');
    Route::get('/checkout/success/{order}',[CheckoutController::class,'success'])->name('checkout.success');
    Route::get('/profile',[AuthController::class,'profile'])->name('profile');
+   Route::get('/profile/credit',[CreditProfileController::class,'edit'])->name('profile.credit');
+   Route::post('/profile/credit',[CreditProfileController::class,'update'])->name('profile.credit.update');
    Route::get('/profile/personal',[AuthController::class,'personal'])->name('profile.personal');
    Route::post('/profile/personal',[AuthController::class,'updatePersonal'])->name('profile.personal.update');
    Route::get('/profile/orders',[AuthController::class,'orders'])->name('profile.orders');
