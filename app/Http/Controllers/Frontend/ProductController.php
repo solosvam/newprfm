@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Support\LocalizedValidation;
 use App\Models\Product\Product;
 use App\Models\Product\ProductReview;
 use App\Models\CreditPeriod;
@@ -79,7 +80,7 @@ class ProductController extends Controller
         $data = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
             'comment' => ['required', 'string', 'min:3', 'max:2000'],
-        ]);
+        ], LocalizedValidation::messages(), LocalizedValidation::attributes());
 
         ProductReview::create([
             'product_id' => $product->id,
