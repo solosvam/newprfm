@@ -15,13 +15,13 @@
                     </li>
                     <li>
                         <a href="{{route('internal-credit')}}"
-                        >{{ __('Hissə-hissə müraciət qaydaları') }}</a
+                        >{{ __('catalog_installment_application_terms') }}</a
                         >
                     </li>
                 </ul>
             </div>
             <div class="internal-credit__tabs">
-                <h1>{{ __('Hissə-hissə müraciət qaydaları') }}</h1>
+                <h1>{{ __('catalog_installment_application_terms') }}</h1>
                 @php
                     $locale = app()->getLocale();
                     $termsContent = $creditTerms?->{'content_' . $locale} ?: $creditTerms?->content_az;
@@ -49,7 +49,7 @@
                 <div class="internal-credit__payment__method">
                     <div class="text">
                         <a href=""
-                        >{{ __('Ödəniş edin') }} <img src="{{asset('frontend/images/arrow-long.svg')}}" alt=""
+                        >{{ __('catalog_make_a_payment') }} <img src="{{asset('frontend/images/arrow-long.svg')}}" alt=""
                             /></a>
                         <p>
                             Daxili kredit ödənişlərinizi Milliön üzərindən həyata keçirə
@@ -63,7 +63,7 @@
                 <div class="internal-credit__payment__method">
                     <div class="text">
                         <a href=""
-                        >{{ __('Ödəniş edin') }} <img src="{{asset('frontend/images/arrow-long.svg')}}" alt=""
+                        >{{ __('catalog_make_a_payment') }} <img src="{{asset('frontend/images/arrow-long.svg')}}" alt=""
                             /></a>
                         <p>
                             Daxili kredit ödənişlərinizi Expresspay üzərindən həyata
