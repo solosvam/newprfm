@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function(){
    Route::get('/profile',[AuthController::class,'profile'])->name('profile');
    Route::get('/profile/credit',[CreditProfileController::class,'edit'])->name('profile.credit');
    Route::post('/profile/credit',[CreditProfileController::class,'update'])->name('profile.credit.update');
+   Route::get('/profile/credit/image/{side}',[CreditProfileController::class,'image'])->whereIn('side',['front','back'])->name('profile.credit.image');
    Route::get('/profile/personal',[AuthController::class,'personal'])->name('profile.personal');
    Route::post('/profile/personal',[AuthController::class,'updatePersonal'])->name('profile.personal.update');
    Route::get('/profile/orders',[AuthController::class,'orders'])->name('profile.orders');
