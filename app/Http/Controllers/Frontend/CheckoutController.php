@@ -37,15 +37,15 @@ class CheckoutController extends Controller {
      'city'=>['required'],
      'address'=>['required'],
     ],[
-     'title.required'=>__('Ünvan adı daxil edilməlidir.'),
-     'city.required'=>__('Şəhər daxil edilməlidir.'),
-     'address.required'=>__('Küçə və ünvan daxil edilməlidir.'),
+     'title.required'=>__('validation_address_name_is_required'),
+     'city.required'=>__('validation_city_is_required'),
+     'address.required'=>__('validation_street_and_address_are_required'),
     ])->validate();
     $address=$customer->addresses()->create(['title'=>$data['title']??null,'city'=>$data['city'],'district'=>$data['district']??null,'address'=>$data['address'],'building'=>$data['building']??null,'entrance'=>$data['entrance']??null,'floor'=>$data['floor']??null,'apartment'=>$data['apartment']??null,'note'=>$data['address_note']??null,'is_default'=>$customer->addresses()->count()===0]);
    }
    $cart=collect($data['cart'])->keyBy('variant_id');
    $variants=ProductVariant::whereIn('id',$cart->keys())->where('active',1)->get();
-   abort_if($variants->count()!==$cart->count(),422,__('Səbətdə mövcud olmayan məhsul var.'));
+   abort_if($variants->count()!==$cart->count(),422,__('validation_your_cart_contains_an_unavailable_product'));
    $subtotal=0;$items=[];
    foreach($variants as $v){$qty=(int)$cart[$v->id]['quantity'];$line=round((float)$v->price*$qty,2);$subtotal+=$line;$items[]=['product_id'=>$v->product_id,'product_variant_id'=>$v->id,'unit_price'=>$v->price,'quantity'=>$qty,'total'=>$line];}
    $order=Order::create(['order_no'=>'PS'.now()->format('ymd').str_pad((string)((Order::max('id')??0)+1),6,'0',STR_PAD_LEFT),'customer_id'=>$customer->id,'customer_address_id'=>$address->id,'payment_method_id'=>$data['payment_method_id'],'source'=>'website','order_status_id'=>$initialStatus->id,'gift_wrap'=>(bool)($data['gift_wrap']??false),'customer_note'=>$data['customer_note']??null,'subtotal'=>$subtotal,'discount'=>0,'total'=>$subtotal]);
