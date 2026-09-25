@@ -147,9 +147,9 @@
                                     @if($firstVariant)
                                         <div class="taksit" data-price="{{ $firstVariant->price }}">
                                             <ul class="months">
-                                                <li data-month="3">3 ay</li>
-                                                <li data-month="6" class="active-taksit">6 ay</li>
-                                                <li data-month="9">9 ay</li>
+                                                <li data-month="3">{{ __('3 ay') }}</li>
+                                                <li data-month="6" class="active-taksit">{{ __('6 ay') }}</li>
+                                                <li data-month="9">{{ __('9 ay') }}</li>
                                             </ul>
 
                                             <div class="taksit-price">
