@@ -1,26 +1,20 @@
 @extends('frontend.layout')
 
 @section('page-styles')
-    <link rel="stylesheet"
-          href="{{ asset('frontend/css/credit-profile.css?v=' . filemtime(public_path('frontend/css/credit-profile.css'))) }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/credit-profile.css?v=' . filemtime(public_path('frontend/css/credit-profile.css'))) }}">
 @endsection
 
 @section('content')
     <main>
         <div class="container">
             <div class="cabinet">
-                @include('frontend.partials.cabinet-sidebar', [
-                    'pageTitle' => __('credit_title'),
-                ])
+                @include('frontend.partials.cabinet-sidebar', ['pageTitle' => __('credit_title'),])
 
                 <div class="cabinet__personal">
                     <h2>{{ __('credit_title') }}</h2>
                     <p>{{ __('credit_description') }}</p>
 
-                    <form id="creditProfileForm"
-                          class="form credit-form"
-                          method="POST"
-                          action="{{ route('profile.credit.update') }}"
+                    <form id="creditProfileForm" class="form credit-form" method="POST" action="{{ route('profile.credit.update') }}"
                           enctype="multipart/form-data"
                           data-change-label="{{ __('credit_change') }}"
                           data-error-message="{{ __('credit_generic_error') }}">
