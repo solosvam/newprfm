@@ -24,10 +24,10 @@
 @media(max-width:800px){.order-info-grid{grid-template-columns:1fr}.order-table{font-size:13px}.order-table th,.order-table td{padding:10px}.order-product__image{width:45px;height:55px}}
 </style>
 <main><div class="container"><div class="cabinet">
-@include('frontend.partials.cabinet-sidebar',['pageTitle'=>'Sifariş detalları'])
+@include('frontend.partials.cabinet-sidebar',['pageTitle'=>__('Sifariş detalları')])
 <div class="order-detail">
  <div class="order-detail__header">
-  <h2>Sifariş {{ $order->order_no }}</h2>
+  <h2>{{ __('Sifariş') }} {{ $order->order_no }}</h2>
   <p>{{ $order->created_at->format('d.m.Y, H:i') }} · {{ ($order->status?->{'name_' . app()->getLocale()} ?: $order->status?->name_az) ?? $order->status?->name }}</p>
  </div>
 
@@ -39,10 +39,10 @@
    <tr>
     <td><div class="order-product">
      <div class="order-product__image">@if($image)<img src="{{ asset('frontend/uploads/products/'.$image->image) }}" alt="{{ $item->product?->name }}">@endif</div>
-     <div><div class="order-product__name">{{ $item->product?->name ?? 'Məhsul' }}</div><div class="order-product__meta">{{ $item->product?->brand?->name }}</div></div>
+     <div><div class="order-product__name">{{ $item->product?->name ?? __('Məhsul') }}</div><div class="order-product__meta">{{ $item->product?->brand?->name }}</div></div>
     </div></td>
     <td>{{ ($item->variant?->size?->{'name_' . app()->getLocale()} ?: $item->variant?->size?->name_az) ?? '-' }}</td>
-    <td>{{ $item->quantity }} ədəd</td>
+    <td>{{ $item->quantity }} {{ __('ədəd') }}</td>
     <td>{{ number_format($item->unit_price,2) }} ₼</td>
     <td><strong>{{ number_format($item->total,2) }} ₼</strong></td>
    </tr>
