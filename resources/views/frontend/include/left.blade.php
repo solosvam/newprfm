@@ -4,12 +4,12 @@
         <div class="filter-section-heading">
                   <span>
                     <img src="{{asset('frontend/images/filter.svg')}}" alt="">
-                    <span> Filter</span>
+                    <span> {{ __('Filter') }}</span>
                   </span>
             <img class="filter-section__close" src="{{asset('frontend/images/filter-close.svg')}}" alt="" />
         </div>
         <div class="filter-section__price">
-            <h4>Qiymət aralığı</h4>
+            <h4>{{ __('Qiymət aralığı') }}</h4>
             <div class="price-range">
                 <div class="slider-container">
                     <input type="range" id="min-range" min="40" max="2400" value="40" oninput="updateRangeValues()" />
@@ -22,7 +22,7 @@
             </div>
         </div>
         <div class="filter-section__checkbox">
-            <h4>Ətirin növü</h4>
+            <h4>{{ __('Ətirin növü') }}</h4>
             <label class="custom-checkbox">
                 <input type="checkbox" />
                 <span class="checkmark"></span>
@@ -57,7 +57,7 @@
             </label>
         </div>
         <div class="filter-section__checkbox">
-            <h4>Ətirin həcmi</h4>
+            <h4>{{ __('Ətirin həcmi') }}</h4>
             <label class="custom-checkbox">
                 <input type="checkbox" />
                 <span class="checkmark"></span>
@@ -83,7 +83,7 @@
             </label>
         </div>
         <div class="filter-section__checkbox" style="margin-bottom: 0;">
-            <h4>Qoxu qrupu</h4>
+            <h4>{{ __('Qoxu qrupu') }}</h4>
             <label class="custom-checkbox">
                 <input type="checkbox" />
                 <span class="checkmark"></span>
@@ -147,11 +147,11 @@
             </li>
             <li>
                 <img src="{{asset('frontend/images/gift_card.svg')}}" alt="services icon" />
-                <span>Xidmətlər və şərtlər</span>
+                <span>{{ __('Xidmətlər və şərtlər') }}</span>
             </li>
             <li>
                 <img src="{{asset('frontend/images/wishlist.svg')}}" alt="wishlist icon" />
-                <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link"><span>Bəyəndiyim ətirlər</span></a>
+                <a href="{{ auth()->check() ? route('profile.wishlist') : route('home').'#favorites' }}" class="wishlist-page-link"><span>{{ __('Bəyəndiyim ətirlər') }}</span></a>
             </li>
         </ul>
         <div class="internal-credit-btn">
