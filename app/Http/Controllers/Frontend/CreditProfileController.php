@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Validation\Rule;
 
 class CreditProfileController extends Controller
@@ -47,21 +49,61 @@ class CreditProfileController extends Controller
             'salary'=>'Əmək haqqı','position'=>'Vəzifə',
         ]);
         $images = [];
-        foreach (['id_card_front','id_card_back'] as $field) {
+        $uploadDirectory = public_path('backend/uploads/customers/'.$request->user()->id);
+
+        foreach (['id_card_front', 'id_card_back'] as $field) {
             unset($data[$field]);
-            if ($request->hasFile($field)) {
-                $images[$field] = $request->file($field)->store('credit-profiles/'.$request->user()->id, 'local');
+
+            if (!$request->hasFile($field)) {
+                continue;
             }
+
+            if (!is_dir($uploadDirectory) && !mkdir($uploadDirectory, 0755, true) && !is_dir($uploadDirectory)) {
+                throw new \\RuntimeException('Şəkil qovluğu yaradıla bilmədi.');
+            }
+
+            $filename = Str::uuid().'.webp';
+            $absolutePath = $uploadDirectory.'/'.$filename;
+
+            try {
+                Image::read($request->file($field)->getRealPath())
+                    ->scaleDown(width: 1024, height: 1024)
+                    ->toWebp(quality: 80)
+                    ->save($absolutePath);
+            } catch (\\Throwable $e) {
+                foreach ($images as $saved) {
+                    @unlink(public_path($saved));
+                }
+                throw $e;
+            }
+
+            $images[$field] = 'backend/uploads/customers/'.$request->user()->id.'/'.$filename;
         }
+
         try {
-            $request->user()->creditProfile()->updateOrCreate([], array_merge($data,$images));
-        } catch (\Throwable $e) {
-            foreach ($images as $path) Storage::disk('local')->delete($path);
+            $request->user()->creditProfile()->updateOrCreate([], array_merge($data, $images));
+        } catch (\\Throwable $e) {
+            foreach ($images as $saved) {
+                @unlink(public_path($saved));
+            }
             throw $e;
         }
-        foreach ($images as $field=>$path) {
-            if ($profile?->{$field}) Storage::disk('local')->delete($profile->{$field});
+
+        foreach ($images as $field => $saved) {
+            if (!$profile?->{$field}) {
+                continue;
+            }
+
+            $previous = $profile->{$field};
+            // Delete only files from the customer's own upload folder.
+            $prefix = 'backend/uploads/customers/'.$request->user()->id.'/';
+            if (str_starts_with($previous, $prefix) && basename($previous) === substr($previous, strlen($prefix))) {
+                @unlink(public_path($previous));
+            } elseif (str_starts_with($previous, 'credit-profiles/'.$request->user()->id.'/')) {
+                Storage::disk('local')->delete($previous);
+            }
         }
+
         return response()->json(['message'=>'Hissəli ödəniş məlumatları yadda saxlanıldı.']);
     }
 }
