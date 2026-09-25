@@ -6,11 +6,11 @@
 <main><div class="container"><div class="cabinet">
 @include('frontend.partials.cabinet-sidebar',['pageTitle'=>'Bonus tarixçəsi'])
 <div class="bonus-history">
- <div class="bonus-head"><h2>Bonus tarixçəsi</h2><div class="bonus-balance">Bonus balansı: <strong>{{ number_format(auth()->user()->bonus_balance ?? 0,2) }} ₼</strong></div></div>
- @if($transactions->isEmpty())<p>Hələ bonus əməliyyatınız yoxdur.</p>
+ <div class="bonus-head"><h2>{{ __('Bonus tarixçəsi') }}</h2><div class="bonus-balance">{{ __('Bonus balansı:') }} <strong>{{ number_format(auth()->user()->bonus_balance ?? 0,2) }} ₼</strong></div></div>
+ @if($transactions->isEmpty())<p>{{ __('Hələ bonus əməliyyatınız yoxdur.') }}</p>
  @else
  <table class="bonus-table">
-  <thead><tr><th>Sifariş №</th><th>Tarix</th><th>Əməliyyat</th><th>Bonus məbləği</th></tr></thead>
+  <thead><tr><th>{{ __('Sifariş №') }}</th><th>{{ __('Tarix') }}</th><th>{{ __('Əməliyyat') }}</th><th>{{ __('Bonus məbləği') }}</th></tr></thead>
   <tbody>
   @foreach($transactions as $transaction)
    <tr>
