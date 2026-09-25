@@ -10,6 +10,16 @@ use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\FavoriteController;
 use App\Http\Controllers\Frontend\CreditProfileController;
 
+Route::post('/language', function (\Illuminate\Http\Request $request) {
+    $data = $request->validate([
+        'locale' => ['required', \Illuminate\Validation\Rule::in(['az', 'en', 'ru'])],
+    ]);
+
+    $request->session()->put('locale', $data['locale']);
+
+    return response()->json(['locale' => $data['locale']]);
+})->name('language.change');
+
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/category/{category}/{slug?}',[CategoryController::class,'show'])->name('category');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
