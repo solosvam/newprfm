@@ -4,7 +4,7 @@
         <li><ul><li><a href="{{ route('home') }}"><img src="{{ asset('frontend/images/home.svg') }}" alt=""></a></li><li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt=""></li><li><a href="{{ route('profile') }}">{{ __('Şəxsi kabinet') }}</a></li>@isset($pageTitle)<li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt=""></li><li><span>{{ $pageTitle }}</span></li>@endisset</ul></li>
     </ul></div>
     <div class="cabinet__aside__nav">
-        <h1>Salam, {{ auth()->user()->name }} {{ auth()->user()->surname }}</h1>
+        <h1>{{ __('Salam, :name', ['name' => trim(auth()->user()->name.' '.auth()->user()->surname)]) }}</h1>
         <ul>
             <li><a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'cabinet-active' : '' }}">{{ __('Hesab məlumatları') }}</a></li>
             <li><a href="{{ route('profile.personal') }}" class="{{ request()->routeIs('profile.personal*') ? 'cabinet-active' : '' }}">{{ __('Şəxsi məlumatlar') }}</a></li>
