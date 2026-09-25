@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Support\LocalizedValidation;
 use App\Models\Product\Product;
 use Illuminate\Http\Request;
 
@@ -43,7 +44,11 @@ class FavoriteController extends Controller
 
     public function sync(Request $request)
     {
-        $data = $request->validate(['product_ids' => ['array', 'max:500'], 'product_ids.*' => ['integer', 'exists:products,id']]);
+        $data = $request->validate(
+            ['product_ids' => ['array', 'max:500'], 'product_ids.*' => ['integer', 'exists:products,id']],
+            LocalizedValidation::messages(),
+            LocalizedValidation::attributes()
+        );
         $ids = collect($data['product_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
         if ($ids) $request->user()->favoriteProducts()->syncWithoutDetaching($ids);
 
