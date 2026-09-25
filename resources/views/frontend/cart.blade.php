@@ -1,7 +1,7 @@
 @extends('frontend.layout')
 @section('content')
 <main><div class="container"><div class="cart-page">
-    <div class="cart-breadcrumb"><a href="{{ route('home') }}">← Geri qayıt</a><h1>{{ __('Səbət') }}</h1></div>
+    <div class="cart-breadcrumb"><a href="{{ route('home') }}">← {{ __('Geri qayıt') }}</a><h1>{{ __('Səbət') }}</h1></div>
     <div class="cart-layout">
         <div id="cartItems" class="cart-items"></div>
         <aside class="cart-summary">
@@ -24,6 +24,7 @@
 @section('page-scripts')
 <script>
 const cartProductUrl = @json(route('cart.products'));
+const cartMessages = {remove: @json(__('Səbətdən sil'))};
 function getCart(){try{return JSON.parse(localStorage.getItem('parfumshop_cart')||'[]')}catch(e){return []}}
 function saveCart(cart){localStorage.setItem('parfumshop_cart',JSON.stringify(cart));window.dispatchEvent(new CustomEvent('parfumshop:cart-updated',{detail:cart}));renderCart()}
 async function renderCart(){
@@ -34,7 +35,7 @@ async function renderCart(){
  const res=await fetch(cartProductUrl+'?variants='+encodeURIComponent(ids.join(','))); const products=await res.json();
  let total=0; items.innerHTML=''; document.getElementById('cartSummaryLines').innerHTML='';
  cart.forEach(item=>{const p=products.find(x=>x.variant_id===item.variant_id);if(!p)return;const line=p.price*item.quantity;total+=line;
- items.insertAdjacentHTML('beforeend',`<div class="cart-row"><div class="cart-row__image">${p.image?'<img src="'+p.image+'" alt="">':''}</div><div><div class="cart-row__name">${p.name}</div><div class="cart-row__brand">${p.brand||''}</div><div class="cart-row__meta">${p.gender||''}${p.type?' | '+p.type:''}</div><div class="cart-row__price">${Number(p.price).toFixed(2)} ₼</div><div class="cart-row__bottom"><span>${p.size||''}</span><div class="cart-row__qty"><button data-action="minus" data-id="${item.variant_id}">-</button><span>${item.quantity}</span><button data-action="plus" data-id="${item.variant_id}">+</button></div><button class="cart-remove" data-action="remove" data-id="${item.variant_id}">Səbətdən sil</button></div></div></div>`);
+ items.insertAdjacentHTML('beforeend',`<div class="cart-row"><div class="cart-row__image">${p.image?'<img src="'+p.image+'" alt="">':''}</div><div><div class="cart-row__name">${p.name}</div><div class="cart-row__brand">${p.brand||''}</div><div class="cart-row__meta">${p.gender||''}${p.type?' | '+p.type:''}</div><div class="cart-row__price">${Number(p.price).toFixed(2)} ₼</div><div class="cart-row__bottom"><span>${p.size||''}</span><div class="cart-row__qty"><button data-action="minus" data-id="${item.variant_id}">-</button><span>${item.quantity}</span><button data-action="plus" data-id="${item.variant_id}">+</button></div><button class="cart-remove" data-action="remove" data-id="${item.variant_id}">${cartMessages.remove}</button></div></div></div>`);
  document.getElementById('cartSummaryLines').insertAdjacentHTML('beforeend',`<div><span>${p.name}</span><strong>${line.toFixed(2)} ₼</strong></div>`)});
  document.getElementById('cartSubtotal').textContent=total.toFixed(2)+' ₼';document.getElementById('cartTotal').textContent=total.toFixed(2)+' ₼';
 }
