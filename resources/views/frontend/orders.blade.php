@@ -38,7 +38,7 @@
        </div>
        <div class="order-card__body">
         <div class="order-card__status">
-         <div class="order-card__status-title">{{ $order->status?->name_az ?? $order->status?->name ?? 'Sifariş qəbul edildi' }}</div>
+         <div class="order-card__status-title">{{ ($order->status?->{'name_' . app()->getLocale()} ?: $order->status?->name_az) ?? $order->status?->name ?? __('Sifariş qəbul edildi') }}</div>
          <div class="order-card__status-sub">{{ $order->items->sum('quantity') }} məhsul sifariş edilib</div>
         </div>
         <div class="order-card__products">
