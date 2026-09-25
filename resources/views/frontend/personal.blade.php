@@ -3,7 +3,7 @@
 <main>
 <div class="container">
 <div class="cabinet">
-@include('frontend.partials.cabinet-sidebar',['pageTitle'=>'Şəxsi məlumatlarım'])
+@include('frontend.partials.cabinet-sidebar',['pageTitle'=>__('Şəxsi məlumatlarım')])
 
 <div class="cabinet__personal">
 @if(session('success'))<div class="profile-success">{{ session('success') }}</div>@endif
