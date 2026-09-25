@@ -5,7 +5,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Validation\Rule;
 
 class CreditProfileController extends Controller
@@ -66,10 +65,44 @@ class CreditProfileController extends Controller
             $absolutePath = $uploadDirectory.'/'.$filename;
 
             try {
-                Image::read($request->file($field)->getRealPath())
-                    ->scaleDown(width: 1024, height: 1024)
-                    ->toWebp(quality: 80)
-                    ->save($absolutePath);
+                // GD is used directly to avoid Intervention v2/v3 facade conflicts.
+                if (!extension_loaded('gd') || !function_exists('imagewebp')) {
+                    throw new \RuntimeException('Serverdə GD/WebP dəstəyi aktiv deyil.');
+                }
+
+                $sourcePath = $request->file($field)->getRealPath();
+                $source = @imagecreatefromstring(file_get_contents($sourcePath));
+                if (!$source) {
+                    throw new \RuntimeException('Şəkil oxuna bilmədi.');
+                }
+
+                try {
+                    $width = imagesx($source);
+                    $height = imagesy($source);
+                    $ratio = min(1, 1024 / max($width, $height));
+                    $targetWidth = max(1, (int) round($width * $ratio));
+                    $targetHeight = max(1, (int) round($height * $ratio));
+                    $target = imagecreatetruecolor($targetWidth, $targetHeight);
+                    if (!$target) {
+                        throw new \RuntimeException('Şəkil emal edilə bilmədi.');
+                    }
+
+                    try {
+                        // A white background keeps transparent PNG documents readable.
+                        $white = imagecolorallocate($target, 255, 255, 255);
+                        imagefill($target, 0, 0, $white);
+                        if (!imagecopyresampled($target, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height)
+                            || !imagewebp($target, $absolutePath, 80)
+                            || !is_file($absolutePath)
+                            || filesize($absolutePath) === 0) {
+                            throw new \RuntimeException('WEBP şəkli saxlanıla bilmədi.');
+                        }
+                    } finally {
+                        imagedestroy($target);
+                    }
+                } finally {
+                    imagedestroy($source);
+                }
             } catch (\Throwable $e) {
                 foreach ($images as $saved) {
                     @unlink(public_path($saved));
