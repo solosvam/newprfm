@@ -3,9 +3,9 @@
 <main>
     <div class="container">
         <section class="wishlist-page wishlist-page--guest">
-            <h2 class="wishlist-page__title">{{ __('Bəyəndiyim ətirlər') }}</h2>
+            <h2 class="wishlist-page__title">{{ __('wishlist_my_favorites') }}</h2>
             <div id="guestWishlist" class="wishlist-grid"></div>
-            <div id="guestWishlistEmpty" class="wishlist-empty" style="display:none">{{ __('Hələ bəyəndiyiniz ətir yoxdur.') }}</div>
+            <div id="guestWishlistEmpty" class="wishlist-empty" style="display:none">{{ __('wishlist_you_have_no_favorites_yet') }}</div>
         </section>
     </div>
 </main>
