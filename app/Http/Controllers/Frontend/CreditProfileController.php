@@ -21,8 +21,10 @@ class CreditProfileController extends Controller
         $path = $request->user()->creditProfile?->{$field};
         abort_unless($path, 404);
 
-        $prefix = 'backend/uploads/customers/'.$request->user()->id.'/';
-        if (str_starts_with($path, $prefix) && basename($path) === substr($path, strlen($prefix))) {
+        $prefix = 'backend/uploads/customers/';
+        $legacyPrefix = $prefix.$request->user()->id.'/';
+        if ((str_starts_with($path, $prefix) && basename($path) === substr($path, strlen($prefix)))
+            || (str_starts_with($path, $legacyPrefix) && basename($path) === substr($path, strlen($legacyPrefix)))) {
             $file = public_path($path);
         } elseif (str_starts_with($path, 'credit-profiles/'.$request->user()->id.'/') && basename($path) === substr($path, strlen('credit-profiles/'.$request->user()->id.'/'))) {
             $file = Storage::disk('local')->path($path);
@@ -67,7 +69,7 @@ class CreditProfileController extends Controller
             'salary'=>'Əmək haqqı','position'=>'Vəzifə',
         ]);
         $images = [];
-        $uploadDirectory = public_path('backend/uploads/customers/'.$request->user()->id);
+        $uploadDirectory = public_path('backend/uploads/customers');
 
         foreach (['id_card_front', 'id_card_back'] as $field) {
             unset($data[$field]);
@@ -129,7 +131,7 @@ class CreditProfileController extends Controller
                 throw $e;
             }
 
-            $images[$field] = 'backend/uploads/customers/'.$request->user()->id.'/'.$filename;
+            $images[$field] = 'backend/uploads/customers/'.$filename;
         }
 
         try {
@@ -147,9 +149,11 @@ class CreditProfileController extends Controller
             }
 
             $previous = $profile->{$field};
-            // Delete only files from the customer's own upload folder.
-            $prefix = 'backend/uploads/customers/'.$request->user()->id.'/';
-            if (str_starts_with($previous, $prefix) && basename($previous) === substr($previous, strlen($prefix))) {
+            // Delete only the file referenced by this customer's existing profile.
+            $prefix = 'backend/uploads/customers/';
+            $legacyPrefix = $prefix.$request->user()->id.'/';
+            if ((str_starts_with($previous, $prefix) && basename($previous) === substr($previous, strlen($prefix)))
+                || (str_starts_with($previous, $legacyPrefix) && basename($previous) === substr($previous, strlen($legacyPrefix)))) {
                 @unlink(public_path($previous));
             } elseif (str_starts_with($previous, 'credit-profiles/'.$request->user()->id.'/')) {
                 Storage::disk('local')->delete($previous);
