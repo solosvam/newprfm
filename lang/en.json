@@ -368,5 +368,10 @@
         "customer_note": "Order note",
         "cart.*.variant_id": "Product variant",
         "cart.*.quantity": "Quantity"
-    }
+    },
+    "brands": "Brands",
+    "gift_card": "Gift cards",
+    "internal_credit": "Installment payments",
+    "best_seller": "Best sellers",
+    "login": "Sign in"
 }
