@@ -368,5 +368,10 @@
         "customer_note": "Комментарий к заказу",
         "cart.*.variant_id": "Вариант товара",
         "cart.*.quantity": "Количество"
-    }
+    },
+    "brands": "Бренды",
+    "gift_card": "Подарочные карты",
+    "internal_credit": "Рассрочка",
+    "best_seller": "Хиты продаж",
+    "login": "Войти"
 }
