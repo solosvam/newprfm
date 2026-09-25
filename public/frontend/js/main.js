@@ -45,24 +45,36 @@ for(let icon of heartIcon) {
       });
 }
 
-document.getElementById('languageSwitcher').addEventListener('change', function() {
-    var newLang = this.value;
-    var currentUrl = window.location.hostname;
-    var mainDomain = 'parfumshop.test';
-    var otherParts = window.location.pathname;
+const languageSwitcher = document.getElementById('languageSwitcher');
 
-    var currentSub = currentUrl.split('.')[0];
+if (languageSwitcher) {
+    languageSwitcher.addEventListener('change', async function () {
+        const selectedLocale = this.value;
+        const previousLocale = this.dataset.currentLocale;
+        this.disabled = true;
 
-    if(newLang === 'az'){
-        window.location.href = `https://${mainDomain}${otherParts}`;
-    }else{
-        if(currentSub === 'en' || currentSub === 'ru') {
-            window.location.href = `https://${newLang}.${mainDomain}${otherParts}`;
-        } else {
-            window.location.href = `https://${newLang}.${currentUrl}${otherParts}`;
+        try {
+            const response = await fetch(this.dataset.changeUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ locale: selectedLocale })
+            });
+
+            if (!response.ok) throw new Error('Language change failed');
+
+            window.location.reload();
+        } catch (error) {
+            this.value = previousLocale;
+            this.disabled = false;
+            console.error(error);
         }
-    }
-});
+    });
+}
 
 function getParfumshopCart(){try{return JSON.parse(localStorage.getItem("parfumshop_cart")||"[]")}catch(e){return []}}
 function updateHeaderCartCount(cart=getParfumshopCart()){const badge=document.getElementById("headerCartCount");if(!badge)return;const count=cart.reduce((sum,item)=>sum+(parseInt(item.quantity,10)||0),0);badge.textContent=count;badge.classList.toggle("is-empty",count===0)}
