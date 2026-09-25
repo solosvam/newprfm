@@ -52,7 +52,7 @@
                         <div class="main">
                             <div class="main__actions">
                                 <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                <button type="button" class="favorite-toggle" data-product-id="{{ $product->id }}" aria-label="Bəyəndiyim ətirlərə əlavə et"><img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" /></button>
+                                <button type="button" class="favorite-toggle" data-product-id="{{ $product->id }}" aria-label="{{ __('Bəyəndiyim ətirlərə əlavə et') }}"><img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" /></button>
                             </div>
                             @if($firstImage)
                                 <img class="main-img" src="{{ asset('frontend/uploads/products/' . $firstImage->image) }}" alt="{{ $product->brand?->name }} {{ $product->name }}"/>
@@ -93,7 +93,7 @@
                                 @endforeach
                             </ul>
                             <div class="amount">
-                                <small>Miqdar</small>
+                                <small>{{ __('Miqdar') }}</small>
                                 <div class="amount-input">
                                     <span id="decrease">-</span>
                                     <span class="count">1</span>
@@ -102,17 +102,17 @@
                             </div>
                         </div>
                         <div class="product-info-actions">
-                            <button type="button" id="addToCartButton" data-product-id="{{ $product->id }}">Səbətə at</button>
+                            <button type="button" id="addToCartButton" data-product-id="{{ $product->id }}">{{ __('Səbətə at') }}</button>
                             <div>
                                 <span></span>
-                                <p>və ya</p>
+                                <p>{{ __('və ya') }}</p>
                                 <span></span>
                             </div>
-                            <button>1 kliklə sifariş</button>
+                            <button>{{ __('1 kliklə sifariş') }}</button>
                         </div>
                         <div class="product-shipping-info">
                             <img class="shipping-info-icon" src="{{asset('frontend/images/info.svg')}}" alt=""/>
-                            <span>Bakı şəhər daxili çatdırılma ödənişsizdir <span class="shipping-tooltip">Ünvandan asılı olaraq çatdırılma 30 dəqiqədən 2 saata qədərdəyişə bilər</span></span>
+                            <span>{{ __('Bakı şəhər daxili çatdırılma ödənişsizdir') }} <span class="shipping-tooltip">{{ __('Ünvandan asılı olaraq çatdırılma 30 dəqiqədən 2 saata qədərdəyişə bilər') }}</span></span>
                         </div>
                     </div>
                     <div class="product-taksit-table">
@@ -130,9 +130,9 @@
                                 <thead>
                                 <tr>
                                     <th></th>
-                                    <th>Müddət</th>
-                                    <th>Ayda</th>
-                                    <th>Qiymət</th>
+                                    <th>{{ __('Müddət') }}</th>
+                                    <th>{{ __('Ayda') }}</th>
+                                    <th>{{ __('Qiymət') }}</th>
                                 </tr>
                                 </thead>
                                 <tbody id="installmentRows">
@@ -153,21 +153,21 @@
                                 @endforeach
                                 </tbody>
                             </table>
-                            <button>Müraciət et</button>
+                            <button>{{ __('Müraciət et') }}</button>
                         </div>
                     </div>
                 </div>
                 <div class="details-tab">
                     <div class="tablinks">
-                        <button class="active">Ətir haqqında</button>
-                        <button>Rəylər <span>{{ $product->reviews->count() }}</span></button>
+                        <button class="active">{{ __('Ətir haqqında') }}</button>
+                        <button>{{ __('Rəylər') }} <span>{{ $product->reviews->count() }}</span></button>
                     </div>
                     <div class="tabcontents">
                         <div class="content1">
                             {!! nl2br(e($product->{'content_' . $locale} ?: $product->content_az)) !!}
                         </div>
                         <div class="content2">
-                            <h4><span>Rəylər</span> Narciso Poudree Narciso Rodriguez</h4>
+                            <h4><span>{{ __('Rəylər') }}</span> Narciso Poudree Narciso Rodriguez</h4>
                             <div class="ratings-container">
                                 <div class="rating-summary">
                                     <div class="average-rating">
@@ -180,7 +180,7 @@
                                             <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
                                         </div>
                                     </div>
-                                    <button class="write-review" type="button">Rəy yaz</button>
+                                    <button class="write-review" type="button">{{ __('Rəy yaz') }}</button>
                                 </div>
                                 <div class="rating-distribution">
                                     <div class="rating-bar">
@@ -230,7 +230,7 @@
                     <div class="reviews-container">
                         <div class="dropdown-container">
                             <div class="header" id="dropdown-header">
-                                <h3>Son rəylər</h3>
+                                <h3>{{ __('Son rəylər') }}</h3>
                                 <div class="header-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160z"/></svg></div>
                             </div>
                         </div>
@@ -250,17 +250,17 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="no-reviews">Bu məhsula hələ rəy yazılmayıb.</p>
+                                <p class="no-reviews">{{ __('Bu məhsula hələ rəy yazılmayıb.') }}</p>
                             @endforelse
                         </div>
                         @if($product->reviews->count() > 3)
-                            <button class="load-more" type="button" id="loadMoreReviews">Daha çox</button>
+                            <button class="load-more" type="button" id="loadMoreReviews">{{ __('Daha çox') }}</button>
                         @endif
                     </div>
                 </div>
 
                 <div class="similar-products">
-                    <h1 class="similar-products__title">Bənzər məhsullar</h1>
+                    <h1 class="similar-products__title">{{ __('Bənzər məhsullar') }}</h1>
                     <div class="similar-products__list">
                         @forelse($similarProducts as $similar)
                             @php
@@ -294,7 +294,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p>Oxşar tərkibli məhsul tapılmadı.</p>
+                            <p>{{ __('Oxşar tərkibli məhsul tapılmadı.') }}</p>
                         @endforelse
                     </div>
                 </div>
@@ -309,7 +309,7 @@
         <div class="other-sizes-content">
             <div class="other-sizes-heading">
                 <img src="{{asset('frontend/images/close.svg')}}" alt="">
-                <span>Digər ölçülər</span>
+                <span>{{ __('Digər ölçülər') }}</span>
             </div>
 
             <div class="other-sizes-body">
@@ -338,7 +338,7 @@
     <div id="reviewModal" class="review-modal">
         <div class="review-modal__box">
             <button type="button" class="review-modal__close">&times;</button>
-            <h3>Rəy yaz</h3>
+            <h3>{{ __('Rəy yaz') }}</h3>
             @auth
                 <form method="POST" action="{{ route('product.review', $product->id) }}">
                     @csrf
@@ -348,14 +348,14 @@
                             <label for="rating{{ $i }}">★</label>
                         @endfor
                     </div>
-                    <textarea name="comment" rows="5" maxlength="2000" placeholder="Məhsul haqqında fikrinizi yazın..." required>{{ old('comment') }}</textarea>
+                    <textarea name="comment" rows="5" maxlength="2000" placeholder="{{ __('Məhsul haqqında fikrinizi yazın...') }}" required>{{ old('comment') }}</textarea>
                     @error('rating')<small>{{ $message }}</small>@enderror
                     @error('comment')<small>{{ $message }}</small>@enderror
-                    <button type="submit">Rəyi göndər</button>
+                    <button type="submit">{{ __('Rəyi göndər') }}</button>
                 </form>
             @else
-                <p>Rəy yazmaq üçün hesabınıza daxil olun.</p>
-                <a class="review-login" href="{{ route('front.login') }}">Daxil ol</a>
+                <p>{{ __('Rəy yazmaq üçün hesabınıza daxil olun.') }}</p>
+                <a class="review-login" href="{{ route('front.login') }}">{{ __('Daxil ol') }}</a>
             @endauth
         </div>
     </div>
@@ -367,8 +367,8 @@
                 <span class="close pay-modal-close">&times;</span>
             </div>
             <div class="modal-body">
-                <h1>Sifarişi tamamlamaq üçün mobil nömrənizi daxil edin</h1>
-                <input type="tel" placeholder="Mobil nömrənizi qeyd edin" />
+                <h1>{{ __('Sifarişi tamamlamaq üçün mobil nömrənizi daxil edin') }}</h1>
+                <input type="tel" placeholder="{{ __('Mobil nömrənizi qeyd edin') }}" />
                 <div class="alert">
                     <img src="{{asset('frontend/images/info.svg')}}" alt="" />
                     <p>
@@ -377,7 +377,7 @@
                         müraciəti üçün "Müraciət et" düyməsini sıxın.
                     </p>
                 </div>
-                <button>Müraciət et</button>
+                <button>{{ __('Müraciət et') }}</button>
             </div>
         </div>
     </div>
