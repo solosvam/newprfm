@@ -23,16 +23,16 @@
                         @else
                         <ul>
                             <li class="{{ request('gender') ? '' : 'active' }}">
-                                <a href="{{ route('home', array_filter(['sort' => request('sort')])) }}">Bütün ətirlər</a>
+                                <a href="{{ route('home', array_filter(['sort' => request('sort')])) }}">{{ __('Bütün ətirlər') }}</a>
                             </li>
                             <li class="{{ request('gender') === 'women' ? 'active' : '' }}">
-                                <a href="{{ route('home', array_filter(['gender' => 'women', 'sort' => request('sort')])) }}">Qadın ətirləri</a>
+                                <a href="{{ route('home', array_filter(['gender' => 'women', 'sort' => request('sort')])) }}">{{ __('Qadın ətirləri') }}</a>
                             </li>
                             <li class="{{ request('gender') === 'men' ? 'active' : '' }}">
-                                <a href="{{ route('home', array_filter(['gender' => 'men', 'sort' => request('sort')])) }}">Kişi ətirləri</a>
+                                <a href="{{ route('home', array_filter(['gender' => 'men', 'sort' => request('sort')])) }}">{{ __('Kişi ətirləri') }}</a>
                             </li>
                             <li class="{{ request('gender') === 'unisex' ? 'active' : '' }}">
-                                <a href="{{ route('home', array_filter(['gender' => 'unisex', 'sort' => request('sort')])) }}">Unisex ətirlər</a>
+                                <a href="{{ route('home', array_filter(['gender' => 'unisex', 'sort' => request('sort')])) }}">{{ __('Unisex ətirlər') }}</a>
                             </li>
                         </ul>
                         @endif
@@ -43,11 +43,11 @@
                             @endif
 
                             <select name="sort" onchange="this.form.submit()">
-                                <option value="">Sıralama</option>
-                                <option value="newest" @selected(request('sort') === 'newest')>Ən yenilər</option>
-                                <option value="oldest" @selected(request('sort') === 'oldest')>Ən köhnələr</option>
-                                <option value="price_asc" @selected(request('sort') === 'price_asc')>Qiymət: aşağıdan yuxarı</option>
-                                <option value="price_desc" @selected(request('sort') === 'price_desc')>Qiymət: yuxarıdan aşağı</option>
+                                <option value="">{{ __('Sıralama') }}</option>
+                                <option value="newest" @selected(request('sort') === 'newest')>{{ __('Ən yenilər') }}</option>
+                                <option value="oldest" @selected(request('sort') === 'oldest')>{{ __('Ən köhnələr') }}</option>
+                                <option value="price_asc" @selected(request('sort') === 'price_asc')>{{ __('Qiymət: aşağıdan yuxarı') }}</option>
+                                <option value="price_desc" @selected(request('sort') === 'price_desc')>{{ __('Qiymət: yuxarıdan aşağı') }}</option>
                             </select>
                         </form>
                     </div>
@@ -81,7 +81,7 @@
                                             data-url="{{ route('product', $product->slug) }}"
                                         />
 
-                                        <button type="button" class="favorite-toggle" data-product-id="{{ $product->id }}" aria-label="Bəyəndiyim ətirlərə əlavə et">
+                                        <button type="button" class="favorite-toggle" data-product-id="{{ $product->id }}" aria-label="{{ __('Bəyəndiyim ətirlərə əlavə et') }}">
                                             <img src="{{ asset('frontend/images/product-card-wishlist.svg') }}" alt="Seçilmişlər" />
                                         </button>
                                     </div>
@@ -204,7 +204,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span class="close">&times;</span>
-                <p>Qaydalar</p>
+                <p>{{ __('Qaydalar') }}</p>
             </div>
 
             <div class="modal-body">
@@ -225,10 +225,10 @@
                 <div class="modal-tabcontents">
                     <div class="tabcontent" id="1">
                         <div class="shipping">
-                            <h1>Çatdırılma</h1>
+                            <h1>{{ __('Çatdırılma') }}</h1>
 
                             <p>
-                                <strong>Bakı şəhər daxili</strong>
+                                <strong>{{ __('Bakı şəhər daxili') }}</strong>
                                 çatdırılma ödənişsizdir.
                             </p>
 
@@ -238,27 +238,27 @@
                             </p>
 
                             <p>
-                                <strong>Ölkə daxili rayonlara</strong>
+                                <strong>{{ __('Ölkə daxili rayonlara') }}</strong>
                                 və
-                                <strong>şəhərlərə</strong>
+                                <strong>{{ __('şəhərlərə') }}</strong>
                                 çatdırılma ödənişlidir (10 AZN).
                             </p>
                         </div>
 
                         <div class="payment-types">
-                            <h1>Ödəniş üsulları:</h1>
+                            <h1>{{ __('Ödəniş üsulları:') }}</h1>
 
                             <ol>
-                                <li>Bank kartı olmadan hissə-hissə ödəniş imkanı.</li>
-                                <li>Qapıda nağd və ya kartla ödəniş.</li>
-                                <li>Saytımızdan onlayn olaraq bank kartı ilə ödəniş.</li>
-                                <li>Birbank taksit kart ilə 2, 3 və ya 6 aylıq faizsiz ödəniş imkanı.</li>
-                                <li>M10 elektron pulqabı ilə.</li>
+                                <li>{{ __('Bank kartı olmadan hissə-hissə ödəniş imkanı.') }}</li>
+                                <li>{{ __('Qapıda nağd və ya kartla ödəniş.') }}</li>
+                                <li>{{ __('Saytımızdan onlayn olaraq bank kartı ilə ödəniş.') }}</li>
+                                <li>{{ __('Birbank taksit kart ilə 2, 3 və ya 6 aylıq faizsiz ödəniş imkanı.') }}</li>
+                                <li>{{ __('M10 elektron pulqabı ilə.') }}</li>
                             </ol>
                         </div>
 
                         <div class="modal-footer">
-                            <p>24 ilin təcrübəsi ilə daim xidmətinizdəyik!</p>
+                            <p>{{ __('24 ilin təcrübəsi ilə daim xidmətinizdəyik!') }}</p>
                         </div>
                     </div>
 
@@ -329,8 +329,8 @@
             </div>
 
             <div class="basket-brand-modal-footer">
-                <button>Səbətə əlavə edin</button>
-                <a>Xidmətlər və şərtlər</a>
+                <button>{{ __('Səbətə əlavə edin') }}</button>
+                <a>{{ __('Xidmətlər və şərtlər') }}</a>
             </div>
         </div>
     </div>
@@ -345,7 +345,7 @@
                     alt=""
                 >
 
-                <span>Digər ölçülər</span>
+                <span>{{ __('Digər ölçülər') }}</span>
             </div>
 
             <div class="other-sizes-body">
