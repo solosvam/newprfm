@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
+use App\Support\LocalizedValidation;
 use App\Models\Order;
 use App\Models\OrderStatus;
 use App\Models\PaymentMethod;
@@ -24,7 +25,7 @@ class CheckoutController extends Controller {
    'title'=>['nullable','string','max:50'],'city'=>['nullable','string','max:100'],'district'=>['nullable','string','max:100'],'address'=>['nullable','string','max:500'],
    'building'=>['nullable','string','max:50'],'entrance'=>['nullable','string','max:50'],'floor'=>['nullable','string','max:30'],'apartment'=>['nullable','string','max:30'],'address_note'=>['nullable','string','max:1000'],
    'payment_method_id'=>['required','integer','exists:payment_methods,id'],'gift_wrap'=>['nullable','boolean'],'customer_note'=>['nullable','string','max:1500'],
-  ]);
+  ], LocalizedValidation::messages(), LocalizedValidation::attributes());
   $customer=$request->user();
   return DB::transaction(function()use($data,$customer){
    $initialStatus=OrderStatus::where('code','new')->where('active',1)->firstOrFail();
