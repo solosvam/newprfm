@@ -345,8 +345,7 @@ window.parfumshopFavoriteConfig = {
                     </li>
                     <li>
               <span>
-                Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə
-                alınır və iş saatı ərzində baxılır.
+                {{ __('Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə alınır və iş saatı ərzində baxılır.') }}
               </span>
                     </li>
                 </ul>
@@ -428,7 +427,7 @@ window.parfumshopFavoriteConfig = {
             <p>9:00 - 19:00. B.e. - Ş.
                 Bazar istirahət günüdür.
 
-                Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə alınır və iş saatı ərzində baxılır.</p>
+                {{ __('Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə alınır və iş saatı ərzində baxılır.') }}</p>
             <div class="question">
                 <ul>
                     <li>{{ __('Sualınız yaranıb?') }}</li>
