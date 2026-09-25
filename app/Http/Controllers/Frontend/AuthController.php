@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Support\LocalizedValidation;
 use App\Models\Customer\Customer;
 use App\Models\Order;
 use App\Services\SmsService;
@@ -57,7 +58,7 @@ class AuthController extends Controller
         $request->validate([
             'mobile' => ['required', 'digits:12'],
             'password' => ['required', 'string'],
-        ]);
+        ], LocalizedValidation::messages(), LocalizedValidation::attributes());
 
         $customer = Customer::where('mobile', $mobile)->where('active', 1)->first();
 
@@ -79,7 +80,7 @@ class AuthController extends Controller
         $request->validate([
             'mobile' => ['required', 'digits:12'],
             'otp' => ['required', 'digits:6'],
-        ]);
+        ], LocalizedValidation::messages(), LocalizedValidation::attributes());
 
         $data = Cache::get($this->otpKey($mobile));
 
@@ -101,7 +102,7 @@ class AuthController extends Controller
         $request->validate([
             'mobile' => ['required', 'digits:12'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
+        ], LocalizedValidation::messages(), LocalizedValidation::attributes());
 
         if (!Cache::pull($this->verifiedKey($mobile))) {
             throw ValidationException::withMessages(['otp' => __('OTP təsdiqi tapılmadı. Yenidən cəhd edin.')]);
@@ -156,7 +157,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:50', 'unique:customers,email,'.$customer->id],
             'password' => ['nullable', 'string'],
             'new_password' => ['nullable', 'string', 'min:6', 'confirmed'],
-        ]);
+        ], LocalizedValidation::messages(), LocalizedValidation::attributes());
 
         if (!empty($data['new_password'])) {
             if (empty($data['password']) || !Hash::check($data['password'], $customer->password)) {
