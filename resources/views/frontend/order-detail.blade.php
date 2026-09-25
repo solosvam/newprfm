@@ -28,7 +28,7 @@
 <div class="order-detail">
  <div class="order-detail__header">
   <h2>Sifariş {{ $order->order_no }}</h2>
-  <p>{{ $order->created_at->format('d.m.Y, H:i') }} · {{ $order->status?->name_az ?? $order->status?->name }}</p>
+  <p>{{ $order->created_at->format('d.m.Y, H:i') }} · {{ ($order->status?->{'name_' . app()->getLocale()} ?: $order->status?->name_az) ?? $order->status?->name }}</p>
  </div>
 
  <table class="order-table">
@@ -41,7 +41,7 @@
      <div class="order-product__image">@if($image)<img src="{{ asset('frontend/uploads/products/'.$image->image) }}" alt="{{ $item->product?->name }}">@endif</div>
      <div><div class="order-product__name">{{ $item->product?->name ?? 'Məhsul' }}</div><div class="order-product__meta">{{ $item->product?->brand?->name }}</div></div>
     </div></td>
-    <td>{{ $item->variant?->size?->name_az ?? '-' }}</td>
+    <td>{{ ($item->variant?->size?->{'name_' . app()->getLocale()} ?: $item->variant?->size?->name_az) ?? '-' }}</td>
     <td>{{ $item->quantity }} ədəd</td>
     <td>{{ number_format($item->unit_price,2) }} ₼</td>
     <td><strong>{{ number_format($item->total,2) }} ₼</strong></td>
