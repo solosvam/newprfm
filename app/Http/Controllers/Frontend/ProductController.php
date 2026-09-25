@@ -88,7 +88,7 @@ class ProductController extends Controller
             'comment' => $data['comment'],
         ]);
 
-        return back()->with('review_success', 'Rəyiniz əlavə edildi.');
+        return back()->with('review_success', __('Rəyiniz əlavə edildi.'));
     }
     public function wishlistProducts(\Illuminate\Http\Request $request)
     {
