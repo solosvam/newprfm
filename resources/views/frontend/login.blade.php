@@ -65,7 +65,13 @@ window.customerAuth = {
     otpUrl: @json(route('front.login.otp')),
     resendUrl: @json(route('front.login.otp.resend')),
     setPasswordUrl: @json(route('front.login.set-password')),
-    registerUrl: '#'
+    registerUrl: '#',
+    messages: {
+        notFound: @json(__('Bu nömrə ilə hesab tapılmadı. Qeydiyyatdan keçin.')),
+        otpSent: @json(__('OTP kod :mobile nömrəsinə göndərildi.')),
+        error: @json(__('Xəta baş verdi.')),
+        registration: @json(__('Qeydiyyat səhifəsini növbəti mərhələdə quracağıq.'))
+    }
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
