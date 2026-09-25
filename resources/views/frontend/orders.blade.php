@@ -24,17 +24,17 @@
   <div class="cabinet">
    @include('frontend.partials.cabinet-sidebar',['pageTitle'=>'Sifarişlərimin tarixçəsi'])
    @if($orders->isEmpty())
-    <div class="cabinet-content-empty"><h2>Sifarişlərimin tarixçəsi</h2><p>Hələ sifarişiniz yoxdur.</p></div>
+    <div class="cabinet-content-empty"><h2>{{ __('Sifarişlərimin tarixçəsi') }}</h2><p>{{ __('Hələ sifarişiniz yoxdur.') }}</p></div>
    @else
     <div class="order-history">
      @foreach($orders as $order)
       <div class="order-card">
        <div class="order-card__head">
-        <div><span class="order-card__label">Sifariş tarixi</span><span class="order-card__value">{{ $order->created_at->format('d.m.Y') }}</span></div>
-        <div><span class="order-card__label">Sifariş xülasəsi</span><span class="order-card__value">{{ $order->items->sum('quantity') }} məhsul</span></div>
-        <div><span class="order-card__label">Sifariş №</span><span class="order-card__value">{{ $order->order_no }}</span></div>
-        <div><span class="order-card__label">Toplam</span><span class="order-card__total">{{ number_format($order->total,2) }} ₼</span></div>
-        <a class="order-card__details" href="{{ route('profile.orders.show',$order) }}">Detallar</a>
+        <div><span class="order-card__label">{{ __('Sifariş tarixi') }}</span><span class="order-card__value">{{ $order->created_at->format('d.m.Y') }}</span></div>
+        <div><span class="order-card__label">{{ __('Sifariş xülasəsi') }}</span><span class="order-card__value">{{ $order->items->sum('quantity') }} məhsul</span></div>
+        <div><span class="order-card__label">{{ __('Sifariş №') }}</span><span class="order-card__value">{{ $order->order_no }}</span></div>
+        <div><span class="order-card__label">{{ __('Toplam') }}</span><span class="order-card__total">{{ number_format($order->total,2) }} ₼</span></div>
+        <a class="order-card__details" href="{{ route('profile.orders.show',$order) }}">{{ __('Detallar') }}</a>
        </div>
        <div class="order-card__body">
         <div class="order-card__status">
