@@ -35,7 +35,6 @@ class CustomerCreditProfile extends Model
     public function isComplete(): bool
     {
         return !empty($this->father_name)
-            && !empty($this->gender)
             && !empty($this->fin)
             && !empty($this->relative_1_name)
             && !empty($this->relative_1_phone)
