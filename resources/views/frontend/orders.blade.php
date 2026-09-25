@@ -39,7 +39,7 @@
        <div class="order-card__body">
         <div class="order-card__status">
          <div class="order-card__status-title">{{ ($order->status?->{'name_' . app()->getLocale()} ?: $order->status?->name_az) ?? $order->status?->name ?? __('Sifariş qəbul edildi') }}</div>
-         <div class="order-card__status-sub">{{ $order->items->sum('quantity') }} {{ __('məhsul') }} sifariş edilib</div>
+         <div class="order-card__status-sub">{{ $order->items->sum('quantity') }} {{ __('məhsul sifariş edilib') }}</div>
         </div>
         <div class="order-card__products">
          @foreach($order->items->take(4) as $item)
