@@ -7,7 +7,7 @@
                 <li>
                     <a href="#" onclick="window.history.back()">
                         <img src="{{asset('frontend/images/arrow-left.svg')}}" alt="" />
-                        <span>Geri qayıt</span>
+                        <span>{{ __('Geri qayıt') }}</span>
                     </a>
                 </li>
                 <li>
@@ -21,7 +21,7 @@
                             <img src="{{asset('frontend/images/arrow-right.svg')}}" class="arrow" alt="" />
                         </li>
                         <li>
-                            <a href="{{route('brands')}}">Markalar</a>
+                            <a href="{{route('brands')}}">{{ __('Markalar') }}</a>
                         </li>
                     </ul>
                 </li>
