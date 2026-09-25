@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>ParfumShop.az - онлайн заказ парфюмерии, мужские женские аро</title>
+    <title>ParfumShop.az</title>
     <link rel="stylesheet" href="{{ asset('frontend/css/style.css?v=' . filemtime(public_path('frontend/css/style.css'))) }}">
     <link rel="stylesheet" href="{{ asset('frontend/css/app.css?v=' . filemtime(public_path('frontend/css/app.css'))) }}">
     @yield('page-styles')
@@ -19,7 +19,7 @@
                 <div class="language-select">
                     <span class="language-select__globe">◎</span>
                     <select id="languageSwitcher"
-                            aria-label="Dil seçimi"
+                            aria-label="{{ __('Dil seçimi') }}"
                             data-current-locale="{{ app()->getLocale() }}"
                             data-change-url="{{ route('language.change') }}">
                         <option value="az" @if(App::isLocale('az')) selected @endif>AZ</option>
@@ -91,11 +91,11 @@
                             <div class="content">
                                 <div class="info">
                                     <h1>Cartier La Panthere Edition Soir</h1>
-                                    <p>Kişi, Eau de Toilette</p>
+                                    <p>{{ __('Kişi, Eau de Toilette') }}</p>
                                     <span>199.00 ₼ / <span>100 ml</span></span>
                                 </div>
                                 <div class="category">
-                                    <span>Qadın üçün</span>
+                                    <span>{{ __('Qadın üçün') }}</span>
                                 </div>
                             </div>
                         </a>
@@ -282,6 +282,11 @@
 
 @yield('content')
 <script>
+window.parfumshopMessages = {
+    cartAdded: @json(__('Məhsul səbətə əlavə olundu')),
+    favoriteAdded: @json(__('Bəyəndiyim ətirlərə əlavə olundu')),
+    favoriteRemoved: @json(__('Bəyəndiyim ətirlərdən silindi'))
+};
 window.parfumshopFavoriteConfig = {
     authenticated: @json(auth()->check()),
     idsUrl: @json(auth()->check() ? route('favorites.ids') : null),
@@ -335,7 +340,7 @@ window.parfumshopFavoriteConfig = {
                         <span>{{ __('Xidmət saatlarımız') }}</span>
                     </li>
                     <li>
-                        <span>9:00 - 19:00. B.e. - Ş.</span>
+                        <span>{{ __('9:00 - 19:00. B.e. - Ş.') }}</span>
                         <span>{{ __('Bazar istirahət günüdür.') }}</span>
                     </li>
                     <li>
