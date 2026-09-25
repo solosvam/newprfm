@@ -32,7 +32,7 @@
  </div>
 
  <table class="order-table">
-  <thead><tr><th>Məhsul</th><th>Ölçü</th><th>Say</th><th>Vahid qiymət</th><th>Cəm</th></tr></thead>
+  <thead><tr><th>{{ __('Məhsul') }}</th><th>{{ __('Ölçü') }}</th><th>{{ __('Say') }}</th><th>{{ __('Vahid qiymət') }}</th><th>{{ __('Cəm') }}</th></tr></thead>
   <tbody>
   @foreach($order->items as $item)
    @php($image=$item->product?->images?->first())
@@ -52,26 +52,26 @@
 
  <div class="order-info-grid">
   <div class="order-info-box">
-   <h3>Çatdırılma məlumatları</h3>
+   <h3>{{ __('Çatdırılma məlumatları') }}</h3>
    <div class="order-info-box__body">
-    <div><strong>Ünvan:</strong> {{ $order->address?->label ?? '-' }}</div>
-    @if($order->address?->building)<div><strong>Bina:</strong> {{ $order->address->building }}</div>@endif
-    @if($order->address?->entrance)<div><strong>Giriş:</strong> {{ $order->address->entrance }}</div>@endif
-    @if($order->address?->floor)<div><strong>Mərtəbə:</strong> {{ $order->address->floor }}</div>@endif
-    @if($order->address?->apartment)<div><strong>Mənzil:</strong> {{ $order->address->apartment }}</div>@endif
-    @if($order->customer_note)<div><strong>Qeyd:</strong> {{ $order->customer_note }}</div>@endif
+    <div><strong>{{ __('Ünvan:') }}</strong> {{ $order->address?->label ?? '-' }}</div>
+    @if($order->address?->building)<div><strong>{{ __('Bina:') }}</strong> {{ $order->address->building }}</div>@endif
+    @if($order->address?->entrance)<div><strong>{{ __('Giriş:') }}</strong> {{ $order->address->entrance }}</div>@endif
+    @if($order->address?->floor)<div><strong>{{ __('Mərtəbə:') }}</strong> {{ $order->address->floor }}</div>@endif
+    @if($order->address?->apartment)<div><strong>{{ __('Mənzil:') }}</strong> {{ $order->address->apartment }}</div>@endif
+    @if($order->customer_note)<div><strong>{{ __('Qeyd:') }}</strong> {{ $order->customer_note }}</div>@endif
    </div>
   </div>
 
   <div class="order-info-box">
-   <h3>Ödəniş məlumatları</h3>
+   <h3>{{ __('Ödəniş məlumatları') }}</h3>
    <div class="order-info-box__body">
-    <div class="order-summary-row"><span>Ödəniş üsulu</span><strong>{{ $order->paymentMethod?->name ?? '-' }}</strong></div>
-    <div class="order-summary-row"><span>Ara cəm</span><span>{{ number_format($order->subtotal,2) }} ₼</span></div>
-    @if($order->discount>0)<div class="order-summary-row"><span>Endirim</span><span>-{{ number_format($order->discount,2) }} ₼</span></div>@endif
-    @if($order->bonus_used>0)<div class="order-summary-row"><span>Bonusla ödənilib</span><span>-{{ number_format($order->bonus_used,2) }} ₼</span></div>@endif
-    <div class="order-summary-row bonus"><span>Qazanılan bonus</span><span>+{{ number_format($order->bonus_earned,2) }} ₼</span></div>
-    <div class="order-summary-row total"><span>Toplam</span><span>{{ number_format($order->total,2) }} ₼</span></div>
+    <div class="order-summary-row"><span>{{ __('Ödəniş üsulu') }}</span><strong>{{ $order->paymentMethod?->name ?? '-' }}</strong></div>
+    <div class="order-summary-row"><span>{{ __('Ara cəm') }}</span><span>{{ number_format($order->subtotal,2) }} ₼</span></div>
+    @if($order->discount>0)<div class="order-summary-row"><span>{{ __('Endirim') }}</span><span>-{{ number_format($order->discount,2) }} ₼</span></div>@endif
+    @if($order->bonus_used>0)<div class="order-summary-row"><span>{{ __('Bonusla ödənilib') }}</span><span>-{{ number_format($order->bonus_used,2) }} ₼</span></div>@endif
+    <div class="order-summary-row bonus"><span>{{ __('Qazanılan bonus') }}</span><span>+{{ number_format($order->bonus_earned,2) }} ₼</span></div>
+    <div class="order-summary-row total"><span>{{ __('Toplam') }}</span><span>{{ number_format($order->total,2) }} ₼</span></div>
    </div>
   </div>
  </div>
