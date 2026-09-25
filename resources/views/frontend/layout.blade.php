@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
     <meta charset="UTF-8" />
@@ -18,7 +18,10 @@
             <div class="lang">
                 <div class="language-select">
                     <span class="language-select__globe">◎</span>
-                    <select id="languageSwitcher" aria-label="Dil seçimi">
+                    <select id="languageSwitcher"
+                            aria-label="Dil seçimi"
+                            data-current-locale="{{ app()->getLocale() }}"
+                            data-change-url="{{ route('language.change') }}">
                         <option value="az" @if(App::isLocale('az')) selected @endif>AZ</option>
                         <option value="en" @if(App::isLocale('en')) selected @endif>EN</option>
                         <option value="ru" @if(App::isLocale('ru')) selected @endif>RU</option>
