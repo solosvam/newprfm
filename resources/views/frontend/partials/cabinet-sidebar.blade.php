@@ -8,6 +8,7 @@
         <ul>
             <li><a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'cabinet-active' : '' }}">Hesab məlumatları</a></li>
             <li><a href="{{ route('profile.personal') }}" class="{{ request()->routeIs('profile.personal*') ? 'cabinet-active' : '' }}">Şəxsi məlumatlar</a></li>
+            <li><a href="{{ route('profile.credit') }}" class="{{ request()->routeIs('profile.credit*') ? 'cabinet-active' : '' }}">Hissəli ödəniş məlumatları @if(!auth()->user()->creditProfile?->isComplete()) <small>(Tamamlanmayıb)</small> @endif</a></li>
             <li><a href="{{ route('profile.orders') }}" class="{{ request()->routeIs('profile.orders') ? 'cabinet-active' : '' }}">Sifarişlərimin tarixçəsi</a></li>
             <li><a href="{{ route('profile.bonuses') }}" class="{{ request()->routeIs('profile.bonuses') ? 'cabinet-active' : '' }}">Bonus tarixçəsi</a></li>
             <li><a href="{{ route('profile.wishlist') }}" class="{{ request()->routeIs('profile.wishlist') ? 'cabinet-active' : '' }}">Bəyəndiyim ətirlər <span id="cabinetWishlistCount">{{ auth()->user()->favoriteProducts()->count() }}</span></a></li>
