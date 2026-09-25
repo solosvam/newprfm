@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await post(window.customerAuth.checkUrl, {mobile: currentMobile});
 
             if (data.status === 'not_found') {
-                error(loginError, 'Bu nömrə ilə hesab tapılmadı. Qeydiyyatdan keçin.');
+                error(loginError, window.customerAuth.messages.notFound);
             } else if (data.status === 'password') {
                 mode = 'password';
                 mobile.disabled = true;
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 loginBox.style.display = 'none';
                 otpSection.classList.remove('hide-form');
                 otpSection.style.display = 'block';
-                otpMessage.textContent = 'OTP kod ' + data.mobile + ' nömrəsinə göndərildi.';
+                otpMessage.textContent = window.customerAuth.messages.otpSent.replace(':mobile', data.mobile);
                 startTimer();
                 requestAnimationFrame(() => otpInput.focus());
             }
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const json = await response.json().catch(() => ({}));
         if (!response.ok) {
             const errors = json.errors || {};
-            throw new Error(Object.values(errors)[0]?.[0] || json.message || 'Xəta baş verdi.');
+            throw new Error(Object.values(errors)[0]?.[0] || json.message || window.customerAuth.messages.error);
         }
         return json;
     }
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('registerBtn').addEventListener('click', function (e) {
         e.preventDefault();
-        error(loginError, 'Qeydiyyat səhifəsini növbəti mərhələdə quracağıq.');
+        error(loginError, window.customerAuth.messages.registration);
     });
 
     function startTimer() {
