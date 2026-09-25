@@ -19,7 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ImportOldParfumshopCategory::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->append(setLangMiddleware::class);
+        // Locale needs the session started by the web middleware group.
+        $middleware->web(append: [setLangMiddleware::class]);
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('admin') || $request->is('admin/*')) {
                 return route('admin.login.form');
