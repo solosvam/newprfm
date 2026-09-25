@@ -1,19 +1,19 @@
 @extends('frontend.layout')
 @section('content')
 <main><div class="container"><div class="cart-page">
-    <div class="cart-breadcrumb"><a href="{{ route('home') }}">← Geri qayıt</a><h1>Səbət</h1></div>
+    <div class="cart-breadcrumb"><a href="{{ route('home') }}">← Geri qayıt</a><h1>{{ __('Səbət') }}</h1></div>
     <div class="cart-layout">
         <div id="cartItems" class="cart-items"></div>
         <aside class="cart-summary">
             <div id="cartSummaryLines"></div>
             <hr>
-            <div><span>Ümumi məbləğ:</span><strong id="cartSubtotal">0.00 ₼</strong></div>
-            <div><span>Endirim məbləği:</span><strong>0.00 ₼</strong></div>
-            <div class="cart-summary__total"><span>Yekun məbləğ:</span><strong id="cartTotal">0.00 ₼</strong></div>
-            @auth<a class="cart-checkout-button" href="{{ route('checkout') }}">Sifarişi rəsmiləşdir</a>@else<a class="cart-checkout-button" href="{{ route('front.login', ['redirect' => route('checkout')]) }}">Sifarişi rəsmiləşdir</a>@endauth
+            <div><span>{{ __('Ümumi məbləğ:') }}</span><strong id="cartSubtotal">0.00 ₼</strong></div>
+            <div><span>{{ __('Endirim məbləği:') }}</span><strong>0.00 ₼</strong></div>
+            <div class="cart-summary__total"><span>{{ __('Yekun məbləğ:') }}</span><strong id="cartTotal">0.00 ₼</strong></div>
+            @auth<a class="cart-checkout-button" href="{{ route('checkout') }}">{{ __('Sifarişi rəsmiləşdir') }}</a>@else<a class="cart-checkout-button" href="{{ route('front.login', ['redirect' => route('checkout')]) }}">{{ __('Sifarişi rəsmiləşdir') }}</a>@endauth
         </aside>
     </div>
-    <div id="cartEmpty" class="cart-empty"><p>Səbətiniz boşdur.</p><a href="{{ route('home') }}">Məhsullara bax</a></div>
+    <div id="cartEmpty" class="cart-empty"><p>{{ __('Səbətiniz boşdur.') }}</p><a href="{{ route('home') }}">{{ __('Məhsullara bax') }}</a></div>
 </div></div></main>
 @endsection
 @section('page-styles')
