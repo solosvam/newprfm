@@ -3,7 +3,7 @@
 <main>
     <div class="container">
         <div class="cabinet">
-            @include('frontend.partials.cabinet-sidebar',['pageTitle'=>'Bəyəndiyim ətirlər'])
+            @include('frontend.partials.cabinet-sidebar',['pageTitle'=>__('Bəyəndiyim ətirlər')])
 
             <section class="wishlist-page">
                 <h2 class="wishlist-page__title">{{ __('Bəyəndiyim ətirlər') }}</h2>
