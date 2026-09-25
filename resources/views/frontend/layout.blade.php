@@ -19,7 +19,7 @@
                 <div class="language-select">
                     <span class="language-select__globe">◎</span>
                     <select id="languageSwitcher"
-                            aria-label="{{ __('Dil seçimi') }}"
+                            aria-label="{{ __('navigation_select_language') }}"
                             data-current-locale="{{ app()->getLocale() }}"
                             data-change-url="{{ route('language.change') }}">
                         <option value="az" @if(App::isLocale('az')) selected @endif>AZ</option>
@@ -39,7 +39,7 @@
                         <img class="search-icon" src="{{asset('frontend/images/search.svg')}}" alt="" />
                     </li>
                     <li class="header-cart">
-                        <a href="{{ route('cart') }}" class="header-cart__link" aria-label="{{ __('Səbət') }}">
+                        <a href="{{ route('cart') }}" class="header-cart__link" aria-label="{{ __('cart_cart') }}">
                             <img src="{{asset('frontend/images/cart.svg')}}" alt="Səbət" />
                             <span class="header-cart__count is-empty" id="headerCartCount">0</span>
                         </a>
@@ -77,11 +77,11 @@
         </div>
         <div class="search-form__wrap">
             <form action="">
-                <input type="text" placeholder="{{ __('Axtarış') }}" />
+                <input type="text" placeholder="{{ __('catalog_search') }}" />
                 <img src="{{asset('frontend/images/search.svg')}}" alt="" />
             </form>
             <div class="prev-search">
-                <span>{{ __('Daha öncəki axtarışlarınız') }}</span>
+                <span>{{ __('catalog_your_recent_searches') }}</span>
                 <ul>
                     <li>
                         <a href="">
@@ -91,11 +91,11 @@
                             <div class="content">
                                 <div class="info">
                                     <h1>Cartier La Panthere Edition Soir</h1>
-                                    <p>{{ __('Kişi, Eau de Toilette') }}</p>
+                                    <p>{{ __('navigation_men_eau_de_toilette') }}</p>
                                     <span>199.00 ₼ / <span>100 ml</span></span>
                                 </div>
                                 <div class="category">
-                                    <span>{{ __('Qadın üçün') }}</span>
+                                    <span>{{ __('navigation_for_women') }}</span>
                                 </div>
                             </div>
                         </a>
@@ -149,11 +149,11 @@
         </div>
         <div class="search-form__wrap">
             <form action="">
-                <input type="text" placeholder="{{ __('Axtarış') }}" />
+                <input type="text" placeholder="{{ __('catalog_search') }}" />
                 <img src="{{asset('frontend/images/search.svg')}}" alt="" />
             </form>
             <div class="prev-search">
-                <span>{{ __('Daha öncəki axtarışlarınız') }}</span>
+                <span>{{ __('catalog_your_recent_searches') }}</span>
                 <ul>
                     <li>
                         <a href="">
@@ -221,12 +221,12 @@
         </div>
         <div class="search-form__wrap">
             <form action="">
-                <input type="text" placeholder="{{ __('Axtarış') }}" />
+                <input type="text" placeholder="{{ __('catalog_search') }}" />
                 <img src="{{asset('frontend/images/search.svg')}}" alt="Search" />
             </form>
 
             <div class="no-results">
-                <p>{{ __('Axtardığınız məhsul mövcud deyil. Bəlkə') }} <span>Cartier</span> {{ __('nəzərdə tutursunuz?') }}</p>
+                <p>{{ __('catalog_product_not_found_did_you_mean') }} <span>Cartier</span> {{ __('catalog_') }}</p>
                 <img src="{{asset('frontend/images/search.svg')}}" alt="No Results" />
             </div>
         </div>
@@ -240,7 +240,7 @@
     <ul class="mobile-sidebar__nav">
         <li>
             <img src="{{asset('frontend/images/filter.svg')}}" alt="filter icon" />
-            <span>{{ __('Filter') }}</span>
+            <span>{{ __('catalog_filter') }}</span>
         </li>
         @foreach(\App\Models\Product\Category::where('active', 1)->orderBy('id')->get() as $menuCategory)
         <li>
@@ -250,19 +250,19 @@
         @endforeach
         <li>
             <img src="{{asset('frontend/images/brands.svg')}}" alt="brand icon" />
-            <a href="{{route('brands')}}"><span>{{ __('Brendlər') }}</span></a>
+            <a href="{{route('brands')}}"><span>{{ __('catalog_brands') }}</span></a>
         </li>
         <li class="terms-link">
             <img src="{{asset('frontend/images/terms.svg')}}" alt="terms icon" />
-            <span>{{ __('Qaydalar') }}</span>
+            <span>{{ __('info_terms') }}</span>
         </li>
         <li>
             <img src="{{asset('frontend/images/gift_card.svg')}}" alt="services icon" />
-            <span>{{ __('Xidmətlər və şərtlər') }}</span>
+            <span>{{ __('product_services_and_terms') }}</span>
         </li>
         <li class="terms-link">
             <img src="{{asset('frontend/images/wishlist.svg')}}" alt="wishlist icon" />
-            <a href="{{ auth()->check() ? route('profile.wishlist') : route('wishlist') }}" class="wishlist-page-link"><span>{{ __('Bəyəndiyim ətirlər') }}</span></a>
+            <a href="{{ auth()->check() ? route('profile.wishlist') : route('wishlist') }}" class="wishlist-page-link"><span>{{ __('wishlist_my_favorites') }}</span></a>
         </li>
     </ul>
 </div>
@@ -271,7 +271,7 @@
 <!-- Search Form for Mobile -->
 <div class="mobile-search-home">
     <form>
-        <input type="text" placeholder="{{ __('Nə axtarırsan?') }}" />
+        <input type="text" placeholder="{{ __('catalog_what_are_you_looking_for') }}" />
         <img src="{{asset('frontend/images/search.svg')}}" alt="" />
     </form>
     <div class="mobile-search__filter">
@@ -283,9 +283,9 @@
 @yield('content')
 <script>
 window.parfumshopMessages = {
-    cartAdded: @json(__('Məhsul səbətə əlavə olundu')),
-    favoriteAdded: @json(__('Bəyəndiyim ətirlərə əlavə olundu')),
-    favoriteRemoved: @json(__('Bəyəndiyim ətirlərdən silindi'))
+    cartAdded: @json(__('notification_product_added_to_cart')),
+    favoriteAdded: @json(__('notification_added_to_favorites')),
+    favoriteRemoved: @json(__('notification_removed_from_favorites'))
 };
 window.parfumshopFavoriteConfig = {
     authenticated: @json(auth()->check()),
@@ -303,55 +303,55 @@ window.parfumshopFavoriteConfig = {
                 <a href="">
                     <img src="{{asset('frontend/images/logo.svg')}}" alt="" />
                 </a>
-                <p>{{ __('ParfumShop.az internet mağazası') }}</p>
-                <p>{{ __('25 ilin təcrübəsi ilə xidmətinizdə olmaqdan qürur duyuruq!') }}</p>
-                <p>{{ __('Həyatınızın ən ətirli səhifəsi...') }}</p>
+                <p>{{ __('navigation_parfumshop_az_online_store') }}</p>
+                <p>{{ __('navigation_proud_to_serve_you_with_25_years_of_experience') }}</p>
+                <p>{{ __('navigation_the_most_fragrant_chapter_of_your_life') }}</p>
             </div>
             <div class="links">
                 <ul>
                     <li>
-                        <span>{{ __('Kateqoriyalar') }}</span>
+                        <span>{{ __('catalog_categories') }}</span>
                     </li>
                     <li>
-                        <span>{{ __('Brendlər') }}</span>
+                        <span>{{ __('catalog_brands') }}</span>
                     </li>
                     <li>
-                        <span>{{ __('Qadın ətirləri') }}</span>
+                        <span>{{ __('catalog_women_s_perfumes') }}</span>
                     </li>
                     <li>
-                        <span>{{ __('Kişi ətirləri') }}</span>
+                        <span>{{ __('catalog_men_s_perfumes') }}</span>
                     </li>
                     <li>
                         <span>Unisex</span>
                     </li>
                     <li>
-                        <span>{{ __('Hamam dəstləri') }}</span>
+                        <span>{{ __('navigation_bath_sets') }}</span>
                     </li>
                     <li>
-                        <span>{{ __('Testerlər') }}</span>
+                        <span>{{ __('navigation_testers') }}</span>
                     </li>
                     
                     <li>
-                        <span>{{ __('Daxili kredit') }}</span>
+                        <span>{{ __('navigation_installment_payments') }}</span>
                     </li>
                 </ul>
                 <ul>
                     <li>
-                        <span>{{ __('Xidmət saatlarımız') }}</span>
+                        <span>{{ __('navigation_business_hours') }}</span>
                     </li>
                     <li>
-                        <span>{{ __('9:00 - 19:00. B.e. - Ş.') }}</span>
-                        <span>{{ __('Bazar istirahət günüdür.') }}</span>
+                        <span>{{ __('navigation_9_00_am_7_00_pm_mon_sat') }}</span>
+                        <span>{{ __('navigation_closed_on_sundays') }}</span>
                     </li>
                     <li>
               <span>
-                {{ __('Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə alınır və iş saatı ərzində baxılır.') }}
+                {{ __('navigation_online_orders_are_accepted_around_the_clock_and_processed_du') }}
               </span>
                     </li>
                 </ul>
                 <ul>
                     <li>
-                        <span>{{ __('Sualınız yaranıb?') }}</span>
+                        <span>{{ __('navigation_have_a_question') }}</span>
                     </li>
                     <li>
                         <span>(055) 55 10 700</span>
@@ -399,16 +399,16 @@ window.parfumshopFavoriteConfig = {
             <div>
                 <img src="{{asset('frontend/images/footer-icon.svg')}}" alt="">
                 <div class="categories">
-                    <h3>{{ __('Kateqoriyalar') }}</h3>
+                    <h3>{{ __('catalog_categories') }}</h3>
                     <ul>
-                        <li>{{ __('Brendlər') }}</li>
-                        <li>{{ __('Qadın ətirləri') }}</li>
-                        <li> {{ __('Kişi ətirləri') }}</li>
+                        <li>{{ __('catalog_brands') }}</li>
+                        <li>{{ __('catalog_women_s_perfumes') }}</li>
+                        <li> {{ __('catalog_men_s_perfumes') }}</li>
                         <li>Unisex</li>
-                        <li>{{ __('Hamam dəstləri') }}</li>
-                        <li>{{ __('Testerlər') }}</li>
+                        <li>{{ __('navigation_bath_sets') }}</li>
+                        <li>{{ __('navigation_testers') }}</li>
                         
-                        <li>{{ __('Daxili kredit') }}</li>
+                        <li>{{ __('navigation_installment_payments') }}</li>
                     </ul>
                 </div>
             </div>
@@ -422,15 +422,15 @@ window.parfumshopFavoriteConfig = {
             </div>
         </div>
         <div class="column2">
-            <h3>{{ __('Xidmət saatlarımız') }}</h3>
+            <h3>{{ __('navigation_business_hours') }}</h3>
 
             <p>9:00 - 19:00. B.e. - Ş.
                 Bazar istirahət günüdür.
 
-                {{ __('Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə alınır və iş saatı ərzində baxılır.') }}</p>
+                {{ __('navigation_online_orders_are_accepted_around_the_clock_and_processed_du') }}</p>
             <div class="question">
                 <ul>
-                    <li>{{ __('Sualınız yaranıb?') }}</li>
+                    <li>{{ __('navigation_have_a_question') }}</li>
                     <li>(055) 55 10 70</li>
                     <li>(012) 310 22 55</li>
                     <li>info@parfumshop.az</li>
@@ -444,7 +444,7 @@ window.parfumshopFavoriteConfig = {
                 <img src="{{asset('frontend/images/whatsapp.svg')}}" alt="">
             </div>
 
-            <p>{{ __('Bütün hüquqlar qorunur.') }}</p>
+            <p>{{ __('navigation_all_rights_reserved') }}</p>
 
         </div>
     </div>
