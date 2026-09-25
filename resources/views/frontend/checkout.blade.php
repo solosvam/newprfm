@@ -25,6 +25,7 @@
 @section('page-scripts')
 <script>
 const checkoutStore=@json(route('checkout.store')),cartProducts=@json(route('cart.products')),csrf=@json(csrf_token());
+const checkoutMessages={error:@json(__('Xəta baş verdi.'))};
 const getCheckoutCart=()=>{try{return JSON.parse(localStorage.getItem('parfumshop_cart')||'[]')}catch(e){return[]}};
 const addressSelect=document.getElementById('addressSelect'),newAddressBox=document.getElementById('newAddress');
 function syncAddressForm(){
@@ -64,8 +65,8 @@ document.getElementById('placeOrder').onclick=async function(){const b=this;b.di
         });
     }
     const errors=d.errors?Object.values(d.errors).flat():[];
-    throw new Error(errors.length?errors.join(' | '):(d.message||'Xəta baş verdi'));
+    throw new Error(errors.length?errors.join(' | '):(d.message||checkoutMessages.error));
 }
-document.querySelectorAll('.checkout-field.is-invalid').forEach(el=>el.classList.remove('is-invalid'));localStorage.removeItem('parfumshop_cart');location.href=d.redirect}catch(e){const message=e.message||'Xəta baş verdi';document.getElementById('checkoutError').textContent='';if(window.jQuery&&typeof jQuery.notify==='function'){jQuery.notify(message,{className:'error',position:'top right',autoHideDelay:5000});}else{document.getElementById('checkoutError').textContent=message;}b.disabled=false}};
+document.querySelectorAll('.checkout-field.is-invalid').forEach(el=>el.classList.remove('is-invalid'));localStorage.removeItem('parfumshop_cart');location.href=d.redirect}catch(e){const message=e.message||checkoutMessages.error;document.getElementById('checkoutError').textContent='';if(window.jQuery&&typeof jQuery.notify==='function'){jQuery.notify(message,{className:'error',position:'top right',autoHideDelay:5000});}else{document.getElementById('checkoutError').textContent=message;}b.disabled=false}};
 </script>
 @endsection
