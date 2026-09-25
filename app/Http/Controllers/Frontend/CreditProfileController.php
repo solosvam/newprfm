@@ -52,21 +52,21 @@ class CreditProfileController extends Controller
             'salary' => ['required','numeric','gt:0','max:99999999.99'],
             'position' => ['required','string','max:150'],
         ], [
-            'required' => ':attribute mütləq doldurulmalıdır.',
-            'string' => ':attribute düzgün daxil edilməlidir.',
-            'max' => ':attribute icazə verilən həddi aşır.',
-            'numeric' => ':attribute rəqəm olmalıdır.',
-            'gt' => ':attribute sıfırdan böyük olmalıdır.',
-            'regex' => ':attribute düzgün formatda deyil.',
-            'image' => ':attribute şəkil olmalıdır.',
-            'mimes' => ':attribute JPG, PNG və ya WEBP olmalıdır.',
-            'fin.unique' => 'Bu FİN artıq başqa müştəriyə aiddir.',
+            'required' => __('credit_required'),
+            'string' => __('credit_string'),
+            'max' => __('credit_max'),
+            'numeric' => __('credit_numeric'),
+            'gt' => __('credit_gt'),
+            'regex' => __('credit_regex'),
+            'image' => __('credit_image'),
+            'mimes' => __('credit_mimes'),
+            'fin.unique' => __('credit_fin_unique'),
         ], [
-            'father_name'=>'Ata adı','fin'=>'FİN','relative_1_name'=>'Birinci qohumun adı',
-            'relative_1_phone'=>'Birinci qohumun nömrəsi','relative_2_name'=>'İkinci qohumun adı',
-            'relative_2_phone'=>'İkinci qohumun nömrəsi','id_card_front'=>'Vəsiqənin ön şəkli',
-            'id_card_back'=>'Vəsiqənin arxa şəkli','workplace_name'=>'İş yeri',
-            'salary'=>'Əmək haqqı','position'=>'Vəzifə',
+            'father_name'=>__('credit_father_name'),'fin'=>__('credit_fin'),'relative_1_name'=>__('credit_relative_1_name'),
+            'relative_1_phone'=>__('credit_relative_1_phone'),'relative_2_name'=>__('credit_relative_2_name'),
+            'relative_2_phone'=>__('credit_relative_2_phone'),'id_card_front'=>__('credit_id_card_front'),
+            'id_card_back'=>__('credit_id_card_back'),'workplace_name'=>__('credit_workplace_name'),
+            'salary'=>__('credit_salary'),'position'=>__('credit_position'),
         ]);
         $images = [];
         $uploadDirectory = public_path('backend/uploads/customers');
@@ -79,7 +79,7 @@ class CreditProfileController extends Controller
             }
 
             if (!is_dir($uploadDirectory) && !mkdir($uploadDirectory, 0755, true) && !is_dir($uploadDirectory)) {
-                throw new \RuntimeException('Şəkil qovluğu yaradıla bilmədi.');
+                throw new \RuntimeException(__('credit_directory_error'));
             }
 
             $filename = Str::uuid().'.webp';
@@ -88,13 +88,13 @@ class CreditProfileController extends Controller
             try {
                 // GD is used directly to avoid Intervention v2/v3 facade conflicts.
                 if (!extension_loaded('gd') || !function_exists('imagewebp')) {
-                    throw new \RuntimeException('Serverdə GD/WebP dəstəyi aktiv deyil.');
+                    throw new \RuntimeException(__('credit_gd_error'));
                 }
 
                 $sourcePath = $request->file($field)->getRealPath();
                 $source = @imagecreatefromstring(file_get_contents($sourcePath));
                 if (!$source) {
-                    throw new \RuntimeException('Şəkil oxuna bilmədi.');
+                    throw new \RuntimeException(__('credit_read_error'));
                 }
 
                 try {
@@ -105,7 +105,7 @@ class CreditProfileController extends Controller
                     $targetHeight = max(1, (int) round($height * $ratio));
                     $target = imagecreatetruecolor($targetWidth, $targetHeight);
                     if (!$target) {
-                        throw new \RuntimeException('Şəkil emal edilə bilmədi.');
+                        throw new \RuntimeException(__('credit_process_error'));
                     }
 
                     try {
@@ -116,7 +116,7 @@ class CreditProfileController extends Controller
                             || !imagewebp($target, $absolutePath, 80)
                             || !is_file($absolutePath)
                             || filesize($absolutePath) === 0) {
-                            throw new \RuntimeException('WEBP şəkli saxlanıla bilmədi.');
+                            throw new \RuntimeException(__('credit_webp_error'));
                         }
                     } finally {
                         imagedestroy($target);
@@ -160,7 +160,7 @@ class CreditProfileController extends Controller
             }
         }
 
-        return response()->json(['message'=>'Hissəli ödəniş məlumatları yadda saxlanıldı.',
+        return response()->json(['message'=>__('credit_saved'),
             'images' => [
                 'id_card_front' => $request->user()->creditProfile?->id_card_front ? route('profile.credit.image', ['side' => 'front']) : null,
                 'id_card_back' => $request->user()->creditProfile?->id_card_back ? route('profile.credit.image', ['side' => 'back']) : null,
