@@ -18,6 +18,7 @@ class Banners extends Model
         'location',
         'device',
         'active',
+        'link_url',
     ];
     public function imageForLocale(?string $locale = null): ?string
     {
