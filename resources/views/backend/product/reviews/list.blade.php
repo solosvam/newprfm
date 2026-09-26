@@ -1,3 +1,4 @@
+@php($title = 'Məhsul rəyləri')
 @extends('backend.layout')
 
 @section('content')
