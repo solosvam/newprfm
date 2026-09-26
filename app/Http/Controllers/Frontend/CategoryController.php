@@ -54,7 +54,7 @@ class CategoryController extends Controller
         $formattedBanners = [];
 
         foreach (Banners::where('active', 1)->get() as $banner) {
-            $formattedBanners[$banner->location . $banner->device] = $banner->url;
+            $formattedBanners[$banner->location . $banner->device] = $banner->imageForLocale();
         }
 
         return view('frontend.main', [
