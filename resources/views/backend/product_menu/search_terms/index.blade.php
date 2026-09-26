@@ -12,14 +12,8 @@
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2.min.css') }}"/>
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2-bootstrap4.min.css') }}"/>
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/datatables.min.css') }}"/>
-    <style>.select2-container--open { z-index: 2000; }</style>
 @endsection
 
-@section('js_page')
-    <script src="{{ asset('backend/js/vendor/datatables.min.js') }}"></script>
-    <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
-    <script src="{{ asset('backend/js/plugins/datatable.product-search-terms.ajax.js') }}?v=5"></script>
-@endsection
 
 @section('content')
     <div class="container">
@@ -226,111 +220,116 @@
     </div>
 @endsection
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('attachNoResultModal');
-        const form = document.getElementById('attachNoResultForm');
-        const query = document.getElementById('noResultQuery');
-        const queryText = document.getElementById('noResultQueryText');
-        const brandId = document.getElementById('noResultBrandId');
-        const productId = document.getElementById('noResultProductId');
-        const selected = document.getElementById('noResultSelectedProduct');
-        if (!modal || !form) return;
+@section('js_page')
+    <script src="{{ asset('backend/js/vendor/datatables.min.js') }}"></script>
+    <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
+    <script src="{{ asset('backend/js/plugins/datatable.product-search-terms.ajax.js') }}?v=5"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('attachNoResultModal');
+            const form = document.getElementById('attachNoResultForm');
+            const query = document.getElementById('noResultQuery');
+            const queryText = document.getElementById('noResultQueryText');
+            const brandId = document.getElementById('noResultBrandId');
+            const productId = document.getElementById('noResultProductId');
+            const selected = document.getElementById('noResultSelectedProduct');
+            if (!modal || !form) return;
 
-        const modalInstance = new bootstrap.Modal(modal);
-        const initModalSelect2 = () => {
-            if (!window.jQuery || !window.jQuery.fn.select2) return;
+            const modalInstance = new bootstrap.Modal(modal);
+            const initModalSelect2 = () => {
+                if (!window.jQuery || !window.jQuery.fn.select2) return;
 
-            const $modal = window.jQuery(modal);
-            [brandId, productId].forEach(element => {
-                const $select = window.jQuery(element);
+                const $modal = window.jQuery(modal);
+                [brandId, productId].forEach(element => {
+                    const $select = window.jQuery(element);
 
-                if ($select.hasClass('select2-hidden-accessible')) {
-                    $select.select2('destroy');
-                }
+                    if ($select.hasClass('select2-hidden-accessible')) {
+                        $select.select2('destroy');
+                    }
 
-                $select.select2({
-                    dropdownParent: $modal,
-                    width: '100%',
+                    $select.select2({
+                        dropdownParent: $modal,
+                        width: '100%',
+                    });
                 });
-            });
-        };
+            };
 
-        const setProductDisabled = disabled => {
-            productId.disabled = disabled;
-
-            if (window.jQuery && window.jQuery.fn.select2) {
-                window.jQuery(productId).prop('disabled', disabled).trigger('change.select2');
-            }
-        };
-
-        const resetProducts = () => {
-            productId.replaceChildren(new Option('Əvvəl brend seçin', ''));
-            setProductDisabled(true);
-        };
-
-        const openModal = value => {
-            query.value = value;
-            queryText.value = value;
-            brandId.value = '';
-            resetProducts();
-            selected.textContent = 'Məhsul seçilməyib.';
-            selected.classList.remove('text-danger');
-            modalInstance.show();
-        };
-
-        modal.addEventListener('shown.bs.modal', initModalSelect2);
-
-        document.querySelectorAll('.no-result-attach-button').forEach(button => {
-            button.addEventListener('click', () => openModal(button.dataset.noResultQuery || ''));
-        });
-
-        const loadBrandProducts = async () => {
-            const value = brandId.value;
-            resetProducts();
-            selected.textContent = 'Məhsul seçilməyib.';
-            if (!value) return;
-
-            const url = new URL('{{ route('admin.product.search-terms.products') }}', window.location.origin);
-            url.searchParams.set('brand_id', value);
-
-            try {
-                const response = await fetch(url, {headers: {'Accept': 'application/json'}});
-
-                if (!response.ok) {
-                    throw new Error('Məhsullar yüklənmədi.');
-                }
-
-                const data = await response.json();
-                productId.replaceChildren(new Option('Məhsul seçin', ''));
-                (data.products || []).forEach(product => productId.append(new Option(product.name, product.id)));
-                setProductDisabled(false);
+            const setProductDisabled = disabled => {
+                productId.disabled = disabled;
 
                 if (window.jQuery && window.jQuery.fn.select2) {
-                    window.jQuery(productId).trigger('change.select2');
+                    window.jQuery(productId).prop('disabled', disabled).trigger('change.select2');
                 }
-            } catch (error) {
-                selected.textContent = 'Məhsullar yüklənmədi. Səhifəni yenilə və yenidən sına.';
-                selected.classList.add('text-danger');
+            };
+
+            const resetProducts = () => {
+                productId.replaceChildren(new Option('Əvvəl brend seçin', ''));
+                setProductDisabled(true);
+            };
+
+            const openModal = value => {
+                query.value = value;
+                queryText.value = value;
+                brandId.value = '';
+                resetProducts();
+                selected.textContent = 'Məhsul seçilməyib.';
+                selected.classList.remove('text-danger');
+                modalInstance.show();
+            };
+
+            modal.addEventListener('shown.bs.modal', initModalSelect2);
+
+            document.querySelectorAll('.no-result-attach-button').forEach(button => {
+                button.addEventListener('click', () => openModal(button.dataset.noResultQuery || ''));
+            });
+
+            const loadBrandProducts = async () => {
+                const value = brandId.value;
+                resetProducts();
+                selected.textContent = 'Məhsul seçilməyib.';
+                if (!value) return;
+
+                const url = new URL('{{ route('admin.product.search-terms.products') }}', window.location.origin);
+                url.searchParams.set('brand_id', value);
+
+                try {
+                    const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+
+                    if (!response.ok) {
+                        throw new Error('Məhsullar yüklənmədi.');
+                    }
+
+                    const data = await response.json();
+                    productId.replaceChildren(new Option('Məhsul seçin', ''));
+                    (data.products || []).forEach(product => productId.append(new Option(product.name, product.id)));
+                    setProductDisabled(false);
+
+                    if (window.jQuery && window.jQuery.fn.select2) {
+                        window.jQuery(productId).trigger('change.select2');
+                    }
+                } catch (error) {
+                    selected.textContent = 'Məhsullar yüklənmədi. Səhifəni yenilə və yenidən sına.';
+                    selected.classList.add('text-danger');
+                }
+            };
+
+            brandId.addEventListener('change', loadBrandProducts);
+
+            if (window.jQuery) {
+                window.jQuery(brandId).on('select2:select', loadBrandProducts);
             }
-        };
 
-        brandId.addEventListener('change', loadBrandProducts);
+            productId.addEventListener('change', () => {
+                const option = productId.options[productId.selectedIndex];
+                selected.textContent = productId.value ? 'Seçilən məhsul: ' + option.text : 'Məhsul seçilməyib.';
+            });
 
-        if (window.jQuery) {
-            window.jQuery(brandId).on('select2:select', loadBrandProducts);
-        }
-
-        productId.addEventListener('change', () => {
-            const option = productId.options[productId.selectedIndex];
-            selected.textContent = productId.value ? 'Seçilən məhsul: ' + option.text : 'Məhsul seçilməyib.';
+            form.addEventListener('submit', event => {
+                if (productId.value) return;
+                event.preventDefault();
+                selected.textContent = 'Əvvəl məhsulu seç.';
+                selected.classList.add('text-danger');
+            });
         });
-
-        form.addEventListener('submit', event => {
-            if (productId.value) return;
-            event.preventDefault();
-            selected.textContent = 'Əvvəl məhsulu seç.';
-            selected.classList.add('text-danger');
-        });
-    });
-</script>
+    </script>
+@endsection

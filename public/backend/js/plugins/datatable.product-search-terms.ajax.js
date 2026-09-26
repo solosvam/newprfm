@@ -136,11 +136,9 @@ class ProductsAjax {
                     searchable: false,
                     render: function (data, type, row) {
                         return `
-                            <a
-                                href="/admin/product/edit/${row.id}"
-                                class="btn btn-primary btn-sm product-edit"
-                            >
-                                Edit
+                            <a href="/admin/product/search-terms/${row.id}"
+                               class="btn btn-primary btn-sm product-search-terms-edit">
+                                Aliasları idarə et
                             </a>
                         `;
                     }
