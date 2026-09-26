@@ -23,7 +23,16 @@ class NewMainController extends Controller
         $selectedCategory = null;
         $categories = Category::where('active', 1)->orderBy('id')->get();
         $types = Type::orderBy('id')->get();
-        $brands = Brand::where('active', 1)->whereHas('products', fn ($q) => $q->where('active', 1))->orderBy('name')->get();
+        $brands = Brand::query()
+            ->where('active', 1)
+            ->withCount([
+                'products as products_count' => fn ($query) => $query->where('active', 1),
+            ])
+            ->having('products_count', '>', 0)
+            ->orderByDesc('products_count')
+            ->orderBy('name')
+            ->limit(12)
+            ->get();
         $selectedBrand = $request->integer('brand');
         $search = trim((string) $request->input('q', ''));
 
@@ -47,7 +56,7 @@ class NewMainController extends Controller
                 $query->whereHas('categories', fn ($q) => $q->where('categories.id', $category->id));
             }
         }
-        if ($selectedBrand && $brands->contains('id', $selectedBrand)) {
+        if ($selectedBrand && Brand::where('active', 1)->whereKey($selectedBrand)->exists()) {
             $query->where('brand_id', $selectedBrand);
         }
         if ($search !== '') {
