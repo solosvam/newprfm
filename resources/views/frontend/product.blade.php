@@ -1,7 +1,4 @@
 @extends('frontend.layout')
-@section('page-styles')
-    <link rel="stylesheet" href="{{ asset('frontend/css/pages/product.css?v=' . filemtime(public_path('frontend/css/pages/product.css'))) }}">
-@endsection
 @section('content')
     @php
         $locale = app()->getLocale();
@@ -364,5 +361,5 @@
     <!-- Pay by click Modal -->
 @endsection
 @section('page-scripts')
-    <script src="{{ asset('frontend/js/product.js?v=' . filemtime(public_path('frontend/js/product.js'))) }}"></script>
+    <script src="{{ asset('frontend/js/product.js') }}"></script>
 @endsection
