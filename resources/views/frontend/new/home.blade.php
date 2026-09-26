@@ -93,7 +93,7 @@
                             <div class="thumb-actions">
                                 <button
                                     type="button"
-                                    class="icon-btn fav-btn {{ auth()->check() && auth()->user()->favoriteProducts()->where('products.id', $product->id)->exists() ? 'active' : '' }}"
+                                    class="icon-btn fav-btn"
                                     data-product-id="{{ $product->id }}"
                                     aria-label="Seçilmişlərə əlavə et"
                                 >
