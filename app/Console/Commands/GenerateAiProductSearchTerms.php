@@ -85,6 +85,19 @@ class GenerateAiProductSearchTerms extends Command
         return self::SUCCESS;
     }
 
+    private function isRedundantCanonicalPrefix(string $normalized, array $canonicalTokens): bool
+    {
+        $tokens = array_values(array_filter(explode(' ', $normalized)));
+
+        if (count($tokens) !== 1) {
+            return false;
+        }
+
+        return collect($canonicalTokens)->contains(
+            fn (string $canonicalToken) => str_starts_with($canonicalToken, $tokens[0])
+        );
+    }
+
     private function generateForProduct(Product $product, OpenAiPerfumeService $openAi): int
     {
         $brand = trim((string) $product->brand?->name);
@@ -95,6 +108,7 @@ class GenerateAiProductSearchTerms extends Command
         }
 
         $values = array_merge(["{$brand} {$name}"], $openAi->generateSearchTerms($brand, $name));
+        $canonicalTokens = array_filter(explode(' ', ProductSearchNormalizer::normalize("{$brand} {$name}")));
         $terms = [];
         $manualTerms = $product->searchTerms()
             ->where('source', 'manual')
@@ -106,7 +120,12 @@ class GenerateAiProductSearchTerms extends Command
             $value = trim((string) $value);
             $normalized = ProductSearchNormalizer::normalize($value);
 
-            if ($normalized === '' || isset($terms[$normalized]) || isset($manualTerms[$normalized])) {
+            if (
+                $normalized === ''
+                || ($index > 0 && $this->isRedundantCanonicalPrefix($normalized, $canonicalTokens))
+                || isset($terms[$normalized])
+                || isset($manualTerms[$normalized])
+            ) {
                 continue;
             }
 
