@@ -26,7 +26,7 @@ class CheckoutController extends Controller
             -> orderBy('sort_order')
             -> get();
 
-        return view('frontend.checkout', compact(
+        return view('frontend.new.checkout', compact(
             'addresses',
             'paymentMethods'
         ));

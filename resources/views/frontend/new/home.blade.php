@@ -7,23 +7,7 @@
 @endsection
 
 @section('content')
-
-    <div class="hero-banner">
-        @if(!empty($banners['topweb']['image']))
-            @if(!empty($banners['topweb']['url']))
-                <a class="hero-banner__link hero-banner__link--desktop" href="{{ $banners['topweb']['url'] }}" aria-label="Banner linki"><img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']['image']) }}" alt="Parfumshop banner"></a>
-            @else
-                <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']['image']) }}" alt="Parfumshop banner">
-            @endif
-        @endif
-        @if(!empty($banners['topmobile']['image']))
-            @if(!empty($banners['topmobile']['url']))
-                <a class="hero-banner__link hero-banner__link--mobile" href="{{ $banners['topmobile']['url'] }}" aria-label="Banner linki"><img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']['image']) }}" alt="Parfumshop mobil banner"></a>
-            @else
-                <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']['image']) }}" alt="Parfumshop mobil banner">
-            @endif
-        @endif
-    </div>
+    @include('frontend.new.includes.top-banners')
 
     <div class="brands">
         @foreach ($brands as $brand)
@@ -35,35 +19,89 @@
         <a class="brand-card more" href="{{ route('brands') }}">{{ __('brands') }} →</a>
     </div>
 
-    <div class="section-head">
-        <h2>Ətirlər</h2>
-    </div>
-
     <div class="layout">
-        <form class="filters" method="GET" action="{{ route('newhome') }}">
-            @if(request('category')) <input type="hidden" name="category" value="{{ request('category') }}"> @endif
-            @if(request('brand')) <input type="hidden" name="brand" value="{{ request('brand') }}"> @endif
-            @if(request('q')) <input type="hidden" name="q" value="{{ request('q') }}"> @endif
-            @if(request('sort')) <input type="hidden" name="sort" value="{{ request('sort') }}"> @endif
-            <div class="filter-group">
-                <p class="label">Qiymət</p>
-                <label class="filter-row">Minimum <input type="number" name="min_price" min="0" value="{{ request('min_price') }}" placeholder="0 ₼"></label>
-                <label class="filter-row">Maksimum <input type="number" name="max_price" min="0" value="{{ request('max_price') }}" placeholder="2400 ₼"></label>
-            </div>
-            <div class="filter-group">
-                <p class="label">Ətrin növü</p>
-                @foreach($types as $type)
-                    <label class="filter-row"><input type="radio" name="type" value="{{ $type->id }}" @checked((int)request('type') === $type->id)>
-                        {{ $type->{'name_' . app()->getLocale()} ?: $type->name_az }}</label>
+
+        <div class="sidebar-stack">
+            <select class="brand-select select2" aria-label="Brend seç" onchange="if(this.value) window.location.href=this.value">
+                <option value="">Brend Seç</option>
+                @foreach($allBrands as $brand)
+                    <option value="{{ route('brand.products', ['slug' => $brand->slug]) }}">{{ $brand->name }}</option>
                 @endforeach
+            </select>
+
+            @include('frontend.new.includes.filter-form')
+
+            <div id="sidebarExtras">
+                @if(isset($recommendedProducts) && $recommendedProducts->count())
+                    <div class="side-panel filter-card" data-collapsible-panel>
+                        <button type="button" class="side-panel__toggle" data-panel-toggle aria-expanded="false" aria-controls="recommendedPanelBody">
+                            <h3>Tövsiyə olunanlar</h3>
+                            <svg class="side-panel__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+
+                        <div class="side-panel__body" id="recommendedPanelBody">
+                            @foreach($recommendedProducts as $item)
+                                @php
+                                    $itemVariant = $item->variants->where('active', 1)->first();
+                                @endphp
+                                <a href="{{ route('newproduct', $item->slug) }}" class="mini-card">
+                                    <div class="mini-thumb">
+                                        @if($item->images->first())
+                                            <img src="{{ asset('frontend/uploads/products/' . $item->images->first()->image) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:contain;">
+                                        @else
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
+                                        @endif
+                                    </div>
+                                    <div class="mini-info">
+                                        <p class="n">{{ $item->name }}</p>
+                                        <p class="p">{{ $itemVariant ? number_format((float) $itemVariant->price, 2) : '' }} ₼</p>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if(isset($bestSellers) && $bestSellers->count())
+                <div class="side-panel filter-card" data-collapsible-panel>
+                    <button type="button" class="side-panel__toggle" data-panel-toggle aria-expanded="false" aria-controls="bestSellersPanelBody">
+                        <h3>Ən çox satılanlar</h3>
+                        <svg class="side-panel__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+
+                    <div class="side-panel__body" id="bestSellersPanelBody">
+                        @foreach($bestSellers as $item)
+                            @php
+                                $itemVariant = $item->variants->where('active', 1)->first();
+                            @endphp
+                            <a href="{{ route('newproduct', $item->slug) }}" class="mini-card">
+                                <div class="mini-thumb">
+                                    @if($item->images->first())
+                                        <img src="{{ asset('frontend/uploads/products/' . $item->images->first()->image) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:contain;">
+                                    @else
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
+                                    @endif
+                                </div>
+                                <div class="mini-info">
+                                    <p class="n">{{ $item->name }}</p>
+                                    <p class="p">{{ $itemVariant ? number_format((float) $itemVariant->price, 2) : '' }} ₼</p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             </div>
-            <button type="submit" class="btn btn-dark">Filtrlə</button>
-            <a class="filter-clear" href="{{ route('newhome') }}">Sıfırla</a>
-        </form>
+        </div>
 
         <div>
             <div class="toolbar">
                 <span>{{ $products->total() }} nəticə</span>
+
+                @if(isset($selectedBrand))
+                    <span class="toolbar-brand">{{ $selectedBrand->name }}</span>
+                @endif
+
                 <form method="GET" action="{{ route('newhome') }}">
                     @foreach(request()->except('sort', 'page') as $key => $value)
                         @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
@@ -95,8 +133,6 @@
                     @endphp
                     <div class="card" data-href="{{ route('newproduct', $product->slug) }}">
                         <div class="thumb">
-                            @if($firstVariant)<span class="badge">{{ $firstVariant->size?->{'name_' . $locale} ?? $firstVariant->size?->name_az }}</span>@endif
-
                             <div class="thumb-actions">
                                 <button
                                     type="button"
@@ -155,21 +191,7 @@
     </div>
     {{ $products->links('frontend.include.pagination') }}
 
+    <div id="sidebarExtrasMobileSlot"></div>
 
-    <div class="hero-banner">
-        @if(!empty($banners['bottomweb']['image']))
-            @if(!empty($banners['bottomweb']['url']))
-                <a class="hero-banner__link hero-banner__link--desktop" href="{{ $banners['bottomweb']['url'] }}" aria-label="Banner linki"><img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['bottomweb']['image']) }}" alt="Parfumshop banner"></a>
-            @else
-                <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['bottomweb']['image']) }}" alt="Parfumshop banner">
-            @endif
-        @endif
-        @if(!empty($banners['bottommobile']['image']))
-            @if(!empty($banners['bottommobile']['url']))
-                <a class="hero-banner__link hero-banner__link--mobile" href="{{ $banners['bottommobile']['url'] }}" aria-label="Banner linki"><img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['bottommobile']['image']) }}" alt="Parfumshop mobil banner"></a>
-            @else
-                <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['bottommobile']['image']) }}" alt="Parfumshop mobil banner">
-            @endif
-        @endif
-    </div>
+    @include('frontend.new.includes.bottom-banners')
 @endsection

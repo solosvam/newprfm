@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Banners;
 use App\Models\Product\Brand;
 use App\Models\Product\Category;
+use App\Models\Product\Gender;
 use App\Models\Product\Type;
 use App\Models\CreditPeriod;
 use App\Models\Faq;
@@ -22,6 +23,7 @@ class NewMainController extends Controller
         $banners = Banners::where('active', 1)->get();
         $selectedCategory = null;
         $categories = Category::where('active', 1)->orderBy('id')->get();
+        $genders = Gender::all();
         $types = Type::orderBy('id')->get();
         $brands = Brand::query()
             ->where('active', 1)
@@ -33,8 +35,55 @@ class NewMainController extends Controller
             ->orderBy('name')
             ->limit(12)
             ->get();
+        $allBrands = Brand::where('active',1)->get();
         $selectedBrand = $request->integer('brand');
         $search = trim((string) $request->input('q', ''));
+
+        $recommendedProducts = Product::with([
+            'brand',
+            'type',
+            'images',
+            'variants' => fn ($query) => $query
+                ->where('active', 1)
+                ->orderBy('price'),
+            'variants.size',
+        ])
+            ->where('active', 1)
+            ->whereHas('variants', fn ($query) => $query->where('active', 1))
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
+        $bestSellers = Product::with([
+            'brand',
+            'type',
+            'images',
+            'variants' => fn ($query) => $query
+                ->where('active', 1)
+                ->orderBy('price'),
+            'variants.size',
+        ])
+            ->where('active', 1)
+            ->whereHas('variants', fn ($query) => $query->where('active', 1))
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
+//        $bestSellers = Product::with([
+//            'brand',
+//            'type',
+//            'images',
+//            'variants' => fn ($query) => $query
+//                ->where('active', 1)
+//                ->orderBy('price'),
+//            'variants.size',
+//        ])
+//            ->where('active', 1)
+//            ->whereHas('variants', fn ($query) => $query->where('active', 1))
+//            ->withSum('orderItems as sold_count', 'quantity')
+//            ->orderByDesc('sold_count')
+//            ->limit(6)
+//            ->get();
 
         $query = Product::with([
             'brand',
@@ -146,6 +195,10 @@ class NewMainController extends Controller
             'categories' => $categories,
             'brands' => $brands,
             'types' => $types,
+            'genders' => $genders,
+            'allBrands' => $allBrands,
+            'bestSellers' => $bestSellers,
+            'recommendedProducts' => $recommendedProducts
         ]);
     }
 

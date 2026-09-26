@@ -16,3 +16,6 @@
 <link rel="stylesheet" href="{{ asset('frontend/new/css/theme-dark.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/new/css/main.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/new/css/responsive.css') }}">
+<link rel="stylesheet" href="{{ asset('frontend/new/css/vendor/select2.min.css') }}"/>
+<link rel="stylesheet" href="{{ asset('frontend/new/css/vendor/select2-bootstrap4.min.css') }}"/>
+@yield('css')

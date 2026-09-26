@@ -260,6 +260,109 @@
         if (card && !event.target.closest('a, button, input, select')) window.location.href = card.dataset.href;
     });
 
+    document.addEventListener('click', function (e) {
+        const toggle = e.target.closest('[data-filter-toggle]');
+        if (toggle) {
+            const body = document.getElementById(toggle.getAttribute('aria-controls'));
+            const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', String(!isOpen));
+            body.hidden = isOpen;
+            return;
+        }
+
+        const expandBtn = e.target.closest('[data-filter-expand]');
+        if (expandBtn) {
+            const more = expandBtn.nextElementSibling;
+            more.hidden = !more.hidden;
+            expandBtn.textContent = more.hidden ? 'Bütün qoxu ailələri' : 'Daha az göstər';
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        const panelToggle = e.target.closest('[data-panel-toggle]');
+        if (panelToggle) {
+            const panel = panelToggle.closest('[data-collapsible-panel]');
+            const isOpen = panel.classList.toggle('is-open');
+            panelToggle.setAttribute('aria-expanded', String(isOpen));
+        }
+    });
+
+    document.querySelectorAll('[data-price-slider]').forEach(function (slider) {
+        const minInput = slider.querySelector('[data-price-min-range]');
+        const maxInput = slider.querySelector('[data-price-max-range]');
+        const rangeEl = slider.querySelector('[data-price-range]');
+        const wrapper = slider.parentElement;
+        const minLabel = wrapper.querySelector('[data-price-min-label]');
+        const maxLabel = wrapper.querySelector('[data-price-max-label]');
+        const minHidden = wrapper.querySelector('[data-price-min-hidden]');
+        const maxHidden = wrapper.querySelector('[data-price-max-hidden]');
+
+        const min = parseFloat(slider.dataset.min);
+        const max = parseFloat(slider.dataset.max);
+        const minGap = parseFloat(slider.dataset.step) || 1;
+
+        function update() {
+            let minVal = parseFloat(minInput.value);
+            let maxVal = parseFloat(maxInput.value);
+
+            if (maxVal - minVal < minGap) {
+                if (this === minInput) {
+                    minVal = maxVal - minGap;
+                    minInput.value = minVal;
+                } else {
+                    maxVal = minVal + minGap;
+                    maxInput.value = maxVal;
+                }
+            }
+
+            const minPercent = ((minVal - min) / (max - min)) * 100;
+            const maxPercent = ((maxVal - min) / (max - min)) * 100;
+
+            rangeEl.style.left = minPercent + '%';
+            rangeEl.style.right = (100 - maxPercent) + '%';
+
+            minLabel.textContent = minVal + ' ₼';
+            maxLabel.textContent = maxVal + ' ₼';
+            minHidden.value = minVal;
+            maxHidden.value = maxVal;
+        }
+
+        minInput.addEventListener('input', update);
+        maxInput.addEventListener('input', update);
+        update();
+    });
+
+    const languageSwitcher = document.getElementById('languageSwitcher');
+
+    if (languageSwitcher) {
+        languageSwitcher.addEventListener('change', async function () {
+            const selectedLocale = this.value;
+            const previousLocale = this.dataset.currentLocale;
+            this.disabled = true;
+
+            try {
+                const response = await fetch(this.dataset.changeUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ locale: selectedLocale })
+                });
+
+                if (!response.ok) throw new Error('Language change failed');
+
+                window.location.reload();
+            } catch (error) {
+                this.value = previousLocale;
+                this.disabled = false;
+                console.error(error);
+            }
+        });
+    }
+
     document.addEventListener('auxclick', event => {
         const card = event.target.closest('.card[data-href]');
         if (event.button === 1 && card && !event.target.closest('button, a')) window.open(card.dataset.href, '_blank', 'noopener');
@@ -269,4 +372,25 @@
     updateCounts();
     syncFavorites();
     if (document.querySelector('[data-review-errors]')) document.querySelector('[data-review-modal]')?.showModal();
+
+    (function initSidebarExtrasPlacement() {
+        const extras = document.getElementById('sidebarExtras');
+        const mobileSlot = document.getElementById('sidebarExtrasMobileSlot');
+        if (!extras || !mobileSlot) return;
+
+        const desktopParent = extras.parentElement;
+        const desktopNextSibling = extras.nextSibling;
+        const mq = window.matchMedia('(max-width: 1024px)');
+
+        function place(isMobile) {
+            if (isMobile) {
+                if (!mobileSlot.contains(extras)) mobileSlot.appendChild(extras);
+            } else {
+                if (!desktopParent.contains(extras)) desktopParent.insertBefore(extras, desktopNextSibling);
+            }
+        }
+
+        place(mq.matches);
+        mq.addEventListener('change', e => place(e.matches));
+    })();
 })();

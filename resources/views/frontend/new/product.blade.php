@@ -166,7 +166,7 @@
     <div class="section-head" style="margin-top:40px;">
         <h2>Bənzər məhsullar</h2>
     </div>
-    <div class="grid">
+    <div class="grid similar-products">
         @foreach ($similarProducts ?? [] as $item)
             <div class="card" data-href="{{ route('newproduct', $item->slug) }}">
                 <div class="thumb">

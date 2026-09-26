@@ -110,7 +110,7 @@
     "cart_remove_from_cart": "Səbətdən sil",
     "checkout_delivery_address": "Çatdırılma ünvanı",
     "checkout_add_new_address": "+ Yeni ünvan əlavə et",
-    "checkout_address_name_home_work": "Ünvan adı (Ev, İş...)",
+    "checkout_address_name_home_work": "Ünvan adı (Ev, İş...) *",
     "checkout_city": "Şəhər *",
     "checkout_district": "Rayon",
     "checkout_street_and_address": "Küçə və ünvan *",

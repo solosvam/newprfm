@@ -175,7 +175,7 @@
     "cart_remove_from_cart": "Remove from cart",
     "checkout_delivery_address": "Delivery address",
     "checkout_add_new_address": "+ Add new address",
-    "checkout_address_name_home_work": "Address name (Home, Work...)",
+    "checkout_address_name_home_work": "Address name (Home, Work...) *",
     "checkout_city": "City *",
     "checkout_district": "District",
     "checkout_street_and_address": "Street and address *",

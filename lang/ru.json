@@ -175,7 +175,7 @@
     "cart_remove_from_cart": "Удалить из корзины",
     "checkout_delivery_address": "Адрес доставки",
     "checkout_add_new_address": "+ Добавить новый адрес",
-    "checkout_address_name_home_work": "Название адреса (Дом, Работа...)",
+    "checkout_address_name_home_work": "Название адреса (Дом, Работа...) *",
     "checkout_city": "Город *",
     "checkout_district": "Район",
     "checkout_street_and_address": "Улица и адрес *",

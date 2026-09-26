@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product\Brand;
+use App\Models\Product\Category;
+use App\Models\Product\Gender;
 use App\Models\Product\Product;
 use App\Models\Banners;
+use App\Models\Product\Type;
 use App\Services\SeoUrl;
 use Illuminate\Http\Request;
 
@@ -56,10 +59,30 @@ class BrandsController extends Controller
             $formattedBanners[$banner->location . $banner->device] = $banner->imageForLocale();
         }
 
-        return view('frontend.main', [
+        $brands = Brand::query()
+            ->where('active', 1)
+            ->withCount([
+                'products as products_count' => fn ($query) => $query->where('active', 1),
+            ])
+            ->having('products_count', '>', 0)
+            ->orderByDesc('products_count')
+            ->orderBy('name')
+            ->limit(12)
+            ->get();
+        $allBrands = Brand::where('active',1)->get();
+        $categories = Category::where('active', 1)->orderBy('id')->get();
+        $genders = Gender::all();
+        $types = Type::orderBy('id')->get();
+
+        return view('frontend.new.home', [
             'banners' => $formattedBanners,
             'products' => $products,
             'selectedBrand' => $brand,
+            'brands' => $brands,
+            'allBrands' => $allBrands,
+            'categories' => $categories,
+            'genders' => $genders,
+            'types' => $types,
         ]);
     }
 }
