@@ -14,6 +14,8 @@ class ProductSearchTermsTable {
 
         this._datatable = jQuery('#datatableProductSearchTerms').DataTable({
             scrollX: true,
+            scrollY: '620px',
+            scrollCollapse: true,
             info: false,
             processing: true,
             ajax: {
