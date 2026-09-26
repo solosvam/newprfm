@@ -59,9 +59,6 @@
                                 @foreach(['az' => 'Azərbaycan', 'en' => 'English', 'ru' => 'Русский'] as $locale => $label)
                                     @php
                                         $filename = $banner->{'url_' . $locale};
-                                        if ($locale === 'az' && !$filename) {
-                                            $filename = $banner->url;
-                                        }
                                     @endphp
                                     <div class="mb-3 row">
                                         <label class="col-lg-2 col-md-3 col-sm-4 col-form-label">
