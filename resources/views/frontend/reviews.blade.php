@@ -1,22 +1,22 @@
-@extends('frontend.layout')
+@extends('frontend.layouts.app')
 
 @section('content')
     <main>
-        <div class="container">
-            <div class="cabinet">
+        <div class="wrap">
+            <div class="account-layout">
                 @include('frontend.partials.cabinet-sidebar', ['pageTitle' => __('reviews_my_reviews')])
 
-                <section class="cabinet__comments" aria-label="{{ __('reviews_my_reviews') }}">
+                <section class="account-panel" aria-label="{{ __('reviews_my_reviews') }}">
+                    <h1 class="account-panel-title">{{ __('reviews_my_reviews') }}</h1>
+
                     @if(session('success'))
-                        <div class="review-alert" role="status">{{ session('success') }}</div>
+                        <div class="form-alert form-alert-success" role="status">{{ session('success') }}</div>
                     @endif
+
                     @if($reviews->isEmpty())
-                        <div class="cabinet-content-empty">
-                            <h2>{{ __('reviews_my_reviews') }}</h2>
-                            <p>{{ __('reviews_you_haven_t_written_any_reviews_yet') }}</p>
-                        </div>
+                        <p class="account-card-empty">{{ __('reviews_you_haven_t_written_any_reviews_yet') }}</p>
                     @else
-                        <ul class="cabinet__comments__list">
+                        <ul class="review-list">
                             @foreach($reviews as $review)
                                 @php
                                     $product = $review->product;
@@ -26,22 +26,24 @@
                                 @endphp
 
                                 <li class="review-entry">
-                                    <time class="review-entry__date" datetime="{{ $review->created_at->toDateString() }}">
-                                        {{ $review->created_at->locale(app()->getLocale())->translatedFormat('j F Y') }}
-                                    </time>
+                                    <div class="review-entry__head">
+                                        <time class="review-entry__date" datetime="{{ $review->created_at->toDateString() }}">
+                                            {{ $review->created_at->locale(app()->getLocale())->translatedFormat('j F Y') }}
+                                        </time>
 
-                                    <div class="review-entry__actions">
-                                        @if($review->active)
-                                            <span class="review-entry__status review-entry__status--approved">{{ __('reviews_approved') }}</span>
-                                        @else
-                                            <span class="review-entry__status review-entry__status--pending">{{ __('reviews_pending_approval') }}</span>
-                                            <form method="POST" action="{{ route('profile.reviews.destroy', $review) }}"
-                                                  onsubmit="return confirm('{{ __('reviews_confirm_delete') }}')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="review-entry__delete">{{ __('reviews_delete') }}</button>
-                                            </form>
-                                        @endif
+                                        <div class="review-entry__actions">
+                                            @if($review->active)
+                                                <span class="review-entry__status review-entry__status--approved">{{ __('reviews_approved') }}</span>
+                                            @else
+                                                <span class="review-entry__status review-entry__status--pending">{{ __('reviews_pending_approval') }}</span>
+                                                <form method="POST" action="{{ route('profile.reviews.destroy', $review) }}"
+                                                      onsubmit="return confirm('{{ __('reviews_confirm_delete') }}')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="review-entry__delete">{{ __('reviews_delete') }}</button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     <article class="review-entry__card">

@@ -105,7 +105,7 @@ class CategoryController extends Controller
             ->limit(6)
             ->get();
 
-        return view('frontend.new.home', [
+        return view('frontend.home', [
             'banners' => $formattedBanners,
             'products' => $products,
             'categories' => $categories,

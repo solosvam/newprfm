@@ -13,7 +13,7 @@
             <h4>Kateqoriyalar</h4>
             <ul>
                 @foreach(\App\Models\Product\Category::where('active', 1)->orderBy('id')->get() as $category)
-                    <li><a href="{{ route('newhome', ['category' => $category->id]) }}">{{ $category->{'name_' . app()->getLocale()} ?: $category->name_az }}</a></li>
+                    <li><a href="{{ route('home', ['category' => $category->id]) }}">{{ $category->{'name_' . app()->getLocale()} ?: $category->name_az }}</a></li>
                 @endforeach
             </ul>
         </div>

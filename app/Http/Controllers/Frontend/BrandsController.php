@@ -23,7 +23,7 @@ class BrandsController extends Controller
                 return strtoupper(substr($brand->name, 0, 1)); // İlk hərfə görə qrupla
             });
 
-        return view('frontend.new.brands', compact('brands'));
+        return view('frontend.brands', compact('brands'));
     }
     public function products(string $slug)
     {
@@ -104,7 +104,7 @@ class BrandsController extends Controller
             ->limit(6)
             ->get();
 
-        return view('frontend.new.home', [
+        return view('frontend.home', [
             'banners' => $formattedBanners,
             'products' => $products,
             'selectedBrand' => $brand,

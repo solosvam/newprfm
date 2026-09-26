@@ -14,7 +14,7 @@ class CreditProfileController extends Controller
 
     public function edit(Request $request)
     {
-        return view('frontend.new.credit-profile', [
+        return view('frontend.credit-profile', [
             'profile' => $request->user()->creditProfile,
         ]);
     }

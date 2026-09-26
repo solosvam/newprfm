@@ -1,52 +1,34 @@
-@extends('frontend.layout')
+@extends('frontend.layouts.app')
+
 @section('content')
-    <div class="container">
-        <!-- Breadcrumb -->
-        <div class="breadcrumb-for-brands-page">
-            <ul>
-                <li>
-                    <a href="#" onclick="window.history.back()">
-                        <img src="{{asset('frontend/images/arrow-left.svg')}}" alt="" />
-                        <span>{{ __('cart_go_back') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <ul>
-                        <li>
-                            <a href="{{route('home')}}">
-                                <img src="{{asset('frontend/images/home.svg')}}" alt="" />
-                            </a>
-                        </li>
-                        <li>
-                            <img src="{{asset('frontend/images/arrow-right.svg')}}" class="arrow" alt="" />
-                        </li>
-                        <li>
-                            <a href="{{route('brands')}}">{{ __('reviews_brands') }}</a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-        <div class="home-page">
-            @include('frontend.include.left')
-            <div class="main-right">
-                <div class="brands-section">
-                    @foreach ($brands as $letter => $group)
-                    <div class="brands-list">
-                        <h2>{{ $letter }}</h2>
-                        <ul>
-                            @foreach ($group as $brand)
-                                <li>
-                                    <a href="{{ route('brand.products', \App\Services\SeoUrl::generateImageName(['id' => $brand->id, 'title' => $brand->name])) }}">
-                                        {{ $brand->name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
+    <main>
+        <div class="wrap">
+            <div class="account-layout">
+                @include('frontend.partials.brands-left')
+
+                <div>
+                    <div class="section-head">
+                        <h1>{{ __('reviews_brands') }}</h1>
                     </div>
-                    @endforeach
+
+                    <div class="brand-groups">
+                        @foreach ($brands as $letter => $group)
+                            <div class="brand-group">
+                                <span class="brand-group__letter">{{ $letter }}</span>
+                                <ul class="brand-group__list">
+                                    @foreach ($group as $brand)
+                                        <li>
+                                            <a href="{{ route('brand.products', $brand->slug) }}">
+                                                {{ $brand->name }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 @endsection

@@ -1,10 +1,10 @@
-@extends('frontend.new.layouts.app')
+@extends('frontend.layouts.app')
 
 @section('content')
     <main>
         <div class="wrap">
             <div class="account-layout">
-                @include('frontend.new.partials.cabinet-sidebar', ['pageTitle' => __('bonus_bonus_history')])
+                @include('frontend.partials.cabinet-sidebar', ['pageTitle' => __('bonus_bonus_history')])
 
                 <div class="account-panel">
                     <div class="bonus-head">

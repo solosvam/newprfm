@@ -85,6 +85,6 @@
         </form>
     @else
         <p>{{ __('product_sign_in_to_leave_a_review') }}</p>
-        <a class="btn btn-dark" href="{{ route('front.login', ['redirect' => route('newproduct', $product->slug) . '#reviews']) }}">{{ __('auth_sign_in') }}</a>
+        <a class="btn btn-dark" href="{{ route('front.login', ['redirect' => route('product', $product->slug) . '#reviews']) }}">{{ __('auth_sign_in') }}</a>
     @endauth
 </dialog>

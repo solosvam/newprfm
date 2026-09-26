@@ -18,7 +18,7 @@ class AuthController extends Controller
 {
     public function login()
     {
-        return view('frontend.new.login');
+        return view('frontend.login');
     }
 
     public function checkMobile(Request $request, SmsService $sms)
@@ -140,12 +140,12 @@ class AuthController extends Controller
 
     public function profile()
     {
-        return view('frontend.new.profile');
+        return view('frontend.profile');
     }
 
     public function personal()
     {
-        return view('frontend.new.personal');
+        return view('frontend.personal');
     }
 
     public function updatePersonal(Request $request)
@@ -188,7 +188,7 @@ class AuthController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('frontend.new.orders', compact('orders'));
+        return view('frontend.orders', compact('orders'));
     }
 
     public function order(Order $order)
@@ -214,7 +214,7 @@ class AuthController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('frontend.new.bonus', compact('transactions'));
+        return view('frontend.bonus', compact('transactions'));
     }
 
 
@@ -225,7 +225,7 @@ class AuthController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('frontend.new.reviews', compact('reviews'));
+        return view('frontend.reviews', compact('reviews'));
     }
 
     public function destroyReview(ProductReview $review)

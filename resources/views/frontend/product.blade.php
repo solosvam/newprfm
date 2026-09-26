@@ -1,4 +1,11 @@
-@extends('frontend.layout')
+@extends('frontend.layouts.app')
+
+@section('title', $product->name . ' | parfumshop')
+
+@section('subnav')
+    @include('frontend.partials.subnav')
+@endsection
+
 @section('content')
     @php
         $locale = app()->getLocale();
@@ -9,357 +16,191 @@
         $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
         $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
         $initialPrice = (float) ($firstVariant?->price ?? 0);
-        $birbankMonth = 6;
-        $birbankTotal = $initialPrice;
+
+        // İlk (ən qısa) taksit müddətini defolt aktiv qəbul edirik
+        $firstPeriod = $creditPeriods->first();
     @endphp
-    <main id="product-details">
-        <div class="container">
-            <div class="details-page">
-                <div class="breadcrumb">
-                    <ul>
-                        <li>
-                            <a href="{{ route('home') }}">
-                                <img src="{{ asset('frontend/images/home.svg') }}" alt="Ana səhifə" />
-                            </a>
-                        </li>
-                        <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
-                        @if($product->brand)
-                            <li>
-                                <a href="{{ route('brand.products', \App\Services\SeoUrl::generateImageName(['id' => $product->brand->id, 'title' => $product->brand->name])) }}">{{ $product->brand->name }}</a>
-                            </li>
-                            <li><img src="{{ asset('frontend/images/arrow-right.svg') }}" alt="" /></li>
-                        @endif
-                        <li class="current"><span>{{ $product->name }}</span></li>
-                    </ul>
-                </div>
-                <div class="product-title">
-                    <h1>{{$product->name}}</h1>
-                    <span>{{$product->brand->name}}</span>
-                    <span>{{ $genderName }}{{ $genderName && $typeName ? ' | ' : '' }}{{ $typeName }}</span>
-                </div>
-                <div class="details-wrap">
-                    <div class="product-image">
-                        <ul class="left">
-                            @foreach($product->images as $image)
-                            <li>
-                                <img src="{{ asset('frontend/uploads/products/' . $image->image) }}" alt="" />
-                            </li>
-                            @endforeach
-                        </ul>
-                        <div class="main">
-                            <div class="main__actions">
-                                <img src="{{asset('frontend/images/share.svg')}}" alt="" />
-                                <button type="button" class="favorite-toggle" data-product-id="{{ $product->id }}" aria-label="{{ __('wishlist_add_to_favorites') }}"><img src="{{asset('frontend/images/product-card-wishlist.svg')}}" alt="" /></button>
-                            </div>
-                            @if($firstImage)
-                                <img class="main-img" src="{{ asset('frontend/uploads/products/' . $firstImage->image) }}" alt="{{ $product->brand?->name }} {{ $product->name }}"/>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="product-info">
-                        <h1>
-                            {{ number_format($firstVariant?->price ?? 0, 2) }} <img src="{{asset('frontend/images/manat.svg')}}" alt="manat symbol" />
-                        </h1>
-                        <div class="product-stars">
-                            <ul>
-                                <li>
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                </li>
-                                <li>
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                </li>
-                                <li>
-                                    <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                </li>
-                                <li>
-                                    <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                </li>
-                                <li>
-                                    <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="product-size-amount">
-                            <ul>
-                                @foreach($variants as $variant)
-                                    <li class="{{ $loop->first ? 'active-size-amount' : '' }}"
-                                        data-variant-id="{{ $variant->id }}"
-                                        data-price="{{ $variant->price }}">
-                                        <span>{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                            <div class="amount">
-                                <small>{{ __('product_quantity') }}</small>
-                                <div class="amount-input">
-                                    <span id="decrease">-</span>
-                                    <span class="count">1</span>
-                                    <span id="increase">+</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="product-info-actions">
-                            <button type="button" id="addToCartButton" data-product-id="{{ $product->id }}">{{ __('product_add_to_cart_2') }}</button>
-                            <div>
-                                <span></span>
-                                <p>{{ __('product_or') }}</p>
-                                <span></span>
-                            </div>
-                            <button>{{ __('product_order_in_one_click') }}</button>
-                        </div>
-                        <div class="product-shipping-info">
-                            <img class="shipping-info-icon" src="{{asset('frontend/images/info.svg')}}" alt=""/>
-                            <span>{{ __('product_free_delivery_within_baku') }} <span class="shipping-tooltip">{{ __('product_delivery_may_take_30_minutes_to_2_hours_depending_on_the_add') }}</span></span>
-                        </div>
-                    </div>
-                    <div class="product-taksit-table">
-                        <div class="birbank-banner">
-                            <img src="{{asset('frontend/images/birbank.png')}}" alt="" />
-                            <div>
-                                <h1><span id="birbankMonthly">{{ number_format($birbankTotal / $birbankMonth, 2) }}</span> AZN x <span id="birbankMonth">{{ $birbankMonth }}</span> ay</h1>
-                                <p>
-                                    Birbank taksit kartı ilə aktiv kredit müddətlərindən birini seçərək ödə!
-                                </p>
-                            </div>
-                        </div>
-                        <div class="taksit-table">
-                            <table class="table-container">
-                                <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>{{ __('product_term') }}</th>
-                                    <th>{{ __('product_monthly') }}</th>
-                                    <th>{{ __('product_price') }}</th>
-                                </tr>
-                                </thead>
-                                <tbody id="installmentRows">
-                                @foreach($creditPeriods as $period)
-                                    @php
-                                        $rate = (float) $period->interest_rate;
-                                        $installmentTotal = $initialPrice + (($initialPrice * $rate) / 100);
-                                        $installmentMonthly = $installmentTotal / $period->month;
-                                    @endphp
-                                    <tr data-month="{{ $period->month }}" data-rate="{{ $rate }}">
-                                        <td class="radio-cell">
-                                            <input type="radio" name="duration" value="{{ $period->month }}" {{ $loop->first ? 'checked' : '' }} />
-                                        </td>
-                                        <td>{{ $period->month }} {{ __('product_month') }} @if($period->interest_rate == 0) {{ __('product_interest_free') }} @endif </td>
-                                        <td class="installment-monthly">{{ number_format($installmentMonthly, 2) }} ₼</td>
-                                        <td class="installment-total">{{ number_format($installmentTotal, 2) }} ₼</td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                            <button>{{ __('product_apply') }}</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="details-tab">
-                    <div class="tablinks">
-                        <button class="active">{{ __('product_about_the_perfume') }}</button>
-                        <button>{{ __('product_reviews') }} <span>{{ $product->reviews->count() }}</span></button>
-                    </div>
-                    <div class="tabcontents">
-                        <div class="content1">
-                            {!! nl2br(e($product->{'content_' . $locale} ?: $product->content_az)) !!}
-                        </div>
-                        <div class="content2">
-                            <h4><span>{{ __('product_reviews') }}</span> {{ $product->name }} {{ $product->brand?->name }}</h4>
-                            <div class="ratings-container">
-                                <div class="rating-summary">
-                                    <div class="average-rating">
-                                        <span class="rating-value">{{ number_format($ratingAverage, 1) }}</span>
-                                        <div class="stars">
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                        </div>
-                                    </div>
-                                    <button class="write-review" type="button">{{ __('product_write_a_review') }}</button>
-                                </div>
-                                <div class="rating-distribution">
-                                    @foreach([5, 4, 3, 2, 1] as $score)
-                                        @php
-                                            $count = $ratingCounts[$score] ?? 0;
-                                            $percent = $product->reviews->count()
-                                                ? round($count * 100 / $product->reviews->count())
-                                                : 0;
-                                        @endphp
-                                        <div class="rating-bar">
-                                            <div class="progress-bar">
-                                                <div class="filled" style="width: {{ $percent }}%"></div>
-                                            </div>
-                                            <span class="rating-count">{{ $count }}</span>
-                                            <div class="stars-label">
-                                                @for($star = 1; $star <= 5; $star++)
-                                                    <img src="{{ asset('frontend/images/' . ($star <= $score ? 'star-filled.svg' : 'star-outlined.svg')) }}" alt="">
-                                                @endfor
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="reviews-container">
-                        <div class="dropdown-container">
-                            <div class="header" id="dropdown-header">
-                                <h3>{{ __('product_latest_reviews') }}</h3>
-                                <div class="header-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160z"/></svg></div>
-                            </div>
-                        </div>
-                        <hr>
-                        <div id="reviewsList">
-                            @forelse($product->reviews as $review)
-                                <div class="review product-review {{ $loop->index >= 3 ? 'review-hidden' : '' }}">
-                                    <p>{{ $review->comment }}</p>
-                                    <div class="review-info">
-                                        <div class="stars">
-                                            @for($star = 1; $star <= 5; $star++)
-                                                <img src="{{ asset('frontend/images/' . ($star <= $review->rating ? 'star-filled.svg' : 'star-outlined.svg')) }}" alt="">
-                                            @endfor
-                                        </div>
-                                        <span class="name">{{ $review->customer?->name ?? 'Müştəri' }}</span>
-                                        <span class="date">{{ $review->created_at->format('d.m.Y') }}</span>
-                                    </div>
-                                </div>
-                            @empty
-                                <p class="no-reviews">{{ __('product_no_reviews_for_this_product_yet') }}</p>
-                            @endforelse
-                        </div>
-                        @if($product->reviews->count() > 3)
-                            <button class="load-more" type="button" id="loadMoreReviews">{{ __('product_show_more') }}</button>
-                        @endif
-                    </div>
-                </div>
+    <p class="crumb"><a href="{{ route('home') }}">Ana səhifə</a> / <a href="#">{{ $product->brand?->name }}</a> / {{ $product->name }}</p>
 
-                <div class="similar-products">
-                    <h1 class="similar-products__title">{{ __('product_similar_products') }}</h1>
-                    <div class="similar-products__list">
-                        @forelse($similarProducts as $similar)
-                            @php
-                                $similarImage = $similar->images->first();
-                                $similarVariant = $similar->variants->first();
-                                $similarGender = $similar->genders->first();
-                                $similarGenderName = $similarGender ? ($similarGender->{'name_' . $locale} ?? $similarGender->name_az) : null;
-                                $similarTypeName = $similar->type ? ($similar->type->{'name_' . $locale} ?? $similar->type->name_az) : null;
-                            @endphp
-                            <div class="product-item">
-                                <div class="product-item__image">
-                                    <div class="product-item__image__actions">
-                                        <img src="{{ asset('frontend/images/share.svg') }}" alt="">
-                                        <img src="{{ asset('frontend/images/product-card-wishlist.svg') }}" alt="">
-                                    </div>
-                                    <a href="{{ route('product', $similar->slug) }}">
-                                        @if($similarImage)
-                                            <img class="product-main-image" src="{{ asset('frontend/uploads/products/' . $similarImage->image) }}" alt="{{ $similar->brand?->name }} {{ $similar->name }}">
-                                        @endif
-                                    </a>
-                                </div>
-                                <div class="product-item__info">
-                                    <div class="title">
-                                        <h1><a href="{{ route('product', $similar->slug) }}">{{ $similar->name }}</a></h1>
-                                        <span>{{ $similar->brand?->name }}</span>
-                                        <span>{{ $similarGenderName }}{{ $similarGenderName && $similarTypeName ? ' | ' : '' }}{{ $similarTypeName }}</span>
-                                        @if($similarVariant)
-                                            <span class="product-price">{{ $similarVariant->size?->{'name_' . $locale} ?? $similarVariant->size?->name_az }} / <span>{{ number_format($similarVariant->price, 2) }} ₼</span></span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <p>{{ __('product_no_products_with_similar_notes_found') }}</p>
-                        @endforelse
-                    </div>
+    <div class="product-top">
+        <div class="product-header">
+            <p class="subtitle" style="margin-bottom:0;color:var(--text-muted);font-size:13px;">{{ $product->brand?->name }}</p>
+            <h1 class="title">{{ $product->name }}</h1>
+            <p class="subtitle">{{ $genderName }} · {{ $typeName }}</p>
+        </div>
+
+        <div class="thumbs">
+            @foreach ($product->images as $image)
+                <div class="t {{ $loop->first ? 'active' : '' }}" data-thumb data-full="{{ asset('frontend/uploads/products/' . $image->image) }}">
+                    <img src="{{ asset('frontend/uploads/products/' . $image->image) }}" alt="">
                 </div>
+            @endforeach
+        </div>
+
+        <div class="main-image">
+            @if ($firstImage)
+                <img data-main-image src="{{ asset('frontend/uploads/products/' . $firstImage->image) }}" alt="{{ $product->brand?->name }} {{ $product->name }}">
+            @endif
+
+            <div class="thumb-actions">
+                <button type="button" class="icon-btn fav-btn" data-product-id="{{ $product->id }}" aria-label="Seçilmişlərə əlavə et">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                </button>
+                <button type="button" class="icon-btn share-btn" data-url="{{ route('product', $product->slug) }}" data-title="{{ $product->name }}" aria-label="Paylaş">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+                </button>
             </div>
         </div>
-    </main>
-@endsection
-@section('modal')
-    <!--OTHER SIZES FOR MOBILE-->
-    <div class="other-sizes-container-mobile">
-        <div class="other-sizes-overlay"></div>
-        <div class="other-sizes-content">
-            <div class="other-sizes-heading">
-                <img src="{{asset('frontend/images/close.svg')}}" alt="">
-                <span>{{ __('product_other_sizes') }}</span>
+
+        <div class="buy-core" data-buybox data-base-price="{{ $initialPrice }}">
+            <div class="stars" aria-label="{{ $ratingAverage }} / 5">
+                @for($star = 1; $star <= 5; $star++)
+                    <span>{{ $star <= round($ratingAverage) ? '★' : '☆' }}</span>
+                @endfor
+                <span style="color:var(--text-muted);font-size:12px;">({{ $product->reviews->count() }} rəy)</span>
             </div>
 
-            <div class="other-sizes-body">
-                <ul>
-                    <li>
-                        30 ml / <span>66.00 &#8380;</span>
-                    </li>
-                    <li>
-                        50 ml / <span> 96.00 &#8380; </span>
-                    </li>
-                    <li>
-                        90 ml / <span>218.00 &#8380;</span>
-                    </li>
-                    <li>
-                        110 ml / <span>251.00 &#8380;</span>
-                    </li>
-                    <li>
-                        130 ml / <span>294.00 &#8380;</span>
-                    </li>
-                </ul>
+            <div class="price-qty-row">
+                <p class="price-row" data-price-display>{{ number_format($initialPrice, 2) }} ₼</p>
+
+                <div class="qty">
+                    <button type="button" data-qty-action="minus">−</button>
+                    <span data-qty-value>1</span>
+                    <button type="button" data-qty-action="plus">+</button>
+                </div>
             </div>
+
+            <div class="size-pills">
+                @foreach ($variants as $variant)
+                    <span
+                        class="size-pill {{ $loop->first ? 'active-size-amount' : '' }}"
+                        data-variant-id="{{ $variant->id }}"
+                        data-price="{{ $variant->price }}"
+                    >{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
+                @endforeach
+            </div>
+
+            <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>Səbətə əlavə et</button>
+            <a class="btn btn-outline" href="{{ auth()->check() ? route('checkout') : route('front.login', ['redirect' => route('checkout')]) }}">Sifarişi rəsmiləşdir</a>
         </div>
-    </div>
-    <!--OTHER SIZES FOR MOBILE-->
 
-    <div id="reviewModal" class="review-modal">
-        <div class="review-modal__box">
-            <button type="button" class="review-modal__close">&times;</button>
-            <h3>{{ __('product_write_a_review') }}</h3>
-            @auth
-                <form method="POST" action="{{ route('product.review', $product->id) }}">
-                    @csrf
-                    <div class="review-rating">
-                        @for($i = 5; $i >= 1; $i--)
-                            <input type="radio" id="rating{{ $i }}" name="rating" value="{{ $i }}" {{ old('rating') == $i ? 'checked' : '' }}>
-                            <label for="rating{{ $i }}">★</label>
-                        @endfor
-                    </div>
-                    <textarea name="comment" rows="5" maxlength="2000" placeholder="{{ __('product_write_your_review') }}" required>{{ old('comment') }}</textarea>
-                    @error('rating')<small>{{ $message }}</small>@enderror
-                    @error('comment')<small>{{ $message }}</small>@enderror
-                    <button type="submit">{{ __('product_submit_review') }}</button>
-                </form>
-            @else
-                <p>{{ __('product_sign_in_to_leave_a_review') }}</p>
-                <a class="review-login" href="{{ route('front.login') }}">{{ __('auth_sign_in') }}</a>
-            @endauth
-        </div>
-    </div>
-
-    <!-- Pay by click Modal -->
-    <div id="payByClickModal" class="pay-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close pay-modal-close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <h1>{{ __('product_enter_your_mobile_number_to_complete_the_order') }}</h1>
-                <input type="tel" placeholder="{{ __('product_enter_your_mobile_number') }}" />
-                <div class="alert">
-                    <img src="{{asset('frontend/images/info.svg')}}" alt="" />
-                    <p>
-                        Diqqət ! Hörmətli müştərilər Bir kliklə sifariş sadəcə Nağd və
-                        Plastik kartla olan sifarişlər üçündür. Hissə hissə ödəniş
-                        müraciəti üçün "Müraciət et" düyməsini sıxın.
+        <div class="installment-full" data-installment>
+            <div class="installment-hero">
+                <img src="{{ asset('frontend/images/birbank-card.png') }}" alt="Birbank taksit kartı">
+                <div>
+                    <p class="headline" data-installment-headline>
+                        {{ number_format($initialPrice / 6, 2) }} ₼ x 6 ay
                     </p>
+                    <p class="sub">Birbank taksit kartı ilə aktiv kredit müddətlərindən birini seçərək ödə!</p>
                 </div>
-                <button>{{ __('product_apply') }}</button>
             </div>
+
+            <table class="installment-table">
+                <thead>
+                <tr><th></th><th>Müddət</th><th>Ayda</th><th>Qiymət</th></tr>
+                </thead>
+                <tbody>
+                @foreach ($creditPeriods as $period)
+                    @php
+                        $rate = (float) $period->interest_rate;
+                        $installmentTotal = $initialPrice + (($initialPrice * $rate) / 100);
+                        $installmentMonthly = $installmentTotal / $period->month;
+                    @endphp
+                    <tr class="{{ $loop->first ? 'active' : '' }}" data-month="{{ $period->month }}" data-rate="{{ $rate }}">
+                        <td>
+                            <input
+                                type="radio"
+                                name="installment"
+                                value="{{ $period->month }}"
+                                data-monthly="{{ $installmentMonthly }}"
+                                data-total="{{ $installmentTotal }}"
+                                {{ $loop->first ? 'checked' : '' }}
+                            >
+                        </td>
+                        <td>{{ $period->month }} ay{{ $rate == 0 ? ' Faizsiz' : '' }}</td>
+                        <td data-installment-monthly>{{ number_format($installmentMonthly, 2) }} ₼</td>
+                        <td data-installment-total>{{ number_format($installmentTotal, 2) }} ₼</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+
+            <a class="btn btn-dark" href="{{ auth()->check() ? route('profile.credit') : route('front.login', ['redirect' => route('profile.credit')]) }}">Müraciət et</a>
+        </div>
+
+    </div>
+
+    <div class="tabs" data-tabs @if(session('review_success') || $errors->has('rating') || $errors->has('comment')) data-show-reviews @endif>
+        <div class="tab-list">
+            <button type="button" class="tab-btn active" data-tab="about">Ətir haqqında</button>
+            <button type="button" class="tab-btn" data-tab="reviews">
+                Rəylər <span class="tab-count">{{ $product->reviews->count() }}</span>
+            </button>
+        </div>
+
+        <div class="tab-panel" data-tab-panel="about">
+            @php
+                $description = $product->{'content_' . $locale} ?: $product->content_az;
+                $ingredientNames = $product->ingredients
+                    ->map(fn ($ingredient) => $ingredient->{'name_' . $locale} ?: $ingredient->name_az)
+                    ->filter();
+            @endphp
+            @if($description)
+                <div class="product-description">{!! nl2br(e($description)) !!}</div>
+            @else
+                <p>Bu ətir haqqında təsvir hələ əlavə edilməyib.</p>
+            @endif
+            @if($ingredientNames->isNotEmpty())
+                <div class="notes">
+                    <div><p class="k">Ətir notları</p><p class="v">{{ $ingredientNames->join(', ') }}</p></div>
+                </div>
+            @endif
+        </div>
+
+        <div class="tab-panel" data-tab-panel="reviews" hidden>
+            @include('frontend.partials.product-reviews', ['product' => $product])
         </div>
     </div>
-    <!-- Pay by click Modal -->
-@endsection
-@section('page-scripts')
-    <script src="{{ asset('frontend/js/product.js') }}"></script>
+
+    <div class="section-head" style="margin-top:40px;">
+        <h2>Bənzər məhsullar</h2>
+    </div>
+    <div class="grid similar-products">
+        @foreach ($similarProducts ?? [] as $item)
+            <div class="card" data-href="{{ route('product', $item->slug) }}">
+                <div class="thumb">
+                    <div class="thumb-actions">
+                        <button
+                            type="button"
+                            class="icon-btn fav-btn"
+                            data-product-id="{{ $product->id }}"
+                            aria-label="Seçilmişlərə əlavə et"
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="icon-btn share-btn"
+                            data-url="{{ route('product', $product->slug) }}"
+                            data-title="{{ $product->name }}"
+                            aria-label="Paylaş"
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+                        </button>
+                    </div>
+
+                    @if ($item->images->first())
+                        <img src="{{ asset('frontend/uploads/products/' . $item->images->first()->image) }}" alt="{{ $item->name }}" loading="lazy">
+                    @else
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="34" height="34"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
+                    @endif
+                </div>
+                <p class="brandname">{{ $item->brand?->name }}</p>
+                <p class="pname">{{ $item->name }}</p>
+                <p class="price">{{ number_format((float) ($item->variants->first()?->price ?? 0), 2) }} ₼</p>
+            </div>
+        @endforeach
+    </div>
 @endsection

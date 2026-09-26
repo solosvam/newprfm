@@ -1,6 +1,6 @@
 <div class="wrap">
     <nav class="cats" aria-label="Kateqoriyalar">
-        <a href="{{ route('newhome') }}" class="{{ request()->routeIs('newhome') && empty($selectedCategory) && !request()->filled('category') ? 'active' : '' }}">Hamısı</a>
+        <a href="{{ route('home') }}" class="{{ request()->routeIs('home') && empty($selectedCategory) && !request()->filled('category') ? 'active' : '' }}">Hamısı</a>
         @foreach($categories ?? [] as $category)
             @php $name = $category->{'name_' . app()->getLocale()} ?: $category->name_az; @endphp
             <a href="{{ route('category', ['slug' => $category->slug]) }}"

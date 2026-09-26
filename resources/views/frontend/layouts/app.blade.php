@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" data-theme="light">
 <head>
-    @include('frontend.new.partials.head')
+    @include('frontend.partials.head')
 </head>
 <body data-auth="{{ auth()->check() ? 1 : 0 }}">
-@include('frontend.new.partials.nav')
+@include('frontend.partials.nav')
 
 <div class="wrap">
     @yield('content')
 </div>
 
-@include('frontend.new.partials.footer')
+@include('frontend.partials.footer')
 <script>
     window.parfumshopFlash = {
         success: @json(session('success') ?? session('review_success')),
@@ -24,7 +24,7 @@
         favoriteRemoved: @json(__('notification_removed_from_favorites'))
     };
 </script>
-@include('frontend.new.partials.theme-script')
+@include('frontend.partials.theme-script')
 @yield('page-scripts')
 </body>
 </html>

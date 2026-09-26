@@ -1,13 +1,13 @@
-@extends('frontend.new.layouts.app')
+@extends('frontend.layouts.app')
 
 @section('title', 'parfumshop — Ana səhifə')
 
 @section('subnav')
-    @include('frontend.new.partials.subnav')
+    @include('frontend.partials.subnav')
 @endsection
 
 @section('content')
-    @include('frontend.new.includes.top-banners')
+    @include('frontend.includes.top-banners')
 
     <div class="brands">
         @foreach ($brands as $brand)
@@ -29,7 +29,7 @@
                 @endforeach
             </select>
 
-            @include('frontend.new.includes.filter-form')
+            @include('frontend.includes.filter-form')
 
             <div id="sidebarExtras">
                 @if(isset($recommendedProducts) && $recommendedProducts->count())
@@ -44,7 +44,7 @@
                                 @php
                                     $itemVariant = $item->variants->where('active', 1)->first();
                                 @endphp
-                                <a href="{{ route('newproduct', $item->slug) }}" class="mini-card">
+                                <a href="{{ route('product', $item->slug) }}" class="mini-card">
                                     <div class="mini-thumb">
                                         @if($item->images->first())
                                             <img src="{{ asset('frontend/uploads/products/' . $item->images->first()->image) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:contain;">
@@ -74,7 +74,7 @@
                             @php
                                 $itemVariant = $item->variants->where('active', 1)->first();
                             @endphp
-                            <a href="{{ route('newproduct', $item->slug) }}" class="mini-card">
+                            <a href="{{ route('product', $item->slug) }}" class="mini-card">
                                 <div class="mini-thumb">
                                     @if($item->images->first())
                                         <img src="{{ asset('frontend/uploads/products/' . $item->images->first()->image) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:contain;">
@@ -106,7 +106,7 @@
                     <span class="toolbar-brand">{{ $selectedCategory->{'name_' . app()->getLocale()} ?: $selectedCategory->name_az }}</span>
                 @endif
 
-                <form method="GET" action="{{ route('newhome') }}">
+                <form method="GET" action="{{ route('home') }}">
                     @foreach(request()->except('sort', 'page') as $key => $value)
                         @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
                     @endforeach
@@ -135,7 +135,7 @@
                             ? ($product->type->{'name_' . $locale} ?? $product->type->name_az)
                             : null;
                     @endphp
-                    <div class="card" data-href="{{ route('newproduct', $product->slug) }}">
+                    <div class="card" data-href="{{ route('product', $product->slug) }}">
                         <div class="thumb">
                             <div class="thumb-actions">
                                 <button
@@ -150,7 +150,7 @@
                                 <button
                                     type="button"
                                     class="icon-btn share-btn"
-                                    data-url="{{ route('newproduct', $product->slug) }}"
+                                    data-url="{{ route('product', $product->slug) }}"
                                     data-title="{{ $product->name }}"
                                     aria-label="Paylaş"
                                 >
@@ -193,9 +193,9 @@
             </div>
         </div>
     </div>
-    {{ $products->links('frontend.include.pagination') }}
+    {{ $products->links('frontend.includes.pagination') }}
 
     <div id="sidebarExtrasMobileSlot"></div>
 
-    @include('frontend.new.includes.bottom-banners')
+    @include('frontend.includes.bottom-banners')
 @endsection

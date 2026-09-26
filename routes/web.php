@@ -12,7 +12,6 @@ use App\Http\Controllers\Frontend\FavoriteController;
 use App\Http\Controllers\Frontend\CreditProfileController;
 use App\Http\Controllers\Frontend\SearchController;
 
-use App\Http\Controllers\Frontend\NewMainController;
 use Illuminate\Validation\Rule;
 
 Route::post('/language', function (Request $request) {
@@ -27,11 +26,6 @@ Route::post('/language', function (Request $request) {
 
 Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 Route::post('/search/click', [SearchController::class, 'click'])->name('search.click');
-
-
-// NEW START
-Route::get('/newhome',[NewMainController::class,'index'])->name('newhome');
-Route::get('/newhome/{slug}',[NewMainController::class,'product'])->name('newproduct');
 
 // NEW END
 Route::controller(BrandsController::class)->group(function () {
@@ -48,7 +42,7 @@ Route::controller(ProductController::class)->group(function () {
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
-Route::view('/cart', 'frontend.new.cart')->name('cart');
+Route::view('/cart', 'frontend.cart')->name('cart');
 
 
 Route::get('/wishlist',[FavoriteController::class,'guest'])->name('wishlist');
