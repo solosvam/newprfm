@@ -110,6 +110,9 @@
                             <input type="text" name="name_en" class="form-control" placeholder="ADI EN" value="{{old('name_en')}}" required>
                             <label>ADI RU</label>
                             <input type="text" name="name_ru" class="form-control" placeholder="ADI RU" value="{{old('name_ru')}}" required>
+                            <label>Slug (URL)</label>
+                            <input type="text" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}" placeholder="Boş saxlasanız ingilis adından yaradılacaq">
+                            @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <hr>
                             <button type="submit" class="btn btn-primary">Əlavə et</button>
                         </form>
