@@ -39,3 +39,48 @@ img, video, iframe { max-width: 100%; }
     main .home-page .main-products__list .product-item { width: 100%; }
     .home-banner .banner-img img { height: auto; }
 }
+
+/* Mobile catalog: keep the real product listing visible. */
+@media (max-width: 768px) {
+    main .container > .home-page {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 20px;
+    }
+    main .container > .home-page .main-products {
+        display: block;
+        width: 100% !important;
+        min-width: 0;
+    }
+    main .container > .home-page .main-products__list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 12px;
+    }
+    main .container > .home-page .main-products__list .product-item {
+        display: block;
+        width: calc(50% - 6px) !important;
+        min-width: 0;
+    }
+    main .container .home-banner-mobile .home-banner__wrap {
+        height: auto;
+        min-height: 0;
+    }
+    main .container .home-banner-mobile .home-banner__wrap .banner-img {
+        position: static;
+        width: 100%;
+    }
+    main .container .home-banner-mobile .home-banner__wrap .banner-img img {
+        display: block;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+}
+@media (max-width: 420px) {
+    main .container > .home-page .main-products__list .product-item {
+        width: calc(50% - 6px) !important;
+    }
+}
