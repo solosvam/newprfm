@@ -22,7 +22,7 @@
             @php
                 $menuCategoryName = $menuCategory->{'name_'.app()->getLocale()} ?: $menuCategory->name_az;
             @endphp
-            <a href="{{ route('category', ['category' => $menuCategory->id, 'slug' => \Illuminate\Support\Str::slug($menuCategoryName)]) }}"
+            <a href="{{ route('category', ['slug' => $menuCategory->slug]) }}"
                class="account-nav-item {{ isset($selectedCategory) && $selectedCategory?->id === $menuCategory->id ? 'active' : '' }}">
                 <img src="{{ asset('frontend/images/terms.svg') }}" alt="">
                 <span>{{ $menuCategoryName }}</span>
