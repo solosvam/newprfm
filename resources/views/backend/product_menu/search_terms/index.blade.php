@@ -171,6 +171,24 @@
         if (!modal || !form) return;
 
         const modalInstance = new bootstrap.Modal(modal);
+        const initModalSelect2 = () => {
+            if (!window.jQuery || !window.jQuery.fn.select2) return;
+
+            const $modal = window.jQuery(modal);
+            [brandId, productId].forEach(element => {
+                const $select = window.jQuery(element);
+
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.select2({
+                    dropdownParent: $modal,
+                    width: '100%',
+                });
+            });
+        };
+
         const resetProducts = () => {
             productId.replaceChildren(new Option('Əvvəl brend seçin', ''));
             productId.disabled = true;
@@ -185,6 +203,8 @@
             selected.classList.remove('text-danger');
             modalInstance.show();
         };
+
+        modal.addEventListener('shown.bs.modal', initModalSelect2);
 
         document.querySelectorAll('.no-result-attach-button').forEach(button => {
             button.addEventListener('click', () => openModal(button.dataset.noResultQuery || ''));
