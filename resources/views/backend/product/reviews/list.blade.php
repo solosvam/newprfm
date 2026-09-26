@@ -1,4 +1,7 @@
-@php($title = 'Məhsul rəyləri')
+@php
+    $title = 'Məhsul rəyləri';
+    $html_tag_data = [];
+@endphp
 @extends('backend.layout')
 
 @section('content')
@@ -12,7 +15,7 @@
         @endif
 
         @foreach(['pending' => 'Təsdiqlənməmiş rəylər', 'approved' => 'Təsdiqlənmiş rəylər'] as $group => $heading)
-            @php($records = $$group)
+            @php($records = $group === 'pending' ? $pending : $approved)
 
             <div class="card mb-4">
                 <div class="card-body">
@@ -76,7 +79,7 @@
                         </table>
                     </div>
 
-                    {{ $records->appends(request()->except($group === 'pending' ? 'pending_page' : 'approved_page'))->links() }}
+                    {{ $records->appends(request()->except($group === 'pending' ? 'pending_page' : 'approved_page'))->links('backend.pagination') }}
                 </div>
             </div>
         @endforeach
