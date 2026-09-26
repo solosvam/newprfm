@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend\Product;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product\Product;
+use App\Models\Product\Brand;
 use App\Models\Product\ProductSearchClick;
 use App\Models\Product\ProductSearchLog;
 use App\Models\Product\ProductSearchTerm;
@@ -31,6 +32,7 @@ class ProductSearchTermsController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(20)
             ->withQueryString();
+        $brands = Brand::query()->where('active', 1)->orderBy('name')->get(['id', 'name']);
 
         $analytics = [
             'total' => ProductSearchLog::query()->where('searched_at', '>=', $from)->count(),
@@ -71,7 +73,7 @@ class ProductSearchTermsController extends Controller
             ->get();
 
         return view('backend.product_menu.search_terms.index', compact(
-            'products', 'search', 'analytics', 'popularQueries', 'noResultQueries', 'popularProducts'
+            'products', 'brands', 'search', 'analytics', 'popularQueries', 'noResultQueries', 'popularProducts'
         ));
     }
 
@@ -105,28 +107,17 @@ class ProductSearchTermsController extends Controller
     public function productLookup(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'q' => ['required', 'string', 'min:2', 'max:100'],
+            'brand_id' => ['required', 'integer'],
         ]);
 
-        $query = trim($data['q']);
-        $tokens = array_values(array_filter(preg_split('/\s+/u', $query)));
         $products = Product::query()
-            ->with('brand')
-            ->where(function ($productQuery) use ($tokens) {
-                foreach ($tokens as $token) {
-                    $productQuery->where(function ($tokenQuery) use ($token) {
-                        $tokenQuery->where('name', 'like', "%{$token}%")
-                            ->orWhereHas('brand', fn ($brandQuery) => $brandQuery->where('name', 'like', "%{$token}%"));
-                    });
-                }
-            })
+            ->where('brand_id', $data['brand_id'])
             ->orderByDesc('active')
             ->orderBy('name')
-            ->limit(15)
             ->get()
             ->map(fn (Product $product) => [
                 'id' => $product->id,
-                'name' => trim(($product->brand?->name ?? '') . ' ' . $product->name),
+                'name' => $product->name,
             ]);
 
         return response()->json(['products' => $products]);
