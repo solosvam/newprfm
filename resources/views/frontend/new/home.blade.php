@@ -29,7 +29,6 @@
 
     <div class="section-head">
         <h2>Ətirlər</h2>
-        <a href="{{ route('newhome') }}">Hamısına bax</a>
     </div>
 
     <div class="layout">
@@ -61,7 +60,7 @@
                     @foreach(request()->except('sort', 'page') as $key => $value)
                         @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
                     @endforeach
-                    <select name="sort" aria-label="Sırala" onchange="this.form.submit()">
+                    <select name="sort" class="sort-select" aria-label="Sırala" onchange="this.form.submit()">
                         <option value="newest" @selected(request('sort', 'newest') === 'newest')>Ən yenilər</option>
                         <option value="oldest" @selected(request('sort') === 'oldest')>Ən köhnələr</option>
                         <option value="price_asc" @selected(request('sort') === 'price_asc')>Ucuzdan bahaya</option>
@@ -148,4 +147,13 @@
     </div>
     {{ $products->links('frontend.include.pagination') }}
 
+
+    <div class="hero-banner">
+        @if(!empty($banners['bottomweb']))
+            <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['bottomweb']) }}" alt="Parfumshop banner">
+        @endif
+        @if(!empty($banners['bottommobile']))
+            <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['bottommobile']) }}" alt="Parfumshop mobil banner">
+        @endif
+    </div>
 @endsection

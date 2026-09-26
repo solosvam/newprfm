@@ -133,14 +133,21 @@ class BannersController extends Controller
     private function saveBannerImage($file, string $device, string $location, int $bannerId, string $locale): string
     {
         if ($device === 'web') {
-            $width = 1920;
-            $height = 370;
-        } elseif ($location === 'top') {
-            $width = 790;
-            $height = 300;
+            if($location === 'top'){
+                $width = 1920;
+                $height = 370;
+            }else{
+                $width = 1920;
+                $height = 300;
+            }
         } else {
-            $width = 800;
-            $height = 220;
+            if ($location === 'top') {
+                $width = 790;
+                $height = 300;
+            } else {
+                $width = 790;
+                $height = 220;
+            }
         }
 
         $imageName = $bannerId . '-' . $location . '-' . $device . '-' . $locale . '.webp';
