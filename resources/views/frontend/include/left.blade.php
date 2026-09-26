@@ -134,7 +134,7 @@
             @endphp
             <li class="{{ isset($selectedCategory) && $selectedCategory?->id === $menuCategory->id ? 'active' : '' }}">
                 <img src="{{asset('frontend/images/terms.svg')}}" alt="category icon" />
-                <a href="{{ route('category', ['category' => $menuCategory->id, 'slug' => \Illuminate\Support\Str::slug($menuCategoryName)]) }}"><span>{{ $menuCategoryName }}</span></a>
+                <a href="{{ route('category', ['slug' => $menuCategory->slug]) }}"><span>{{ $menuCategoryName }}</span></a>
             </li>
             @endforeach
             <li class="left-links-brands">
