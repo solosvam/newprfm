@@ -23,7 +23,7 @@ class ProductController extends Controller
             'ingredients',
             'variants' => fn ($query) => $query->where('active', 1)->orderBy('price'),
             'variants.size',
-            'reviews' => fn ($query) => $query->with('customer')->latest(),
+            'reviews' => fn ($query) => $query->where('active', true)->with('customer')->latest(),
         ])->findOrFail(SeoUrl::decodeSlug($slug));
 
         $canonicalSlug = $product->slug;
@@ -88,6 +88,7 @@ class ProductController extends Controller
             'customer_id' => auth()->id(),
             'rating' => $data['rating'],
             'comment' => $data['comment'],
+            'active' => false,
         ]);
 
         return back()->with('review_success', __('validation_your_review_has_been_added'));
