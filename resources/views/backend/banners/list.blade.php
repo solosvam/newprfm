@@ -88,6 +88,7 @@
                             <th class="text-muted text-small text-uppercase">Cihaz</th>
                             <th class="text-muted text-small text-uppercase">Yerləşmə</th>
                             <th class="text-muted text-small text-uppercase">Dillər</th>
+                            <th class="text-muted text-small text-uppercase">Link</th>
                             <th class="text-muted text-small text-uppercase">Status</th>
                             <th class="text-muted text-small text-uppercase">Əməliyyat</th>
                         </tr>
@@ -114,6 +115,14 @@
                                             {{ $label }} {{ $banner->{'url_' . $locale} ? '✓' : '—' }}
                                         </span>
                                     @endforeach
+                                </td>
+                                <td>
+                                    @if($banner->link_url)
+                                        <a href="{{ $banner->link_url }}" target="_blank" rel="noopener noreferrer"
+                                           title="{{ $banner->link_url }}">Linkə bax</a>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge {{ $banner->active ? 'bg-success' : 'bg-secondary' }}">
@@ -174,6 +183,13 @@
                                     @enderror
                                 </div>
                             @endforeach
+                            <div class="mb-3">
+                                <label class="form-label" for="bannerLinkUrl">Keçid linki (istəyə bağlı)</label>
+                                <input type="url" id="bannerLinkUrl" name="link_url"
+                                       value="{{ old('link_url') }}" placeholder="https://example.com"
+                                       class="form-control @error('link_url') is-invalid @enderror" maxlength="2048">
+                                @error('link_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
                             <hr>
                             <button type="submit" class="btn btn-primary">Əlavə et</button>
                         </form>
