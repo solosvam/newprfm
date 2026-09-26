@@ -16,7 +16,8 @@
         <a href="{{ route('newhome') }}" class="logo">parfumshop</a>
 
         <form class="search" method="GET" action="{{ route('newhome') }}" id="searchForm" autocomplete="off"
-              data-suggestions-url="{{ route('search.suggestions') }}">
+              data-suggestions-url="{{ route('search.suggestions') }}"
+              data-click-url="{{ route('search.click') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="search" name="q" id="searchInput" value="{{ request('q') }}" placeholder="Brend və ya ətir axtar..." aria-label="Məhsul axtar">
         </form>
