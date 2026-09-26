@@ -11,7 +11,14 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2.min.css') }}"/>
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2-bootstrap4.min.css') }}"/>
+    <link rel="stylesheet" href="{{ asset('backend/css/vendor/datatables.min.css') }}"/>
     <style>.select2-container--open { z-index: 2000; }</style>
+@endsection
+
+@section('js_page')
+    <script src="{{ asset('backend/js/vendor/datatables.min.js') }}"></script>
+    <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
+    <script src="{{ asset('backend/js/plugins/datatable.product-search-terms.ajax.js') }}"></script>
 @endsection
 
 @section('content')
@@ -73,57 +80,31 @@
             </div></div></div>
         </div>
 
-        <div class="card mb-4">
-            <div class="card-body">
-                <form method="GET" class="row g-2 align-items-end">
-                    <div class="col-12 col-md-8 col-lg-6">
-                        <label class="form-label">Məhsul və ya brend axtar</label>
-                        <input class="form-control" name="q" value="{{ $search }}" placeholder="Məsələn: Calvin Klein Eternity Moment">
+        <div class="data-table-rows slim">
+            <div class="row">
+                <div class="col-12 col-md-6 col-lg-4 mb-3">
+                    <div class="search-input-container shadow bg-foreground">
+                        <input class="form-control datatable-search"
+                               placeholder="Məhsul və ya brend axtar"
+                               data-datatable="#datatableProductSearchTerms">
+                        <span class="search-magnifier-icon"><i data-acorn-icon="search"></i></span>
+                        <span class="search-delete-icon d-none"><i data-acorn-icon="close"></i></span>
                     </div>
-                    <div class="col-12 col-md-auto">
-                        <button class="btn btn-primary" type="submit">Axtar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table mb-0">
-                        <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Brend</th>
-                            <th>Məhsul</th>
-                            <th class="text-end">Əməliyyat</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @forelse($products as $product)
-                            <tr>
-                                <td>{{ $product->id }}</td>
-                                <td>{{ $product->brand?->name ?: '-' }}</td>
-                                <td>{{ $product->name }}</td>
-                                <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.product.search-terms.show', $product) }}">
-                                        Aliasları idarə et
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">Məhsul tapılmadı.</td>
-                            </tr>
-                        @endforelse
-                        </tbody>
-                    </table>
                 </div>
             </div>
-        </div>
 
-        <div class="mt-3">
-            {{ $products->links('backend.pagination') }}
+            <div class="data-table-responsive-wrapper">
+                <table id="datatableProductSearchTerms" class="data-table nowrap w-100">
+                    <thead>
+                    <tr>
+                        <th class="text-muted text-small text-uppercase">#</th>
+                        <th class="text-muted text-small text-uppercase">Brend</th>
+                        <th class="text-muted text-small text-uppercase">Məhsul</th>
+                        <th class="text-muted text-small text-uppercase text-end">Əməliyyat</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
 
         <div class="modal fade" id="attachNoResultModal" tabindex="-1" aria-hidden="true">
