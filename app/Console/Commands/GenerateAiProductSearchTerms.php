@@ -29,7 +29,7 @@ class GenerateAiProductSearchTerms extends Command
             return self::FAILURE;
         }
 
-        $query = Product::query()->with('brand')->orderBy('id');
+        $query = Product::query()->with('brand')->orderByDesc('id');
 
         if ($productId !== null) {
             $query->whereKey((int) $productId);

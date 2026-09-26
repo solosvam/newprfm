@@ -125,24 +125,87 @@ Qaydalar:
 PROMPT;
     }
 
+
     private function searchTermsPrompt(string $brand, string $name): string
     {
         return <<<PROMPT
-Sən parfumshop.az saytında məhsul axtarışı üçün yazılış variantları hazırlayırsan.
+Sən parfumshop.az üçün Azərbaycan bazarına uyğun
+ətir axtarış ifadələri hazırlayan mütəxəssissən.
 
 Brend: {$brand}
 Məhsul: {$name}
 
-4-14 fərqli axtarış ifadəsi qaytar. Sistem ayrıca rəsmi "brend + məhsul" adını əlavə edəcək.
+MƏQSƏD:
+İstifadəçinin bu konkret ətiri tapmaq üçün
+axtarış sətrinə yaza biləcəyi realistik ifadələri yarat.
 
-Qaydalar:
-- yalnız bu konkret məhsula aid ifadələr yaz; başqa məhsul, brend və ya ümumi "women", "perfume" kimi söz yazma.
-- istifadəçinin yaza biləcəyi rəsmi yazılış, söz sırası, qısa forma, azərbaycanca eşidilən fonetik yazılış və real typo variantlarını daxil et.
-- hər ifadə 2-60 simvol olsun, təkrarlanmasın.
-- məhsulun brendi və ya adından fakt uydurma.
-- yalnız JSON sxeminə uyğun cavab ver.
+Sistem rəsmi "brend + məhsul" adını avtomatik
+əlavə edir. Onu təkrar qaytarma.
+
+Aşağıdakı kateqoriyaları nəzərə al:
+
+1. QISA VƏ ALTERNATİV AXTARIŞLAR
+- Məhsulun brendsiz tam adı.
+- Brend + məhsulun tanınan qısa adı.
+- Məhsul + brend şəklində tərs söz sırası.
+- Yalnız bu məhsulu müəyyən etməyə kömək edən
+  mənalı qısaltmalar.
+- Başqa məhsullarla qarışa biləcək həddindən
+  artıq ümumi ifadələr yaratma.
+
+2. AZƏRBAYCAN DİLİNDƏ FONETİK YAZILIŞ
+- Brend və məhsul adının Azərbaycan dilində
+  eşidildiyi kimi yazılan təbii variantlarını yarat.
+- Azərbaycan istifadəçisinin latın hərfləri ilə
+  yaza biləcəyi formaları nəzərə al.
+- Brendin və məhsulun fonetik formalarını
+  həm ayrı-ayrılıqda, həm birlikdə qiymətləndir.
+- Süni və qeyri-təbii transliterasiya yaratma.
+
+3. REALİSTİK YAZI SƏHVLƏRİ
+- Yalnız geniş yayılması ağlabatan səhvləri daxil et.
+- Məsələn, oxşar səslərin və hərflərin qarışdırılması.
+- Təsadüfi hərf silmə, əlavə etmə və ya
+  hərflərin yerini dəyişməklə siyahını doldurma.
+- Bir-birindən cəmi bir hərflə fərqlənən,
+  eyni axtarış niyyətli çoxlu variant yaratma.
+- Adi yazı səhvlərinin əksəriyyətini saytın
+  fuzzy search mexanizmi ayrıca həll edir.
+
+4. RUS DİLİNDƏ AXTARIŞLAR
+- Azərbaycan bazarında rus dilində axtarış
+  edən istifadəçilərin yaza biləcəyi
+  təbii kiril variantlarını daxil et.
+- Brend + məhsul və brendsiz məhsul
+  variantlarını nəzərə al.
+- Süni kiril yazılışları yaratma.
+
+5. KEYFİYYƏT VƏ SEÇİM
+- Maksimum 12 ifadə qaytar.
+- Faydalı variant azdırsa, daha az qaytar.
+- Sayı tamamlamaq üçün ifadə uydurma.
+- Ən faydalı və fərqli axtarış niyyətlərini
+  əhatə edən variantlara üstünlük ver.
+- Rəsmi adın yalnız böyük-kiçik hərf
+  fərqi olan variantlarını yaratma.
+- Eyni ifadəni təkrarlama.
+- Hər ifadə 2-60 simvol olsun.
+- Başqa məhsul, brend, ümumi kateqoriya
+  və ya məhsulun xüsusiyyətlərini əlavə etmə.
+- Məhsulun adından və brendindən kənar
+  fakt uydurma.
+- İfadələrin Google-da həqiqətən axtarıldığını
+  iddia etmə; bunlar ehtimal olunan variantlardır.
+
+NƏTİCƏ:
+İfadələri istifadəçinin həmin məhsulu
+axtarma ehtimalına və konkretliyinə görə
+ən faydalıdan daha az faydalıya sırala.
+
+Yalnız verilmiş JSON sxeminə uyğun cavab ver.
 PROMPT;
     }
+
 
     private function schema(): array
     {
