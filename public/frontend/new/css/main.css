@@ -545,3 +545,6 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 .notifyjs-parfumshop-error-base .ps-notify__check { color: #d9534f; }
 .notifyjs-parfumshop-warning-base .ps-notify__check { color: #d89a21; }
 .notifyjs-parfumshop-info-base .ps-notify__check { color: #377db8; }
+
+.credit-field .invalid-feedback{display:none;color:#dc3545;font-size:12px}
+.credit-field .is-invalid~.invalid-feedback{display:block}
