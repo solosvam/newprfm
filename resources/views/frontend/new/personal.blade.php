@@ -9,14 +9,6 @@
                 <div class="account-panel">
                     <h1 class="account-panel-title">{{ __('profile_personal_details') }}</h1>
 
-                    @if(session('success'))
-                        <div class="form-alert form-alert-success">{{ session('success') }}</div>
-                    @endif
-
-                    @if($errors->any())
-                        <div class="form-alert form-alert-error">{{ $errors->first() }}</div>
-                    @endif
-
                     <form method="POST" action="{{ route('profile.personal.update') }}" class="account-form">
                         @csrf
 
