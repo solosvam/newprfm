@@ -50,7 +50,7 @@
                                 @foreach($banners as $banner)
                                 <div class="row g-0 sh-6 mb-2">
                                     <div class="col-auto">
-                                        <img src="{{ asset('frontend/uploads/banners/' . $banner->url) }}" class="card-img rounded-xl sh-6 sw-6" alt="thumb" />
+                                        <img src="{{ asset('frontend/uploads/banners/' . $banner->imageForLocale('az')) }}" class="card-img rounded-xl sh-6 sw-6" alt="thumb" />
                                     </div>
                                     <div class="col">
                                         <div class="card-body d-flex flex-row pt-0 pb-0 ps-3 pe-0 h-100 align-items-center justify-content-between">
@@ -61,6 +61,13 @@
                                                     {{ $banner->location == 'top' ? 'Üst banner' : 'Alt banner' }}
                                                 </div>
                                                 <div class="text-small position">{{ $banner->active ? 'Aktiv' : 'Deaktiv' }}</div>
+                                                <div class="text-small mt-1">
+                                                    @foreach(['az' => 'AZ', 'en' => 'EN', 'ru' => 'RU'] as $locale => $label)
+                                                        <span class="badge {{ $banner->{'url_' . $locale} ? 'bg-success' : 'bg-warning text-dark' }}">
+                                                            {{ $label }} {{ $banner->{'url_' . $locale} ? '✓' : '—' }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                             <div class="d-flex">
                                                 <a href="{{route('admin.banner.edit',$banner->id)}}" class="btn btn-outline-primary btn-sm ms-1">Edit</a>
@@ -97,8 +104,16 @@
                                 <option value="top">Üst banner</option>
                                 <option value="bottom">Alt banner</option>
                             </select>
-                            <label>Şəkil</label>
-                            <input type="file" name="image" class="form-control" required>
+                            @foreach(['az' => 'Azərbaycan', 'en' => 'English', 'ru' => 'Русский'] as $locale => $label)
+                                <div class="mb-3">
+                                    <label class="form-label" for="image_{{ $locale }}">Şəkil — {{ $label }} *</label>
+                                    <input type="file" id="image_{{ $locale }}" name="image_{{ $locale }}"
+                                           accept="image/*" class="form-control @error('image_' . $locale) is-invalid @enderror" required>
+                                    @error('image_' . $locale)
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endforeach
                             <hr>
                             <button type="submit" class="btn btn-primary">Əlavə et</button>
                         </form>
