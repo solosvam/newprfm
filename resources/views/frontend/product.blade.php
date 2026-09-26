@@ -146,7 +146,7 @@
                                         <td class="radio-cell">
                                             <input type="radio" name="duration" value="{{ $period->month }}" {{ $loop->first ? 'checked' : '' }} />
                                         </td>
-                                        <td>{{ $period->month }} ay @if($period->interest_rate == 0) Faizsiz @endif </td>
+                                        <td>{{ $period->month }} {{ __('product_month') }} @if($period->interest_rate == 0) {{ __('product_interest_free') }} @endif </td>
                                         <td class="installment-monthly">{{ number_format($installmentMonthly, 2) }} ₼</td>
                                         <td class="installment-total">{{ number_format($installmentTotal, 2) }} ₼</td>
                                     </tr>
