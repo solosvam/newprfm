@@ -25,6 +25,6 @@ class OrderStatus extends Model
             ? 'name_' . $locale
             : 'name_az';
 
-        return $this->{$column} ?: $this->name_az ?: $this->name ?: '';
+        return $this->{$column} ?: $this->name_az ?: '';
     }
 }
