@@ -101,8 +101,6 @@
                                                    id="{{ $field }}"
                                                    name="{{ $field }}"
                                                    aria-describedby="{{ $field }}-error"
-                                                   @class(['is-invalid' => $errors->has($field)])
-                                                   aria-describedby="{{ $field }}-error"
                                                    type="file"
                                                    accept="image/jpeg,image/png,image/webp"
                                                    @if (!$hasImage) required @endif>
