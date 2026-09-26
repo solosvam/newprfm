@@ -24,12 +24,6 @@ class ProductSearchTermsTable {
             order: [],
             sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',
             pageLength: 10,
-            initComplete: function () {
-                _this._setInlineHeight(this.api().page.len());
-            },
-            drawCallback: function () {
-                _this._setInlineHeight(this.api().page.len());
-            },
             columns: [
                 {data: null},
                 {data: 'brand'},
@@ -64,6 +58,12 @@ class ProductSearchTermsTable {
             ]
         });
 
+        this._setInlineHeight();
+
+        jQuery('#datatableProductSearchTerms').on('draw.dt', () => {
+            this._setInlineHeight();
+        });
+
         new DatatableExtend({
             datatable: this._datatable,
             singleSelectCallback: function () {},
@@ -73,13 +73,13 @@ class ProductSearchTermsTable {
         });
     }
 
-    _setInlineHeight(pageLength) {
+    _setInlineHeight() {
         const scrollBody = document.querySelector(
             '#datatableProductSearchTerms_wrapper .dataTables_scrollBody'
         );
 
         if (scrollBody) {
-            scrollBody.style.height = this._staticHeight * pageLength + 'px';
+            scrollBody.style.height = this._staticHeight * this._datatable.page.len() + 'px';
         }
     }
 }
