@@ -128,7 +128,7 @@
                         </div>
                         <div>
                             <label class="form-label">Brend</label>
-                            <select id="noResultBrandId">
+                            <select class="form-select" id="noResultBrandId">
                                 <option value="">Brend seçin</option>
                                 @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}">{{ $brand->name }}</option>
@@ -137,7 +137,7 @@
                         </div>
                         <div class="mt-3">
                             <label class="form-label">Məhsul</label>
-                            <select name="product_id" id="noResultProductId" disabled>
+                            <select class="form-select" name="product_id" id="noResultProductId" disabled>
                                 <option value="">Əvvəl brend seçin</option>
                             </select>
                             <div class="form-text" id="noResultSelectedProduct">Məhsul seçilməyib.</div>
@@ -165,16 +165,15 @@
         if (!modal || !form) return;
 
         const modalInstance = new bootstrap.Modal(modal);
-        const $brand = window.jQuery(brandId);
-        const $product = window.jQuery(productId);
-        $brand.select2({dropdownParent: window.jQuery(modal), width: '100%'});
-        $product.select2({dropdownParent: window.jQuery(modal), width: '100%'});
-        const resetProducts = () => $product.empty().append(new Option('Əvvəl brend seçin', '')).prop('disabled', true).trigger('change');
+        const resetProducts = () => {
+            productId.replaceChildren(new Option('Əvvəl brend seçin', ''));
+            productId.disabled = true;
+        };
 
         const openModal = value => {
             query.value = value;
             queryText.value = value;
-            $brand.val('').trigger('change');
+            brandId.value = '';
             resetProducts();
             selected.textContent = 'Məhsul seçilməyib.';
             selected.classList.remove('text-danger');
@@ -185,8 +184,8 @@
             button.addEventListener('click', () => openModal(button.dataset.noResultQuery || ''));
         });
 
-        $brand.on('change', async () => {
-            const value = $brand.val();
+        brandId.addEventListener('change', async () => {
+            const value = brandId.value;
             resetProducts();
             selected.textContent = 'Məhsul seçilməyib.';
             if (!value) return;
@@ -195,12 +194,12 @@
             url.searchParams.set('brand_id', value);
             const response = await fetch(url, {headers: {'Accept': 'application/json'}});
             const data = await response.json();
-            $product.empty().append(new Option('Məhsul seçin', ''));
-            (data.products || []).forEach(product => $product.append(new Option(product.name, product.id)));
-            $product.prop('disabled', false).trigger('change');
+            productId.replaceChildren(new Option('Məhsul seçin', ''));
+            (data.products || []).forEach(product => productId.append(new Option(product.name, product.id)));
+            productId.disabled = false;
         });
 
-        $product.on('change', () => {
+        productId.addEventListener('change', () => {
             const option = productId.options[productId.selectedIndex];
             selected.textContent = productId.value ? 'Seçilən məhsul: ' + option.text : 'Məhsul seçilməyib.';
         });
