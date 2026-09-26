@@ -17,7 +17,24 @@ class OpenAiPerfumeService
         return $this->request($this->factsPrompt($url), $this->factsSchema());
     }
 
-    private function request(string $prompt, array $schema, bool $sanitizeDescriptions = false): array
+    public function generateSearchTerms(string $brand, string $name): array
+    {
+        $data = $this->request(
+            $this->searchTermsPrompt($brand, $name),
+            $this->searchTermsSchema(),
+            false,
+            false
+        );
+
+        return $data['terms'];
+    }
+
+    private function request(
+        string $prompt,
+        array $schema,
+        bool $sanitizeDescriptions = false,
+        bool $allowWebSearch = true
+    ): array
     {
         $apiKey = config('services.openai.api_key');
 
@@ -25,32 +42,37 @@ class OpenAiPerfumeService
             throw new RuntimeException('OPENAI_API_KEY .env faylında təyin edilməyib.');
         }
 
+        $payload = [
+            'model' => config('services.openai.model'),
+            'reasoning' => [
+                'effort' => 'low',
+            ],
+            'input' => $prompt,
+            'text' => [
+                'format' => [
+                    'type' => 'json_schema',
+                    'name' => 'perfume_product_content',
+                    'strict' => true,
+                    'schema' => $schema,
+                ],
+            ],
+        ];
+
+        if ($allowWebSearch) {
+            $payload['tools'] = [
+                [
+                    'type' => 'web_search',
+                    'filters' => [
+                        'allowed_domains' => ['fragrantica.com'],
+                    ],
+                ],
+            ];
+        }
+
         $response = Http::timeout(90)
             ->withToken($apiKey)
             ->acceptJson()
-            ->post('https://api.openai.com/v1/responses', [
-                'model' => config('services.openai.model'),
-                'reasoning' => [
-                    'effort' => 'low',
-                ],
-                'tools' => [
-                    [
-                        'type' => 'web_search',
-                        'filters' => [
-                            'allowed_domains' => ['fragrantica.com'],
-                        ],
-                    ],
-                ],
-                'input' => $prompt,
-                'text' => [
-                    'format' => [
-                        'type' => 'json_schema',
-                        'name' => 'perfume_product_content',
-                        'strict' => true,
-                        'schema' => $schema,
-                    ],
-                ],
-            ]);
+            ->post('https://api.openai.com/v1/responses', $payload);
 
         if (!$response->successful()) {
             $message = data_get($response->json(), 'error.message', 'OpenAI sorğusu uğursuz oldu.');
@@ -103,6 +125,25 @@ Qaydalar:
 PROMPT;
     }
 
+    private function searchTermsPrompt(string $brand, string $name): string
+    {
+        return <<<PROMPT
+Sən parfumshop.az saytında məhsul axtarışı üçün yazılış variantları hazırlayırsan.
+
+Brend: {$brand}
+Məhsul: {$name}
+
+4-14 fərqli axtarış ifadəsi qaytar. Sistem ayrıca rəsmi "brend + məhsul" adını əlavə edəcək.
+
+Qaydalar:
+- yalnız bu konkret məhsula aid ifadələr yaz; başqa məhsul, brend və ya ümumi "women", "perfume" kimi söz yazma.
+- istifadəçinin yaza biləcəyi rəsmi yazılış, söz sırası, qısa forma, azərbaycanca eşidilən fonetik yazılış və real typo variantlarını daxil et.
+- hər ifadə 2-60 simvol olsun, təkrarlanmasın.
+- məhsulun brendi və ya adından fakt uydurma.
+- yalnız JSON sxeminə uyğun cavab ver.
+PROMPT;
+    }
+
     private function schema(): array
     {
         return [
@@ -149,6 +190,25 @@ PROMPT;
                 'notes' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'accords' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'source_description' => ['type' => ['string', 'null']],
+            ],
+        ];
+    }
+
+    private function searchTermsSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'required' => ['terms'],
+            'properties' => [
+                'terms' => [
+                    'type' => 'array',
+                    'minItems' => 4,
+                    'maxItems' => 14,
+                    'items' => [
+                        'type' => 'string',
+                    ],
+                ],
             ],
         ];
     }
