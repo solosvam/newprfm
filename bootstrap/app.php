@@ -21,6 +21,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Locale needs the session started by the web middleware group.
         $middleware->web(append: [setLangMiddleware::class]);
+        // Redirect authenticated users away from the login page for their own guard.
+        $middleware->redirectUsersTo(function (Request $request) {
+            if ($request->is('admin') || $request->is('admin/*')) {
+                return route('admin.dashboard');
+            }
+
+            return route('home');
+        });
+
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('admin') || $request->is('admin/*')) {
                 return route('admin.login.form');
