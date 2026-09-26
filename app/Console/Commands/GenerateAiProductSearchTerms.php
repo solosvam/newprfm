@@ -34,7 +34,8 @@ class GenerateAiProductSearchTerms extends Command
         if ($productId !== null) {
             $query->whereKey((int) $productId);
         } elseif (!$this->option('fresh')) {
-            $query->whereDoesntHave('searchTerms', fn ($termQuery) => $termQuery->where('source', 'ai'));
+            // Həmin məhsul üçün hər hansı axtarış termini varsa yenidən AI çağırışı etmə.
+            $query->whereDoesntHave('searchTerms');
         }
 
         if ($this->option('limit')) {
