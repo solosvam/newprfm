@@ -22,6 +22,14 @@
         });
     }
 
+    // Laravel redirect-lərindən sonra bütün yeni Blade səhifələrində flash bildirişləri göstər.
+    const flash = window.parfumshopFlash || {};
+    for (const type of ['success', 'error', 'warning', 'info']) {
+        if (typeof flash[type] === 'string' && flash[type].trim()) {
+            notify(flash[type], type);
+        }
+    }
+
     function readArray(key) {
         try {
             const value = JSON.parse(localStorage.getItem(key) || '[]');
