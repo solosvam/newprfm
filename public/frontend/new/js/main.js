@@ -44,6 +44,71 @@
         } catch (error) { console.warn('Seçilmişlər yüklənmədi', error); }
     }
 
+    const buybox = document.querySelector('[data-buybox]');
+    const installment = document.querySelector('[data-installment]');
+
+    function updateInstallments() {
+        if (!buybox || !installment) return;
+        const variant = buybox.querySelector('.size-pill.active-size-amount');
+        const price = Number(variant?.dataset.price || buybox.dataset.basePrice || 0);
+        const priceDisplay = buybox.querySelector('[data-price-display]');
+        if (priceDisplay) priceDisplay.textContent = price.toFixed(2) + ' ₼';
+
+        installment.querySelectorAll('tr[data-month]').forEach(row => {
+            const months = Number(row.dataset.month);
+            const rate = Number(row.dataset.rate || 0);
+            const total = price * (1 + rate / 100);
+            const monthly = months > 0 ? total / months : 0;
+            const monthlyCell = row.querySelector('[data-installment-monthly]');
+            const totalCell = row.querySelector('[data-installment-total]');
+            if (monthlyCell) monthlyCell.textContent = monthly.toFixed(2) + ' ₼';
+            if (totalCell) totalCell.textContent = total.toFixed(2) + ' ₼';
+            const radio = row.querySelector('input[name="installment"]');
+            if (radio) {
+                radio.dataset.monthly = monthly.toFixed(2);
+                radio.dataset.total = total.toFixed(2);
+            }
+        });
+
+        // Birbank is always displayed as six interest-free installments.
+        const headline = installment.querySelector('[data-installment-headline]');
+        if (headline) headline.textContent = (price / 6).toFixed(2) + ' ₼ x 6 ay';
+        const selected = buybox.querySelector('[data-add-to-cart]');
+        if (selected && variant) selected.dataset.variantId = variant.dataset.variantId;
+    }
+
+    function initProductTabs() {
+        const tabs = document.querySelector('[data-tabs]');
+        if (!tabs) return;
+        const activate = name => {
+            tabs.querySelectorAll('[data-tab]').forEach(button => {
+                const active = button.dataset.tab === name;
+                button.classList.toggle('active', active);
+                button.setAttribute('aria-selected', String(active));
+            });
+            tabs.querySelectorAll('[data-tab-panel]').forEach(panel => {
+                panel.hidden = panel.dataset.tabPanel !== name;
+            });
+        };
+        tabs.addEventListener('click', event => {
+            const button = event.target.closest('[data-tab]');
+            if (button) activate(button.dataset.tab);
+        });
+        if (window.location.hash === '#reviews' || document.querySelector('[data-review-errors]')) activate('reviews');
+    }
+
+    if (installment) {
+        installment.addEventListener('change', event => {
+            if (event.target.matches('input[name="installment"]')) {
+                installment.querySelectorAll('tr[data-month]').forEach(row => {
+                    row.classList.toggle('active', row.contains(event.target));
+                });
+            }
+        });
+        updateInstallments();
+    }
+    initProductTabs();
+
     document.addEventListener('click', async event => {
         const fav = event.target.closest('.fav-btn');
         if (fav) {
@@ -94,8 +159,7 @@
         if (size) {
             document.querySelectorAll('.size-pill').forEach(el => el.classList.remove('active-size-amount'));
             size.classList.add('active-size-amount');
-            const price = document.querySelector('.price-row');
-            if (price) price.textContent = Number(size.dataset.price).toFixed(2) + ' ₼';
+            updateInstallments();
             return;
         }
 
@@ -115,12 +179,33 @@
             const quantity = Number(document.querySelector('[data-qty-value]')?.textContent || 1);
             const item = cart.find(v => Number(v.variant_id) === id);
             if (item) item.quantity = (Number(item.quantity) || 1) + quantity;
-            else cart.push({variant_id:id, quantity});
+            else cart.push({product_id: Number(add.dataset.productId || buybox?.dataset.productId), variant_id:id, quantity});
             localStorage.setItem('parfumshop_cart', JSON.stringify(cart));
             window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', {detail:cart}));
             updateCounts();
+            if (typeof window.showCartSuccess === 'function') window.showCartSuccess();
+            const label = add.textContent;
             add.textContent = 'Səbətə əlavə edildi ✓';
-            setTimeout(() => add.textContent = 'Səbətə əlavə et', 1600);
+            setTimeout(() => { add.textContent = label; }, 1600);
+            return;
+        }
+
+        const writeReview = event.target.closest('[data-review-open]');
+        if (writeReview) {
+            document.querySelector('[data-review-modal]')?.showModal();
+            return;
+        }
+        const closeReview = event.target.closest('[data-review-close]');
+        if (closeReview) {
+            document.querySelector('[data-review-modal]')?.close();
+            return;
+        }
+        const accordion = event.target.closest('[data-accordion-toggle]');
+        if (accordion) {
+            const root = accordion.closest('[data-accordion]');
+            const open = root.classList.toggle('open');
+            accordion.setAttribute('aria-expanded', String(open));
+            root.querySelector('[data-accordion-body]').hidden = !open;
             return;
         }
 
@@ -136,4 +221,5 @@
     window.addEventListener('parfumshop:cart-updated', updateCounts);
     updateCounts();
     syncFavorites();
+    if (document.querySelector('[data-review-errors]')) document.querySelector('[data-review-modal]')?.showModal();
 })();
