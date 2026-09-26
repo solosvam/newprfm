@@ -372,6 +372,7 @@ Route::prefix('admin')
                     Route::get('/', 'index')->name('index');
                     Route::get('/{product}', 'show')->name('show');
                     Route::post('/{product}', 'store')->name('store');
+                    Route::put('/term/{term}', 'updateTerm')->name('term.update');
                     Route::delete('/term/{term}', 'destroy')->name('destroy');
                 });
 
