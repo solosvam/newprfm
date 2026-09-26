@@ -85,6 +85,9 @@
                             @csrf
                             <label>Brend adı</label>
                             <input type="text" name="name" class="form-control" placeholder="Brend adı" value="{{old('name')}}" required>
+                            <label>Slug (URL)</label>
+                            <input type="text" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}" placeholder="Boş saxlasanız avtomatik yaradılacaq">
+                            @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <label>Şəkil</label>
                             <input type="file" name="image" class="form-control" required>
                             <hr>
