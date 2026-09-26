@@ -548,3 +548,20 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 
 .credit-field .invalid-feedback{display:none;color:#dc3545;font-size:12px}
 .credit-field .is-invalid~.invalid-feedback{display:block}
+
+/* Validation feedback shared by credit and personal profile forms */
+.credit-field .invalid-feedback:not(:empty),
+.form-field .invalid-feedback:not(:empty) {
+    display: block;
+    color: #dc3545;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.credit-field .invalid-feedback:empty,
+.form-field .invalid-feedback:empty { display: none; }
+.form-field input.is-invalid,
+.credit-field input.is-invalid:not([type="file"]),
+.credit-photo:has(input.is-invalid) {
+    border-color: #dc3545;
+}
+.credit-photo:has(input.is-invalid) { outline: 1px solid #dc3545; }
