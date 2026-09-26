@@ -21,6 +21,7 @@ use App\Http\Controllers\Backend\Product\TypesController;
 use App\Http\Controllers\Backend\Product\IngredientController;
 use App\Http\Controllers\Backend\Product\CategoriesController;
 use App\Http\Controllers\Backend\Product\ProductsController;
+use App\Http\Controllers\Backend\Product\ReviewsController;
 use App\Http\Controllers\Backend\Product\ProductImportController;
 
 
@@ -328,6 +329,16 @@ Route::prefix('admin')
                     Route::post('/update/{id}', 'update')->name('update');
                 });
 
+
+            Route::controller(ReviewsController::class)
+                ->middleware('can:product.review')
+                ->prefix('product/review')
+                ->name('product.review.')
+                ->group(function () {
+                    Route::get('/list', 'index')->name('list');
+                    Route::post('/{review}/approve', 'approve')->name('approve');
+                    Route::delete('/{review}', 'destroy')->name('destroy');
+                });
 
             /*
             |--------------------------------------------------------------------------
