@@ -3,10 +3,10 @@ const menu_icon = document.querySelector(".menu-icon");
 const mobile_sidebar = document.querySelector(".mobile-sidebar");
 const mobile_sidebar_close_icon = document.querySelector(".sidebar-close-icon");
 
-menu_icon.onclick = function () {
+if (menu_icon && mobile_sidebar) menu_icon.onclick = function () {
   mobile_sidebar.classList.add("mobile-sidebar-active");
 };
-mobile_sidebar_close_icon.onclick = function () {
+if (mobile_sidebar_close_icon && mobile_sidebar) mobile_sidebar_close_icon.onclick = function () {
   mobile_sidebar.classList.remove("mobile-sidebar-active");
 };
 
@@ -14,11 +14,11 @@ const search_close_btn = document.querySelector(".search-close");
 const search_form = document.querySelector(".search-form");
 const search_icon = document.querySelector(".search-icon");
 
-search_icon.onclick = () => {
+if (search_icon && search_form) search_icon.onclick = () => {
   search_form.classList.toggle("search-active");
 };
 
-search_close_btn.onclick = () => {
+if (search_close_btn && search_form) search_close_btn.onclick = () => {
   search_form.classList.remove("search-active");
 };
 
@@ -57,7 +57,7 @@ const basket_brand_modal_close_btn = document.querySelector(
   ".basket-brand-modal-container .modal-section__close"
 );
 
-basket_brand_modal_close_btn.addEventListener("click", function () {
+basket_brand_modal_close_btn?.addEventListener("click", function () {
   this.parentElement.parentElement.parentElement.style.display = "none";
 });
 
@@ -68,7 +68,7 @@ const other_sizes_container_mobile_close_btn = document.querySelector(
   ".other-sizes-container-mobile .other-sizes-heading img"
 );
 
-other_sizes_container_mobile_close_btn.addEventListener("click", function () {
+other_sizes_container_mobile_close_btn?.addEventListener("click", function () {
   other_sizes_container_mobile.style.display = "none";
 });
 
@@ -76,11 +76,11 @@ var modal = document.getElementById("myModal");
 var btn = document.querySelector(".terms-link");
 var span = document.getElementsByClassName("close")[0];
 
-btn.onclick = function () {
+if (btn && modal) btn.onclick = function () {
   modal.style.display = "block";
 };
 
-span.onclick = function () {
+if (span && modal) span.onclick = function () {
   modal.style.display = "none";
 };
 
@@ -93,7 +93,7 @@ window.onclick = function (event) {
 const brand_icon = document.querySelector(".left-links-brands");
 const brands_section = document.querySelector(".brands-section");
 
-brand_icon.onclick = () => {
+if (brand_icon && brands_section) brand_icon.onclick = () => {
   brands_section.classList.toggle("brands-active");
 };
 
@@ -110,4 +110,4 @@ function closeBanner() {
 }
 
 
-closeBannerBtn.addEventListener("click", closeBanner);
+closeBannerBtn?.addEventListener("click", closeBanner);
