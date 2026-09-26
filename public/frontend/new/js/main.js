@@ -40,6 +40,7 @@
         let controller;
         let results = [];
         let activeIndex = -1;
+        let searchLogId = null;
 
         const show = () => { resultsBox.hidden = false; };
         const hide = () => {
@@ -56,6 +57,7 @@
 
         function render(data) {
             results = data.results || [];
+            searchLogId = data.search_log_id || null;
             resultsBox.replaceChildren();
             activeIndex = -1;
 
@@ -75,6 +77,7 @@
                 link.className = 'search-result-item';
                 link.href = product.url;
                 link.dataset.searchIndex = String(index);
+                link.addEventListener('click', () => recordClick(product, index));
 
                 const thumb = document.createElement('div');
                 thumb.className = 'search-result-thumb';
@@ -101,6 +104,25 @@
                 resultsBox.append(link);
             });
             show();
+        }
+
+        function recordClick(product, index) {
+            if (!searchLogId || !form.dataset.clickUrl) return;
+
+            fetch(form.dataset.clickUrl, {
+                method: 'POST',
+                keepalive: true,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf || '',
+                },
+                body: JSON.stringify({
+                    search_log_id: searchLogId,
+                    product_id: product.id,
+                    result_rank: index + 1,
+                }),
+            }).catch(() => {});
         }
 
         async function request(query) {
@@ -149,7 +171,9 @@
         form.addEventListener('submit', event => {
             if (results.length === 0) return;
             event.preventDefault();
-            window.location.href = results[activeIndex >= 0 ? activeIndex : 0].url;
+            const index = activeIndex >= 0 ? activeIndex : 0;
+            recordClick(results[index], index);
+            window.location.href = results[index].url;
         });
 
         document.addEventListener('click', event => {
