@@ -23,7 +23,7 @@
 
         <div class="search-results" id="searchResults" hidden aria-live="polite">
             {{-- Statik demo nəticələri API ilə əvəz olunub. --}}
-            {{!--
+            {{--
             <a class="search-result-item" href="#">
                 <div class="search-result-thumb">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
