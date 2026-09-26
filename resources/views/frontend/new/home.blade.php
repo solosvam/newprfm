@@ -28,33 +28,31 @@
     </div>
 
     <div class="section-head">
-        <h2>Ən çox satılanlar</h2>
+        <h2>Ətirlər</h2>
         <a href="{{ route('newhome') }}">Hamısına bax</a>
     </div>
 
     <div class="layout">
-        <div class="filters">
+        <form class="filters" method="GET" action="{{ route('newhome') }}">
+            @if(request('category')) <input type="hidden" name="category" value="{{ request('category') }}"> @endif
+            @if(request('brand')) <input type="hidden" name="brand" value="{{ request('brand') }}"> @endif
+            @if(request('q')) <input type="hidden" name="q" value="{{ request('q') }}"> @endif
+            @if(request('sort')) <input type="hidden" name="sort" value="{{ request('sort') }}"> @endif
             <div class="filter-group">
                 <p class="label">Qiymət</p>
-                <input type="range" min="40" max="2400">
-                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px;">
-                    <span>40 ₼</span><span>2400 ₼</span>
-                </div>
+                <label class="filter-row">Minimum <input type="number" name="min_price" min="0" value="{{ request('min_price') }}" placeholder="0 ₼"></label>
+                <label class="filter-row">Maksimum <input type="number" name="max_price" min="0" value="{{ request('max_price') }}" placeholder="2400 ₼"></label>
             </div>
             <div class="filter-group">
                 <p class="label">Ətrin növü</p>
-                <label class="filter-row"><input type="checkbox"> Eau de Parfum</label>
-                <label class="filter-row"><input type="checkbox"> Eau de Toilette</label>
-                <label class="filter-row"><input type="checkbox"> Eau de Cologne</label>
+                @foreach($types as $type)
+                    <label class="filter-row"><input type="radio" name="type" value="{{ $type->id }}" @checked((int)request('type') === $type->id)>
+                        {{ $type->{'name_' . app()->getLocale()} ?: $type->name_az }}</label>
+                @endforeach
             </div>
-            <div class="filter-group">
-                <p class="label">Qoxu qrupu</p>
-                <label class="filter-row"><input type="checkbox"> Fujer</label>
-                <label class="filter-row"><input type="checkbox"> Şipr</label>
-                <label class="filter-row"><input type="checkbox"> Şərq</label>
-                <label class="filter-row"><input type="checkbox"> Ağac</label>
-            </div>
-        </div>
+            <button type="submit" class="btn btn-dark">Filtrlə</button>
+            <a class="filter-clear" href="{{ route('newhome') }}">Sıfırla</a>
+        </form>
 
         <div>
             <div class="toolbar">
