@@ -1,9 +1,5 @@
 @extends('frontend.layout')
 
-@section('page-styles')
-    <link rel="stylesheet" href="{{ asset('frontend/css/credit-profile.css?v=' . filemtime(public_path('frontend/css/credit-profile.css'))) }}">
-@endsection
-
 @section('content')
     <main>
         <div class="container">
@@ -126,5 +122,5 @@
 @endsection
 
 @section('page-scripts')
-    <script src="{{ asset('frontend/js/credit-profile.js?v=' . filemtime(public_path('frontend/js/credit-profile.js'))) }}"></script>
+    <script src="{{ asset('frontend/js/credit-profile.js') }}"></script>
 @endsection
