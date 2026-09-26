@@ -14,6 +14,7 @@ class Product extends Model
         'type_id',
         'old_id',
         'name',
+        'slug',
         'content_az',
         'content_en',
         'content_ru',
@@ -83,13 +84,16 @@ class Product extends Model
             ->where('active', 1);
     }
 
-    public function getSlugAttribute()
+    protected static function booted(): void
     {
-        return SeoUrl::generateSlug([
-            'id'    => $this->id,
-            'brand' => ($this->brand->name)?? null,
-            'name'  => ($this->name)?? null,
-        ]);
+        static::creating(function (self $product) {
+            if (!$product->slug) {
+                $brandName = Brand::query()->whereKey($product->brand_id)->value('name') ?? '';
+                $product->slug = SeoUrl::uniqueDatabaseSlug(
+                    'products',
+                    trim($brandName . ' ' . $product->name)
+                );
+            }
+        });
     }
-
 }
