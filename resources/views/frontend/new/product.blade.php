@@ -25,7 +25,7 @@
 
     <div class="product-top">
         <div class="product-header">
-            <p class="subtitle" style="margin-bottom:0;color:var(--text-muted);font-size:13px;">{{ $product->brand->name }}</p>
+            <p class="subtitle" style="margin-bottom:0;color:var(--text-muted);font-size:13px;">{{ $product->brand?->name }}</p>
             <h1 class="title">{{ $product->name }}</h1>
             <p class="subtitle">{{ $genderName }} · {{ $typeName }}</p>
         </div>
@@ -53,8 +53,13 @@
             </div>
         </div>
 
-        <div class="buy-core" data-buybox data-base-price="{{ $initialPrice }}">
-            <div class="stars">★★★☆☆ <span style="color:var(--text-muted);font-size:12px;">({{ $product->reviews_count }} rəy)</span></div>
+        <div class="buy-core" data-buybox data-base-price="{{ $initialPrice }}" data-product-id="{{ $product->id }}">
+            <div class="stars" aria-label="{{ $ratingAverage }} / 5">
+                @for($star = 1; $star <= 5; $star++)
+                    <span>{{ $star <= round($ratingAverage) ? '★' : '☆' }}</span>
+                @endfor
+                <span style="color:var(--text-muted);font-size:12px;">({{ $product->reviews->count() }} rəy)</span>
+            </div>
 
             <p class="price-row" data-price-display>{{ number_format($initialPrice, 2) }} ₼</p>
 
@@ -74,7 +79,7 @@
                 <button type="button" data-qty-action="plus">+</button>
             </div>
 
-            <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" @disabled(!$firstVariant)>Səbətə əlavə et</button>
+            <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>Səbətə əlavə et</button>
             <a class="btn btn-outline" href="{{ auth()->check() ? route('checkout') : route('front.login', ['redirect' => route('checkout')]) }}">Sifarişi rəsmiləşdir</a>
         </div>
 
@@ -83,7 +88,7 @@
                 <img src="{{ asset('frontend/images/birbank-card.png') }}" alt="Birbank taksit kartı">
                 <div>
                     <p class="headline" data-installment-headline>
-                        {{ $firstPeriod ? number_format($initialPrice / $firstPeriod->month, 2) : number_format($initialPrice, 2) }} ₼ x {{ $firstPeriod->month ?? 1 }} ay
+                        {{ number_format($initialPrice / 6, 2) }} ₼ x 6 ay
                     </p>
                     <p class="sub">Birbank taksit kartı ilə aktiv kredit müddətlərindən birini seçərək ödə!</p>
                 </div>
@@ -100,7 +105,7 @@
                         $installmentTotal = $initialPrice + (($initialPrice * $rate) / 100);
                         $installmentMonthly = $installmentTotal / $period->month;
                     @endphp
-                    <tr class="{{ $loop->first ? 'active' : '' }}">
+                    <tr class="{{ $loop->first ? 'active' : '' }}" data-month="{{ $period->month }}" data-rate="{{ $rate }}">
                         <td>
                             <input
                                 type="radio"
@@ -112,14 +117,14 @@
                             >
                         </td>
                         <td>{{ $period->month }} ay{{ $rate == 0 ? ' Faizsiz' : '' }}</td>
-                        <td>{{ number_format($installmentMonthly, 2) }} ₼</td>
-                        <td>{{ number_format($installmentTotal, 2) }} ₼</td>
+                        <td data-installment-monthly>{{ number_format($installmentMonthly, 2) }} ₼</td>
+                        <td data-installment-total>{{ number_format($installmentTotal, 2) }} ₼</td>
                     </tr>
                 @endforeach
                 </tbody>
             </table>
 
-            <button type="button" class="btn btn-dark" data-installment-apply>Müraciət et</button>
+            <a class="btn btn-dark" href="{{ auth()->check() ? route('profile.credit') : route('front.login', ['redirect' => route('profile.credit')]) }}">Müraciət et</a>
         </div>
     </div>
 
@@ -127,17 +132,27 @@
         <div class="tab-list">
             <button type="button" class="tab-btn active" data-tab="about">Ətir haqqında</button>
             <button type="button" class="tab-btn" data-tab="reviews">
-                Rəylər <span class="tab-count">{{ $product->reviews_count ?? 0 }}</span>
+                Rəylər <span class="tab-count">{{ $product->reviews->count() }}</span>
             </button>
         </div>
 
         <div class="tab-panel" data-tab-panel="about">
-            <p>{{ $product->description }}</p>
-            <div class="notes">
-                <div><p class="k">Üst notlar</p><p class="v">{{ $product->top_notes }}</p></div>
-                <div><p class="k">Orta notlar</p><p class="v">{{ $product->heart_notes }}</p></div>
-                <div><p class="k">Baza notlar</p><p class="v">{{ $product->base_notes }}</p></div>
-            </div>
+            @php
+                $description = $product->{'content_' . $locale} ?: $product->content_az;
+                $ingredientNames = $product->ingredients
+                    ->map(fn ($ingredient) => $ingredient->{'name_' . $locale} ?: $ingredient->name_az)
+                    ->filter();
+            @endphp
+            @if($description)
+                <div class="product-description">{!! nl2br(e($description)) !!}</div>
+            @else
+                <p>Bu ətir haqqında təsvir hələ əlavə edilməyib.</p>
+            @endif
+            @if($ingredientNames->isNotEmpty())
+                <div class="notes">
+                    <div><p class="k">Ətir notları</p><p class="v">{{ $ingredientNames->join(', ') }}</p></div>
+                </div>
+            @endif
         </div>
 
         <div class="tab-panel" data-tab-panel="reviews" hidden>
