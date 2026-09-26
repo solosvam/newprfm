@@ -10,9 +10,16 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function show(Request $request, Category $category, ?string $slug = null)
+    public function legacy(int $category)
     {
-        abort_unless($category->active, 404);
+        $record = Category::whereKey($category)->where('active', 1)->firstOrFail();
+
+        return redirect()->route('category', ['slug' => $record->slug], 301);
+    }
+
+    public function show(Request $request, string $slug)
+    {
+        $category = Category::where('slug', $slug)->where('active', 1)->firstOrFail();
 
         $query = Product::with([
             'brand',
