@@ -56,13 +56,40 @@
                                     </div>
                                 </div>
 
-                                <div class="mb-3 row">
-                                    <label class="col-lg-2 col-md-3 col-sm-4 col-form-label">Şəkil (Seçilmədikdə dəyişdirilmir)</label>
-                                    <div class="col-sm-8 col-md-9 col-lg-10">
-                                        <img src="{{ asset('frontend/uploads/banners/' . $banner->url) }}" class="card-img rounded-xl sh-6 sw-6" alt="thumb" />
-                                        <input type="file" name="image" class="form-control">
+                                @foreach(['az' => 'Azərbaycan', 'en' => 'English', 'ru' => 'Русский'] as $locale => $label)
+                                    @php
+                                        $filename = $banner->{'url_' . $locale};
+                                        if ($locale === 'az' && !$filename) {
+                                            $filename = $banner->url;
+                                        }
+                                    @endphp
+                                    <div class="mb-3 row">
+                                        <label class="col-lg-2 col-md-3 col-sm-4 col-form-label">
+                                            Şəkil — {{ $label }}
+                                        </label>
+                                        <div class="col-sm-8 col-md-9 col-lg-10">
+                                            @if($filename)
+                                                <img src="{{ asset('frontend/uploads/banners/' . $filename) }}"
+                                                     class="img-fluid rounded mb-2" style="max-height: 140px;"
+                                                     alt="{{ $label }} banner">
+                                            @else
+                                                <div class="alert alert-warning py-2">
+                                                    Bu dil üçün banner yüklənməyib.
+                                                </div>
+                                            @endif
+                                            <input type="file" name="image_{{ $locale }}" id="image_{{ $locale }}"
+                                                   accept="image/*"
+                                                   class="form-control @error('image_' . $locale) is-invalid @enderror"
+                                                   {{ $filename ? '' : 'required' }}>
+                                            <small class="text-muted">
+                                                {{ $filename ? 'Yeni şəkil seçilməsə mövcud şəkil saxlanacaq.' : 'Bu dil üçün şəkil tələb olunur.' }}
+                                            </small>
+                                            @error('image_' . $locale)
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
                                     </div>
-                                </div>
+                                @endforeach
 
                                 <div class="mb-3 row">
                                     <label class="col-lg-2 col-md-3 col-sm-4 col-form-label">Aktivlik</label>
