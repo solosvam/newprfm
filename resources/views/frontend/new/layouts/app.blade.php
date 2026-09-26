@@ -25,5 +25,6 @@
     };
 </script>
 @include('frontend.new.partials.theme-script')
+@yield('page-scripts')
 </body>
 </html>
