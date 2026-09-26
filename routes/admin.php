@@ -23,6 +23,7 @@ use App\Http\Controllers\Backend\Product\CategoriesController;
 use App\Http\Controllers\Backend\Product\ProductsController;
 use App\Http\Controllers\Backend\Product\ReviewsController;
 use App\Http\Controllers\Backend\Product\ProductImportController;
+use App\Http\Controllers\Backend\Product\ProductSearchTermsController;
 
 
 /*
@@ -361,6 +362,17 @@ Route::prefix('admin')
                     Route::post('/add', 'create')->name('create');
                     Route::post('/update/{id}', 'update')->name('update');
                     Route::post('/delete/{id}', 'destroy')->name('destroy');
+                });
+
+            Route::controller(ProductSearchTermsController::class)
+                ->middleware('can:products.menu')
+                ->prefix('product/search-terms')
+                ->name('product.search-terms.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/{product}', 'show')->name('show');
+                    Route::post('/{product}', 'store')->name('store');
+                    Route::delete('/term/{term}', 'destroy')->name('destroy');
                 });
 
         });
