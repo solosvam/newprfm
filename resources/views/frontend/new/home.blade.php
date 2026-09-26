@@ -9,11 +9,19 @@
 @section('content')
 
     <div class="hero-banner">
-        @if(!empty($banners['topweb']))
-            <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']) }}" alt="Parfumshop banner">
+        @if(!empty($banners['topweb']['image']))
+            @if(!empty($banners['topweb']['url']))
+                <a class="hero-banner__link hero-banner__link--desktop" href="{{ $banners['topweb']['url'] }}" aria-label="Banner linki"><img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']['image']) }}" alt="Parfumshop banner"></a>
+            @else
+                <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']['image']) }}" alt="Parfumshop banner">
+            @endif
         @endif
-        @if(!empty($banners['topmobile']))
-            <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']) }}" alt="Parfumshop mobil banner">
+        @if(!empty($banners['topmobile']['image']))
+            @if(!empty($banners['topmobile']['url']))
+                <a class="hero-banner__link hero-banner__link--mobile" href="{{ $banners['topmobile']['url'] }}" aria-label="Banner linki"><img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']['image']) }}" alt="Parfumshop mobil banner"></a>
+            @else
+                <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']['image']) }}" alt="Parfumshop mobil banner">
+            @endif
         @endif
     </div>
 
@@ -149,11 +157,19 @@
 
 
     <div class="hero-banner">
-        @if(!empty($banners['bottomweb']))
-            <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['bottomweb']) }}" alt="Parfumshop banner">
+        @if(!empty($banners['bottomweb']['image']))
+            @if(!empty($banners['bottomweb']['url']))
+                <a class="hero-banner__link hero-banner__link--desktop" href="{{ $banners['bottomweb']['url'] }}" aria-label="Banner linki"><img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['bottomweb']['image']) }}" alt="Parfumshop banner"></a>
+            @else
+                <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['bottomweb']['image']) }}" alt="Parfumshop banner">
+            @endif
         @endif
-        @if(!empty($banners['bottommobile']))
-            <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['bottommobile']) }}" alt="Parfumshop mobil banner">
+        @if(!empty($banners['bottommobile']['image']))
+            @if(!empty($banners['bottommobile']['url']))
+                <a class="hero-banner__link hero-banner__link--mobile" href="{{ $banners['bottommobile']['url'] }}" aria-label="Banner linki"><img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['bottommobile']['image']) }}" alt="Parfumshop mobil banner"></a>
+            @else
+                <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['bottommobile']['image']) }}" alt="Parfumshop mobil banner">
+            @endif
         @endif
     </div>
 @endsection
