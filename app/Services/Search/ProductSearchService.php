@@ -50,6 +50,12 @@ class ProductSearchService
         }
 
         arsort($scores, SORT_NUMERIC);
+        $bestScore = reset($scores);
+        $relevanceFloor = max(68, $bestScore - 18);
+        $scores = array_filter(
+            $scores,
+            fn (float $score) => $score >= $relevanceFloor
+        );
         $scores = array_slice($scores, 0, max($limit * 4, 20), true);
 
         if ($scores === []) {
@@ -132,6 +138,12 @@ class ProductSearchService
                 fn (string $haystackToken) => $this->distanceScore($needleToken, $haystackToken),
                 $haystackTokens
             ));
+        }
+
+        // İki və daha çox sözlü sorğuda hər söz eyni məhsulla əlaqəli olmalıdır.
+        // Məsələn "aventus creed" yazanda təkcə "vertus" oxşarlığı kifayət etmir.
+        if (count($needleTokens) > 1 && min($tokenScores) < 60) {
+            return 0;
         }
 
         return max($phraseScore, array_sum($tokenScores) / count($tokenScores));
