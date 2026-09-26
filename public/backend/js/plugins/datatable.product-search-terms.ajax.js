@@ -1,8 +1,8 @@
 /**
- * Search term products DataTable
+ * Products Ajax DataTable
  */
 
-class ProductSearchTermsAjax {
+class ProductsAjax {
     constructor() {
         if (!jQuery().DataTable) {
             console.log('DataTable is null!');
@@ -21,7 +21,7 @@ class ProductSearchTermsAjax {
     _createInstance() {
         const _this = this;
 
-        this._datatable = jQuery('#datatableProductSearchTerms').DataTable({
+        this._datatable = jQuery('#datatableProductsAjax').DataTable({
             scrollX: true,
             buttons: ['copy', 'excel', 'csv', 'print'],
             info: false,
@@ -34,13 +34,21 @@ class ProductSearchTermsAjax {
             },
 
             order: [],
+
             sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',
+
             pageLength: 10,
 
             columns: [
                 {data: null},
+                {data: 'image'},
                 {data: 'brand'},
                 {data: 'name'},
+                {data: 'type'},
+                {data: 'variant_count'},
+                {data: 'price'},
+                {data: 'category_count'},
+                {data: 'active'},
                 {data: null}
             ],
 
@@ -69,14 +77,70 @@ class ProductSearchTermsAjax {
                     }
                 },
                 {
-                    targets: 3,
+                    targets: 1,
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        if (!data) {
+                            return `
+                                <div class="sh-6 sw-6 rounded-xl bg-light d-flex align-items-center justify-content-center">
+                                    -
+                                </div>
+                            `;
+                        }
+
+                        return `
+                            <img
+                                src="/frontend/uploads/products/${data}"
+                                class="card-img rounded-xl sh-6 sw-6"
+                                alt="${row.name || ''}"
+                            >
+                        `;
+                    }
+                },
+                {
+                    targets: 5,
+                    render: function (data) {
+                        return `${data || 0} ölçü`;
+                    }
+                },
+                {
+                    targets: 6,
+                    render: function (data) {
+                        if (data === null || data === undefined || data === '') {
+                            return '-';
+                        }
+
+                        return `${parseFloat(data).toFixed(2)} AZN`;
+                    }
+                },
+                {
+                    targets: 7,
+                    render: function (data) {
+                        return `${data || 0} kateqoriya`;
+                    }
+                },
+                {
+                    targets: 8,
+                    render: function (data) {
+                        if (parseInt(data) === 1) {
+                            return '<span class="badge bg-outline-success">Aktiv</span>';
+                        }
+
+                        return '<span class="badge bg-outline-danger">Deaktiv</span>';
+                    }
+                },
+                {
+                    targets: 9,
                     orderable: false,
                     searchable: false,
                     render: function (data, type, row) {
                         return `
-                            <a href="/admin/product/search-terms/${row.id}"
-                               class="btn btn-primary btn-sm product-search-terms-edit">
-                                Aliasları idarə et
+                            <a
+                                href="/admin/product/edit/${row.id}"
+                                class="btn btn-primary btn-sm product-edit"
+                            >
+                                Edit
                             </a>
                         `;
                     }
@@ -86,9 +150,9 @@ class ProductSearchTermsAjax {
     }
 
     _addListeners() {
-        const table = jQuery('#datatableProductSearchTerms');
+        const table = jQuery('#datatableProductsAjax');
 
-        table.on('click', '.product-search-terms-edit', function (e) {
+        table.on('click', '.product-edit', function (e) {
             e.preventDefault();
             e.stopImmediatePropagation();
 
@@ -113,16 +177,18 @@ class ProductSearchTermsAjax {
         }
 
         const pageLength = this._datatable.page.len();
+
         const scrollBody = document.querySelector(
-            '#datatableProductSearchTerms_wrapper .dataTables_scrollBody'
+            '#datatableProductsAjax_wrapper .dataTables_scrollBody'
         );
 
         if (scrollBody) {
-            scrollBody.style.height = this._staticHeight * pageLength + 'px';
+            scrollBody.style.height =
+                this._staticHeight * pageLength + 'px';
         }
     }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    new ProductSearchTermsAjax();
+    new ProductsAjax();
 });
