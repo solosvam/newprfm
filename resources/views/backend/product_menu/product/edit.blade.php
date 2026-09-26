@@ -222,16 +222,33 @@
                                                     </select>
                                                 </div>
 
-                                                <div class="mt-3">
-                                                    <label for="gender">Cinsiyyət</label>
-                                                    <select class="form-select select-multiple" id="gender" multiple name="genders[]" required>
-                                                        @foreach($genders as $gender)
-                                                            <option value="{{ $gender->id }}" @selected(in_array($gender->id, $selectedGenders))>
-                                                                {{ $gender->name_az }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <div>
+                                                        <label for="gender">Cinsiyyət</label>
+                                                        <select class="form-select select-multiple" id="gender" multiple name="genders[]" required>
+                                                            @foreach($genders as $gender)
+                                                                <option value="{{ $gender->id }}" @selected(in_array($gender->id, $selectedGenders))>
+                                                                    {{ $gender->name_az }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                    <div>
+                                                        <label for="type">Məhsul tipi</label>
+                                                        <select id="type" class="form-select select2" name="type_id" required>
+                                                            @foreach($types as $type)
+                                                                <option value="{{ $type->id }}" @selected(old('type_id', $product->type_id) == $type->id)>
+                                                                    {{ $type->name_az }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    </div>
                                                 </div>
+
                                             </div>
 
                                             <div class="col-md-6">
@@ -246,17 +263,6 @@
                                                     @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                     <small class="text-muted">Slug dəyişərsə köhnə ID-siz link artıq işləməyəcək.</small>
                                                 </div>
-                                                <div class="mt-3">
-                                                    <label for="type">Məhsul tipi</label>
-                                                    <select id="type" class="form-select select2" name="type_id" required>
-                                                        @foreach($types as $type)
-                                                            <option value="{{ $type->id }}" @selected(old('type_id', $product->type_id) == $type->id)>
-                                                                {{ $type->name_az }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-
                                                 <div class="mt-3">
                                                     <label for="ingredients">İnqrediyentlər</label>
                                                     <select class="form-select select2-tags" multiple name="ingredients[]" id="ingredients">
