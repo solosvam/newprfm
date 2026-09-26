@@ -20,7 +20,7 @@ class BrandsController extends Controller
                 return strtoupper(substr($brand->name, 0, 1)); // İlk hərfə görə qrupla
             });
 
-        return view('frontend.brands', compact('brands'));
+        return view('frontend.new.brands', compact('brands'));
     }
     public function products(string $slug)
     {

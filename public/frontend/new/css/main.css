@@ -844,7 +844,62 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 /* Responsive clickable banners: hide the link wrapper as well as its image. */
 .hero-banner__link { display:block; }
 .hero-banner__link--mobile { display:none; }
-@media (max-width:760px) {
-    .hero-banner__link--desktop { display:none; }
-    .hero-banner__link--mobile { display:block; }
+
+.brand-groups {
+    columns: 3 220px;
+    column-gap: 44px;
 }
+
+.brand-group {
+    break-inside: avoid;
+    margin-bottom: 32px;
+    display: flow-root; /* float-u konteyner daxilində saxlamaq üçün */
+}
+
+.brand-group__letter {
+    float: left;
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin: 0 16px 0 0;
+}
+
+.brand-group__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.brand-group__list li { padding: 3px 0; }
+.brand-group__list a {
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: color 0.12s;
+}
+.brand-group__list a:hover { color: var(--accent); }
+
+.account-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.account-nav-item img { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.55; }
+.account-nav-item:hover { color: var(--text); }
+.account-nav-item:hover img { opacity: 1; }
+.account-nav-item.active { color: var(--accent); font-weight: 600; }
+.account-nav-item.active img { opacity: 1; }
+.account-nav-item--filter { font-weight: 600; color: var(--text); cursor: pointer; }
+.account-nav-item--filter img { opacity: 1; }
+
+.account-nav-credit {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    width: 100%;
+}
+
+.brand-sidebar .account-nav { border-top: 1px solid var(--border); margin-top: 4px; }
