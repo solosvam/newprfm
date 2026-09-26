@@ -142,7 +142,7 @@ class ProductSearchService
 
         // İki və daha çox sözlü sorğuda hər söz eyni məhsulla əlaqəli olmalıdır.
         // Məsələn "aventus creed" yazanda təkcə "vertus" oxşarlığı kifayət etmir.
-        if (count($needleTokens) > 1 && min($tokenScores) < 60) {
+        if (count($needleTokens) > 1 && min($tokenScores) < 75) {
             return 0;
         }
 
