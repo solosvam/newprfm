@@ -93,7 +93,7 @@ class MainController extends Controller
 
         foreach ($banners as $banner) {
             $key = $banner->location . $banner->device;
-            $formattedBanners[$key] = $banner->url;
+            $formattedBanners[$key] = $banner->imageForLocale();
         }
 
         return view('frontend.main', [
