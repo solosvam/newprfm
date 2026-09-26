@@ -9,6 +9,7 @@ use App\Models\Product\ProductSearchLog;
 use App\Models\Product\ProductSearchTerm;
 use App\Services\Search\ProductSearchNormalizer;
 use App\Services\Search\ProductSearchService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,10 +48,15 @@ class ProductSearchTermsController extends Controller
             ->get();
 
         $noResultQueries = ProductSearchLog::query()
+            ->leftJoin('product_search_terms as resolved_terms', function ($join) {
+                $join->on('resolved_terms.normalized_term', '=', 'product_search_logs.normalized_query')
+                    ->where('resolved_terms.active', 1);
+            })
             ->where('searched_at', '>=', $from)
             ->where('result_count', 0)
-            ->select('normalized_query', DB::raw('MAX(query) as query'), DB::raw('COUNT(*) as search_count'))
-            ->groupBy('normalized_query')
+            ->whereNull('resolved_terms.id')
+            ->select('product_search_logs.normalized_query', DB::raw('MAX(product_search_logs.query) as query'), DB::raw('COUNT(*) as search_count'))
+            ->groupBy('product_search_logs.normalized_query')
             ->orderByDesc('search_count')
             ->limit(8)
             ->get();
@@ -90,12 +96,67 @@ class ProductSearchTermsController extends Controller
             return back()->withErrors(['term' => 'Axtarış ifadəsi boş ola bilməz.']);
         }
 
+        $message = $this->upsertManualTerm($product, $term, (int) ($data['priority'] ?? 950));
+        $search->forgetCachedTerms();
+
+        return back()->with('success', $message);
+    }
+
+    public function productLookup(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'q' => ['required', 'string', 'min:2', 'max:100'],
+        ]);
+
+        $query = trim($data['q']);
+        $products = Product::query()
+            ->with('brand')
+            ->where(function ($productQuery) use ($query) {
+                $productQuery->where('name', 'like', "%{$query}%")
+                    ->orWhereHas('brand', fn ($brandQuery) => $brandQuery->where('name', 'like', "%{$query}%"));
+            })
+            ->orderByDesc('active')
+            ->orderBy('name')
+            ->limit(15)
+            ->get()
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'name' => trim(($product->brand?->name ?? '') . ' ' . $product->name),
+            ]);
+
+        return response()->json(['products' => $products]);
+    }
+
+    public function attachNoResult(Request $request, ProductSearchService $search): RedirectResponse
+    {
+        $data = $request->validate([
+            'query' => ['required', 'string', 'max:100'],
+            'product_id' => ['required', 'integer'],
+        ]);
+
+        $product = Product::findOrFail($data['product_id']);
+        $message = $this->upsertManualTerm($product, trim($data['query']), 950);
+        $search->forgetCachedTerms();
+
+        return redirect()
+            ->route('admin.product.search-terms.index')
+            ->with('success', $message);
+    }
+
+    private function upsertManualTerm(Product $product, string $term, int $priority): string
+    {
+        $normalized = ProductSearchNormalizer::normalize($term);
+
+        if ($normalized === '') {
+            throw new \InvalidArgumentException('Axtarış ifadəsi boş ola bilməz.');
+        }
+
         $attributes = [
             'term' => $term,
             'phonetic_term' => ProductSearchNormalizer::phonetic($term),
             'token_signature' => ProductSearchNormalizer::tokenSignature($term),
             'source' => 'manual',
-            'priority' => $data['priority'] ?? 950,
+            'priority' => $priority,
             'active' => (bool) $product->active,
         ];
 
@@ -103,15 +164,12 @@ class ProductSearchTermsController extends Controller
 
         if ($existing) {
             $existing->update($attributes);
-            $message = 'Mövcud alias əl ilə idarə olunan aliasa çevrildi.';
-        } else {
-            $product->searchTerms()->create($attributes + ['normalized_term' => $normalized]);
-            $message = 'Axtarış aliası əlavə edildi.';
+            return 'Mövcud alias əl ilə idarə olunan aliasa çevrildi.';
         }
 
-        $search->forgetCachedTerms();
+        $product->searchTerms()->create($attributes + ['normalized_term' => $normalized]);
 
-        return back()->with('success', $message);
+        return 'Axtarış aliası əlavə edildi.';
     }
 
     public function destroy(ProductSearchTerm $term, ProductSearchService $search): RedirectResponse
