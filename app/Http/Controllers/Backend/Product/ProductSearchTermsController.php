@@ -109,11 +109,16 @@ class ProductSearchTermsController extends Controller
         ]);
 
         $query = trim($data['q']);
+        $tokens = array_values(array_filter(preg_split('/\s+/u', $query)));
         $products = Product::query()
             ->with('brand')
-            ->where(function ($productQuery) use ($query) {
-                $productQuery->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('brand', fn ($brandQuery) => $brandQuery->where('name', 'like', "%{$query}%"));
+            ->where(function ($productQuery) use ($tokens) {
+                foreach ($tokens as $token) {
+                    $productQuery->where(function ($tokenQuery) use ($token) {
+                        $tokenQuery->where('name', 'like', "%{$token}%")
+                            ->orWhereHas('brand', fn ($brandQuery) => $brandQuery->where('name', 'like', "%{$token}%"));
+                    });
+                }
             })
             ->orderByDesc('active')
             ->orderBy('name')
