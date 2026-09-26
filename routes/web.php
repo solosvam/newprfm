@@ -31,7 +31,9 @@ Route::get('/newhome/{slug}',[NewMainController::class,'product'])->name('newpro
 
 // NEW END
 Route::get('/',[MainController::class,'index'])->name('home');
-Route::get('/category/{category}/{slug?}',[CategoryController::class,'show'])->name('category');
+Route::get('/category/{category}/{oldSlug?}', [CategoryController::class, 'legacy'])
+    ->whereNumber('category')->name('category.legacy');
+Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
 Route::get('/brands',[BrandsController::class,'index'])->name('brands');
 Route::get('/brand/{slug}',[BrandsController::class,'products'])->name('brand.products');
