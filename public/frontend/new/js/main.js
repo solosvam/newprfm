@@ -94,10 +94,17 @@
             const button = event.target.closest('[data-tab]');
             if (button) activate(button.dataset.tab);
         });
-        if (window.location.hash === '#reviews' || document.querySelector('[data-review-errors]')) activate('reviews');
+        if (window.location.hash === '#reviews' || tabs.hasAttribute('data-show-reviews')) activate('reviews');
     }
 
     if (installment) {
+        installment.addEventListener('click', event => {
+            const row = event.target.closest('tr[data-month]');
+            if (row && !event.target.matches('input')) {
+                const radio = row.querySelector('input[name="installment"]');
+                if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change', {bubbles:true})); }
+            }
+        });
         installment.addEventListener('change', event => {
             if (event.target.matches('input[name="installment"]')) {
                 installment.querySelectorAll('tr[data-month]').forEach(row => {
@@ -178,7 +185,10 @@
             const id = Number(selected.dataset.variantId);
             const quantity = Number(document.querySelector('[data-qty-value]')?.textContent || 1);
             const item = cart.find(v => Number(v.variant_id) === id);
-            if (item) item.quantity = (Number(item.quantity) || 1) + quantity;
+            if (item) {
+                item.quantity = (Number(item.quantity) || 1) + quantity;
+                item.product_id = Number(add.dataset.productId || buybox?.dataset.productId);
+            }
             else cart.push({product_id: Number(add.dataset.productId || buybox?.dataset.productId), variant_id:id, quantity});
             localStorage.setItem('parfumshop_cart', JSON.stringify(cart));
             window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', {detail:cart}));
