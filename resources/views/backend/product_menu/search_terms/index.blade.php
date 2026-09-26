@@ -111,5 +111,108 @@
         <div class="mt-3">
             {{ $products->links('backend.pagination') }}
         </div>
+
+        <div class="modal fade" id="attachNoResultModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('admin.product.search-terms.no-result.attach') }}" class="modal-content" id="attachNoResultForm">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nəticəsiz sorğunu məhsula bağla</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="query" id="noResultQuery">
+                        <div class="mb-3">
+                            <label class="form-label">Axtarılan ifadə</label>
+                            <input class="form-control" id="noResultQueryText" readonly>
+                        </div>
+                        <div>
+                            <label class="form-label">Məhsulu axtar və seç</label>
+                            <input class="form-control" id="noResultProductSearch" autocomplete="off" placeholder="Brend və ya məhsul adı">
+                            <input type="hidden" name="product_id" id="noResultProductId">
+                            <div class="list-group mt-2" id="noResultProducts"></div>
+                            <div class="form-text" id="noResultSelectedProduct">Məhsul seçilməyib.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Bağla</button>
+                        <button type="submit" class="btn btn-primary">Alias kimi əlavə et</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('attachNoResultModal');
+        const form = document.getElementById('attachNoResultForm');
+        const query = document.getElementById('noResultQuery');
+        const queryText = document.getElementById('noResultQueryText');
+        const productSearch = document.getElementById('noResultProductSearch');
+        const productId = document.getElementById('noResultProductId');
+        const products = document.getElementById('noResultProducts');
+        const selected = document.getElementById('noResultSelectedProduct');
+        if (!modal || !form) return;
+
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
+        let timer;
+
+        const openModal = value => {
+            query.value = value;
+            queryText.value = value;
+            productSearch.value = '';
+            productId.value = '';
+            products.replaceChildren();
+            selected.textContent = 'Məhsul seçilməyib.';
+            selected.classList.remove('text-danger');
+            modalInstance.show();
+        };
+
+        document.querySelectorAll('.no-result-attach-button').forEach(button => {
+            button.addEventListener('click', () => openModal(button.dataset.noResultQuery || ''));
+        });
+
+        productSearch.addEventListener('input', () => {
+            clearTimeout(timer);
+            const value = productSearch.value.trim();
+            productId.value = '';
+            selected.textContent = 'Məhsul seçilməyib.';
+            products.replaceChildren();
+            if (value.length < 2) return;
+
+            timer = setTimeout(async () => {
+                const url = new URL('{{ route('admin.product.search-terms.products') }}', window.location.origin);
+                url.searchParams.set('q', value);
+
+                try {
+                    const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+                    const data = await response.json();
+                    (data.products || []).forEach(product => {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'list-group-item list-group-item-action';
+                        button.textContent = product.name;
+                        button.addEventListener('click', () => {
+                            productId.value = product.id;
+                            selected.textContent = 'Seçilən məhsul: ' + product.name;
+                            products.replaceChildren();
+                        });
+                        products.append(button);
+                    });
+                } catch {
+                    selected.textContent = 'Məhsullar yüklənmədi.';
+                    selected.classList.add('text-danger');
+                }
+            }, 250);
+        });
+
+        form.addEventListener('submit', event => {
+            if (productId.value) return;
+            event.preventDefault();
+            selected.textContent = 'Əvvəl məhsulu seç.';
+            selected.classList.add('text-danger');
+        });
+    });
+</script>
