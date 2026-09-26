@@ -48,10 +48,6 @@
 </main>
 @endsection
 
-@section('page-styles')
-    <link rel="stylesheet" href="{{ asset('frontend/css/cart.css?v=' . filemtime(public_path('frontend/css/cart.css'))) }}">
-@endsection
-
 @section('page-scripts')
-    <script src="{{ asset('frontend/js/cart.js?v=' . filemtime(public_path('frontend/js/cart.js'))) }}" defer></script>
+    <script src="{{ asset('frontend/js/cart.js') }}" defer></script>
 @endsection
