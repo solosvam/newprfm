@@ -128,7 +128,7 @@
         </div>
     </div>
 
-    <div class="tabs" data-tabs>
+    <div class="tabs" data-tabs @if(session('review_success') || $errors->has('rating') || $errors->has('comment')) data-show-reviews @endif>
         <div class="tab-list">
             <button type="button" class="tab-btn active" data-tab="about">Ətir haqqında</button>
             <button type="button" class="tab-btn" data-tab="reviews">
