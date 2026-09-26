@@ -18,7 +18,7 @@
                                 <ul class="brand-group__list">
                                     @foreach ($group as $brand)
                                         <li>
-                                            <a href="{{ route('brand.products', \App\Services\SeoUrl::generateImageName(['id' => $brand->id, 'title' => $brand->name])) }}">
+                                            <a href="{{ route('brand.products', $brand->slug) }}">
                                                 {{ $brand->name }}
                                             </a>
                                         </li>
