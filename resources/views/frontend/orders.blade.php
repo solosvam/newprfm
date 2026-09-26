@@ -38,7 +38,7 @@
        </div>
        <div class="order-card__body">
         <div class="order-card__status">
-         <div class="order-card__status-title">{{ ($order->status?->{'name_' . app()->getLocale()} ?: $order->status?->name_az) ?? $order->status?->name ?? __('orders_order_received') }}</div>
+         <div class="order-card__status-title">{{ $order->status?->localized_name ?? __('orders_order_received') }}</div>
          <div class="order-card__status-sub">{{ $order->items->sum('quantity') }} {{ __('orders_products_ordered') }}</div>
         </div>
         <div class="order-card__products">
