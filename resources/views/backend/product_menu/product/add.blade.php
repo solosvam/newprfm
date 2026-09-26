@@ -382,6 +382,12 @@
                                                 </div>
 
                                                 <div class="mt-3">
+                                                    <label for="slug">Slug (URL)</label>
+                                                    <input type="text" id="slug" name="slug" value="{{ old('slug') }}" class="form-control @error('slug') is-invalid @enderror" placeholder="Boş saxlasanız avtomatik yaradılacaq">
+                                                    @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                    <small class="text-muted">Məsələn: amouage-opus-xv-king-blue</small>
+                                                </div>
+                                                <div class="mt-3">
                                                     <label for="type">Məhsul tipi</label>
                                                     <select id="type" class="form-select select2" name="type_id" required>
                                                         @foreach($types as $type)
