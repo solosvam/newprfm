@@ -51,6 +51,7 @@ class ProductsController extends Controller
                 'type_id'    => $request->type_id,
                 'old_id'     => $request->old_id,
                 'name'       => $request->name,
+                'slug'       => $request->filled('slug') ? $request->slug : null,
                 'content_az' => $request->content_az,
                 'content_en' => $request->content_en,
                 'content_ru' => $request->content_ru,
@@ -206,6 +207,7 @@ class ProductsController extends Controller
             $product = Product::findOrFail($id);
 
             $product->update([
+                'slug'       => $request->filled('slug') ? $request->slug : $product->slug,
                 'brand_id'   => $request->brand_id,
                 'type_id'    => $request->type_id,
                 'old_id'     => $request->old_id,
