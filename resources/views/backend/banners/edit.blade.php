@@ -80,9 +80,9 @@
                                             <input type="file" name="image_{{ $locale }}" id="image_{{ $locale }}"
                                                    accept="image/*"
                                                    class="form-control @error('image_' . $locale) is-invalid @enderror"
-                                                   {{ $filename ? '' : 'required' }}>
+                                                   >
                                             <small class="text-muted">
-                                                {{ $filename ? 'Yeni şəkil seçilməsə mövcud şəkil saxlanacaq.' : 'Bu dil üçün şəkil tələb olunur.' }}
+                                                {{ $filename ? 'Yeni şəkil seçilməsə mövcud şəkil saxlanacaq.' : 'Şəkil yüklənənədək Azərbaycan versiyası göstəriləcək.' }}
                                             </small>
                                             @error('image_' . $locale)
                                                 <div class="invalid-feedback">{{ $message }}</div>
