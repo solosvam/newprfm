@@ -3,39 +3,33 @@
 @section('title', 'parfumshop — Ana səhifə')
 
 @section('subnav')
-    <div class="wrap">
-        <nav class="cats">
-            <a href="#" class="active">Hamısı</a>
-            <a href="#">Qadın</a>
-            <a href="#">Kişi</a>
-            <a href="#">Unisex</a>
-            <a href="#">Yeni</a>
-            <a href="#">Ekskluziv</a>
-            <a href="#">Testerlər</a>
-            <a href="#">Hədiyyə kartları</a>
-        </nav>
-    </div>
+    @include('frontend.new.partials.subnav')
 @endsection
 
 @section('content')
 
-    <div class="hero">
-        <p class="eyebrow">YENİ KOLLEKSİYA</p>
-        <h1>Payızın ətri</h1>
-        <p>Odunsu və ədviyyəli notlarla 90+ brenddən yeni sezon seçkisi</p>
-        <a class="btn-primary" href="#">Kolleksiyaya bax</a>
+    <div class="hero-banner">
+        @if(!empty($banners['topweb']))
+            <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']) }}" alt="Parfumshop banner">
+        @endif
+        @if(!empty($banners['topmobile']))
+            <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']) }}" alt="Parfumshop mobil banner">
+        @endif
     </div>
 
     <div class="brands">
-        @foreach (['Chanel','Dior','Creed','Amouage','Givenchy','Burberry'] as $brand)
-            <div class="brand-card">{{ $brand }}</div>
+        @foreach ($brands as $brand)
+            <a class="brand-card {{ request('brand') == $brand->id ? 'active' : '' }}"
+               href="{{ route('newhome', array_filter(['brand' => $brand->id, 'q' => request('q')])) }}">
+                {{ $brand->name }}
+            </a>
         @endforeach
-        <div class="brand-card more">+94 brend</div>
+        <a class="brand-card more" href="{{ route('brands') }}">{{ __('brands') }} →</a>
     </div>
 
     <div class="section-head">
         <h2>Ən çox satılanlar</h2>
-        <a href="#">Hamısına bax</a>
+        <a href="{{ route('newhome') }}">Hamısına bax</a>
     </div>
 
     <div class="layout">
@@ -64,8 +58,18 @@
 
         <div>
             <div class="toolbar">
-                <span>{{ $products->total() ?? 1133 }} nəticə</span>
-                <span>Sırala: Ən yenilər</span>
+                <span>{{ $products->total() }} nəticə</span>
+                <form method="GET" action="{{ route('newhome') }}">
+                    @foreach(request()->except('sort', 'page') as $key => $value)
+                        @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
+                    @endforeach
+                    <select name="sort" aria-label="Sırala" onchange="this.form.submit()">
+                        <option value="newest" @selected(request('sort', 'newest') === 'newest')>Ən yenilər</option>
+                        <option value="oldest" @selected(request('sort') === 'oldest')>Ən köhnələr</option>
+                        <option value="price_asc" @selected(request('sort') === 'price_asc')>Ucuzdan bahaya</option>
+                        <option value="price_desc" @selected(request('sort') === 'price_desc')>Bahadan ucuza</option>
+                    </select>
+                </form>
             </div>
             <div class="grid">
                 @foreach ($products ?? [] as $product)
@@ -86,12 +90,12 @@
                     @endphp
                     <div class="card" data-href="{{ route('newproduct', $product->slug) }}">
                         <div class="thumb">
-                            <span class="badge">3</span>
+                            @if($firstVariant)<span class="badge">{{ $firstVariant->size?->{'name_' . $locale} ?? $firstVariant->size?->name_az }}</span>@endif
 
                             <div class="thumb-actions">
                                 <button
                                     type="button"
-                                    class="icon-btn fav-btn {{ ($product->id == '1137') ? 'active' : '' }}"
+                                    class="icon-btn fav-btn {{ auth()->check() && auth()->user()->favoriteProducts()->where('products.id', $product->id)->exists() ? 'active' : '' }}"
                                     data-product-id="{{ $product->id }}"
                                     aria-label="Seçilmişlərə əlavə et"
                                 >
@@ -138,11 +142,12 @@
                             @endif
                         </p>
                         <p class="pname">{{ $product->name }}</p>
-                        <p class="price">{{ $firstVariant?->price }} ₼</p>
+                        <p class="price">@if($firstVariant){{ $firstVariant->size?->{'name_' . $locale} ?? $firstVariant->size?->name_az }} / {{ number_format((float) $firstVariant->price, 2) }} ₼@endif</p>
                     </div>
                 @endforeach
             </div>
         </div>
     </div>
+    <div class="catalog-pagination">{{ $products->links() }}</div>
 
 @endsection
