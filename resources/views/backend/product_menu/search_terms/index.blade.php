@@ -128,7 +128,7 @@
                         </div>
                         <div>
                             <label class="form-label">Brend</label>
-                            <select class="form-select" id="noResultBrandId">
+                            <select id="noResultBrandId">
                                 <option value="">Brend seçin</option>
                                 @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}">{{ $brand->name }}</option>
@@ -137,7 +137,7 @@
                         </div>
                         <div class="mt-3">
                             <label class="form-label">Məhsul</label>
-                            <select class="form-select" name="product_id" id="noResultProductId" disabled>
+                            <select name="product_id" id="noResultProductId" disabled>
                                 <option value="">Əvvəl brend seçin</option>
                             </select>
                             <div class="form-text" id="noResultSelectedProduct">Məhsul seçilməyib.</div>
