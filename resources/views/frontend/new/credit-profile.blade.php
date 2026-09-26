@@ -97,10 +97,9 @@
                                                 {{ $hasImage ? __('credit_change') : __('credit_select_image') }}
                                             </button>
 
-                                            <input class="credit-file"
+                                            <input @class(['credit-file', 'is-invalid' => $errors->has($field)])
                                                    id="{{ $field }}"
                                                    name="{{ $field }}"
-                                                   @class(['is-invalid' => $errors->has($field)])
                                                    aria-describedby="{{ $field }}-error"
                                                    @class(['is-invalid' => $errors->has($field)])
                                                    aria-describedby="{{ $field }}-error"
