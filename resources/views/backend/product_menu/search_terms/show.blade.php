@@ -1,9 +1,9 @@
 @php
-    $title = 'Axtarış aliasları';
+    $title = 'Axtarış idarəetməsi';
     $productTitle = trim(($product->brand?->name ?? '') . ' ' . $product->name);
     $breadcrumbs = [
         '/admin' => 'ParfumShop',
-        route('admin.product.search-terms.index') => 'Axtarış aliasları',
+        route('admin.product.search-terms.index') => 'Axtarış idarəetməsi',
         '#' => $productTitle,
     ];
 @endphp
@@ -65,6 +65,7 @@
                             <th>Alias</th>
                             <th>Mənbə</th>
                             <th>Prioritet</th>
+                            <th>Status</th>
                             <th class="text-end">Əməliyyat</th>
                         </tr>
                         </thead>
@@ -84,8 +85,22 @@
                                         <span class="badge bg-secondary">Sistem</span>
                                     @endif
                                 </td>
-                                <td>{{ $term->priority }}</td>
+                                <td>
+                                    <input form="term-update-{{ $term->id }}" class="form-control form-control-sm" style="width: 82px" type="number" name="priority" value="{{ $term->priority }}" min="1" max="1000">
+                                </td>
+                                <td>
+                                    <input form="term-update-{{ $term->id }}" type="hidden" name="active" value="0">
+                                    <label class="form-check mb-0">
+                                        <input form="term-update-{{ $term->id }}" class="form-check-input" type="checkbox" name="active" value="1" @checked($term->active)>
+                                        <span class="form-check-label">Aktiv</span>
+                                    </label>
+                                </td>
                                 <td class="text-end">
+                                    <form id="term-update-{{ $term->id }}" method="POST" action="{{ route('admin.product.search-terms.term.update', $term) }}" class="d-inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <button class="btn btn-sm btn-outline-primary" type="submit">Saxla</button>
+                                    </form>
                                     <form method="POST" action="{{ route('admin.product.search-terms.destroy', $term) }}" class="d-inline" onsubmit="return confirm('Bu alias silinsin?')">
                                         @csrf
                                         @method('DELETE')
@@ -95,7 +110,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">Bu məhsul üçün alias yoxdur.</td>
+                                <td colspan="5" class="text-center text-muted py-4">Bu məhsul üçün alias yoxdur.</td>
                             </tr>
                         @endforelse
                         </tbody>
