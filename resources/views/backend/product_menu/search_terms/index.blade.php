@@ -218,7 +218,7 @@
             button.addEventListener('click', () => openModal(button.dataset.noResultQuery || ''));
         });
 
-        brandId.addEventListener('change', async () => {
+        const loadBrandProducts = async () => {
             const value = brandId.value;
             resetProducts();
             selected.textContent = 'Məhsul seçilməyib.';
@@ -226,16 +226,33 @@
 
             const url = new URL('{{ route('admin.product.search-terms.products') }}', window.location.origin);
             url.searchParams.set('brand_id', value);
-            const response = await fetch(url, {headers: {'Accept': 'application/json'}});
-            const data = await response.json();
-            productId.replaceChildren(new Option('Məhsul seçin', ''));
-            (data.products || []).forEach(product => productId.append(new Option(product.name, product.id)));
-            setProductDisabled(false);
 
-            if (window.jQuery && window.jQuery.fn.select2) {
-                window.jQuery(productId).trigger('change.select2');
+            try {
+                const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+
+                if (!response.ok) {
+                    throw new Error('Məhsullar yüklənmədi.');
+                }
+
+                const data = await response.json();
+                productId.replaceChildren(new Option('Məhsul seçin', ''));
+                (data.products || []).forEach(product => productId.append(new Option(product.name, product.id)));
+                setProductDisabled(false);
+
+                if (window.jQuery && window.jQuery.fn.select2) {
+                    window.jQuery(productId).trigger('change.select2');
+                }
+            } catch (error) {
+                selected.textContent = 'Məhsullar yüklənmədi. Səhifəni yenilə və yenidən sına.';
+                selected.classList.add('text-danger');
             }
-        });
+        };
+
+        brandId.addEventListener('change', loadBrandProducts);
+
+        if (window.jQuery) {
+            window.jQuery(brandId).on('select2:select', loadBrandProducts);
+        }
 
         productId.addEventListener('change', () => {
             const option = productId.options[productId.selectedIndex];
