@@ -38,7 +38,13 @@
             <div class="col-12 col-xl-4"><div class="card h-100"><div class="card-body">
                 <h2 class="h5 mb-3">Nəticəsiz axtarışlar</h2>
                 @forelse($noResultQueries as $item)
-                    <div class="d-flex justify-content-between border-bottom py-2 gap-2"><span>{{ $item->query }}</span><span class="badge bg-danger">{{ $item->search_count }}</span></div>
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2 gap-2">
+                        <span>{{ $item->query }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger">{{ $item->search_count }}</span>
+                            <button class="btn btn-sm btn-outline-primary" type="button" data-no-result-query="{{ $item->query }}" data-bs-toggle="modal" data-bs-target="#attachNoResultModal">Məhsula bağla</button>
+                        </div>
+                    </div>
                 @empty
                     <div class="text-muted">Hələ nəticəsiz axtarış yoxdur.</div>
                 @endforelse
