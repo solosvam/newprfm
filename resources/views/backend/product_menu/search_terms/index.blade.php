@@ -18,7 +18,7 @@
 @section('js_page')
     <script src="{{ asset('backend/js/vendor/datatables.min.js') }}"></script>
     <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
-    <script src="{{ asset('backend/js/plugins/datatable.product-search-terms.ajax.js') }}?v=2"></script>
+    <script src="{{ asset('backend/js/plugins/datatable.product-search-terms.ajax.js') }}?v=3"></script>
 @endsection
 
 @section('content')
