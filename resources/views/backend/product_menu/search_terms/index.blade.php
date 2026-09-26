@@ -69,7 +69,7 @@
         </div>
 
         <div class="mt-3">
-            {{ $products->links() }}
+            {{ $products->links('backend.pagination') }}
         </div>
     </div>
 @endsection

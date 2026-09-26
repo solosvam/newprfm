@@ -365,7 +365,7 @@ Route::prefix('admin')
                 });
 
             Route::controller(ProductSearchTermsController::class)
-                ->middleware('can:products.menu')
+                ->middleware('can:product.search-terms')
                 ->prefix('product/search-terms')
                 ->name('product.search-terms.')
                 ->group(function () {
