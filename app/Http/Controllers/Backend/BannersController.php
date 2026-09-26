@@ -30,6 +30,7 @@ class BannersController extends Controller
             'location' => $data['location'],
             'device' => $data['device'],
             'active' => 1,
+            'link_url' => $data['link_url'] ?? null,
         ]);
 
         foreach (self::LOCALES as $locale) {
@@ -63,6 +64,7 @@ class BannersController extends Controller
         $banner->location = $data['location'];
         $banner->device = $data['device'];
         $banner->active = $data['active'];
+        $banner->link_url = $data['link_url'] ?? null;
 
         $oldImages = [];
 
@@ -106,6 +108,11 @@ class BannersController extends Controller
         $rules = [
             'location' => ['required', Rule::in(['top', 'bottom'])],
             'device' => ['required', Rule::in(['mobile', 'web'])],
+            'link_url' => ['nullable', 'url', 'max:2048', function ($attribute, $value, $fail) {
+                if ($value && !in_array(strtolower(parse_url($value, PHP_URL_SCHEME) ?? ''), ['http', 'https'], true)) {
+                    $fail('Link http və ya https ilə başlamalıdır.');
+                }
+            }],
         ];
 
         if (!$creating) {
