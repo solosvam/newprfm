@@ -28,6 +28,8 @@
         });
     }
 
+    window.parfumshopNotify = notify;
+
     // Laravel redirect-lərindən sonra bütün yeni Blade səhifələrində flash bildirişləri göstər.
     const flash = window.parfumshopFlash || {};
     for (const type of ['success', 'error', 'warning', 'info']) {
