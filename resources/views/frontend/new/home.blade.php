@@ -27,8 +27,8 @@
 
     <div class="brands">
         @foreach ($brands as $brand)
-            <a class="brand-card {{ request('brand') == $brand->id ? 'active' : '' }}"
-               href="{{ route('newhome', array_filter(['brand' => $brand->id, 'q' => request('q')])) }}">
+            <a class="brand-card {{ (isset($selectedBrand) && $selectedBrand?->id === $brand->id) ? 'active' : '' }}"
+               href="{{ route('brand.products', ['slug' => $brand->slug]) }}">
                 {{ $brand->name }}
             </a>
         @endforeach
