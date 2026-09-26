@@ -8,6 +8,12 @@
 
 @extends('backend.layout', ['title' => $title])
 
+@section('css')
+    <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2.min.css') }}"/>
+    <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2-bootstrap4.min.css') }}"/>
+    <style>.select2-container--open { z-index: 2000; }</style>
+@endsection
+
 @section('content')
     <div class="container">
         <div class="page-title-container">
@@ -128,7 +134,7 @@
                         </div>
                         <div>
                             <label class="form-label">Brend</label>
-                            <select class="form-select" id="noResultBrandId">
+                            <select class="form-select select2" id="noResultBrandId">
                                 <option value="">Brend seçin</option>
                                 @foreach($brands as $brand)
                                     <option value="{{ $brand->id }}">{{ $brand->name }}</option>
@@ -137,7 +143,7 @@
                         </div>
                         <div class="mt-3">
                             <label class="form-label">Məhsul</label>
-                            <select class="form-select" name="product_id" id="noResultProductId" disabled>
+                            <select class="form-select select2" name="product_id" id="noResultProductId" disabled>
                                 <option value="">Əvvəl brend seçin</option>
                             </select>
                             <div class="form-text" id="noResultSelectedProduct">Məhsul seçilməyib.</div>
