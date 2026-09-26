@@ -309,5 +309,11 @@
     "navigation_for_women": "Qadın üçün",
     "navigation_9_00_am_7_00_pm_mon_sat": "9:00 - 19:00. B.e. - Ş.",
     "navigation_online_orders_are_accepted_around_the_clock_and_processed_du": "Sayt üzərindən edilən sifarişlər bütün sutka ərzində növbəyə alınır və iş saatı ərzində baxılır.",
-    "product_interest_free": "Faizsiz"
+    "product_interest_free": "Faizsiz",
+    "reviews_approved": "Təsdiqlənib",
+    "reviews_pending_approval": "Təsdiq gözləyir",
+    "reviews_delete": "Sil",
+    "reviews_confirm_delete": "Bu rəyi silmək istəyirsiniz?",
+    "reviews_deleted": "Rəy silindi.",
+    "reviews_submitted_for_approval": "Rəyiniz göndərildi. Admin təsdiqlədikdən sonra saytda görünəcək."
 }
