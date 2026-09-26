@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\ImportOldParfumshopCategory;
+use App\Console\Commands\GenerateAiProductSearchTerms;
 use App\Console\Commands\SyncProductSearchTerms;
 
 use App\Http\Middleware\setLangMiddleware;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         ImportOldParfumshopCategory::class,
+        GenerateAiProductSearchTerms::class,
         SyncProductSearchTerms::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
