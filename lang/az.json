@@ -315,5 +315,6 @@
     "reviews_delete": "Sil",
     "reviews_confirm_delete": "Bu rəyi silmək istəyirsiniz?",
     "reviews_deleted": "Rəy silindi.",
-    "reviews_submitted_for_approval": "Rəyiniz göndərildi. Admin təsdiqlədikdən sonra saytda görünəcək."
+    "reviews_submitted_for_approval": "Rəyiniz göndərildi. Admin təsdiqlədikdən sonra saytda görünəcək.",
+    "auth_dont_have_account_yet" : "Hesabınız yoxdur?"
 }

@@ -146,6 +146,6 @@
             </div>
         </div>
     </div>
-    <div class="catalog-pagination">{{ $products->links() }}</div>
+    {{ $products->links('frontend.include.pagination') }}
 
 @endsection

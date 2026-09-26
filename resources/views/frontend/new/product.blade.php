@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <div class="buy-core" data-buybox data-base-price="{{ $initialPrice }}" data-product-id="{{ $product->id }}">
+        <div class="buy-core" data-buybox data-base-price="{{ $initialPrice }}">
             <div class="stars" aria-label="{{ $ratingAverage }} / 5">
                 @for($star = 1; $star <= 5; $star++)
                     <span>{{ $star <= round($ratingAverage) ? '★' : '☆' }}</span>
@@ -61,7 +61,15 @@
                 <span style="color:var(--text-muted);font-size:12px;">({{ $product->reviews->count() }} rəy)</span>
             </div>
 
-            <p class="price-row" data-price-display>{{ number_format($initialPrice, 2) }} ₼</p>
+            <div class="price-qty-row">
+                <p class="price-row" data-price-display>{{ number_format($initialPrice, 2) }} ₼</p>
+
+                <div class="qty">
+                    <button type="button" data-qty-action="minus">−</button>
+                    <span data-qty-value>1</span>
+                    <button type="button" data-qty-action="plus">+</button>
+                </div>
+            </div>
 
             <div class="size-pills">
                 @foreach ($variants as $variant)
@@ -71,12 +79,6 @@
                         data-price="{{ $variant->price }}"
                     >{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
                 @endforeach
-            </div>
-
-            <div class="qty">
-                <button type="button" data-qty-action="minus">−</button>
-                <span data-qty-value>1</span>
-                <button type="button" data-qty-action="plus">+</button>
             </div>
 
             <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>Səbətə əlavə et</button>
@@ -126,6 +128,7 @@
 
             <a class="btn btn-dark" href="{{ auth()->check() ? route('profile.credit') : route('front.login', ['redirect' => route('profile.credit')]) }}">Müraciət et</a>
         </div>
+
     </div>
 
     <div class="tabs" data-tabs @if(session('review_success') || $errors->has('rating') || $errors->has('comment')) data-show-reviews @endif>

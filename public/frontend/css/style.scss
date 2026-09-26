@@ -1340,6 +1340,7 @@ main {
                 }
 
                 @media screen and (max-width: 768px) {
+
                     main .cabinet__sections .get-birkart {
                         display: none !important;
                     }
@@ -2126,7 +2127,7 @@ main {
                                                 .heart-icon {
                                                     width: 24px;
                                                     height: 24px;
-                                                    background: url("../images/wishlist-red-heart.svg")
+                                                    background: url(../images/wishlist-red-heart.svg)
                                                     no-repeat center;
                                                     background-size: contain;
                                                     cursor: pointer;

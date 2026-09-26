@@ -15,17 +15,17 @@
                         <div class="account-form-grid">
                             <div class="form-field">
                                 <label>{{ __('profile_first_name') }}</label>
-                                <input id="personal-name" type="text" name="name" @class(['is-invalid' => $errors->has('name')]) aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" aria-describedby="personal-name-error" value="{{ old('name', auth()->user()->name) }}" placeholder="{{ __('profile_first_name') }}">
+                                <input id="personal-name" type="text" name="name" @class(['is-invalid' => $errors->has('name')]) aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" aria-describedby="personal-name-error" value="{{ old('name', auth()->user()->name) }}" placeholder="{{ __('profile_first_name') }}" required>
                                 <div class="invalid-feedback" id="personal-name-error" data-error="name">{{ $errors->first('name') }}</div>
                             </div>
                             <div class="form-field">
                                 <label>{{ __('profile_last_name') }}</label>
-                                <input id="personal-surname" type="text" name="surname" @class(['is-invalid' => $errors->has('surname')]) aria-invalid="{{ $errors->has('surname') ? 'true' : 'false' }}" aria-describedby="personal-surname-error" value="{{ old('surname', auth()->user()->surname) }}" placeholder="{{ __('profile_last_name') }}">
+                                <input id="personal-surname" type="text" name="surname" @class(['is-invalid' => $errors->has('surname')]) aria-invalid="{{ $errors->has('surname') ? 'true' : 'false' }}" aria-describedby="personal-surname-error" value="{{ old('surname', auth()->user()->surname) }}" placeholder="{{ __('profile_last_name') }}" required>
                                 <div class="invalid-feedback" id="personal-surname-error" data-error="surname">{{ $errors->first('surname') }}</div>
                             </div>
                             <div class="form-field">
                                 <label>{{ __('profile_your_email') }}</label>
-                                <input id="personal-email" type="email" name="email" @class(['is-invalid' => $errors->has('email')]) aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="personal-email-error" value="{{ old('email', auth()->user()->email) }}" placeholder="{{ __('profile_your_email') }}">
+                                <input id="personal-email" type="email" name="email" @class(['is-invalid' => $errors->has('email')]) aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="personal-email-error" value="{{ old('email', auth()->user()->email) }}" placeholder="{{ __('profile_your_email') }}" required>
                                 <div class="invalid-feedback" id="personal-email-error" data-error="email">{{ $errors->first('email') }}</div>
                             </div>
                             <div class="form-field">

@@ -380,5 +380,6 @@
     "reviews_delete": "Удалить",
     "reviews_confirm_delete": "Вы уверены, что хотите удалить этот отзыв?",
     "reviews_deleted": "Отзыв удалён.",
-    "reviews_submitted_for_approval": "Ваш отзыв отправлен. Он появится на сайте после одобрения администратором."
+    "reviews_submitted_for_approval": "Ваш отзыв отправлен. Он появится на сайте после одобрения администратором.",
+    "auth_dont_have_account_yet" : "Нет аккаунта?"
 }

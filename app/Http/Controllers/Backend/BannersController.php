@@ -134,10 +134,10 @@ class BannersController extends Controller
     {
         if ($device === 'web') {
             $width = 1920;
-            $height = 660;
+            $height = 370;
         } elseif ($location === 'top') {
-            $width = 800;
-            $height = 560;
+            $width = 790;
+            $height = 300;
         } else {
             $width = 800;
             $height = 220;

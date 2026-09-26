@@ -2,10 +2,62 @@
     <div class="wrap header-row">
         <a href="{{ route('newhome') }}" class="logo">parfumshop</a>
 
-        <form class="search" method="GET" action="{{ route('newhome') }}">
+        <form class="search" method="GET" action="{{ route('newhome') }}" id="searchForm" autocomplete="off">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="search" name="q" value="{{ request('q') }}" placeholder="Brend və ya ətir axtar..." aria-label="Məhsul axtar">
+            <input type="search" name="q" id="searchInput" value="{{ request('q') }}" placeholder="Brend və ya ətir axtar..." aria-label="Məhsul axtar">
         </form>
+
+        <div class="search-results" id="searchResults" hidden>
+            <a class="search-result-item" href="#">
+                <div class="search-result-thumb">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
+                </div>
+                <div class="search-result-info">
+                    <p class="search-result-brand">Amouage</p>
+                    <p class="search-result-name">Opus XV — King Blue</p>
+                    <div class="search-result-meta">Eau de Parfum <span class="dot">&middot;</span> Unisex</div>
+                </div>
+                <span class="search-result-price">110 ml / 340.00 ₼</span>
+            </a>
+
+            <a class="search-result-item" href="#">
+                <div class="search-result-thumb">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
+                </div>
+                <div class="search-result-info">
+                    <p class="search-result-brand">Creed</p>
+                    <p class="search-result-name">Aventus</p>
+                    <div class="search-result-meta">Eau de Parfum <span class="dot">&middot;</span> Kişi</div>
+                </div>
+                <span class="search-result-price">100 ml / 748.00 ₼</span>
+            </a>
+
+            <a class="search-result-item" href="#">
+                <div class="search-result-thumb">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
+                </div>
+                <div class="search-result-info">
+                    <p class="search-result-brand">Burberry</p>
+                    <p class="search-result-name">Her Intense</p>
+                    <div class="search-result-meta">Eau de Parfum <span class="dot">&middot;</span> Qadın</div>
+                </div>
+                <span class="search-result-price">100 ml / 299.00 ₼</span>
+            </a>
+
+            <a class="search-result-item" href="#">
+                <div class="search-result-thumb">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
+                </div>
+                <div class="search-result-info">
+                    <p class="search-result-brand">Issey Miyake</p>
+                    <p class="search-result-name">L'Eau d'Issey</p>
+                    <div class="search-result-meta">Eau de Toilette <span class="dot">&middot;</span> Kişi</div>
+                </div>
+                <span class="search-result-price">75 ml / 146.00 ₼</span>
+            </a>
+
+            <a class="search-results-more" href="#">Bütün nəticələrə bax</a>
+        </div>
 
         <div class="icons">
             <button id="theme-toggle" type="button" aria-label="Rejimi dəyiş">

@@ -18,7 +18,7 @@ class AuthController extends Controller
 {
     public function login()
     {
-        return view('frontend.login');
+        return view('frontend.new.login');
     }
 
     public function checkMobile(Request $request, SmsService $sms)
