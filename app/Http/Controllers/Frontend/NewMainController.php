@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Banners;
 use App\Models\Product\Brand;
 use App\Models\Product\Category;
+use App\Models\Product\Type;
 use App\Models\CreditPeriod;
 use App\Models\Faq;
 use App\Models\CreditTerms;
@@ -21,6 +22,7 @@ class NewMainController extends Controller
         $banners = Banners::where('active', 1)->get();
         $selectedCategory = null;
         $categories = Category::where('active', 1)->orderBy('id')->get();
+        $types = Type::orderBy('id')->get();
         $brands = Brand::where('active', 1)->whereHas('products', fn ($q) => $q->where('active', 1))->orderBy('name')->get();
         $selectedBrand = $request->integer('brand');
         $search = trim((string) $request->input('q', ''));
@@ -89,7 +91,7 @@ class NewMainController extends Controller
         }
 
         if ($request->filled('type')) {
-            $query->whereHas('type', fn ($q) => $q->where('name_en', $request->input('type')));
+            $query->whereHas('type', fn ($q) => $q->where('id', (int) $request->input('type')));
         }
 
         switch ($request->get('sort')) {
@@ -134,6 +136,7 @@ class NewMainController extends Controller
             'selectedCategory' => $selectedCategory,
             'categories' => $categories,
             'brands' => $brands,
+            'types' => $types,
         ]);
     }
 
