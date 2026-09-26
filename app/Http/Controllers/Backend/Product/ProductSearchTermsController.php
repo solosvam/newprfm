@@ -139,6 +139,24 @@ class ProductSearchTermsController extends Controller
             ->with('success', $message);
     }
 
+    public function destroyNoResult(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'query' => ['required', 'string', 'max:100'],
+        ]);
+
+        $normalizedQuery = ProductSearchNormalizer::normalize($data['query']);
+
+        ProductSearchLog::query()
+            ->where('normalized_query', $normalizedQuery)
+            ->where('result_count', 0)
+            ->delete();
+
+        return redirect()
+            ->route('admin.product.search-terms.index')
+            ->with('success', 'Nəticəsiz axtarış qeydi silindi.');
+    }
+
     private function upsertManualTerm(Product $product, string $term, int $priority): string
     {
         $normalized = ProductSearchNormalizer::normalize($term);
