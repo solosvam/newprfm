@@ -232,6 +232,16 @@ class AuthController extends Controller
         return view('frontend.reviews', compact('reviews'));
     }
 
+    public function destroyReview(ProductReview $review)
+    {
+        abort_unless($review->customer_id === auth()->id(), 403);
+        abort_if($review->active, 403);
+
+        $review->delete();
+
+        return back()->with('success', __('reviews_deleted'));
+    }
+
     private function sendOtp(string $mobile, SmsService $sms): void
     {
         $throttleKey = 'login-otp-throttle:'.$mobile;
