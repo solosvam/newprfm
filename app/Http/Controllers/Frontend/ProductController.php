@@ -100,7 +100,7 @@ class ProductController extends Controller
 
         return back()->with('review_success', __('reviews_submitted_for_approval'));
     }
-    public function wishlistProducts(Request $request)
+    public function wishlist(Request $request)
     {
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter()->map(fn ($id) => (int) $id)->unique()->values();
@@ -120,7 +120,7 @@ class ProductController extends Controller
             ]);
     }
 
-    public function cartProducts(Request $request)
+    public function cart(Request $request)
     {
         $variantIds = collect(explode(',', (string) $request->query('variants')))
             ->filter()->map(fn ($id) => (int) $id)->unique()->values();
