@@ -1,0 +1,13 @@
+[data-theme="dark"] {
+    --bg: #19161F;
+    --surface: #211c2b;
+    --surface-2: #2a2438;
+    --accent-bg: #302442;
+    --accent: #BDA4E5;
+    --on-accent: #1c1330;
+    --on-accent-bg: #F5F1F8;
+    --text: #F5F1F8;
+    --text-secondary: #b3a9c4;
+    --text-muted: #7d7290;
+    --border: #2f2a3c;
+}

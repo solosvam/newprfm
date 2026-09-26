@@ -10,6 +10,8 @@ use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\FavoriteController;
 use App\Http\Controllers\Frontend\CreditProfileController;
+
+use App\Http\Controllers\Frontend\NewMainController;
 use Illuminate\Validation\Rule;
 
 Route::post('/language', function (Request $request) {
@@ -22,6 +24,12 @@ Route::post('/language', function (Request $request) {
     return response()->json(['locale' => $data['locale']]);
 })->name('language.change');
 
+
+// NEW START
+Route::get('/newhome',[NewMainController::class,'index'])->name('newhome');
+Route::get('/newhome/{slug}',[NewMainController::class,'product'])->name('newproduct');
+
+// NEW END
 Route::get('/',[MainController::class,'index'])->name('home');
 Route::get('/category/{category}/{slug?}',[CategoryController::class,'show'])->name('category');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');

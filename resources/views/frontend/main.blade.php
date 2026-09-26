@@ -106,7 +106,7 @@
 
                                         @if($genderName || $typeName)
                                             <span class="product-type">
-                                            @if($genderName)
+                                                @if($genderName)
                                                     {{ $genderName }}
                                                 @endif
 
@@ -117,7 +117,7 @@
                                                 @if($typeName)
                                                     {{ $typeName }}
                                                 @endif
-                                        </span>
+                                            </span>
                                         @endif
 
                                         @if($variants->count())
