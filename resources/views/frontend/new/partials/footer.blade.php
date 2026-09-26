@@ -11,11 +11,20 @@
         </div>
         <div>
             <h4>Kateqoriyalar</h4>
-            <ul><li>Qadın ətirləri</li><li>Kişi ətirləri</li><li>Unisex</li><li>Hədiyyə dəstləri</li><li>Testerlər</li></ul>
+            <ul>
+                @foreach(\App\Models\Product\Category::where('active', 1)->orderBy('id')->get() as $category)
+                    <li><a href="{{ route('newhome', ['category' => $category->id]) }}">{{ $category->{'name_' . app()->getLocale()} ?: $category->name_az }}</a></li>
+                @endforeach
+            </ul>
         </div>
         <div>
             <h4>Kömək</h4>
-            <ul><li>Necə sifariş edim</li><li>Çatdırılma qaydaları</li><li>Hissə-hissə ödəniş</li><li>Qaytarma şərtləri</li></ul>
+            <ul>
+                <li><a href="{{ route('cart') }}">Səbət</a></li>
+                <li><a href="{{ route('internal-credit') }}">Hissə-hissə ödəniş</a></li>
+                <li><a href="{{ route('brands') }}">Brendlər</a></li>
+                <li><a href="{{ auth()->check() ? route('profile') : route('front.login') }}">Şəxsi kabinet</a></li>
+            </ul>
         </div>
         <div>
             <h4>Əlaqə</h4>
