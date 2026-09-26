@@ -6,9 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>ParfumShop.az</title>
-    <link rel="stylesheet" href="{{ asset('frontend/css/style.css?v=' . filemtime(public_path('frontend/css/style.css'))) }}">
-    <link rel="stylesheet" href="{{ asset('frontend/css/app.css?v=' . filemtime(public_path('frontend/css/app.css'))) }}">
-    @yield('page-styles')
+    <link rel="stylesheet" href="{{ asset('frontend/css/frontend.css') }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/responsive.css') }}">
 </head>
 <body>
 <!-- Header section -->
