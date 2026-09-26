@@ -7,14 +7,20 @@
     function notify(message, type = 'success') {
         if (!window.jQuery || typeof window.jQuery.notify !== 'function') return;
         const $ = window.jQuery;
-        if (!$.notify.getStyle('parfumshop-success')) {
-            $.notify.addStyle('parfumshop-success', {
-                html: '<div><div class="ps-notify"><span class="ps-notify__check">✓</span><span data-notify-text></span></div></div>'
+        const icons = { success: '✓', error: '✕', warning: '!', info: 'i' };
+        const variant = Object.prototype.hasOwnProperty.call(icons, type) ? type : 'info';
+        const style = 'parfumshop-' + variant;
+
+        if (!$.notify.getStyle(style)) {
+            $.notify.addStyle(style, {
+                html: '<div><div class="ps-notify"><span class="ps-notify__check">' +
+                    icons[variant] + '</span><span data-notify-text></span></div></div>'
             });
         }
+
         $.notify(message, {
-            style: 'parfumshop-success',
-            className: type,
+            style,
+            className: variant,
             globalPosition: 'top right',
             autoHideDelay: 3000,
             showAnimation: 'fadeIn',
