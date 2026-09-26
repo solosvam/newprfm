@@ -25,10 +25,10 @@ class ProductSearchTermsTable {
             sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',
             pageLength: 10,
             initComplete: function () {
-                _this._setInlineHeight();
+                _this._setInlineHeight(this.api().page.len());
             },
             drawCallback: function () {
-                _this._setInlineHeight();
+                _this._setInlineHeight(this.api().page.len());
             },
             columns: [
                 {data: null},
@@ -73,13 +73,13 @@ class ProductSearchTermsTable {
         });
     }
 
-    _setInlineHeight() {
+    _setInlineHeight(pageLength) {
         const scrollBody = document.querySelector(
             '#datatableProductSearchTerms_wrapper .dataTables_scrollBody'
         );
 
         if (scrollBody) {
-            scrollBody.style.height = this._staticHeight * this._datatable.page.len() + 'px';
+            scrollBody.style.height = this._staticHeight * pageLength + 'px';
         }
     }
 }
