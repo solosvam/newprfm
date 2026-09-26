@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Backend\Product;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AddProductRequest;
+use App\Models\Order\OrderItem;
 use App\Models\Product\Brand;
 use App\Models\Product\Category;
 use App\Models\Product\Gender;
 use App\Models\Product\Ingredient;
-use App\Models\Product\ProductImage;
 use App\Models\Product\Product;
+use App\Models\Product\ProductImage;
 use App\Models\Product\ProductVariant;
 use App\Models\Product\Size;
 use App\Models\Product\Type;
-use App\Models\OrderItem;
 use App\Services\SeoUrl;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;

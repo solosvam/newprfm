@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\Frontend\MainController;
@@ -9,10 +10,11 @@ use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\FavoriteController;
 use App\Http\Controllers\Frontend\CreditProfileController;
+use Illuminate\Validation\Rule;
 
-Route::post('/language', function (\Illuminate\Http\Request $request) {
+Route::post('/language', function (Request $request) {
     $data = $request->validate([
-        'locale' => ['required', \Illuminate\Validation\Rule::in(['az', 'en', 'ru'])],
+        'locale' => ['required',Rule::in(['az', 'en', 'ru'])],
     ]);
 
     $request->session()->put('locale', $data['locale']);

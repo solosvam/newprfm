@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product\ProductVariant;
 use App\Support\LocalizedValidation;
 use App\Models\Product\Product;
 use App\Models\Product\ProductReview;
@@ -91,7 +92,7 @@ class ProductController extends Controller
 
         return back()->with('review_success', __('validation_your_review_has_been_added'));
     }
-    public function wishlistProducts(\Illuminate\Http\Request $request)
+    public function wishlistProducts(Request $request)
     {
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter()->map(fn ($id) => (int) $id)->unique()->values();
@@ -111,12 +112,12 @@ class ProductController extends Controller
             ]);
     }
 
-    public function cartProducts(\Illuminate\Http\Request $request)
+    public function cartProducts(Request $request)
     {
         $variantIds = collect(explode(',', (string) $request->query('variants')))
             ->filter()->map(fn ($id) => (int) $id)->unique()->values();
 
-        return \App\Models\Product\ProductVariant::with(['product.brand','product.images','product.genders','product.type','size'])
+        return ProductVariant::with(['product.brand','product.images','product.genders','product.type','size'])
             ->whereIn('id', $variantIds)
             ->where('active', 1)
             ->get()

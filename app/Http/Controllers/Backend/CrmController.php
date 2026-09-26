@@ -136,7 +136,7 @@ class CrmController extends Controller
         return view('backend.crm.sms', compact('messages', 'error'));
     }
 
-    public function order(Customer $customer, \App\Models\Order $order): View
+    public function order(Customer $customer, \App\Models\Order\Order $order): View
     {
         abort_unless($order->customer_id === $customer->id, 404);
 

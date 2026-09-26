@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 use App\Models\Customer\Customer;
-use App\Models\Order;
+use App\Models\Order\Order;
 use App\Models\Setting;
 
 class BonusService {

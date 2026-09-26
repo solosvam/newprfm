@@ -7,6 +7,7 @@ use App\Models\Banners;
 use App\Models\Faq;
 use App\Models\CreditTerms;
 use App\Models\Product\Product;
+use App\Models\Product\ProductVariant;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
@@ -53,37 +54,31 @@ class MainController extends Controller
             }
         }
 
-        switch ($request->get('sort')) {
-            case 'newest':
-                $query->orderByDesc('id');
-                break;
 
+        switch ($request->get('sort')) {
             case 'oldest':
-                $query->orderBy('id');
+                $query->orderBy('products.id');
                 break;
 
             case 'price_asc':
-                $query->orderBy(
-                    Product::selectRaw('MIN(product_variants.price)')
-                        ->join('product_variants', 'product_variants.product_id', '=', 'products.id')
-                        ->whereColumn('products.id', 'product_variants.product_id')
-                        ->where('product_variants.active', 1)
-                );
-                break;
-
             case 'price_desc':
-                $query->orderByDesc(
-                    Product::selectRaw('MIN(product_variants.price)')
-                        ->join('product_variants', 'product_variants.product_id', '=', 'products.id')
-                        ->whereColumn('products.id', 'product_variants.product_id')
-                        ->where('product_variants.active', 1)
+                $priceQuery = ProductVariant::query()
+                    ->selectRaw('MIN(price)')
+                    ->whereColumn('product_id', 'products.id')
+                    ->where('active', 1);
+
+                $query->orderBy(
+                    $priceQuery,
+                    $request->get('sort') === 'price_asc' ? 'asc' : 'desc'
                 );
                 break;
 
+            case 'newest':
             default:
-                $query->orderByDesc('id');
+                $query->orderByDesc('products.id');
                 break;
         }
+
 
         $products = $query
             ->paginate(12)

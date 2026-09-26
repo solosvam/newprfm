@@ -2,7 +2,7 @@
 
 namespace App\Models\Customer;
 
-use App\Models\Order;
+use App\Models\Order\Order;
 use App\Models\Product\Product;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;

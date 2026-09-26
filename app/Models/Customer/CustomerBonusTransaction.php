@@ -1,6 +1,6 @@
 <?php
 namespace App\Models\Customer;
-use App\Models\Order;
+use App\Models\Order\Order;
 use Illuminate\Database\Eloquent\Model;
 
 class CustomerBonusTransaction extends Model {

@@ -1,7 +1,0 @@
-<?php
-namespace App\Models;
-use App\Models\Customer\Customer;
-use App\Models\Customer\CustomerAddress;
-use Illuminate\Database\Eloquent\Model;
-
-class Order extends Model {protected $guarded=[];protected function casts():array{return ['gift_wrap'=>'boolean','subtotal'=>'decimal:2','discount'=>'decimal:2','total'=>'decimal:2'];}public function items(){return $this->hasMany(OrderItem::class);}public function paymentMethod(){return $this->belongsTo(PaymentMethod::class);}public function customer(){return $this->belongsTo(Customer::class);}public function status(){return $this->belongsTo(OrderStatus::class,'order_status_id');}public function address(){return $this->belongsTo(CustomerAddress::class,'customer_address_id');}}

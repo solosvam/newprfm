@@ -1,5 +1,5 @@
 <?php
-namespace App\Models;
+namespace App\Models\Order;
 
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;

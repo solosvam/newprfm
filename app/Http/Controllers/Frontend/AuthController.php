@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Support\LocalizedValidation;
 use App\Models\Customer\Customer;
-use App\Models\Order;
+use App\Models\Order\Order;
+use App\Models\Product\ProductReview;
 use App\Services\SmsService;
+use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -223,7 +224,7 @@ class AuthController extends Controller
 
     public function reviews()
     {
-        $reviews = \App\Models\ProductReview::with(['product.brand', 'product.images'])
+        $reviews = ProductReview::with(['product.brand', 'product.images'])
             ->where('customer_id', auth()->id())
             ->latest()
             ->get();
