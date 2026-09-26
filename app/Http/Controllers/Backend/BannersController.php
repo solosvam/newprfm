@@ -117,15 +117,8 @@ class BannersController extends Controller
         }
 
         foreach (self::LOCALES as $locale) {
-            $existing = $banner?->{'url_' . $locale};
-
-            // Existing AZ banners can still use the original url column.
-            if ($locale === 'az' && !$existing) {
-                $existing = $banner?->url;
-            }
-
             $rules['image_' . $locale] = [
-                $creating || !$existing ? 'required' : 'nullable',
+                $creating ? 'required' : 'nullable',
                 'image',
                 'max:10240',
             ];
