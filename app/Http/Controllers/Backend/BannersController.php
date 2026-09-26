@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Banners;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
@@ -144,8 +143,7 @@ class BannersController extends Controller
             $height = 220;
         }
 
-        $imageName = $bannerId . '-' . $location . '-' . $device . '-' . $locale
-            . '-' . Str::uuid() . '.webp';
+        $imageName = $bannerId . '-' . $location . '-' . $device . '-' . $locale . '.webp';
 
         $directory = public_path('frontend/uploads/banners');
         File::ensureDirectoryExists($directory);
