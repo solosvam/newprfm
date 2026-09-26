@@ -374,5 +374,11 @@
     "navigation_for_women": "For women",
     "navigation_9_00_am_7_00_pm_mon_sat": "9:00 AM – 7:00 PM, Mon–Sat",
     "navigation_online_orders_are_accepted_around_the_clock_and_processed_du": "Online orders are accepted around the clock and processed during business hours.",
-    "product_interest_free": "Interest-free"
+    "product_interest_free": "Interest-free",
+    "reviews_approved": "Approved",
+    "reviews_pending_approval": "Awaiting approval",
+    "reviews_delete": "Delete",
+    "reviews_confirm_delete": "Are you sure you want to delete this review?",
+    "reviews_deleted": "Review deleted.",
+    "reviews_submitted_for_approval": "Your review was submitted. It will appear on the site after admin approval."
 }
