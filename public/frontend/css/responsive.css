@@ -1,7 +1,6 @@
 /* Responsive overrides — loaded after frontend.css */
 html { -webkit-text-size-adjust: 100%; }
 img, video, iframe { max-width: 100%; }
-.container { max-width: 100%; }
 @media (max-width: 1199px) {
     .cart-layout { gap: 24px; grid-template-columns: minmax(0, 1fr) 290px; }
     .cart-summary { padding: 22px; }
