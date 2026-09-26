@@ -189,9 +189,17 @@
             });
         };
 
+        const setProductDisabled = disabled => {
+            productId.disabled = disabled;
+
+            if (window.jQuery && window.jQuery.fn.select2) {
+                window.jQuery(productId).prop('disabled', disabled).trigger('change.select2');
+            }
+        };
+
         const resetProducts = () => {
             productId.replaceChildren(new Option('Əvvəl brend seçin', ''));
-            productId.disabled = true;
+            setProductDisabled(true);
         };
 
         const openModal = value => {
@@ -222,7 +230,11 @@
             const data = await response.json();
             productId.replaceChildren(new Option('Məhsul seçin', ''));
             (data.products || []).forEach(product => productId.append(new Option(product.name, product.id)));
-            productId.disabled = false;
+            setProductDisabled(false);
+
+            if (window.jQuery && window.jQuery.fn.select2) {
+                window.jQuery(productId).trigger('change.select2');
+            }
         });
 
         productId.addEventListener('change', () => {
