@@ -18,7 +18,7 @@ class BannersController extends Controller
     public function index()
     {
         return view('backend.banners.list', [
-            'banners' => Banners::orderByDesc('id')->paginate(25),
+            'banners' => Banners::orderByDesc('id')->get(),
         ]);
     }
 
