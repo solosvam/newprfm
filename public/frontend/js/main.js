@@ -212,21 +212,48 @@
         }
     }
 
+    const favoriteSelector = '.fav-btn, .favorite-toggle';
+    const activeFavoriteIcon = '/frontend/images/product-card-wishlist-active.svg';
+
+    function paintFavorites(ids) {
+        const selectedIds = ids.map(Number);
+
+        document.querySelectorAll(favoriteSelector).forEach(button => {
+            const active = selectedIds.includes(Number(button.dataset.productId));
+            button.classList.toggle('active', active);
+            button.classList.toggle('is-favorite', active);
+            button.setAttribute('aria-pressed', String(active));
+
+            const icon = button.querySelector('img');
+            if (!icon) return;
+
+            const outlineIcon = icon.dataset.outlineIcon || icon.getAttribute('src');
+            icon.dataset.outlineIcon = outlineIcon;
+            icon.src = active ? activeFavoriteIcon : outlineIcon;
+        });
+    }
+
+    window.paintFavorites = paintFavorites;
+
     async function syncFavorites() {
         if (!loggedIn) {
             const ids = readArray(favoritesKey).map(Number);
-            document.querySelectorAll('.fav-btn').forEach(btn => btn.classList.toggle('active', ids.includes(Number(btn.dataset.productId))));
+            paintFavorites(ids);
             updateCounts();
             return;
         }
+
         try {
             const response = await fetch('/favorites/ids', {headers: {'Accept':'application/json'}});
             if (!response.ok) return;
+
             const ids = (await response.json()).ids.map(Number);
             localStorage.setItem(favoritesKey, JSON.stringify(ids));
-            document.querySelectorAll('.fav-btn').forEach(btn => btn.classList.toggle('active', ids.includes(Number(btn.dataset.productId))));
+            paintFavorites(ids);
             updateCounts();
-        } catch (error) { console.warn('Seçilmişlər yüklənmədi', error); }
+        } catch (error) {
+            console.warn('Seçilmişlər yüklənmədi', error);
+        }
     }
 
     const buybox = document.querySelector('[data-buybox]');
@@ -303,30 +330,40 @@
     initHeaderSearch();
 
     document.addEventListener('click', async event => {
-        const fav = event.target.closest('.fav-btn');
+        const fav = event.target.closest(favoriteSelector);
         if (fav) {
             event.preventDefault();
+
             const id = Number(fav.dataset.productId);
             const ids = readArray(favoritesKey).map(Number);
             const active = ids.includes(id);
-            fav.classList.toggle('active', !active);
-            localStorage.setItem(favoritesKey, JSON.stringify(active ? ids.filter(v => v !== id) : [...ids, id]));
+            const updatedIds = active ? ids.filter(value => value !== id) : [...ids, id];
+
+            localStorage.setItem(favoritesKey, JSON.stringify(updatedIds));
+            paintFavorites(updatedIds);
             updateCounts();
+
             if (loggedIn) {
                 try {
                     const response = await fetch('/favorites/' + id, {
                         method: active ? 'DELETE' : 'POST',
                         headers: {'X-CSRF-TOKEN': csrf || '', 'Accept':'application/json'}
                     });
+
                     if (!response.ok) throw new Error('HTTP ' + response.status);
                 } catch {
                     localStorage.setItem(favoritesKey, JSON.stringify(ids));
-                    fav.classList.toggle('active', active);
+                    paintFavorites(ids);
                     updateCounts();
                     notify('Əməliyyat yerinə yetirilmədi', 'error');
                     return;
                 }
             }
+
+            if (active) {
+                fav.closest('.wishlist-card')?.remove();
+            }
+
             notify(active ? (window.parfumshopMessages?.favoriteRemoved || 'Seçilmişlərdən silindi') : (window.parfumshopMessages?.favoriteAdded || 'Seçilmişlərə əlavə edildi'));
             return;
         }
@@ -483,8 +520,6 @@
         maxInput.addEventListener('input', update);
         update();
     });
-
-
 
     const languageSwitcher = document.getElementById('languageSwitcher');
 
