@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product\Brand;
 use App\Services\SeoUrl;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\File;
@@ -25,6 +26,7 @@ class BrandsController extends Controller
     {
         $request->validate([
             'name'  => 'required|string|max:255',
+            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('brands', 'slug')],
             'image' => 'required|image|max:10240',
         ], [
             'name.required'  => 'Brend adı daxil edilməlidir.',
@@ -34,7 +36,8 @@ class BrandsController extends Controller
         ]);
 
         $brand = Brand::create([
-            'name' => $request->name
+            'name' => $request->name,
+            'slug' => $request->filled('slug') ? $request->slug : null,
         ]);
 
         $brand->image = $this->saveBrandImage(
@@ -61,6 +64,7 @@ class BrandsController extends Controller
         $request->validate([
             'id'     => 'required',
             'name'   => 'required|string|max:255',
+            'slug'   => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('brands', 'slug')->ignore($request->id)],
             'image'  => 'nullable|image|max:10240',
             'active' => 'required',
         ], [
@@ -74,6 +78,9 @@ class BrandsController extends Controller
         $brand = Brand::findOrFail($request->id);
 
         $brand->name   = $request->name;
+        if ($request->filled('slug')) {
+            $brand->slug = $request->slug;
+        }
         $brand->active = $request->active;
 
         if ($request->hasFile('image')) {
