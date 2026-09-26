@@ -4,13 +4,13 @@ namespace App\Services;
 
 class SeoUrl
 {
-    public static function uniqueDatabaseSlug(string $table, string $name): string
+    public static function uniqueDatabaseSlug(string $table, string $name, ?int $exceptId = null): string
     {
         $base = substr(\Illuminate\Support\Str::slug($name) ?: $table, 0, 235);
         $slug = $base;
         $suffix = 2;
 
-        while (\Illuminate\Support\Facades\DB::table($table)->where('slug', $slug)->exists()) {
+        while (\Illuminate\Support\Facades\DB::table($table)->where('slug', $slug)->when($exceptId, fn ($query) => $query->where('id', '!=', $exceptId))->exists()) {
             $slug = $base . '-' . $suffix++;
         }
 
