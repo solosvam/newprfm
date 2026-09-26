@@ -145,11 +145,14 @@ Sistem rəsmi "brend + məhsul" adını avtomatik
 Aşağıdakı kateqoriyaları nəzərə al:
 
 1. QISA VƏ ALTERNATİV AXTARIŞLAR
-- Məhsulun brendsiz tam adı.
-- Brend + məhsulun tanınan qısa adı.
-- Məhsul + brend şəklində tərs söz sırası.
-- Yalnız bu məhsulu müəyyən etməyə kömək edən
-  mənalı qısaltmalar.
+- Məhsulun brendsiz tam adını ayrıca qaytarma:
+  sistem rəsmi "brend + məhsul" adından onu özü tapır.
+- Rəsmi adın başlanğıcı olan natamam hissələri
+  qətiyyən yaratma: "Aventus" üçün "avent", "aventu"
+  kimi ifadələr faydasızdır və qadağandır.
+- Yalnız yazılışı həqiqətən fərqli olan tanınan
+  qısa formaları və məhsul + brend şəklində tərs
+  söz sırasını nəzərə al.
 - Başqa məhsullarla qarışa biləcək həddindən
   artıq ümumi ifadələr yaratma.
 
