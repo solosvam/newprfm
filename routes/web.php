@@ -26,6 +26,7 @@ Route::post('/language', function (Request $request) {
 })->name('language.change');
 
 Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+Route::post('/search/click', [SearchController::class, 'click'])->name('search.click');
 
 
 // NEW START
