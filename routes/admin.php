@@ -371,6 +371,7 @@ Route::prefix('admin')
                 ->group(function () {
                     Route::get('/products', 'productLookup')->name('products');
                     Route::post('/no-result', 'attachNoResult')->name('no-result.attach');
+                    Route::delete('/no-result', 'destroyNoResult')->name('no-result.destroy');
                     Route::get('/', 'index')->name('index');
                     Route::get('/{product}', 'show')->name('show');
                     Route::post('/{product}', 'store')->name('store');
