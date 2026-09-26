@@ -136,7 +136,7 @@ class NewMainController extends Controller
 
         foreach ($banners as $banner) {
             $key = $banner->location . $banner->device;
-            $formattedBanners[$key] = $banner->imageForLocale();
+            $formattedBanners[$key] = ['image' => $banner->imageForLocale(), 'url' => $banner->link_url];
         }
 
         return view('frontend.new.home', [
