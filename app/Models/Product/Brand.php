@@ -4,6 +4,7 @@ namespace App\Models\Product;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\SeoUrl;
 
 class Brand extends Model
 {
@@ -13,9 +14,19 @@ class Brand extends Model
     protected $fillable = [
         'id',
         'name',
+        'slug',
         'image',
         'active'
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $brand) {
+            if (!$brand->slug) {
+                $brand->slug = SeoUrl::uniqueDatabaseSlug('brands', $brand->name);
+            }
+        });
+    }
 
     public function products()
     {
