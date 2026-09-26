@@ -258,6 +258,13 @@
                         </a>
                     </li>
                     @endcan
+                    @can('product.review')
+                        <li>
+                            <a href="{{ route('admin.product.review.list') }}">
+                                <span class="label">Rəylər</span>
+                            </a>
+                        </li>
+                    @endcan
                     @can('category.menu')
                         <li>
                             <a href="{{route('admin.category.list')}}">
