@@ -8,6 +8,10 @@ class ProductSearchTermsTable {
             return;
         }
 
+        this._staticHeight = 62;
+
+        const _this = this;
+
         this._datatable = jQuery('#datatableProductSearchTerms').DataTable({
             scrollX: true,
             info: false,
@@ -20,6 +24,12 @@ class ProductSearchTermsTable {
             order: [],
             sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',
             pageLength: 10,
+            initComplete: function () {
+                _this._setInlineHeight();
+            },
+            drawCallback: function () {
+                _this._setInlineHeight();
+            },
             columns: [
                 {data: null},
                 {data: 'brand'},
@@ -61,6 +71,16 @@ class ProductSearchTermsTable {
             anySelectCallback: function () {},
             noneSelectCallback: function () {}
         });
+    }
+
+    _setInlineHeight() {
+        const scrollBody = document.querySelector(
+            '#datatableProductSearchTerms_wrapper .dataTables_scrollBody'
+        );
+
+        if (scrollBody) {
+            scrollBody.style.height = this._staticHeight * this._datatable.page.len() + 'px';
+        }
     }
 }
 
