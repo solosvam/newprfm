@@ -10,7 +10,7 @@
             <li><a href="{{ route('profile.personal') }}" class="{{ request()->routeIs('profile.personal*') ? 'cabinet-active' : '' }}">{{ __('catalog_personal_details') }}</a></li>
             <li><a href="{{ route('profile.credit') }}" class="{{ request()->routeIs('profile.credit*') ? 'cabinet-active' : '' }}">{{ __('credit_title') }} @if(!auth()->user()->creditProfile?->isComplete()) <small>({{ __('credit_sidebar_incomplete') }})</small> @endif</a></li>
             <li><a href="{{ route('profile.orders') }}" class="{{ request()->routeIs('profile.orders') ? 'cabinet-active' : '' }}">{{ __('orders_history') }}</a></li>
-            <li><a href="{{ route('profile.bonuses') }}" class="{{ request()->routeIs('profile.bonuses') ? 'cabinet-active' : '' }}">{{ __('bonus_bonus_history') }}</a></li>
+            <li><a href="{{ route('profile.bonus') }}" class="{{ request()->routeIs('profile.bonus') ? 'cabinet-active' : '' }}">{{ __('bonus_bonus_history') }}</a></li>
             <li><a href="{{ route('profile.wishlist') }}" class="{{ request()->routeIs('profile.wishlist') ? 'cabinet-active' : '' }}">{{ __('wishlist_my_favorites') }} <span id="cabinetWishlistCount">{{ auth()->user()->favoriteProducts()->count() }}</span></a></li>
             <li><a href="{{ route('profile.reviews') }}" class="{{ request()->routeIs('profile.reviews') ? 'cabinet-active' : '' }}">{{ __('reviews_my_reviews') }}</a></li>
         </ul>

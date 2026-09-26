@@ -140,12 +140,12 @@ class AuthController extends Controller
 
     public function profile()
     {
-        return view('frontend.profile');
+        return view('frontend.new.profile');
     }
 
     public function personal()
     {
-        return view('frontend.personal');
+        return view('frontend.new.personal');
     }
 
     public function updatePersonal(Request $request)
@@ -188,7 +188,7 @@ class AuthController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('frontend.orders', compact('orders'));
+        return view('frontend.new.orders', compact('orders'));
     }
 
     public function order(Order $order)
@@ -207,20 +207,16 @@ class AuthController extends Controller
         return view('frontend.order-detail', compact('order'));
     }
 
-    public function bonuses()
+    public function bonus()
     {
         $transactions = auth()->user()->bonusTransactions()
             ->with('order')
             ->latest()
             ->paginate(20);
 
-        return view('frontend.bonuses', compact('transactions'));
+        return view('frontend.new.bonus', compact('transactions'));
     }
 
-    public function wishlist()
-    {
-        return view('frontend.wishlist');
-    }
 
     public function reviews()
     {
@@ -229,7 +225,7 @@ class AuthController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('frontend.reviews', compact('reviews'));
+        return view('frontend.new.reviews', compact('reviews'));
     }
 
     public function destroyReview(ProductReview $review)

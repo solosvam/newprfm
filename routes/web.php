@@ -63,7 +63,7 @@ Route::middleware('auth')->group(function(){
    Route::post('/profile/personal',[AuthController::class,'updatePersonal'])->name('profile.personal.update');
    Route::get('/profile/orders',[AuthController::class,'orders'])->name('profile.orders');
    Route::get('/profile/orders/{order}',[AuthController::class,'order'])->name('profile.orders.show');
-   Route::get('/profile/bonuses',[AuthController::class,'bonuses'])->name('profile.bonuses');
+   Route::get('/profile/bonus',[AuthController::class,'bonus'])->name('profile.bonus');
    Route::get('/profile/wishlist',[FavoriteController::class,'index'])->name('profile.wishlist');
    Route::get('/favorites/ids',[FavoriteController::class,'ids'])->name('favorites.ids');
    Route::post('/favorites/sync',[FavoriteController::class,'sync'])->name('favorites.sync');

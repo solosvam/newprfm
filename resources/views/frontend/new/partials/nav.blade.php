@@ -20,9 +20,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 <span class="header-count is-empty" id="headerCartCount">0</span>
             </a>
-            <a href="{{ auth()->check() ? route('profile') : route('front.login') }}" class="header-icon-link header-profile" aria-label="Profil">
+            <a href="{{ auth()->check() ? route('profile') : route('front.login') }}" class="header-icon-link header-profile" aria-label="{{ auth()->check() ? __('auth_my_account') : __('auth_login') }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="8" r="4"/><path d="M4 22a8 8 0 0 1 16 0"/></svg>
-                @auth <span>{{ auth()->user()->name }}</span> @endauth
+                @auth
+                    <span class="header-profile-name">{{ auth()->user()->name }} {{ mb_substr(auth()->user()->surname, 0, 1) }}.</span>
+                @else
+                    <span class="header-profile-name">{{ __('auth_sign_in') }}</span>
+                @endauth
             </a>
         </div>
     </div>

@@ -11,7 +11,7 @@ class FavoriteController extends Controller
 {
     public function guest()
     {
-        return view('frontend.wishlist-guest');
+        return view('frontend.new.wishlist-guest');
     }
 
     public function index(Request $request)
@@ -22,7 +22,7 @@ class FavoriteController extends Controller
             ->latest('product_favorites.created_at')
             ->get();
 
-        return view('frontend.wishlist', compact('products'));
+        return view('frontend.new.wishlist', compact('products'));
     }
 
     public function ids(Request $request)
