@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banners;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
@@ -132,23 +133,7 @@ class BannersController extends Controller
 
     private function saveBannerImage($file, string $device, string $location, int $bannerId, string $locale): string
     {
-        if ($device === 'web') {
-            if($location === 'top'){
-                $width = 1920;
-                $height = 370;
-            }else{
-                $width = 1920;
-                $height = 300;
-            }
-        } else {
-            if ($location === 'top') {
-                $width = 790;
-                $height = 300;
-            } else {
-                $width = 790;
-                $height = 220;
-            }
-        }
+        [$width, $height] = Setting::bannerDimensions($device, $location);
 
         $imageName = $bannerId . '-' . $location . '-' . $device . '-' . $locale . '.webp';
 
