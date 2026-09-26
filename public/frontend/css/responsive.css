@@ -1,0 +1,42 @@
+/* Responsive overrides — loaded after frontend.css */
+html { -webkit-text-size-adjust: 100%; }
+img, video, iframe { max-width: 100%; }
+.container { max-width: 100%; }
+@media (max-width: 1199px) {
+    .cart-layout { gap: 24px; grid-template-columns: minmax(0, 1fr) 290px; }
+    .cart-summary { padding: 22px; }
+}
+@media (max-width: 991px) {
+    .cart-layout { grid-template-columns: minmax(0, 1fr); }
+    .cart-summary { width: 100%; box-sizing: border-box; }
+    .credit-form .credit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cabinet .cabinet__comments { width: 100%; min-width: 0; }
+    main .home-page .main-products__list { justify-content: flex-start; gap: 18px; }
+    main .home-page .main-products__list .product-item { width: calc(50% - 9px); }
+}
+@media (max-width: 768px) {
+    .cart-page { padding: 24px 0 48px; }
+    .cart-breadcrumb h1 { margin-top: 16px; }
+    .cart-row { grid-template-columns: 95px minmax(0, 1fr); gap: 14px; padding: 18px 0; }
+    .cart-row__image { width: 95px; height: 120px; }
+    .cart-row__image img { max-width: 75px; max-height: 100px; }
+    .cart-row__name { font-size: 16px; overflow-wrap: anywhere; }
+    .cart-row__price { font-size: 19px; margin-top: 12px; }
+    .cart-row__bottom { margin-top: 16px; gap: 10px; flex-wrap: wrap; }
+    .cart-summary { padding: 20px; }
+    .credit-form .credit-grid,
+    .credit-form .credit-work-row,
+    .credit-form .credit-photos-row { grid-template-columns: minmax(0, 1fr); }
+    .credit-form .credit-work-row,
+    .credit-form .credit-photos-row { grid-column: 1 / -1; }
+    .cabinet .cabinet__comments { width: 100%; }
+    main .home-page .main-products__list .product-item { width: calc(50% - 9px); }
+}
+@media (max-width: 480px) {
+    .cart-row__qty { height: 40px; }
+    .cart-row__qty button, .cart-row__qty span { width: 36px; }
+    .cart-summary__line { overflow-wrap: anywhere; }
+    main .home-page .main-products__list { gap: 12px; }
+    main .home-page .main-products__list .product-item { width: 100%; }
+    .home-banner .banner-img img { height: auto; }
+}
