@@ -510,9 +510,38 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
     margin-top: 3px;
 }
 
-/* jQuery Notify: shared appearance for the new frontend */
+/* jQuery Notify: distinct variants and icons for each message type */
 .notifyjs-corner { z-index: 99999 !important; top: 18px !important; right: 18px !important; }
-.notifyjs-parfumshop-success-base { background: #20c95a; color: #fff; border: 0; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,.18); padding: 14px 18px; min-width: 260px; font-size: 14px; font-weight: 600; }
-.notifyjs-parfumshop-success-base .ps-notify { display: flex; align-items: center; gap: 10px; }
-.notifyjs-parfumshop-success-base .ps-notify__check { display: inline-flex; align-items: center; justify-content: center; width: 23px; height: 23px; border-radius: 50%; background: #fff; color: #20c95a; font-weight: 800; }
-.notifyjs-parfumshop-success-error { background: #d9534f; }
+.notifyjs-parfumshop-success-base,
+.notifyjs-parfumshop-error-base,
+.notifyjs-parfumshop-warning-base,
+.notifyjs-parfumshop-info-base {
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.18);
+    padding: 14px 18px;
+    min-width: 260px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.notifyjs-parfumshop-success-base { background: #20c95a; }
+.notifyjs-parfumshop-error-base { background: #d9534f; }
+.notifyjs-parfumshop-warning-base { background: #d89a21; }
+.notifyjs-parfumshop-info-base { background: #377db8; }
+.ps-notify { display: flex; align-items: center; gap: 10px; }
+.ps-notify__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 23px;
+    height: 23px;
+    flex: 0 0 23px;
+    border-radius: 50%;
+    background: #fff;
+    font-weight: 800;
+}
+.notifyjs-parfumshop-success-base .ps-notify__check { color: #20c95a; }
+.notifyjs-parfumshop-error-base .ps-notify__check { color: #d9534f; }
+.notifyjs-parfumshop-warning-base .ps-notify__check { color: #d89a21; }
+.notifyjs-parfumshop-info-base .ps-notify__check { color: #377db8; }
