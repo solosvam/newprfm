@@ -24,17 +24,14 @@ class BrandsController extends Controller
     }
     public function products(string $slug)
     {
-        $brandId = (int) SeoUrl::decodeSlug($slug);
-        $brand = Brand::where('id', $brandId)->where('active', 1)->firstOrFail();
+        $brand = Brand::where('slug', $slug)->where('active', 1)->first();
 
-        $canonicalSlug = SeoUrl::generateImageName([
-            'id' => $brand->id,
-            'title' => $brand->name,
-        ]);
-
-        if ($slug !== $canonicalSlug) {
-            return redirect()->route('brand.products', $canonicalSlug, 301);
+        if (!$brand && preg_match('/^(\\d+)(?:-|$)/', $slug, $matches)) {
+            $legacyBrand = Brand::whereKey((int) $matches[1])->where('active', 1)->firstOrFail();
+            return redirect()->route('brand.products', $legacyBrand->slug, 301);
         }
+
+        abort_unless($brand, 404);
 
         $banners = Banners::where('active', 1)->get();
 
