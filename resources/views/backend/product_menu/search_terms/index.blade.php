@@ -42,7 +42,7 @@
                         <span>{{ $item->query }}</span>
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-danger">{{ $item->search_count }}</span>
-                            <button class="btn btn-sm btn-outline-primary" type="button" data-no-result-query="{{ $item->query }}" data-bs-toggle="modal" data-bs-target="#attachNoResultModal">Məhsula bağla</button>
+                            <button class="btn btn-sm btn-outline-primary no-result-attach-button" type="button" data-no-result-query="{{ $item->query }}">Məhsula bağla</button>
                         </div>
                     </div>
                 @empty
