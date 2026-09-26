@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banners;
+use App\Models\Product\Brand;
+use App\Models\Product\Category;
 use App\Models\CreditPeriod;
 use App\Models\Faq;
 use App\Models\CreditTerms;
@@ -18,6 +20,10 @@ class NewMainController extends Controller
     {
         $banners = Banners::where('active', 1)->get();
         $selectedCategory = null;
+        $categories = Category::where('active', 1)->orderBy('id')->get();
+        $brands = Brand::where('active', 1)->whereHas('products', fn ($q) => $q->where('active', 1))->orderBy('name')->get();
+        $selectedBrand = $request->integer('brand');
+        $search = trim((string) $request->input('q', ''));
 
         $query = Product::with([
             'brand',
@@ -32,6 +38,22 @@ class NewMainController extends Controller
             'variants.size',
         ])->where('active', 1);
 
+        if ($request->filled('category')) {
+            $category = $categories->firstWhere('id', $request->integer('category'));
+            if ($category) {
+                $selectedCategory = $category;
+                $query->whereHas('categories', fn ($q) => $q->where('categories.id', $category->id));
+            }
+        }
+        if ($selectedBrand && $brands->contains('id', $selectedBrand)) {
+            $query->where('brand_id', $selectedBrand);
+        }
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('brand', fn ($b) => $b->where('name', 'like', '%' . $search . '%'));
+            });
+        }
         if ($request->filled('gender')) {
             $gender = $request->string('gender')->lower()->value();
 
@@ -97,6 +119,8 @@ class NewMainController extends Controller
             'banners' => $formattedBanners,
             'products' => $products,
             'selectedCategory' => $selectedCategory,
+            'categories' => $categories,
+            'brands' => $brands,
         ]);
     }
 
@@ -155,12 +179,14 @@ class NewMainController extends Controller
             fn ($rating) => [$rating => $product->reviews->where('rating', $rating)->count()]
         );
 
+        $categories = Category::where('active', 1)->orderBy('id')->get();
         return view('frontend.new.product', compact(
             'product',
             'similarProducts',
             'ratingAverage',
             'ratingCounts',
-            'creditPeriods'
+            'creditPeriods',
+            'categories'
         ));
     }
 
