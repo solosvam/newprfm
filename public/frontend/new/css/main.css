@@ -152,3 +152,9 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
     .header-profile span { display:none; }
     .icons { margin-left:auto; }
 }
+
+.filters input[type=number] { width:100%; min-width:0; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:7px; }
+.filters .filter-row { flex-wrap:wrap; }
+.filters .filter-row input[type=radio] { width:auto; }
+.filters .btn { margin-top:12px; }
+.filter-clear { display:block; text-align:center; font-size:12px; color:var(--text-secondary); }
