@@ -11,6 +11,13 @@
 </div>
 
 @include('frontend.new.partials.footer')
+<script>
+    window.parfumshopMessages = {
+        cartAdded: @json(__('notification_product_added_to_cart')),
+        favoriteAdded: @json(__('notification_added_to_favorites')),
+        favoriteRemoved: @json(__('notification_removed_from_favorites'))
+    };
+</script>
 @include('frontend.new.partials.theme-script')
 </body>
 </html>
