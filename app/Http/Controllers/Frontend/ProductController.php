@@ -24,7 +24,14 @@ class ProductController extends Controller
             'variants' => fn ($query) => $query->where('active', 1)->orderBy('price'),
             'variants.size',
             'reviews' => fn ($query) => $query->where('active', true)->with('customer')->latest(),
-        ])->findOrFail(SeoUrl::decodeSlug($slug));
+        ])->where('slug', $slug)->first();
+
+        if (!$product && preg_match('/^(\\d+)(?:-|$)/', $slug, $matches)) {
+            $legacyProduct = Product::findOrFail((int) $matches[1]);
+            return redirect()->route('product', $legacyProduct->slug, 301);
+        }
+
+        abort_unless($product, 404);
 
         $canonicalSlug = $product->slug;
         if ($slug !== $canonicalSlug) {
