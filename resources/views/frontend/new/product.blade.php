@@ -2,6 +2,10 @@
 
 @section('title', $product->name . ' | parfumshop')
 
+@section('subnav')
+    @include('frontend.new.partials.subnav')
+@endsection
+
 @section('content')
     @php
         $locale = app()->getLocale();
@@ -15,7 +19,7 @@
         $birbankMonth = 6;
         $birbankTotal = $initialPrice;
     @endphp
-    <p class="crumb"><a href="{{ route('home') }}">Ana səhifə</a> / <a href="#">{{ $product->brand->name }}</a> / {{ $product->name }}</p>
+    <p class="crumb"><a href="{{ route('home') }}">Ana səhifə</a> / <a href="#">{{ $product->brand?->name }}</a> / {{ $product->name }}</p>
 
     <div class="layout">
         <div>
@@ -24,7 +28,7 @@
                 @foreach ($similarProducts as $item)
                     <div class="mini-card">
                         <div class="mini-thumb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg></div>
-                        <div class="mini-info"><p class="n">{{ $item->name }}</p><p class="p">{{ $item->price }} ₼</p></div>
+                        <div class="mini-info"><p class="n">{{ $item->name }}</p><p class="p">{{ number_format((float) ($item->variants->first()?->price ?? 0), 2) }} ₼</p></div>
                     </div>
                 @endforeach
             </div>
@@ -61,7 +65,7 @@
                         <div class="thumb-actions">
                             <button
                                 type="button"
-                                class="icon-btn fav-btn {{ ($product->id == '1137') ? 'active' : '' }}"
+                                class="icon-btn fav-btn {{ auth()->check() && auth()->user()->favoriteProducts()->where('products.id', $product->id)->exists() ? 'active' : '' }}"
                                 data-product-id="{{ $product->id }}"
                                 aria-label="Seçilmişlərə əlavə et"
                             >
@@ -89,12 +93,12 @@
                               data-price="{{ $variant->price }}"
                         >{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
                     @endforeach
-                    <div class="qty"><span>−</span><span>1</span><span>+</span></div>
-                    <button class="btn btn-dark">Səbətə əlavə et</button>
-                    <button class="btn btn-outline">Bir kliklə sifariş</button>
+                    <div class="qty"><button type="button" data-qty-action="minus">−</button><span data-qty-value>1</span><button type="button" data-qty-action="plus">+</button></div>
+                    <button type="button" class="btn btn-dark" data-add-to-cart @disabled(!$firstVariant)>Səbətə əlavə et</button>
+                    <a class="btn btn-outline" href="{{ auth()->check() ? route('checkout') : route('front.login', ['redirect' => route('checkout')]) }}">Sifarişi rəsmiləşdir</a>
 
                     <div class="installment">
-                        <p class="headline">{{ $product->installment_monthly }} ₼ x {{ $product->installment_default_term }} ay</p>
+                        <p class="headline">{{ number_format($initialPrice / 6, 2) }} ₼ x 6 ay</p>
                         <p class="sub">Birbank taksit kartı ilə faizsiz ödəniş</p>
                         @foreach ($creditPeriods as $period)
                             @php
@@ -103,7 +107,7 @@
                                 $installmentMonthly = $installmentTotal / $period->month;
                             @endphp
                             <div class="term-row ">
-                                <span class="t">{{ $period->month }}</span><span>{{ number_format($installmentMonthly, 2) }} ₼ ₼/ay</span>
+                                <span class="t">{{ $period->month }}</span><span>{{ number_format($installmentMonthly, 2) }} ₼/ay</span>
                             </div>
                         @endforeach
                     </div>
@@ -112,11 +116,11 @@
 
             <div class="desc-section">
                 <h2>Haqqında</h2>
-                <p>{{ $product->description }}</p>
+                <p>{{ $product->{'content_' . $locale} ?: $product->content_az }}</p>
                 <div class="notes">
-                    <div><p class="k">Üst notlar</p><p class="v">{{ $product->top_notes }}</p></div>
-                    <div><p class="k">Orta notlar</p><p class="v">{{ $product->heart_notes }}</p></div>
-                    <div><p class="k">Baza notlar</p><p class="v">{{ $product->base_notes }}</p></div>
+                    <div><p class="k">Üst notlar</p><p class="v">{{ $product->ingredients->pluck('name')->take(3)->join(', ') }}</p></div>
+                    <div><p class="k">Orta notlar</p><p class="v">{{ $product->ingredients->pluck('name')->slice(3, 3)->join(', ') }}</p></div>
+                    <div><p class="k">Baza notlar</p><p class="v">{{ $product->ingredients->pluck('name')->slice(6, 3)->join(', ') }}</p></div>
                 </div>
             </div>
         </div>
