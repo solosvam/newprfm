@@ -25,7 +25,7 @@ class Category extends Model
             if (!$category->slug) {
                 $category->slug = SeoUrl::uniqueDatabaseSlug(
                     'categories',
-                    $category->name_az ?: $category->name_en ?: $category->name_ru ?: 'category'
+                    $category->name_en ?: $category->name_az ?: $category->name_ru ?: 'category'
                 );
             }
         });
