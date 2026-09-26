@@ -74,6 +74,36 @@ class BrandsController extends Controller
         $genders = Gender::all();
         $types = Type::orderBy('id')->get();
 
+        $recommendedProducts = Product::with([
+            'brand',
+            'type',
+            'images',
+            'variants' => fn ($query) => $query
+                ->where('active', 1)
+                ->orderBy('price'),
+            'variants.size',
+        ])
+            ->where('active', 1)
+            ->whereHas('variants', fn ($query) => $query->where('active', 1))
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
+        $bestSellers = Product::with([
+            'brand',
+            'type',
+            'images',
+            'variants' => fn ($query) => $query
+                ->where('active', 1)
+                ->orderBy('price'),
+            'variants.size',
+        ])
+            ->where('active', 1)
+            ->whereHas('variants', fn ($query) => $query->where('active', 1))
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
         return view('frontend.new.home', [
             'banners' => $formattedBanners,
             'products' => $products,
@@ -81,6 +111,8 @@ class BrandsController extends Controller
             'brands' => $brands,
             'allBrands' => $allBrands,
             'categories' => $categories,
+            'bestSellers' => $bestSellers,
+            'recommendedProducts' => $recommendedProducts,
             'genders' => $genders,
             'types' => $types,
         ]);

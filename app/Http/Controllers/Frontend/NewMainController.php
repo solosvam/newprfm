@@ -21,7 +21,6 @@ class NewMainController extends Controller
     public function index(Request $request)
     {
         $banners = Banners::where('active', 1)->get();
-        $selectedCategory = null;
         $categories = Category::where('active', 1)->orderBy('id')->get();
         $genders = Gender::all();
         $types = Type::orderBy('id')->get();
@@ -36,8 +35,6 @@ class NewMainController extends Controller
             ->limit(12)
             ->get();
         $allBrands = Brand::where('active',1)->get();
-        $selectedBrand = $request->integer('brand');
-        $search = trim((string) $request->input('q', ''));
 
         $recommendedProducts = Product::with([
             'brand',
@@ -98,44 +95,11 @@ class NewMainController extends Controller
             'variants.size',
         ])->where('active', 1);
 
-        if ($request->filled('category')) {
-            $category = $categories->firstWhere('id', $request->integer('category'));
-            if ($category) {
-                $selectedCategory = $category;
-                $query->whereHas('categories', fn ($q) => $q->where('categories.id', $category->id));
-            }
-        }
-        if ($selectedBrand && Brand::where('active', 1)->whereKey($selectedBrand)->exists()) {
-            $query->where('brand_id', $selectedBrand);
-        }
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhereHas('brand', fn ($b) => $b->where('name', 'like', '%' . $search . '%'));
-            });
-        }
         if ($request->filled('gender')) {
-            $gender = $request->string('gender')->lower()->value();
-
-            $genderNames = [
-                'women' => ['qadın', 'qadin', 'women', 'woman', 'female'],
-                'men' => ['kişi', 'kisi', 'men', 'man', 'male'],
-                'unisex' => ['unisex'],
-            ];
-
-            if (isset($genderNames[$gender])) {
-                $names = $genderNames[$gender];
-
-                $query->whereHas('genders', function ($genderQuery) use ($names) {
-                    $genderQuery->where(function ($nameQuery) use ($names) {
-                        foreach (['name_az', 'name_en', 'name_ru'] as $column) {
-                            foreach ($names as $name) {
-                                $nameQuery->orWhereRaw('LOWER(' . $column . ') LIKE ?', ['%' . $name . '%']);
-                            }
-                        }
-                    });
-                });
-            }
+            $query->whereHas(
+                'genders',
+                fn ($q) => $q->whereKey($request->integer('gender'))
+            );
         }
 
 
@@ -191,7 +155,6 @@ class NewMainController extends Controller
         return view('frontend.new.home', [
             'banners' => $formattedBanners,
             'products' => $products,
-            'selectedCategory' => $selectedCategory,
             'categories' => $categories,
             'brands' => $brands,
             'types' => $types,

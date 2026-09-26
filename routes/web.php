@@ -30,16 +30,23 @@ Route::get('/newhome',[NewMainController::class,'index'])->name('newhome');
 Route::get('/newhome/{slug}',[NewMainController::class,'product'])->name('newproduct');
 
 // NEW END
+Route::controller(BrandsController::class)->group(function () {
+    Route::get('/brands', 'index')->name('brands');
+    Route::get('/brand/{slug}', 'products')->name('brand.products');
+});
+
+Route::controller(ProductController::class)->group(function () {
+    Route::get('/cart/products', 'cartProducts')->name('cart.products');
+    Route::get('/wishlist/products', 'wishlistProducts')->name('wishlist.products');
+});
+
+
 Route::get('/',[MainController::class,'index'])->name('home');
-Route::get('/category/{category}/{oldSlug?}', [CategoryController::class, 'legacy'])
-    ->whereNumber('category')->name('category.legacy');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category');
 Route::get('/internal-credit',[MainController::class,'credit'])->name('internal-credit');
-Route::get('/brands',[BrandsController::class,'index'])->name('brands');
-Route::get('/brand/{slug}',[BrandsController::class,'products'])->name('brand.products');
 Route::view('/cart', 'frontend.new.cart')->name('cart');
-Route::get('/cart/products',[ProductController::class,'cartProducts'])->name('cart.products');
-Route::get('/wishlist/products',[ProductController::class,'wishlistProducts'])->name('wishlist.products');
+
+
 Route::get('/wishlist',[FavoriteController::class,'guest'])->name('wishlist');
 
 Route::middleware('guest')->group(function(){
