@@ -1,10 +1,5 @@
 @extends('frontend.layout')
 
-@section('page-styles')
-    <link rel="stylesheet" href="{{ asset('frontend/css/components/product-card.css?v=' . filemtime(public_path('frontend/css/components/product-card.css'))) }}">
-    <link rel="stylesheet" href="{{ asset('frontend/css/pages/home.css?v=' . filemtime(public_path('frontend/css/pages/home.css'))) }}">
-@endsection
-
 @section('content')
     @php
         $selectedCategory = $selectedCategory ?? null;
