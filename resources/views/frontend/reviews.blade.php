@@ -40,7 +40,7 @@
                                         @else
                                             <span class="review-entry__status review-entry__status--pending">{{ __('reviews_pending_approval') }}</span>
                                             <form method="POST" action="{{ route('profile.reviews.destroy', $review) }}"
-                                                  onsubmit="return confirm(@json(__('reviews_confirm_delete')))">
+                                                  onsubmit="return confirm('{{ __('reviews_confirm_delete') }}')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="review-entry__delete">{{ __('reviews_delete') }}</button>
