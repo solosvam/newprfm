@@ -32,7 +32,7 @@
                         </ul>
                         @endif
 
-                        <form method="GET" action="{{ $selectedCategory ? route('category', ['category' => $selectedCategory->id, 'slug' => \Illuminate\Support\Str::slug($selectedCategory->{'name_'.app()->getLocale()} ?: $selectedCategory->name_az)]) : route('home') }}" class="product-sort-form">
+                        <form method="GET" action="{{ $selectedCategory ? route('category', ['slug' => $selectedCategory->slug]) : route('home') }}" class="product-sort-form">
                             @if(request('gender'))
                                 <input type="hidden" name="gender" value="{{ request('gender') }}">
                             @endif
