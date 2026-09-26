@@ -28,7 +28,7 @@
 <div class="order-detail">
  <div class="order-detail__header">
   <h2>{{ __('orders_order') }} {{ $order->order_no }}</h2>
-  <p>{{ $order->created_at->format('d.m.Y, H:i') }} · {{ ($order->status?->{'name_' . app()->getLocale()} ?: $order->status?->name_az) ?? $order->status?->name }}</p>
+  <p>{{ $order->created_at->format('d.m.Y, H:i') }} · {{ $order->status?->localized_name }}</p>
  </div>
 
  <table class="order-table">
