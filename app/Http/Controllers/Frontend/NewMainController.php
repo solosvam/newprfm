@@ -79,6 +79,19 @@ class NewMainController extends Controller
         }
 
 
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $min = max(0, (float) $request->input('min_price', 0));
+            $max = (float) $request->input('max_price', 0);
+            $query->whereHas('variants', function ($q) use ($min, $max) {
+                $q->where('active', 1)->where('price', '>=', $min);
+                if ($max > 0) $q->where('price', '<=', $max);
+            });
+        }
+
+        if ($request->filled('type')) {
+            $query->whereHas('type', fn ($q) => $q->where('name_en', $request->input('type')));
+        }
+
         switch ($request->get('sort')) {
             case 'oldest':
                 $query->orderBy('products.id');
@@ -140,7 +153,7 @@ class NewMainController extends Controller
 
         $canonicalSlug = $product->slug;
         if ($slug !== $canonicalSlug) {
-            return redirect()->route('product', $canonicalSlug, 301);
+            return redirect()->route('newproduct', $canonicalSlug, 301);
         }
 
         $ingredientIds = $product->ingredients->pluck('id');
