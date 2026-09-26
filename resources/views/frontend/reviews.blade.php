@@ -1,9 +1,5 @@
 @extends('frontend.layout')
 
-@section('page-styles')
-    <link rel="stylesheet" href="{{ asset('frontend/css/pages/reviews.css?v=' . filemtime(public_path('frontend/css/pages/reviews.css'))) }}">
-@endsection
-
 @section('content')
     <main>
         <div class="container">
