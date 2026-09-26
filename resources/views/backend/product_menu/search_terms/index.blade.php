@@ -49,6 +49,12 @@
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-danger">{{ $item->search_count }}</span>
                             <button class="btn btn-sm btn-outline-primary no-result-attach-button" type="button" data-no-result-query="{{ $item->query }}">Məhsula bağla</button>
+                            <form method="POST" action="{{ route('admin.product.search-terms.no-result.destroy') }}" onsubmit="return confirm('Bu nəticəsiz axtarış qeydini silmək istəyirsən?')">
+                                @csrf
+                                @method('DELETE')
+                                <input type="hidden" name="query" value="{{ $item->query }}">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Sil</button>
+                            </form>
                         </div>
                     </div>
                 @empty
