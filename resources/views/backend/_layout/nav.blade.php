@@ -258,7 +258,7 @@
                         </a>
                     </li>
                     @endcan
-                    @can('product.review')
+                    @can('product.reviews')
                         <li>
                             <a href="{{ route('admin.product.review.list') }}">
                                 <span class="label">Rəylər</span>

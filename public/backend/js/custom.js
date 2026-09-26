@@ -10,7 +10,7 @@ $(document).on('change', '.role-permission-switch', function() {
     let permId = $(this).data('id');
 
     $.ajax({
-        url: urls.ajaxurls.setRolePermission,
+        url: ajax_url.rolePermission,
         method: 'POST',
         data: {
             checked: checked,

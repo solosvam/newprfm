@@ -331,7 +331,7 @@ Route::prefix('admin')
 
 
             Route::controller(ReviewsController::class)
-                ->middleware('can:product.review')
+                ->middleware('can:product.reviews')
                 ->prefix('product/review')
                 ->name('product.review.')
                 ->group(function () {
