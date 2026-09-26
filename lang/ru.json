@@ -374,5 +374,11 @@
     "navigation_for_women": "Для женщин",
     "navigation_9_00_am_7_00_pm_mon_sat": "09:00–19:00, пн–сб",
     "navigation_online_orders_are_accepted_around_the_clock_and_processed_du": "Заказы на сайте принимаются круглосуточно и обрабатываются в рабочее время.",
-    "product_interest_free": "Без процентов"
+    "product_interest_free": "Без процентов",
+    "reviews_approved": "Подтверждён",
+    "reviews_pending_approval": "Ожидает подтверждения",
+    "reviews_delete": "Удалить",
+    "reviews_confirm_delete": "Вы уверены, что хотите удалить этот отзыв?",
+    "reviews_deleted": "Отзыв удалён.",
+    "reviews_submitted_for_approval": "Ваш отзыв отправлен. Он появится на сайте после одобрения администратором."
 }
