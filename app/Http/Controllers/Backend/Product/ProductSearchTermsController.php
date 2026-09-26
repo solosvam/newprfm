@@ -124,4 +124,20 @@ class ProductSearchTermsController extends Controller
             ->route('admin.product.search-terms.show', $product)
             ->with('success', 'Axtarış aliası silindi.');
     }
+
+    public function updateTerm(Request $request, ProductSearchTerm $term, ProductSearchService $search): RedirectResponse
+    {
+        $data = $request->validate([
+            'priority' => ['required', 'integer', 'min:1', 'max:1000'],
+            'active' => ['nullable', 'boolean'],
+        ]);
+
+        $term->update([
+            'priority' => $data['priority'],
+            'active' => $request->boolean('active'),
+        ]);
+        $search->forgetCachedTerms();
+
+        return back()->with('success', 'Alias parametrləri yeniləndi.');
+    }
 }
