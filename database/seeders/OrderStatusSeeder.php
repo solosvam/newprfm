@@ -23,7 +23,6 @@ class OrderStatusSeeder extends Seeder
             DB::table('order_statuses')->updateOrInsert(
                 ['code' => $code],
                 [
-                    'name' => $az,
                     'name_az' => $az,
                     'name_en' => $en,
                     'name_ru' => $ru,
