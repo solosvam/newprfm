@@ -840,3 +840,11 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 }
 .sort-select:hover { border-color: var(--accent); }
 .sort-select:focus { outline: none; border-color: var(--accent); }
+
+/* Responsive clickable banners: hide the link wrapper as well as its image. */
+.hero-banner__link { display:block; }
+.hero-banner__link--mobile { display:none; }
+@media (max-width:760px) {
+    .hero-banner__link--desktop { display:none; }
+    .hero-banner__link--mobile { display:block; }
+}
