@@ -119,7 +119,7 @@
                 <p>{{ $product->{'content_' . $locale} ?: $product->content_az }}</p>
                 @if($product->ingredients->isNotEmpty())
                     <div class="notes">
-                        <div><p class="k">Ətir notları</p><p class="v">{{ $product->ingredients->pluck('name')->filter()->join(', ') }}</p></div>
+                        <div><p class="k">Ətir notları</p><p class="v">{{ $product->ingredients->map(fn ($ingredient) => $ingredient->{'name_' . $locale} ?: $ingredient->name_az)->filter()->join(', ') }}</p></div>
                     </div>
                 @endif
             </div>
