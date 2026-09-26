@@ -98,6 +98,17 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-3 row">
+                                    <label for="bannerLinkUrl" class="col-lg-2 col-md-3 col-sm-4 col-form-label">Keçid linki</label>
+                                    <div class="col-sm-8 col-md-9 col-lg-10">
+                                        <input id="bannerLinkUrl" type="url" name="link_url"
+                                               value="{{ old('link_url', $banner->link_url) }}"
+                                               placeholder="https://example.com" maxlength="2048"
+                                               class="form-control @error('link_url') is-invalid @enderror">
+                                        <small class="text-muted">Boş saxlanılarsa banner kliklənməyəcək.</small>
+                                        @error('link_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
                                 <div class="mb-3 row mt-5">
                                     <div class="col-sm-8 col-md-9 col-lg-10 ms-auto">
                                         <button type="submit" class="btn btn-primary">Yenilə</button>
