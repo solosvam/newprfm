@@ -156,7 +156,7 @@
         const selected = document.getElementById('noResultSelectedProduct');
         if (!modal || !form) return;
 
-        const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
+        const modalInstance = new bootstrap.Modal(modal);
         let timer;
 
         const openModal = value => {
