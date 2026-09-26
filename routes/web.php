@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function(){
    Route::post('/favorites/{product}',[FavoriteController::class,'store'])->name('favorites.store');
    Route::delete('/favorites/{product}',[FavoriteController::class,'destroy'])->name('favorites.destroy');
    Route::get('/profile/reviews',[AuthController::class,'reviews'])->name('profile.reviews');
+   Route::delete('/profile/reviews/{review}',[AuthController::class,'destroyReview'])->name('profile.reviews.destroy');
    Route::post('/product/{product}/review',[ProductController::class,'review'])->name('product.review');
 });
 
