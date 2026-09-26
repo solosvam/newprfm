@@ -227,7 +227,7 @@ class AuthController extends Controller
         $reviews = ProductReview::with(['product.brand', 'product.images'])
             ->where('customer_id', auth()->id())
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return view('frontend.reviews', compact('reviews'));
     }
