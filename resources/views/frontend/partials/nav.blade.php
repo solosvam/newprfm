@@ -13,7 +13,9 @@
                 </select>
             </div>
         </div>
-        <a href="{{ route('home') }}" class="logo">parfumshop</a>
+        <a href="{{ route('home') }}" class="logo logo--svg" aria-label="parfumshop">
+            @include('frontend.partials.logo')
+        </a>
 
         <form class="search" method="GET" action="{{ route('home') }}" id="searchForm" autocomplete="off"
               data-suggestions-url="{{ route('search.suggestions') }}"
