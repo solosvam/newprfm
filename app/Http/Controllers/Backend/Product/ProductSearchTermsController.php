@@ -19,19 +19,7 @@ class ProductSearchTermsController extends Controller
 {
     public function index(Request $request)
     {
-        $search = trim((string) $request->input('q'));
         $from = now()->subDays(30);
-        $products = Product::query()
-            ->with('brand')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($productQuery) use ($search) {
-                    $productQuery->where('name', 'like', "%{$search}%")
-                        ->orWhereHas('brand', fn ($brandQuery) => $brandQuery->where('name', 'like', "%{$search}%"));
-                });
-            })
-            ->orderBy('id', 'desc')
-            ->paginate(20)
-            ->withQueryString();
         $brands = Brand::query()->where('active', 1)->orderBy('name')->get(['id', 'name']);
 
         $analytics = [
@@ -73,8 +61,24 @@ class ProductSearchTermsController extends Controller
             ->get();
 
         return view('backend.product_menu.search_terms.index', compact(
-            'products', 'brands', 'search', 'analytics', 'popularQueries', 'noResultQueries', 'popularProducts'
+            'brands', 'analytics', 'popularQueries', 'noResultQueries', 'popularProducts'
         ));
+    }
+
+    public function productsData(): JsonResponse
+    {
+        $products = Product::query()
+            ->with('brand')
+            ->orderByDesc('id')
+            ->get(['id', 'brand_id', 'name']);
+
+        return response()->json(
+            $products->map(fn (Product $product) => [
+                'id' => $product->id,
+                'brand' => $product->brand?->name ?? '-',
+                'name' => $product->name,
+            ])->values()
+        );
     }
 
     public function show(Product $product)
