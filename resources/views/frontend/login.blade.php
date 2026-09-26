@@ -75,5 +75,5 @@ window.customerAuth = {
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
-<script src="{{ asset('frontend/js/login.js?v=' . filemtime(public_path('frontend/js/login.js'))) }}"></script>
+<script src="{{ asset('frontend/js/login.js') }}"></script>
 @endsection
