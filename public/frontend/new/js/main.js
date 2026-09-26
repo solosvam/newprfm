@@ -4,6 +4,24 @@
     const loggedIn = document.body.dataset.auth === '1';
     const favoritesKey = 'parfumshop_favorites';
 
+    function notify(message, type = 'success') {
+        if (!window.jQuery || typeof window.jQuery.notify !== 'function') return;
+        const $ = window.jQuery;
+        if (!$.notify.getStyle('parfumshop-success')) {
+            $.notify.addStyle('parfumshop-success', {
+                html: '<div><div class="ps-notify"><span class="ps-notify__check">✓</span><span data-notify-text></span></div></div>'
+            });
+        }
+        $.notify(message, {
+            style: 'parfumshop-success',
+            className: type,
+            globalPosition: 'top right',
+            autoHideDelay: 3000,
+            showAnimation: 'fadeIn',
+            hideAnimation: 'fadeOut'
+        });
+    }
+
     function readArray(key) {
         try {
             const value = JSON.parse(localStorage.getItem(key) || '[]');
@@ -137,8 +155,11 @@
                     localStorage.setItem(favoritesKey, JSON.stringify(ids));
                     fav.classList.toggle('active', active);
                     updateCounts();
+                    notify('Əməliyyat yerinə yetirilmədi', 'error');
+                    return;
                 }
             }
+            notify(active ? (window.parfumshopMessages?.favoriteRemoved || 'Seçilmişlərdən silindi') : (window.parfumshopMessages?.favoriteAdded || 'Seçilmişlərə əlavə edildi'));
             return;
         }
 
@@ -149,7 +170,7 @@
             if (navigator.share) {
                 try { await navigator.share({title: share.dataset.title || document.title, url}); } catch {}
             } else {
-                try { await navigator.clipboard.writeText(url); share.setAttribute('title', 'Kopyalandı'); }
+                try { await navigator.clipboard.writeText(url); notify('Link kopyalandı'); }
                 catch { window.prompt('Linki kopyalayın:', url); }
             }
             return;
@@ -193,7 +214,7 @@
             localStorage.setItem('parfumshop_cart', JSON.stringify(cart));
             window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', {detail:cart}));
             updateCounts();
-            if (typeof window.showCartSuccess === 'function') window.showCartSuccess();
+            notify(window.parfumshopMessages?.cartAdded || 'Məhsul səbətə əlavə edildi');
             const label = add.textContent;
             add.textContent = 'Səbətə əlavə edildi ✓';
             setTimeout(() => { add.textContent = label; }, 1600);
