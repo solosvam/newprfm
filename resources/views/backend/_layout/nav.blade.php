@@ -258,10 +258,10 @@
                         </a>
                     </li>
                     @endcan
-                    @can('product.search-terms')
+                    @can('product.search')
                     <li>
                         <a href="{{ route('admin.product.search-terms.index') }}">
-                            <span class="label">Axtarış aliasları</span>
+                            <span class="label">Axtarış idarəetməsi</span>
                         </a>
                     </li>
                     @endcan
