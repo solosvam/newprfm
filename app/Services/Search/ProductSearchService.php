@@ -93,6 +93,7 @@ class ProductSearchService
     {
         return Cache::remember(self::CACHE_KEY, now()->addMinutes(10), fn () => ProductSearchTerm::query()
             ->where('active', 1)
+            ->toBase()
             ->get([
                 'product_id',
                 'term',
@@ -101,7 +102,8 @@ class ProductSearchService
                 'token_signature',
                 'source',
                 'priority',
-            ]));
+            ])
+            ->map(fn ($term) => (array) $term));
     }
 
     private function similarity(string $needle, ?string $haystack, string $needleSignature, ?string $haystackSignature): float
