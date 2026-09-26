@@ -1,7 +1,7 @@
-<script src="{{ asset('frontend/new/js/vendor/jquery.min.js') }}"></script>
-<script src="{{ asset('frontend/new/js/vendor/notify.min.js') }}"></script>
-<script src="{{ asset('frontend/new/js/select2.full.min.js') }}"></script>
-<script defer src="{{ asset('frontend/new/js/main.js') }}"></script>
+<script src="{{ asset('frontend/js/vendor/jquery.min.js') }}"></script>
+<script src="{{ asset('frontend/js/vendor/notify.min.js') }}"></script>
+<script src="{{ asset('frontend/js/select2.full.min.js') }}"></script>
+<script defer src="{{ asset('frontend/js/main.js') }}"></script>
 <script>
     document.getElementById('theme-toggle').addEventListener('click', function () {
         var html = document.documentElement;

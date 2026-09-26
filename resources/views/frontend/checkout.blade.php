@@ -100,5 +100,5 @@
             },
         };
     </script>
-    <script src="{{ asset('frontend/new/js/checkout.js') }}" defer></script>
+    <script src="{{ asset('frontend/js/checkout.js') }}" defer></script>
 @endsection
