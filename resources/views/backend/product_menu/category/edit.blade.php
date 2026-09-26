@@ -58,6 +58,14 @@
                                 </div>
 
                                 <div class="mb-3 row">
+                                    <label class="col-lg-2 col-md-3 col-sm-4 col-form-label">Slug (URL)</label>
+                                    <div class="col-sm-8 col-md-9 col-lg-10">
+                                        <input type="text" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug', $category->slug) }}">
+                                        @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <small class="text-muted">Dəyişdirildikdə əvvəlki ID-siz link işləməyəcək.</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
                                     <label class="col-lg-2 col-md-3 col-sm-4 col-form-label">Aktivlik</label>
                                     <div class="col-sm-8 col-md-9 col-lg-10">
                                         <select class="form-select" name="active">
