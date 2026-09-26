@@ -16,3 +16,21 @@
     .hero { padding: 40px 22px; }
     .hero h1 { font-size: 26px; }
 }
+
+@media (max-width: 1024px) {
+    .product-top { grid-template-columns: 76px minmax(0, 1fr); }
+    .product-header,
+    .buy-core,
+    .installment-full { grid-column: 1 / -1; }
+}
+
+@media (max-width: 760px) {
+    .product-top { grid-template-columns: 1fr; }
+    .product-header,
+    .thumbs,
+    .main-image,
+    .buy-core,
+    .installment-full { grid-column: 1 / -1; }
+    .thumbs { flex-direction: row; overflow-x: auto; }
+    .thumbs .t { width: 60px; flex-shrink: 0; }
+}

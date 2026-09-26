@@ -190,7 +190,7 @@ class NewMainController extends Controller
                     'variants.size',
                 ])
                 ->orderByDesc('shared_ingredients_count')
-                ->limit(5)
+                ->limit(4)
                 ->get();
         }
 
