@@ -369,6 +369,8 @@ Route::prefix('admin')
                 ->prefix('product/search-terms')
                 ->name('product.search-terms.')
                 ->group(function () {
+                    Route::get('/products', 'productLookup')->name('products');
+                    Route::post('/no-result', 'attachNoResult')->name('no-result.attach');
                     Route::get('/', 'index')->name('index');
                     Route::get('/{product}', 'show')->name('show');
                     Route::post('/{product}', 'store')->name('store');
