@@ -49,8 +49,8 @@ class GenerateAiProductSearchTerms extends Command
         }
 
         if ($this->option('fresh')) {
-            ProductSearchTerm::query()->delete();
-            $this->warn('Köhnə axtarış terminləri silindi.');
+            ProductSearchTerm::query()->where('source', '!=', 'manual')->delete();
+            $this->warn('Köhnə AI axtarış terminləri silindi. Əl ilə əlavə olunan aliaslar saxlanıldı.');
         }
 
         $termCount = 0;
@@ -95,12 +95,17 @@ class GenerateAiProductSearchTerms extends Command
 
         $values = array_merge(["{$brand} {$name}"], $openAi->generateSearchTerms($brand, $name));
         $terms = [];
+        $manualTerms = $product->searchTerms()
+            ->where('source', 'manual')
+            ->pluck('normalized_term')
+            ->flip()
+            ->all();
 
         foreach ($values as $index => $value) {
             $value = trim((string) $value);
             $normalized = ProductSearchNormalizer::normalize($value);
 
-            if ($normalized === '' || isset($terms[$normalized])) {
+            if ($normalized === '' || isset($terms[$normalized]) || isset($manualTerms[$normalized])) {
                 continue;
             }
 
@@ -116,7 +121,7 @@ class GenerateAiProductSearchTerms extends Command
         }
 
         DB::transaction(function () use ($product, $terms) {
-            $product->searchTerms()->delete();
+            $product->searchTerms()->where('source', '!=', 'manual')->delete();
             $product->searchTerms()->createMany(array_values($terms));
         });
 
