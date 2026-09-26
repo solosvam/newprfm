@@ -42,8 +42,6 @@ class BannersController extends Controller
             );
         }
 
-        // Keep the legacy column populated for any older code still reading it.
-        $banner->url = $banner->url_az;
         $banner->save();
 
         return redirect()->route('admin.banner.list')
@@ -85,13 +83,11 @@ class BannersController extends Controller
             );
         }
 
-        $banner->url = $banner->url_az ?: $banner->url;
         $banner->save();
 
         // Only remove replaced files if no banner still references them.
         foreach (array_unique(array_filter($oldImages)) as $filename) {
-            if (Banners::where('url', $filename)
-                ->orWhere('url_az', $filename)
+            if (Banners::where('url_az', $filename)
                 ->orWhere('url_en', $filename)
                 ->orWhere('url_ru', $filename)
                 ->exists()) {
