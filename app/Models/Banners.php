@@ -12,7 +12,6 @@ class Banners extends Model
     public $timestamps = false;
     protected $fillable = [
         'id',
-        'url',
         'url_az',
         'url_en',
         'url_ru',
@@ -27,7 +26,6 @@ class Banners extends Model
             : app()->getLocale();
 
         return $this->{'url_' . $locale}
-            ?: $this->url_az
-            ?: $this->url;
+            ?: $this->url_az;
     }
 }
