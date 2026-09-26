@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AddProductRequest extends FormRequest
 {
@@ -14,6 +15,14 @@ class AddProductRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'slug' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                Rule::unique('products', 'slug')->ignore($this->route('id') ?? $this->route('product')),
+            ],
+
             'brand_id' => [
                 'required',
                 'exists:brands,id',
@@ -151,6 +160,9 @@ class AddProductRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'slug.regex' => 'Slug yalnız kiçik latın hərfləri, rəqəmlər və tire ilə yazılmalıdır.',
+            'slug.unique' => 'Bu slug artıq başqa məhsulda istifadə olunur.',
+
             'brand_id.required' => 'Brend seçilməlidir.',
             'brand_id.exists' => 'Seçilən brend mövcud deyil.',
 
