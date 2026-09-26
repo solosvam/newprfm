@@ -257,6 +257,11 @@
                             <span class="label">Məhsullar</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('admin.product.search-terms.index') }}">
+                            <span class="label">Axtarış aliasları</span>
+                        </a>
+                    </li>
                     @endcan
                     @can('product.reviews')
                         <li>
