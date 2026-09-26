@@ -167,7 +167,7 @@
                             {!! nl2br(e($product->{'content_' . $locale} ?: $product->content_az)) !!}
                         </div>
                         <div class="content2">
-                            <h4><span>{{ __('product_reviews') }}</span> Narciso Poudree Narciso Rodriguez</h4>
+                            <h4><span>{{ __('product_reviews') }}</span> {{ $product->name }} {{ $product->brand?->name }}</h4>
                             <div class="ratings-container">
                                 <div class="rating-summary">
                                     <div class="average-rating">
@@ -183,45 +183,25 @@
                                     <button class="write-review" type="button">{{ __('product_write_a_review') }}</button>
                                 </div>
                                 <div class="rating-distribution">
-                                    <div class="rating-bar">
-                                        <div class="progress-bar">
-                                            <div class="filled" style="width: 90%"></div>
+                                    @foreach([5, 4, 3, 2, 1] as $score)
+                                        @php
+                                            $count = $ratingCounts[$score] ?? 0;
+                                            $percent = $product->reviews->count()
+                                                ? round($count * 100 / $product->reviews->count())
+                                                : 0;
+                                        @endphp
+                                        <div class="rating-bar">
+                                            <div class="progress-bar">
+                                                <div class="filled" style="width: {{ $percent }}%"></div>
+                                            </div>
+                                            <span class="rating-count">{{ $count }}</span>
+                                            <div class="stars-label">
+                                                @for($star = 1; $star <= 5; $star++)
+                                                    <img src="{{ asset('frontend/images/' . ($star <= $score ? 'star-filled.svg' : 'star-outlined.svg')) }}" alt="">
+                                                @endfor
+                                            </div>
                                         </div>
-                                        <span class="rating-count">18</span>
-                                        <div class="stars-label">
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                        </div>
-                                    </div>
-                                    <div class="rating-bar">
-                                        <div class="progress-bar">
-                                            <div class="filled" style="width: 20%"></div>
-                                        </div>
-                                        <span class="rating-count">4</span>
-                                        <div class="stars-label">
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                        </div>
-                                    </div>
-                                    <div class="rating-bar">
-                                        <div class="progress-bar">
-                                            <div class="filled" style="width: 10%"></div>
-                                        </div>
-                                        <span class="rating-count">2</span>
-                                        <div class="stars-label">
-                                            <img src="{{asset('frontend/images/star-filled.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                            <img src="{{asset('frontend/images/star-outlined.svg')}}" alt="" />
-                                        </div>
-                                    </div>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
