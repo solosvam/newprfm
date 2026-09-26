@@ -30,6 +30,133 @@
 
     window.parfumshopNotify = notify;
 
+    function initHeaderSearch() {
+        const form = document.getElementById('searchForm');
+        const input = document.getElementById('searchInput');
+        const resultsBox = document.getElementById('searchResults');
+        if (!form || !input || !resultsBox) return;
+
+        let timer;
+        let controller;
+        let results = [];
+        let activeIndex = -1;
+
+        const show = () => { resultsBox.hidden = false; };
+        const hide = () => {
+            resultsBox.hidden = true;
+            resultsBox.replaceChildren();
+            activeIndex = -1;
+        };
+        const text = (tag, className, value) => {
+            const node = document.createElement(tag);
+            node.className = className;
+            node.textContent = value || '';
+            return node;
+        };
+
+        function render(data) {
+            results = data.results || [];
+            resultsBox.replaceChildren();
+            activeIndex = -1;
+
+            if (results.length === 0) {
+                const empty = text('div', 'search-results-empty', 'Axtardığınız məhsul tapılmadı.');
+                if (data.suggestion) {
+                    empty.append(document.createElement('br'));
+                    empty.append(text('strong', '', 'Bəlkə “' + data.suggestion + '” nəzərdə tutursunuz?'));
+                }
+                resultsBox.append(empty);
+                show();
+                return;
+            }
+
+            results.forEach((product, index) => {
+                const link = document.createElement('a');
+                link.className = 'search-result-item';
+                link.href = product.url;
+                link.dataset.searchIndex = String(index);
+
+                const thumb = document.createElement('div');
+                thumb.className = 'search-result-thumb';
+                if (product.image) {
+                    const image = document.createElement('img');
+                    image.src = product.image;
+                    image.alt = product.name || '';
+                    thumb.append(image);
+                } else {
+                    thumb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>';
+                }
+
+                const info = document.createElement('div');
+                info.className = 'search-result-info';
+                info.append(text('p', 'search-result-brand', product.brand));
+                info.append(text('p', 'search-result-name', product.name));
+                info.append(text('div', 'search-result-meta', [product.type, product.gender].filter(Boolean).join(' · ')));
+
+                const price = [product.size, product.price ? product.price + ' ₼' : null]
+                    .filter(Boolean)
+                    .join(' / ');
+
+                link.append(thumb, info, text('span', 'search-result-price', price));
+                resultsBox.append(link);
+            });
+            show();
+        }
+
+        async function request(query) {
+            controller?.abort();
+            controller = new AbortController();
+            const url = new URL(form.dataset.suggestionsUrl, window.location.origin);
+            url.searchParams.set('q', query);
+
+            try {
+                const response = await fetch(url, {
+                    headers: {'Accept': 'application/json'},
+                    signal: controller.signal,
+                });
+                if (!response.ok) throw new Error('Axtarış sorğusu alınmadı');
+                render(await response.json());
+            } catch (error) {
+                if (error.name !== 'AbortError') hide();
+            }
+        }
+
+        input.addEventListener('input', () => {
+            const query = input.value.trim();
+            clearTimeout(timer);
+            if (query.length < 2) {
+                controller?.abort();
+                hide();
+                return;
+            }
+            timer = setTimeout(() => request(query), 350);
+        });
+
+        input.addEventListener('keydown', event => {
+            if (resultsBox.hidden || results.length === 0) return;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                activeIndex = event.key === 'ArrowDown'
+                    ? (activeIndex + 1) % results.length
+                    : (activeIndex - 1 + results.length) % results.length;
+                resultsBox.querySelectorAll('.search-result-item').forEach((item, index) => {
+                    item.classList.toggle('is-active', index === activeIndex);
+                });
+            }
+            if (event.key === 'Escape') hide();
+        });
+
+        form.addEventListener('submit', event => {
+            if (results.length === 0) return;
+            event.preventDefault();
+            window.location.href = results[activeIndex >= 0 ? activeIndex : 0].url;
+        });
+
+        document.addEventListener('click', event => {
+            if (!form.contains(event.target) && !resultsBox.contains(event.target)) hide();
+        });
+    }
+
     // Laravel redirect-lərindən sonra bütün yeni Blade səhifələrində flash bildirişləri göstər.
     const flash = window.parfumshopFlash || {};
     for (const type of ['success', 'error', 'warning', 'info']) {
@@ -149,6 +276,7 @@
         updateInstallments();
     }
     initProductTabs();
+    initHeaderSearch();
 
     document.addEventListener('click', async event => {
         const fav = event.target.closest('.fav-btn');

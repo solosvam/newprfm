@@ -15,12 +15,15 @@
         </div>
         <a href="{{ route('newhome') }}" class="logo">parfumshop</a>
 
-        <form class="search" method="GET" action="{{ route('newhome') }}" id="searchForm" autocomplete="off">
+        <form class="search" method="GET" action="{{ route('newhome') }}" id="searchForm" autocomplete="off"
+              data-suggestions-url="{{ route('search.suggestions') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="search" name="q" id="searchInput" value="{{ request('q') }}" placeholder="Brend və ya ətir axtar..." aria-label="Məhsul axtar">
         </form>
 
-        <div class="search-results" id="searchResults" hidden>
+        <div class="search-results" id="searchResults" hidden aria-live="polite">
+            {{-- Statik demo nəticələri API ilə əvəz olunub. --}}
+            {{!--
             <a class="search-result-item" href="#">
                 <div class="search-result-thumb">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
@@ -70,6 +73,7 @@
             </a>
 
             <a class="search-results-more" href="#">Bütün nəticələrə bax</a>
+            --}}
         </div>
 
         <div class="icons">

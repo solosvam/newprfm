@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\ImportOldParfumshopCategory;
+use App\Console\Commands\SyncProductSearchTerms;
 
 use App\Http\Middleware\setLangMiddleware;
 use Illuminate\Foundation\Application;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         ImportOldParfumshopCategory::class,
+        SyncProductSearchTerms::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
         // Locale needs the session started by the web middleware group.
