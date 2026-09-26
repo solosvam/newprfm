@@ -44,16 +44,18 @@
             <div class="col-12 col-xl-4"><div class="card h-100"><div class="card-body">
                 <h2 class="h5 mb-3">Nəticəsiz axtarışlar</h2>
                 @forelse($noResultQueries as $item)
-                    <div class="d-flex justify-content-between align-items-center border-bottom py-2 gap-2">
-                        <span>{{ $item->query }}</span>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-danger">{{ $item->search_count }}</span>
-                            <button class="btn btn-sm btn-outline-primary no-result-attach-button" type="button" data-no-result-query="{{ $item->query }}">Məhsula bağla</button>
-                            <form method="POST" action="{{ route('admin.product.search-terms.no-result.destroy') }}" onsubmit="return confirm('Bu nəticəsiz axtarış qeydini silmək istəyirsən?')">
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-3 gap-3">
+                        <div class="d-flex align-items-center gap-2 min-w-0">
+                            <span class="text-truncate">{{ $item->query }}</span>
+                            <span class="badge bg-danger rounded-pill">{{ $item->search_count }}</span>
+                        </div>
+                        <div class="d-flex align-items-stretch flex-shrink-0">
+                            <button class="btn btn-sm btn-primary px-3 rounded-end-0 no-result-attach-button" type="button" data-no-result-query="{{ $item->query }}">Məhsula bağla</button>
+                            <form class="d-flex m-0" method="POST" action="{{ route('admin.product.search-terms.no-result.destroy') }}" onsubmit="return confirm('Bu nəticəsiz axtarış qeydini silmək istəyirsən?')">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="query" value="{{ $item->query }}">
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Sil</button>
+                                <button class="btn btn-sm btn-danger px-3 rounded-start-0 border-start border-white" type="submit">Sil</button>
                             </form>
                         </div>
                     </div>
