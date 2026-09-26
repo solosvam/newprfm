@@ -208,3 +208,27 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 .filters .filter-row input[type=radio] { width:auto; }
 .filters .btn { margin-top:12px; }
 .filter-clear { display:block; text-align:center; font-size:12px; color:var(--text-secondary); }
+
+/* Product details, real review form and interactive installment states */
+.tab-panel[hidden], .accordion-body[hidden] { display: none !important; }
+.review-accordion.open .accordion-body { display: block; }
+.review-notice { padding: 12px 14px; border-radius: 8px; background: var(--surface-2); color: var(--text); margin: 0 0 18px; }
+.review-notice--error { border: 1px solid #b94a48; }
+.review-item-stars { color: var(--accent); margin: 4px 0; letter-spacing: 2px; }
+.review-dialog { width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 24px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); color: var(--text); }
+.review-dialog::backdrop { background: rgba(0,0,0,.65); }
+.review-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.review-dialog-head h2 { margin: 0; font-size: 20px; }
+.review-dialog-head button { border: 0; background: none; color: var(--text); font-size: 28px; cursor: pointer; }
+.review-form { display: flex; flex-direction: column; gap: 12px; }
+.review-form textarea { width: 100%; resize: vertical; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; }
+.review-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; border: 0; margin: 0; padding: 0; }
+.review-rating legend { margin-bottom: 8px; }
+.review-rating input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.review-rating label { font-size: 30px; color: var(--text-muted); cursor: pointer; }
+.review-rating input:checked ~ label, .review-rating label:hover, .review-rating label:hover ~ label { color: var(--accent); }
+.review-rating input:focus-visible + label { outline: 2px solid var(--accent); }
+.review-hint { margin: 0; font-size: 12px; color: var(--text-secondary); }
+.product-description { white-space: normal; overflow-wrap: anywhere; }
+.installment-table tr { cursor: pointer; }
+.installment-table tr.active { background: var(--surface-2); }
