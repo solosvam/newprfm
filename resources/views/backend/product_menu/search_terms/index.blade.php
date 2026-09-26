@@ -127,10 +127,19 @@
                             <input class="form-control" id="noResultQueryText" readonly>
                         </div>
                         <div>
-                            <label class="form-label">Məhsulu axtar və seç</label>
-                            <input class="form-control" id="noResultProductSearch" autocomplete="off" placeholder="Brend və ya məhsul adı">
-                            <input type="hidden" name="product_id" id="noResultProductId">
-                            <div class="list-group mt-2" id="noResultProducts"></div>
+                            <label class="form-label">Brend</label>
+                            <select class="form-select" id="noResultBrandId">
+                                <option value="">Brend seçin</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Məhsul</label>
+                            <select class="form-select" name="product_id" id="noResultProductId" disabled>
+                                <option value="">Əvvəl brend seçin</option>
+                            </select>
                             <div class="form-text" id="noResultSelectedProduct">Məhsul seçilməyib.</div>
                         </div>
                     </div>
@@ -150,21 +159,23 @@
         const form = document.getElementById('attachNoResultForm');
         const query = document.getElementById('noResultQuery');
         const queryText = document.getElementById('noResultQueryText');
-        const productSearch = document.getElementById('noResultProductSearch');
+        const brandId = document.getElementById('noResultBrandId');
         const productId = document.getElementById('noResultProductId');
-        const products = document.getElementById('noResultProducts');
         const selected = document.getElementById('noResultSelectedProduct');
         if (!modal || !form) return;
 
         const modalInstance = new bootstrap.Modal(modal);
-        let timer;
+        const $brand = window.jQuery(brandId);
+        const $product = window.jQuery(productId);
+        $brand.select2({dropdownParent: window.jQuery(modal), width: '100%'});
+        $product.select2({dropdownParent: window.jQuery(modal), width: '100%'});
+        const resetProducts = () => $product.empty().append(new Option('Əvvəl brend seçin', '')).prop('disabled', true).trigger('change');
 
         const openModal = value => {
             query.value = value;
             queryText.value = value;
-            productSearch.value = '';
-            productId.value = '';
-            products.replaceChildren();
+            $brand.val('').trigger('change');
+            resetProducts();
             selected.textContent = 'Məhsul seçilməyib.';
             selected.classList.remove('text-danger');
             modalInstance.show();
@@ -174,38 +185,24 @@
             button.addEventListener('click', () => openModal(button.dataset.noResultQuery || ''));
         });
 
-        productSearch.addEventListener('input', () => {
-            clearTimeout(timer);
-            const value = productSearch.value.trim();
-            productId.value = '';
+        $brand.on('change', async () => {
+            const value = $brand.val();
+            resetProducts();
             selected.textContent = 'Məhsul seçilməyib.';
-            products.replaceChildren();
-            if (value.length < 2) return;
+            if (!value) return;
 
-            timer = setTimeout(async () => {
-                const url = new URL('{{ route('admin.product.search-terms.products') }}', window.location.origin);
-                url.searchParams.set('q', value);
+            const url = new URL('{{ route('admin.product.search-terms.products') }}', window.location.origin);
+            url.searchParams.set('brand_id', value);
+            const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+            const data = await response.json();
+            $product.empty().append(new Option('Məhsul seçin', ''));
+            (data.products || []).forEach(product => $product.append(new Option(product.name, product.id)));
+            $product.prop('disabled', false).trigger('change');
+        });
 
-                try {
-                    const response = await fetch(url, {headers: {'Accept': 'application/json'}});
-                    const data = await response.json();
-                    (data.products || []).forEach(product => {
-                        const button = document.createElement('button');
-                        button.type = 'button';
-                        button.className = 'list-group-item list-group-item-action';
-                        button.textContent = product.name;
-                        button.addEventListener('click', () => {
-                            productId.value = product.id;
-                            selected.textContent = 'Seçilən məhsul: ' + product.name;
-                            products.replaceChildren();
-                        });
-                        products.append(button);
-                    });
-                } catch {
-                    selected.textContent = 'Məhsullar yüklənmədi.';
-                    selected.classList.add('text-danger');
-                }
-            }, 250);
+        $product.on('change', () => {
+            const option = productId.options[productId.selectedIndex];
+            selected.textContent = productId.value ? 'Seçilən məhsul: ' + option.text : 'Məhsul seçilməyib.';
         });
 
         form.addEventListener('submit', event => {
