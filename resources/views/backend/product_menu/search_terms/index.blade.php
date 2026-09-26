@@ -1,8 +1,8 @@
 @php
-    $title = 'Axtarış aliasları';
+    $title = 'Axtarış idarəetməsi';
     $breadcrumbs = [
         '/admin' => 'ParfumShop',
-        '#' => 'Axtarış aliasları',
+        '#' => 'Axtarış idarəetməsi',
     ];
 @endphp
 
@@ -17,6 +17,40 @@
                     @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
                 </div>
             </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted text-small">Son 30 gündə axtarış</div><div class="display-6">{{ number_format($analytics['total']) }}</div></div></div></div>
+            <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted text-small">Nəticə çıxan</div><div class="display-6 text-success">{{ number_format($analytics['with_results']) }}</div></div></div></div>
+            <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted text-small">Nəticəsiz</div><div class="display-6 text-danger">{{ number_format($analytics['without_results']) }}</div></div></div></div>
+            <div class="col-6 col-xl-3"><div class="card h-100"><div class="card-body"><div class="text-muted text-small">Kliklənən axtarış</div><div class="display-6 text-primary">{{ number_format($analytics['clicked']) }}</div></div></div></div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-xl-4"><div class="card h-100"><div class="card-body">
+                <h2 class="h5 mb-3">Ən çox axtarılanlar</h2>
+                @forelse($popularQueries as $item)
+                    <div class="d-flex justify-content-between border-bottom py-2 gap-2"><span>{{ $item->query }}</span><span class="badge bg-primary">{{ $item->search_count }}</span></div>
+                @empty
+                    <div class="text-muted">Hələ məlumat yoxdur.</div>
+                @endforelse
+            </div></div></div>
+            <div class="col-12 col-xl-4"><div class="card h-100"><div class="card-body">
+                <h2 class="h5 mb-3">Nəticəsiz axtarışlar</h2>
+                @forelse($noResultQueries as $item)
+                    <div class="d-flex justify-content-between border-bottom py-2 gap-2"><span>{{ $item->query }}</span><span class="badge bg-danger">{{ $item->search_count }}</span></div>
+                @empty
+                    <div class="text-muted">Hələ nəticəsiz axtarış yoxdur.</div>
+                @endforelse
+            </div></div></div>
+            <div class="col-12 col-xl-4"><div class="card h-100"><div class="card-body">
+                <h2 class="h5 mb-3">Ən çox kliklənən məhsullar</h2>
+                @forelse($popularProducts as $item)
+                    <div class="d-flex justify-content-between border-bottom py-2 gap-2"><span>{{ $item->product?->brand?->name }} {{ $item->product?->name ?? 'Silinmiş məhsul' }}</span><span class="badge bg-success">{{ $item->click_count }}</span></div>
+                @empty
+                    <div class="text-muted">Hələ klik məlumatı yoxdur.</div>
+                @endforelse
+            </div></div></div>
         </div>
 
         <div class="card mb-4">
