@@ -11,6 +11,9 @@
                 @include('frontend.partials.cabinet-sidebar', ['pageTitle' => __('reviews_my_reviews')])
 
                 <section class="cabinet__comments" aria-label="{{ __('reviews_my_reviews') }}">
+                    @if(session('success'))
+                        <div class="review-alert" role="status">{{ session('success') }}</div>
+                    @endif
                     @if($reviews->isEmpty())
                         <div class="cabinet-content-empty">
                             <h2>{{ __('reviews_my_reviews') }}</h2>
@@ -30,6 +33,20 @@
                                     <time class="review-entry__date" datetime="{{ $review->created_at->toDateString() }}">
                                         {{ $review->created_at->locale(app()->getLocale())->translatedFormat('j F Y') }}
                                     </time>
+
+                                    <div class="review-entry__actions">
+                                        @if($review->active)
+                                            <span class="review-entry__status review-entry__status--approved">{{ __('reviews_approved') }}</span>
+                                        @else
+                                            <span class="review-entry__status review-entry__status--pending">{{ __('reviews_pending_approval') }}</span>
+                                            <form method="POST" action="{{ route('profile.reviews.destroy', $review) }}"
+                                                  onsubmit="return confirm(@json(__('reviews_confirm_delete')))">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="review-entry__delete">{{ __('reviews_delete') }}</button>
+                                            </form>
+                                        @endif
+                                    </div>
 
                                     <article class="review-entry__card">
                                         <div class="review-entry__product">
