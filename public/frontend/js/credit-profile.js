@@ -60,7 +60,7 @@ $(function () {
                     card.find('.credit-file').val('').prop('required', false).removeClass('is-visible');
                 });
 
-                $.notify(response.message, 'success');
+                window.parfumshopNotify(response.message, 'success');
             },
             error: function (xhr) {
                 if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
@@ -72,11 +72,11 @@ $(function () {
                     });
 
                     form.find('.is-invalid').first().trigger('focus');
-                    $.notify(Object.values(errors)[0][0], 'error');
+                    window.parfumshopNotify(Object.values(errors)[0][0], 'error');
                     return;
                 }
 
-                $.notify(genericError, 'error');
+                window.parfumshopNotify(genericError, 'error');
             },
             complete: function () {
                 button.prop('disabled', false);
