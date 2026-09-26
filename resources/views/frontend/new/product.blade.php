@@ -117,11 +117,11 @@
             <div class="desc-section">
                 <h2>Haqqında</h2>
                 <p>{{ $product->{'content_' . $locale} ?: $product->content_az }}</p>
-                <div class="notes">
-                    <div><p class="k">Üst notlar</p><p class="v">{{ $product->ingredients->pluck('name')->take(3)->join(', ') }}</p></div>
-                    <div><p class="k">Orta notlar</p><p class="v">{{ $product->ingredients->pluck('name')->slice(3, 3)->join(', ') }}</p></div>
-                    <div><p class="k">Baza notlar</p><p class="v">{{ $product->ingredients->pluck('name')->slice(6, 3)->join(', ') }}</p></div>
-                </div>
+                @if($product->ingredients->isNotEmpty())
+                    <div class="notes">
+                        <div><p class="k">Ətir notları</p><p class="v">{{ $product->ingredients->pluck('name')->filter()->join(', ') }}</p></div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
