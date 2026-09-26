@@ -4,6 +4,19 @@ namespace App\Services;
 
 class SeoUrl
 {
+    public static function uniqueDatabaseSlug(string $table, string $name): string
+    {
+        $base = substr(\Illuminate\Support\Str::slug($name) ?: $table, 0, 235);
+        $slug = $base;
+        $suffix = 2;
+
+        while (\Illuminate\Support\Facades\DB::table($table)->where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $suffix++;
+        }
+
+        return $slug;
+    }
+
     public static function generateSlug($array)
     {
         return self::generate($array);
