@@ -14,7 +14,13 @@ class ProductReview extends Model
         'customer_id',
         'rating',
         'comment',
+        'active',
     ];
+
+    protected function casts(): array
+    {
+        return ['active' => 'boolean'];
+    }
 
     public function product()
     {
