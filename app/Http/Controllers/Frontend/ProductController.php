@@ -91,7 +91,7 @@ class ProductController extends Controller
             'active' => false,
         ]);
 
-        return back()->with('review_success', __('validation_your_review_has_been_added'));
+        return back()->with('review_success', __('reviews_submitted_for_approval'));
     }
     public function wishlistProducts(Request $request)
     {
