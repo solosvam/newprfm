@@ -77,7 +77,7 @@
                                             @case('cash')
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
                                                 @break
-                                            @case('card')
+                                            @case('card_online')
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
                                                 @break
                                             @case('installment')
@@ -102,6 +102,19 @@
                                     </span>
                                 </label>
                             @endforeach
+                        </div>
+
+                        <div id="birbankInstallmentDetails" class="installment" hidden>
+                            <div class="installment__label">Birbank taksit müddəti</div>
+                            <div class="installment__periods">
+                                @foreach([2, 3, 6] as $months)
+                                    <label class="installment__period">
+                                        <input type="radio" name="birbank_installment_months" value="{{ $months }}">
+                                        <span class="installment__months">{{ $months }} ay</span>
+                                        <span class="installment__monthly" data-birbank-monthly>—</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
 
                         <p id="bonusWarning" class="form-alert form-alert-error" hidden></p>
