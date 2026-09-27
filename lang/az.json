@@ -413,7 +413,7 @@
     "cart_free": "Pulsuz",
     "cart_free_delivery_left": "Pulsuz çatdırılmaya :amount qaldı",
     "cart_free_delivery_done": "Pulsuz çatdırılma qazandınız",
-    "cart_installment_hint": "0% faizlə :months aya bölmək imkanı: Ayda cəmi :amount",
+    "cart_installment_hint": "0% faizlə :months aya bölmək imkanı: Ayda :amount",
     "cart_installment_with_interest": ":months aya hissə-hissə ödəniş — ayda :amount",
     "cart_installment_how": "Sifarişi rəsmiləşdirərkən “Hissə-hissə ödəniş” üsulunu və uyğun müddəti seçin.",
     "cart_bonus_hint": "Bu sifarişdən :amount bonus qazanacaqsınız",
