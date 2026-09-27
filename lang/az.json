@@ -372,5 +372,8 @@
     "catalog_apply": "Tətbiq et",
     "catalog_search_size": "Ölçü axtar",
     "credit_application_complete_profile": "Müraciət üçün əvvəlcə şəxsi kabinetdə hissəli ödəniş məlumatlarını tamamlayın.",
-    "credit_application_success": "Hissəli ödəniş müraciətiniz qeydə alındı."
+    "credit_application_success": "Hissəli ödəniş müraciətiniz qeydə alındı.",
+    "credit_profile_required_title": "Hissəli ödəniş məlumatları",
+    "credit_profile_required_message": "Hissəli ödəniş məlumatlarınız doldurulmadığı üçün müraciət edə bilmirsiniz. Zəhmət olmasa, əvvəlcə məlumatlarınızı tamamlayın.",
+    "credit_profile_required_action": "Məlumatları doldur"
 }
