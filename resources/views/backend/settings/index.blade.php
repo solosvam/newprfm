@@ -108,6 +108,18 @@
                                 <div class="form-text">Checkout səhifəsində “şərtlər” keçidi üçün istifadə olunur.</div>
                             </div>
 
+                            <div class="mt-3">
+                                <label for="credit_terms_url" class="form-label">Kredit şərtlərinin URL-i</label>
+                                <input id="credit_terms_url" name="credit_terms_url" type="url" maxlength="2048"
+                                       placeholder="https://parfumshop.az/..."
+                                       value="{{ old('credit_terms_url', $creditTermsUrl) }}"
+                                       @class(['form-control', 'is-invalid' => $errors->has('credit_terms_url')])>
+                                @error('credit_terms_url')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">Checkout-da “Hissə-hissə ödəniş” seçiləndə kredit şərtlərinin keçidi kimi göstərilir.</div>
+                            </div>
+
                             <div class="form-text mt-3">
                                 Bonus sifariş məbləğinin faizi kimi hesablanır (çatdırılma daxil deyil).
                             </div>
