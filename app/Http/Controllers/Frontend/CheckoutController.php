@@ -178,6 +178,9 @@ class CheckoutController extends Controller
                 ];
             }
 
+            $period = $paymentMethod->code === 'installment' ? CreditPeriod::whereKey($data['credit_period_id'])->where('active', 1)->firstOrFail() : null;
+            $creditTotal = $period ? round($subtotal * (1 + (float) $period->interest_rate / 100), 2) : $subtotal;
+
             // Sifariş nömrəsi
             $nextOrderId = (Order ::max('id') ?? 0) + 1;
 
@@ -197,7 +200,7 @@ class CheckoutController extends Controller
                 'customer_note' => $data['customer_note'] ?? null,
                 'subtotal' => $subtotal,
                 'discount' => 0,
-                'total' => $subtotal,
+                'total' => $creditTotal,
             ]);
 
             // Sifariş məhsulları
