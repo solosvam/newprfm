@@ -456,5 +456,7 @@
     "credit_address_title": "Installment application — delivery address",
     "credit_address_continue": "Continue",
     "credit_address_confirm": "Confirm application",
-    "credit_address_back": "Back to product"
+    "credit_address_back": "Back to product",
+    "credit_success_title": "Your application has been received.",
+    "credit_success_contact": "We will contact you within one business day."
 }
