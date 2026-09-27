@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CreditPeriod;
+use App\Models\CreditTermItem;
 use App\Models\Product\Product;
 use Illuminate\Support\Collection;
 
@@ -77,6 +78,8 @@ class ProductDetailService
             'product' => $product,
             'similarProducts' => $this->similarProducts($product),
             'creditPeriods' => $this->creditPeriods(),
+            'creditTermItems' => CreditTermItem::orderBy('sort_order')->orderBy('id')->get(),
+            'creditProfileComplete' => auth()->check() && (bool) auth()->user()->creditProfile?->isComplete(),
         ], $this->ratings($product));
     }
 }
