@@ -17,7 +17,6 @@ class CategoryController extends Controller
     {
         $category = Category::where('slug', $slug)->where('active', 1)->firstOrFail();
 
-        $categories = Category::where('active', 1)->orderBy('id')->get();
         $genders = Gender::all();
         $types = Type::orderBy('id')->get();
         $brands = Brand::query()
@@ -108,7 +107,6 @@ class CategoryController extends Controller
         return view('frontend.home', [
             'banners' => $formattedBanners,
             'products' => $products,
-            'categories' => $categories,
             'brands' => $brands,
             'types' => $types,
             'genders' => $genders,

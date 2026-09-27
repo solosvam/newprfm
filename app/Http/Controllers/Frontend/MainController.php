@@ -21,7 +21,6 @@ class MainController extends Controller
     public function index(Request $request)
     {
         $banners = Banners::where('active', 1)->get();
-        $categories = Category::where('active', 1)->orderBy('id')->get();
         $genders = Gender::all();
         $types = Type::orderBy('id')->get();
         $brands = Brand::query()
@@ -155,7 +154,6 @@ class MainController extends Controller
         return view('frontend.home', [
             'banners' => $formattedBanners,
             'products' => $products,
-            'categories' => $categories,
             'brands' => $brands,
             'types' => $types,
             'genders' => $genders,

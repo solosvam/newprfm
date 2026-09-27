@@ -70,7 +70,6 @@ class BrandsController extends Controller
             ->limit(12)
             ->get();
         $allBrands = Brand::where('active',1)->get();
-        $categories = Category::where('active', 1)->orderBy('id')->get();
         $genders = Gender::all();
         $types = Type::orderBy('id')->get();
 
@@ -110,7 +109,6 @@ class BrandsController extends Controller
             'selectedBrand' => $brand,
             'brands' => $brands,
             'allBrands' => $allBrands,
-            'categories' => $categories,
             'bestSellers' => $bestSellers,
             'recommendedProducts' => $recommendedProducts,
             'genders' => $genders,
