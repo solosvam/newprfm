@@ -156,12 +156,43 @@ class CrmController extends Controller
         return view('backend.crm.sms', compact('messages', 'error'));
     }
 
+    public function confirmOneClick(Request $request, Customer $customer, Order $order, ShopPricing $pricing): RedirectResponse
+    {
+        abort_unless($order->one_click && $order->customer_id === $customer->id, 404);
+        $data = $request->validate([
+            'customer_address_id' => ['required', 'integer'],
+            'payment_method_id' => ['required', 'integer', 'exists:payment_methods,id'],
+        ]);
+        $address = $customer->addresses()->findOrFail($data['customer_address_id']);
+        $method = PaymentMethod::whereKey($data['payment_method_id'])->where('active', 1)->firstOrFail();
+        abort_unless(in_array($method->code, ['cash', 'card_online'], true), 422);
+        DB::transaction(function () use ($order, $address, $method, $pricing) {
+            $locked = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            abort_if($locked->payment_status === 'paid', 422, 'Ödənilmiş sifariş dəyişdirilə bilməz.');
+            $delivery = $pricing->deliveryFee((float)$locked->subtotal - (float)$locked->discount);
+            $locked->update([
+                'customer_address_id' => $address->id,
+                'payment_method_id' => $method->id,
+                'payment_status' => $method->code === 'cash' ? 'cod' : 'pending',
+                'delivery_fee' => $delivery,
+                'total' => round((float)$locked->subtotal - (float)$locked->discount + $delivery + (float)$locked->gift_wrap_fee, 2),
+            ]);
+        });
+        return redirect()->route('admin.crm.show', $customer)
+            ->with('success', 'Sifarişin ünvanı və ödəniş üsulu təsdiqləndi.');
+    }
+
     public function order(Customer $customer, \App\Models\Order\Order $order): View
     {
         abort_unless($order->customer_id === $customer->id, 404);
 
         $order->load(['items.product', 'paymentMethod', 'status', 'address']);
 
-        return view('backend.crm.order', compact('order'));
+        return view('backend.crm.order', [
+            'order' => $order,
+            'customer' => $customer,
+            'addresses' => $customer->addresses()->get(),
+            'oneClickPaymentMethods' => PaymentMethod::where('active', 1)->whereIn('code', ['cash', 'card_online'])->get(),
+        ]);
     }
 }
