@@ -32,7 +32,7 @@ class OrdersController extends Controller
             'items.product.images',
             'items.variant.size',
             'paymentMethod',
-            'status',
+            'statusLogs.status',
             'address',
         ]);
 
