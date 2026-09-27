@@ -196,6 +196,10 @@
                             <span>{{ __('cart_delivery') }}</span>
                             <strong id="checkoutDelivery">0.00 ₼</strong>
                         </div>
+                        <div id="checkoutGiftWrapRow" class="cart-summary__row" hidden>
+                            <span>{{ __('checkout_gift_wrap_the_order') }}</span>
+                            <strong id="checkoutGiftWrapFee"></strong>
+                        </div>
                     </div>
 
                     <div class="cart-summary__total">
@@ -244,6 +248,7 @@
             bonusBalance: @json($bonusBalance),
             bonusRate: @json(app(\App\Services\ShopPricing::class)->bonusRate()),
             delivery: @json(app(\App\Services\ShopPricing::class)->delivery()),
+            giftWrap: @json(app(\App\Services\ShopPricing::class)->giftWrap()),
             creditProfileComplete: @json($creditProfileComplete),
             messages: {
                 error: @json(__('auth_something_went_wrong')),
