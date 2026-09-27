@@ -391,5 +391,7 @@
     "credit_address_title": "Kredit müraciəti — çatdırılma ünvanı",
     "credit_address_continue": "Davam et",
     "credit_address_confirm": "Müraciəti təsdiqlə",
-    "credit_address_back": "Məhsula qayıt"
+    "credit_address_back": "Məhsula qayıt",
+    "credit_success_title": "Müraciətiniz qeydə alındı.",
+    "credit_success_contact": "Bir iş günü ərzində sizinlə əlaqə saxlanılacaq."
 }
