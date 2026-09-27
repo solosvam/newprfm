@@ -4,14 +4,12 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CreditProfileController extends Controller
 {
     private const UPLOAD_PATH = 'frontend/uploads/customers/';
-    private const LEGACY_UPLOAD_PATH = 'backend/uploads/customers/';
 
     public function edit(Request $request)
     {
@@ -37,10 +35,7 @@ class CreditProfileController extends Controller
 
         abort_unless($path, 404);
 
-        $file = $this->resolveImagePath(
-            $path,
-            $request->user()->id
-        );
+        $file = $this->resolveImagePath($path);
 
         abort_unless($file && is_file($file), 404);
 
@@ -97,7 +92,7 @@ class CreditProfileController extends Controller
             $previous = $profile?->{$field};
 
             if ($previous) {
-                $this->deleteImage($previous, $user->id);
+                $this->deleteImage($previous);
             }
         }
 
@@ -336,59 +331,22 @@ class CreditProfileController extends Controller
         return $filename;
     }
 
-    private function resolveImagePath(string $path, int $userId): ?string
+    private function resolveImagePath(string $filename): ?string
     {
-        // Yeni yazılış: DB-də yalnız UUID.webp saxlanılır.
-        // Köhnə qeydlər də profildə görünməyə davam edir.
-        if (preg_match('/^[a-f0-9-]{36}\\.webp$/i', $path)) {
-            $new = public_path(self::UPLOAD_PATH . $path);
-            if (is_file($new)) {
-                return $new;
-            }
-
-            // Köhnə qeydlərin DB-də yalnız fayl adı ilə saxlandığı hallar.
-            $legacy = public_path(self::LEGACY_UPLOAD_PATH . $path);
-            return is_file($legacy) ? $legacy : null;
+        // Şəxsiyyət vəsiqəsi şəkilləri yalnız sahibinə aid qorunan route ilə göstərilir.
+        // Bazada yalnız UUID.webp formatlı fayl adı saxlanılır.
+        if (!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.webp$/i', $filename)) {
+            return null;
         }
 
-        foreach ([self::UPLOAD_PATH, self::LEGACY_UPLOAD_PATH] as $prefix) {
-            if (str_starts_with($path, $prefix)
-                && basename($path) === substr($path, strlen($prefix))) {
-                return public_path($path);
-            }
-        }
-
-        $legacyCustomerPrefix = self::LEGACY_UPLOAD_PATH . $userId . '/';
-        if (str_starts_with($path, $legacyCustomerPrefix)
-            && basename($path) === substr($path, strlen($legacyCustomerPrefix))) {
-            return public_path($path);
-        }
-
-        $localPrefix = "credit-profiles/{$userId}/";
-        if (str_starts_with($path, $localPrefix)
-            && basename($path) === substr($path, strlen($localPrefix))) {
-            return Storage::disk('local')->path($path);
-        }
-
-        return null;
+        return public_path(self::UPLOAD_PATH . $filename);
     }
 
-    private function deleteImage(
-        string $path,
-        int $userId
-    ): void {
-        $file = $this->resolveImagePath($path, $userId);
+    private function deleteImage(string $filename): void
+    {
+        $file = $this->resolveImagePath($filename);
 
-        if (!$file) {
-            return;
-        }
-
-        if (str_starts_with($path, 'credit-profiles/')) {
-            Storage::disk('local')->delete($path);
-            return;
-        }
-
-        if (is_file($file)) {
+        if ($file && is_file($file)) {
             @unlink($file);
         }
     }
