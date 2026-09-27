@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
+use App\Models\Order\Order;
+use App\Models\PaymentMethod;
+use App\Services\ShopPricing;
+use Illuminate\Support\Facades\DB;
 use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +20,23 @@ class CrmController extends Controller
 {
     public function index(Request $request): View
     {
-        return view('backend.crm.index');
+        return view('backend.crm.index', [
+            'unassignedOrders' => Order::with(['items.product', 'status'])
+                ->where('one_click', true)->whereNull('customer_id')->latest()->paginate(20),
+        ]);
+    }
+
+    public function assignOneClick(Request $request, Order $order): RedirectResponse
+    {
+        abort_unless($order->one_click && $order->customer_id === null, 404);
+        $data = $request->validate([
+            'customer_id' => ['required', 'integer', 'exists:customers,id'],
+        ]);
+        $customer = Customer::findOrFail($data['customer_id']);
+        // Assignment is deliberate: the operator has verified the caller's identity.
+        $order->update(['customer_id' => $customer->id]);
+        return redirect()->route('admin.crm.show', $customer)
+            ->with('success', 'Sifariş müştəriyə bağlandı. Ünvanı və ödəniş üsulunu dəqiqləşdirin.');
     }
 
     public function search(Request $request): JsonResponse
