@@ -17,6 +17,7 @@ use App\Http\Controllers\Frontend\CreditProfileController;
 use App\Http\Controllers\Frontend\CreditApplicationController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\OrdersController;
+use App\Http\Controllers\Frontend\BirbankPaymentController;
 
 
 /*
@@ -162,6 +163,9 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::middleware('auth')->group(function () {
 
+    Route::post('/payment/birbank/start/{order}', [BirbankPaymentController::class, 'start'])
+        ->middleware('throttle:5,1')->name('payment.birbank.start');
+
     // Checkout
     Route::controller(CheckoutController::class)->group(function () {
         Route::get('/checkout', 'index')->name('checkout');
@@ -220,6 +224,9 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+
+Route::get('/payment/birbank/return/{payment}', [BirbankPaymentController::class, 'callback'])
+    ->middleware('throttle:20,1')->name('payment.birbank.return');
 
 /*
 |--------------------------------------------------------------------------
