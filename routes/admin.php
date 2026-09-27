@@ -14,6 +14,7 @@ use App\Http\Controllers\Backend\CreditController;
 use App\Http\Controllers\Backend\SettingsController;
 use App\Http\Controllers\Backend\SmsTemplateController;
 use App\Http\Controllers\Backend\CrmController;
+use App\Http\Controllers\Backend\PromoCodesController;
 
 use App\Http\Controllers\Backend\Product\BrandsController;
 use App\Http\Controllers\Backend\Product\SizesController;
@@ -166,6 +167,15 @@ Route::prefix('admin')
                     Route::get('/', 'index')->name('index');
                     Route::post('/{smsTemplate}', 'update')->name('update');
                 });
+
+            Route::prefix('promo-codes')->name('promo-codes.')->controller(PromoCodesController::class)->group(function () {
+                Route::get('/', 'index')->middleware('can:promo.list')->name('index');
+                Route::get('/create', 'create')->middleware('can:promo.manage')->name('create');
+                Route::post('/', 'store')->middleware('can:promo.manage')->name('store');
+                Route::get('/{promo}/edit', 'edit')->middleware('can:promo.manage')->name('edit');
+                Route::put('/{promo}', 'update')->middleware('can:promo.manage')->name('update');
+                Route::get('/{promo}/history', 'history')->middleware('can:promo.list')->name('history');
+            });
 
             Route::controller(SettingsController::class)
                 ->middleware('can:system.settings')
