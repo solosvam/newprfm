@@ -55,11 +55,30 @@
                     <h2 class="checkout-section-title">{{ __('checkout_payment_method') }}</h2>
                     <div class="checkout-payment">
                         @foreach($paymentMethods as $m)
-                            <label class="checkout-payment-option">
-                                <input type="radio" name="payment_method" value="{{ $m->id }}" @checked(old('payment_method', $paymentMethods->first()?->id) == $m->id)>
+                            <label class="checkout-payment-option" data-payment-code="{{ $m->code }}">
+                                <input type="radio" name="payment_method" value="{{ $m->id }}" data-code="{{ $m->code }}" @checked(old('payment_method', $paymentMethods->first()?->id) == $m->id)>
                                 <span>{{ $m->localized_name }}</span>
+                                @if($m->code === 'bonus_balance')
+                                    <small>{{ number_format($bonusBalance, 2) }} ₼</small>
+                                @endif
                             </label>
                         @endforeach
+                        <p id="bonusWarning" class="form-alert form-alert-error" hidden></p>
+                        <div id="installmentDetails" hidden>
+                            @if(!$creditProfileComplete)
+                                <p>{{ __('credit_application_complete_profile') }} <a href="{{ route('profile.credit') }}">{{ __('credit_application_complete_profile') }}</a></p>
+                            @else
+                                <label for="creditPeriod">Kredit müddəti</label>
+                                <select id="creditPeriod" class="brand-select">
+                                    <option value="">Seçin</option>
+                                    @foreach($creditPeriods as $period)
+                                        <option value="{{ $period->id }}" data-months="{{ $period->month }}" data-rate="{{ $period->interest_rate }}">{{ $period->month }} ay ({{ $period->interest_rate }}%)</option>
+                                    @endforeach
+                                </select>
+                                <p id="creditEstimate"></p>
+                                <label><input type="checkbox" id="creditTerms"> Şərtləri qəbul edirəm</label>
+                            @endif
+                        </div>
                     </div>
 
                     <h2 class="checkout-section-title">{{ __('checkout_additional_options') }}</h2>
@@ -93,6 +112,8 @@
             cartProductsUrl: @json(route('cart.products')),
             cartUrl: @json(route('cart')),
             csrf: @json(csrf_token()),
+            bonusBalance: @json($bonusBalance),
+            creditProfileComplete: @json($creditProfileComplete),
             messages: {
                 error: @json(__('auth_something_went_wrong')),
             },
