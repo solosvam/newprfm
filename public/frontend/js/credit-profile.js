@@ -7,6 +7,17 @@ $(function () {
     const changeLabel = form.data('change-label');
     const genericError = form.data('error-message');
 
+    // Şəkil route-u 404 qaytararsa, boş/broken preview göstərmə.
+    form.find('.credit-preview').on('error', function () {
+        const card = $(this).closest('.credit-photo');
+        $(this).prop('hidden', true);
+        card.find('.credit-empty').prop('hidden', false);
+    }).on('load', function () {
+        const card = $(this).closest('.credit-photo');
+        $(this).prop('hidden', false);
+        card.find('.credit-empty').prop('hidden', true);
+    });
+
     form.find('.credit-change').on('click', function () {
         $(this).closest('.credit-photo').find('input[type="file"]').trigger('click');
     });
