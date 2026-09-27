@@ -12,7 +12,7 @@ class OrderCreatedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Order $order, public string $locale = 'az')
+    public function __construct(public Order $order, public string $mailLocale = 'az')
     {
         $this->afterCommit();
         $this->onQueue('emails');
@@ -20,7 +20,7 @@ class OrderCreatedMail extends Mailable implements ShouldQueue
 
     public function build(): static
     {
-        $locale = in_array($this->locale, ['az', 'ru', 'en'], true) ? $this->locale : 'az';
+        $locale = in_array($this->mailLocale, ['az', 'ru', 'en'], true) ? $this->mailLocale : 'az';
         $subjects = [
             'az' => 'Sifarişiniz qəbul edildi: ',
             'ru' => 'Ваш заказ принят: ',
