@@ -7,7 +7,8 @@ use App\Models\Setting;
 class BonusService {
  public function earnForOrder(Customer $customer, Order $order, float $paidAmount): float {
   $percent=(float) Setting::valueOf('order_bonus_percent',5);
-  $bonus=round(max(0,$paidAmount)*($percent/100),2);
+  $eligibleAmount = max(0, (float)$order->subtotal - (float)$order->discount);
+  $bonus=round($eligibleAmount*($percent/100),2);
   if($bonus<=0)return 0;
   $customer->increment('bonus_balance',$bonus);
   $customer->bonusTransactions()->create(['order_id'=>$order->id,'type'=>'earn','amount'=>$bonus,'note'=>'Sifariş bonusu']);
