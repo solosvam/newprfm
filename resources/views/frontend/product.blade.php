@@ -115,6 +115,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
         </div>
 
         <div class="installment-full" data-installment>
+            <h2 class="installment-heading">{{ __('product_installment_schedule') }}</h2>
             <table class="installment-table">
                 <thead>
                 <tr><th></th><th>{{ __('product_duration') }}</th><th>{{ __('product_monthly') }}</th><th>{{ __('product_price') }}</th></tr>
@@ -157,6 +158,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
     </div>
 
     <style>
+        .installment-heading {font-size:20px;font-weight:700;margin:0 0 18px;color:var(--text,#272331)}
         .product-mobile-credit {display:none}
         @media (max-width:720px) {
             .product-mobile-credit {display:block;width:100%;text-align:center}
