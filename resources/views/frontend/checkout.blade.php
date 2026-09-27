@@ -94,6 +94,9 @@
                 <aside class="cart-summary checkout-summary">
                     <h2 class="checkout-section-title">{{ __('checkout_your_order') }}</h2>
                     <div id="checkoutItems" class="checkout-items"></div>
+                    @include('frontend.partials.promo-code')
+                    <div class="cart-summary__row"><span>{{ __('cart_discount') }}</span><strong id="checkoutDiscount">0.00 ₼</strong></div>
+                    <div class="cart-summary__row"><span>{{ __('cart_delivery') }}</span><strong id="checkoutDelivery">0.00 ₼</strong></div>
                     <div class="cart-summary__row cart-summary__total checkout-total">
                         <span>{{ __('checkout_total') }}</span>
                         <strong id="checkoutTotal">0.00 ₼</strong>
@@ -113,11 +116,13 @@
             cartUrl: @json(route('cart')),
             csrf: @json(csrf_token()),
             bonusBalance: @json($bonusBalance),
+            delivery: @json(app(\App\Services\ShopPricing::class)->delivery()),
             creditProfileComplete: @json($creditProfileComplete),
             messages: {
                 error: @json(__('auth_something_went_wrong')),
             },
         };
     </script>
+    <script src="{{ asset('frontend/js/promo.js') }}" defer></script>
     <script src="{{ asset('frontend/js/checkout.js') }}" defer></script>
 @endsection
