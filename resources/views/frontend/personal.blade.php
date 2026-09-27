@@ -31,6 +31,21 @@
                             <label>{{ __('profile_your_phone_number') }}</label>
                             <input type="text" value="{{ auth()->user()->mobile }}" placeholder="{{ __('profile_your_phone_number') }}" disabled>
                         </div>
+                        <div class="form-field form-field--full">
+                            <label>{{ __('profile_gender') }}</label>
+                            @php
+                                $selectedGender = old('gender', auth()->user()->gender);
+                            @endphp
+                            <div class="gender-pills">
+                                @foreach([1 => __('profile_male'), 0 => __('profile_female')] as $value => $label)
+                                    <label class="gender-pill">
+                                        <input type="radio" name="gender" value="{{ $value }}" @checked((int) $selectedGender === $value)>
+                                        <span>{{ $label }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <div class="invalid-feedback" data-error="gender">{{ $errors->first('gender') }}</div>
+                        </div>
                     </div>
 
                     <div class="account-form-divider">

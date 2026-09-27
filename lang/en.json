@@ -423,5 +423,8 @@
     "product_notes": "Fragrance notes",
     "product_similar": "Similar products",
     "nav_search_placeholder": "Search for a brand or fragrance...",
-    "nav_search_label": "Search products"
+    "nav_search_label": "Search products",
+    "profile_gender": "Gender",
+    "profile_male": "Male",
+    "profile_female": "Female"
 }

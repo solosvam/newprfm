@@ -423,5 +423,8 @@
     "product_notes": "Ноты аромата",
     "product_similar": "Похожие товары",
     "nav_search_placeholder": "Поиск бренда или аромата...",
-    "nav_search_label": "Поиск товаров"
+    "nav_search_label": "Поиск товаров",
+    "profile_gender": "Пол",
+    "profile_male": "Мужской",
+    "profile_female": "Женский"
 }

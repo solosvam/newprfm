@@ -358,5 +358,8 @@
     "product_notes": "Ətir notları",
     "product_similar": "Bənzər məhsullar",
     "nav_search_placeholder": "Brend və ya ətir axtar...",
-    "nav_search_label": "Məhsul axtar"
+    "nav_search_label": "Məhsul axtar",
+    "profile_gender": "Cinsiyyət",
+    "profile_male": "Kişi",
+    "profile_female": "Qadın"
 }

@@ -16,6 +16,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'name',
         'surname',
+        'gender',
         'email',
         'mobile',
         'password',
