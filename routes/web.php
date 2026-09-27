@@ -192,9 +192,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/credit', 'edit')->name('profile.credit');
         Route::post('/profile/credit', 'update')->name('profile.credit.update');
 
-        Route::get('/profile/credit/image/{side}', 'image')
-            ->whereIn('side', ['front', 'back'])
-            ->name('profile.credit.image');
     });
 
     // Favorites
