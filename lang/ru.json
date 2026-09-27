@@ -437,5 +437,8 @@
     "catalog_apply": "Применить",
     "catalog_search_size": "Поиск объёма",
     "credit_application_complete_profile": "Для подачи заявки сначала заполните данные для рассрочки в личном кабинете.",
-    "credit_application_success": "Ваша заявка на рассрочку зарегистрирована."
+    "credit_application_success": "Ваша заявка на рассрочку зарегистрирована.",
+    "credit_profile_required_title": "Данные для рассрочки",
+    "credit_profile_required_message": "Вы не можете подать заявку, поскольку данные для рассрочки не заполнены. Пожалуйста, сначала заполните необходимые данные.",
+    "credit_profile_required_action": "Заполнить данные"
 }
