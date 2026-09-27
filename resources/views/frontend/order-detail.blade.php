@@ -220,6 +220,13 @@
                                     @if($order->discount > 0)
                                         <div class="od-row od-row--discount"><span>{{ __('orders_discount') }}</span><span>−{{ number_format($order->discount, 2) }} ₼</span></div>
                                     @endif
+                                    @if((float) $order->delivery_fee > 0)
+                                        <div class="od-row"><span>{{ match(app()->getLocale()) {
+                                            'ru' => 'Доставка',
+                                            'en' => 'Delivery',
+                                            default => 'Çatdırılma',
+                                        } }}</span><span>{{ number_format((float) $order->delivery_fee, 2) }} ₼</span></div>
+                                    @endif
                                     @if($order->bonus_used > 0)
                                         <div class="od-row od-row--discount"><span>{{ __('orders_paid_with_bonuses') }}</span><span>−{{ number_format($order->bonus_used, 2) }} ₼</span></div>
                                     @endif
