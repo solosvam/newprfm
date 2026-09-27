@@ -14,6 +14,7 @@ use App\Http\Controllers\Backend\CreditController;
 use App\Http\Controllers\Backend\SettingsController;
 use App\Http\Controllers\Backend\SmsTemplateController;
 use App\Http\Controllers\Backend\CrmController;
+use App\Http\Controllers\Backend\EasyOrdersController;
 use App\Http\Controllers\Backend\PromoCodesController;
 
 use App\Http\Controllers\Backend\Product\BrandsController;
@@ -186,13 +187,18 @@ Route::prefix('admin')
                     Route::post('/', 'update')->name('update');
                 });
 
+            Route::prefix('easy-orders')->name('easy-orders.')->controller(EasyOrdersController::class)->middleware('can:crm')->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('/{order}', 'show')->name('show');
+                Route::post('/{order}/confirm', 'confirm')->name('confirm');
+            });
+
             Route::controller(CrmController::class)
                 ->middleware('can:crm')
                 ->prefix('crm')
                 ->name('crm.')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
-                    Route::post('/one-click/{order}/assign', 'assignOneClick')->name('one-click.assign');
                     Route::get('/customer/{customer}', 'show')->name('show');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
