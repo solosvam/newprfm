@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
 use App\Models\Payment;
 use App\Services\Payment\Birbank;
+use App\Services\BonusService;
+use App\Mail\OrderCreatedMail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -27,8 +31,18 @@ class BirbankPaymentController extends Controller
 
     public function callback(Request $request, Payment $payment, Birbank $birbank): RedirectResponse
     {
-        // The gateway return is not proof of payment.
+        // Bank verification is authoritative; never trust the redirect STATUS.
         $payment = $birbank->verify($payment);
+        if ($payment->status === Payment::PAID) {
+            DB::transaction(function () use ($payment) {
+                $order = Order::whereKey($payment->order_id)->lockForUpdate()->firstOrFail();
+                if ((float) $order->bonus_earned > 0) return;
+                $customer = $order->customer;
+                $bonus = app(BonusService::class)->earnForOrder($customer, $order, (float) $order->total);
+                // Zero-bonus settings must also be idempotent.
+                if ($bonus <= 0) $order->update(['bonus_earned' => 0]);
+            });
+        }
 
         if (!$request->user()) {
             return redirect()->route('front.login', [
