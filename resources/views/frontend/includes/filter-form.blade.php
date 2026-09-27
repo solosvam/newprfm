@@ -50,18 +50,24 @@
             @endforeach
         </div>
 
-        @if(isset($volumeRanges))
+        @if(isset($filterSizes) && $filterSizes->isNotEmpty())
             <div class="filter-section">
                 <p class="filter-section__label">{{ __('catalog_volume') }}</p>
-                <div class="filter-volume-grid">
-                    @foreach($volumeRanges as $range)
-                        <label class="filter-radio-row">
-                            <input type="radio" name="volume" value="{{ $range['value'] }}" @checked(request('volume') === $range['value'])>
-                            <span>{{ $range['label'] }}</span>
+                <input type="search" class="filter-size-search" data-filter-size-search
+                       placeholder="{{ __('catalog_search_size') }}"
+                       aria-label="{{ __('catalog_search_size') }}">
+                <div class="filter-size-scroll" data-filter-size-list>
+                    @foreach($filterSizes as $size)
+                        @php
+                            $sizeName = $size->{'name_' . app()->getLocale()} ?: ($size->name_az ?: $size->name_en);
+                        @endphp
+                        <label class="filter-checkbox-row" data-filter-size-option>
+                            <input type="checkbox" name="size[]" value="{{ $size->id }}"
+                                   @checked(in_array((string) $size->id, array_map('strval', (array) request('size', [])), true))>
+                            <span>{{ $sizeName }}</span>
                         </label>
                     @endforeach
                 </div>
-                <p class="filter-hint">{{ __('catalog_volume_hint') }}</p>
             </div>
         @endif
 
@@ -95,3 +101,36 @@
         </div>
     </div>
 </form>
+
+<style>
+    .filter-size-search {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 13px;
+        border: 1px solid #e3dfeb;
+        border-radius: 8px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        margin: 10px 0 12px;
+    }
+    .filter-size-search:focus { outline: 2px solid #c4a7e5; outline-offset: 1px; }
+    .filter-size-scroll {
+        max-height: 245px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        padding-right: 7px;
+    }
+    .filter-size-scroll .filter-checkbox-row { display: flex; align-items: center; margin-bottom: 9px; }
+</style>
+<script>
+document.addEventListener('input', function (event) {
+    if (!event.target.matches('[data-filter-size-search]')) return;
+    const query = event.target.value.trim().toLocaleLowerCase();
+    const list = event.target.closest('.filter-section').querySelector('[data-filter-size-list]');
+    list.querySelectorAll('[data-filter-size-option]').forEach(function (option) {
+        option.hidden = !option.textContent.trim().toLocaleLowerCase().includes(query);
+    });
+});
+</script>
