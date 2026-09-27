@@ -34,8 +34,8 @@ class SettingsController extends Controller
     {
         $rules = [
             'order_bonus_percent' => ['required', 'numeric', 'min:0', 'max:100'],
-            'delivery_mode' => ['required', 'in:free,threshold'],
-            'delivery_fee' => ['required_if:delivery_mode,threshold', 'nullable','numeric','min:0'],
+            'delivery_mode' => ['required', 'in:free,paid,threshold'],
+            'delivery_fee' => ['required_if:delivery_mode,paid,threshold', 'nullable','numeric','min:0'],
             'free_delivery_from' => ['required_if:delivery_mode,threshold','nullable','numeric','gt:0'],
         ];
 
