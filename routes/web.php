@@ -12,6 +12,7 @@ use App\Http\Controllers\Frontend\CategoryController;
 use App\Http\Controllers\Frontend\BrandsController;
 use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CheckoutController;
+use App\Http\Controllers\Frontend\OneClickOrderController;
 use App\Http\Controllers\Frontend\FavoriteController;
 use App\Http\Controllers\Frontend\CreditProfileController;
 use App\Http\Controllers\Frontend\CreditApplicationController;
@@ -106,6 +107,8 @@ Route::controller(ProductController::class)->group(function () {
 */
 
 Route::view('/cart', 'frontend.cart')->name('cart');
+Route::post('/order/one-click', [OneClickOrderController::class, 'store'])->middleware('throttle:5,1')->name('one-click.store');
+Route::get('/order/one-click/success/{order}', [OneClickOrderController::class, 'success'])->name('one-click.success');
 Route::post('/cart/promo', [PromoCodeController::class, 'apply'])->middleware('throttle:10,1')->name('promo.apply');
 Route::delete('/cart/promo', [PromoCodeController::class, 'remove'])->name('promo.remove');
 
