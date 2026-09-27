@@ -421,5 +421,7 @@
     "product_duration": "Term",
     "product_description_empty": "A description for this fragrance has not been added yet.",
     "product_notes": "Fragrance notes",
-    "product_similar": "Similar products"
+    "product_similar": "Similar products",
+    "nav_search_placeholder": "Search for a brand or fragrance...",
+    "nav_search_label": "Search products"
 }
