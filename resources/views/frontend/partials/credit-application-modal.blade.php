@@ -21,17 +21,6 @@
         <form id="creditApplicationForm" action="{{ route('credit.application.store') }}" method="POST">
             @csrf
             <div class="credit-modal-field">
-                <label>{{ $creditCopy['size'] }}</label>
-                <div class="credit-modal-options" id="creditVariantOptions">
-                    @foreach($variants as $variant)
-                        <label class="credit-modal-pill">
-                            <input type="radio" name="product_variant_id" value="{{ $variant->id }}" data-price="{{ $variant->price }}" @checked($loop->first) required>
-                            <span>{{ $variant->size?->{'name_'.$creditLocale} ?: ($variant->size?->name_az ?: $variant->id) }}</span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-            <div class="credit-modal-field">
                 <label>{{ $creditCopy['period'] }}</label>
                 <div class="credit-modal-options" id="creditPeriodOptions">
                     @foreach($creditPeriods as $period)
@@ -42,7 +31,18 @@
                     @endforeach
                 </div>
             </div>
-            <div class="credit-modal-summary">
+            <div class="credit-modal-field">
+                <label>{{ $creditCopy['size'] }}</label>
+                <div class="credit-modal-options" id="creditVariantOptions">
+                    @foreach($variants as $variant)
+                        <label class="credit-modal-pill">
+                            <input type="radio" name="product_variant_id" value="{{ $variant->id }}" data-price="{{ $variant->price }}" @checked($loop->first) required>
+                            <span>{{ $variant->size?->{'name_'.$creditLocale} ?: ($variant->size?->name_az ?: $variant->id) }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="credit-modal-summary">\n                <div class="credit-modal-product"><strong>{{ $product->brand?->name }}</strong><span>{{ $product->name }}</span></div>
                 <div><span>{{ $creditCopy['price'] }}</span><strong id="creditPrice">—</strong></div>
                 <div><span>{{ $creditCopy['monthly'] }}</span><strong id="creditMonthly">—</strong></div>
                 <div><span>{{ $creditCopy['total'] }}</span><strong id="creditTotal">—</strong></div>
@@ -83,7 +83,10 @@
 .credit-modal-pill input:checked+span{border-color:#30214f;background:#f2edf9;color:#30214f;font-weight:700}
 .credit-modal-pill input:focus-visible+span{outline:2px solid #30214f;outline-offset:3px}
 .credit-modal-summary {background:rgba(143,113,178,.09);border-radius:12px;padding:16px;margin:22px 0}
-.credit-modal-summary div {display:flex;justify-content:space-between;gap:12px;padding:9px 0}.credit-modal-summary div+div {border-top:1px solid #ded6e6}
+.credit-modal-summary .credit-modal-product{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:2px 0 14px;margin-bottom:5px;border-bottom:1px solid #ded6e6}
+.credit-modal-summary .credit-modal-product strong{font-size:13px;color:#766b86}
+.credit-modal-summary .credit-modal-product span{font-size:18px;font-weight:700;line-height:1.35}
+.credit-modal-summary div {display:flex;justify-content:space-between;gap:12px;padding:9px 0}.credit-modal-summary div+div:not(.credit-modal-product) {border-top:1px solid #ded6e6}
 .credit-modal-accept {display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;cursor:pointer}.credit-modal-accept input {margin-top:4px}
 .credit-modal-submit {width:100%;margin-top:20px}.credit-modal-message {font-size:14px;margin:14px 0 0}
 .credit-modal-rules {background:rgba(143,113,178,.07);border-radius:12px;padding:20px;align-self:start;max-height:540px;overflow:auto}
