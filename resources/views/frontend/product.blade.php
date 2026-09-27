@@ -106,16 +106,6 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
         </div>
 
         <div class="installment-full" data-installment>
-            <div class="installment-hero">
-                <img src="{{ asset('frontend/images/birbank-card.png') }}" alt="{{ __('product_card') }}">
-                <div>
-                    <p class="headline" data-installment-headline>
-                        {{ number_format($initialPrice / 6, 2) }} ₼ x 6 ay
-                    </p>
-                    <p class="sub">{{ __('product_card_info') }}</p>
-                </div>
-            </div>
-
             <table class="installment-table">
                 <thead>
                 <tr><th></th><th>{{ __('product_duration') }}</th><th>{{ __('product_monthly') }}</th><th>{{ __('product_price') }}</th></tr>
