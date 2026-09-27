@@ -1478,3 +1478,49 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 .logo--svg { display: inline-flex; align-items: center; color: var(--accent); }
 .logo-svg { width: 132px; height: auto; display: block; }
 footer .logo--svg { color: var(--on-accent-bg); }
+.error-page {
+    max-width: 480px;
+    margin: 60px auto;
+    padding: 48px 32px;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.error-page__icon {
+    width: 96px;
+    height: 96px;
+    margin: 8px auto 0;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    order: 3;
+}
+
+.error-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.error-page__code {
+    order: -2;
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 0 0 4px;
+    letter-spacing: 2px;
+}
+.error-page__title { order: -1; font-size: 22px; font-weight: 700; color: var(--text); margin: 0 0 12px; }
+.error-page__text { font-size: 14px; color: var(--text-secondary); margin: 0 0 28px; max-width: 340px; line-height: 1.6; }
+
+.error-page__actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 28px;
+}
+.error-page__btn { flex: 1; margin: 0; }
