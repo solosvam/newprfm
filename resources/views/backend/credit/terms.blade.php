@@ -35,9 +35,7 @@
                                 <div class="row">
                                     @foreach(['az' => 'AZ', 'en' => 'EN', 'ru' => 'RU'] as $locale => $label)
                                         <div class="col-md-4">
-                                            <label class="form-label">Başlıq {{ $label }}</label>
-                                            <input type="text" class="form-control mb-3" data-field="title_{{ $locale }}" name="items[{{ $index }}][title_{{ $locale }}]" value="{{ $item['title_'.$locale] ?? '' }}" @required($locale === 'az')>
-                                            <label class="form-label">Mətn {{ $label }}</label>
+                                            <label class="form-label">Qayda {{ $label }}</label>
                                             <textarea class="form-control mb-3" rows="5" data-field="content_{{ $locale }}" name="items[{{ $index }}][content_{{ $locale }}]" @required($locale === 'az')>{{ $item['content_'.$locale] ?? '' }}</textarea>
                                         </div>
                                     @endforeach
@@ -67,9 +65,7 @@
             <div class="row">
                 @foreach(['az'=>'AZ','en'=>'EN','ru'=>'RU'] as $locale => $label)
                     <div class="col-md-4">
-                        <label class="form-label">Başlıq {{ $label }}</label>
-                        <input type="text" class="form-control mb-3" data-field="title_{{ $locale }}" @required($locale === 'az')>
-                        <label class="form-label">Mətn {{ $label }}</label>
+                        <label class="form-label">Qayda {{ $label }}</label>
                         <textarea class="form-control mb-3" rows="5" data-field="content_{{ $locale }}" @required($locale === 'az')></textarea>
                     </div>
                 @endforeach
