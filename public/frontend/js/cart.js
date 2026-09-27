@@ -4,19 +4,84 @@
     const root = document.getElementById('cartPage');
     if (!root) return;
 
-    const itemsElement = document.getElementById('cartItems');
-    const emptyElement = document.getElementById('cartEmpty');
-    const layoutElement = root.querySelector('.cart-layout');
-    const summaryElement = document.getElementById('cartSummaryLines');
-    const subtotalElement = document.getElementById('cartSubtotal');
-    const totalElement = document.getElementById('cartTotal');
-    const productUrl = root.dataset.productsUrl;
-    const removeLabel = root.dataset.removeLabel;
+    const CART_KEY = 'parfumshop_cart';
+    const $ = id => document.getElementById(id);
+    const els = {
+        items: $('cartItems'),
+        count: $('cartCount'),
+        itemsLabel: $('cartItemsLabel'),
+        subtotal: $('cartSubtotal'),
+        discountRow: $('cartDiscountRow'),
+        discount: $('cartDiscount'),
+        discountCode: $('cartDiscountCode'),
+        delivery: $('cartDelivery'),
+        total: $('cartTotal'),
+        mobileTotal: $('cartMobileTotal'),
+        installment: $('cartInstallment'),
+        installmentText: $('cartInstallmentText'),
+        bonus: $('cartBonus'),
+        bonusText: $('cartBonusText'),
+        freeship: $('cartFreeship'),
+        freeshipText: $('cartFreeshipText'),
+        freeshipBar: $('cartFreeshipBar'),
+        toast: $('cartToast'),
+        toastText: $('cartToastText'),
+        toastUndo: $('cartToastUndo'),
+        mobilebar: $('cartMobilebar'),
+        checkout: $('cartCheckout'),
+    };
+
+    const d = root.dataset;
+    const config = {
+        productsUrl: d.productsUrl,
+        deliveryFee: Number(d.deliveryFee) || 0,
+        freeFrom: Number(d.freeDeliveryFrom) || 0,
+        bonusRate: Number(d.bonusRate) || 0,
+        installmentMonths: parseInt(d.installmentMonths, 10) || 0,
+        installmentMin: Number(d.installmentMin) || 0,
+        installmentMarkup: Number(d.installmentMarkup) || 0,
+    };
+    const t = JSON.parse(d.i18n || '{}');
+
+    const TRASH_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+
+    const state = { subtotal: 0, count: 0 };
     let renderVersion = 0;
+    let undoEntry = null;
+    let toastTimer = null;
+
+    /* ---------- helpers ---------- */
+    const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const money = value => formatter.format(Number(value) || 0).replace(/,/g, '\u00A0') + '\u00A0₼';
+    const round2 = value => Math.round((value + Number.EPSILON) * 100) / 100;
+
+    function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+    }
+
+    const strong = text => el('strong', '', text);
+
+    /** ":amount" kimi placeholder-ləri mətn və ya DOM node ilə əvəz edir */
+    function fill(template, values) {
+        const fragment = document.createDocumentFragment();
+        String(template || '').split(/(:[a-z_]+)/i).forEach(part => {
+            const key = part.startsWith(':') ? part.slice(1) : null;
+            if (key && key in values) {
+                const value = values[key];
+                fragment.append(value instanceof Node ? value : String(value));
+            } else if (part) {
+                fragment.append(part);
+            }
+        });
+        return fragment;
+    }
 
     function getCart() {
         try {
-            const cart = JSON.parse(localStorage.getItem('parfumshop_cart') || '[]');
+            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
             return Array.isArray(cart) ? cart : [];
         } catch {
             return [];
@@ -24,120 +89,227 @@
     }
 
     function saveCart(cart) {
-        localStorage.setItem('parfumshop_cart', JSON.stringify(cart));
+        localStorage.setItem(CART_KEY, JSON.stringify(cart));
         window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', { detail: cart }));
         renderCart();
     }
 
-    function element(tag, className, text) {
-        const node = document.createElement(tag);
-        if (className) node.className = className;
-        if (text !== undefined && text !== null) node.textContent = String(text);
-        return node;
+    function actionButton(label, action, id, ariaLabel) {
+        const button = el('button', '', label);
+        button.type = 'button';
+        button.dataset.action = action;
+        button.dataset.id = id;
+        button.setAttribute('aria-label', ariaLabel);
+        return button;
     }
 
-    function money(value) {
-        return Number(value).toFixed(2) + ' ₼';
-    }
-
-    function addItem(item, product) {
+    /* ---------- row ---------- */
+    function buildRow(item, product) {
         const quantity = Math.max(1, Number(item.quantity) || 1);
         const price = Number(product.price) || 0;
-        const row = element('div', 'cart-row');
-        const image = element('div', 'cart-row__image');
+        const lineTotal = price * quantity;
+        const id = String(item.variant_id);
+        const isGiftCard = Boolean(product.is_gift_card);
 
+        const row = el('article', 'cart-row');
+
+        const image = el('div', 'cart-row__image');
         if (product.image) {
-            const img = element('img');
+            const img = el('img');
             img.src = product.image;
             img.alt = product.name || '';
+            img.loading = 'lazy';
             image.appendChild(img);
         }
 
-        const info = element('div', 'cart-row__info');
-        info.append(
-            element('div', 'cart-row__name', product.name),
-            element('div', 'cart-row__brand', product.brand || ''),
-            element('div', 'cart-row__meta', [product.gender, product.type].filter(Boolean).join(' | ')),
-            element('div', 'cart-row__price', money(price))
-        );
-
-        const bottom = element('div', 'cart-row__bottom');
-        bottom.appendChild(element('span', 'cart-row__size', product.size || ''));
-
-        const quantityControl = element('div', 'cart-row__qty');
-        const minus = element('button', '', '−');
-        const plus = element('button', '', '+');
-        for (const [button, action] of [[minus, 'minus'], [plus, 'plus']]) {
-            button.type = 'button';
-            button.dataset.action = action;
-            button.dataset.id = String(item.variant_id);
+        const name = el('h3', 'cart-row__name');
+        if (product.url) {
+            const link = el('a', '', product.name);
+            link.href = product.url;
+            name.appendChild(link);
+        } else {
+            name.textContent = product.name || '';
         }
-        quantityControl.append(minus, element('span', '', quantity), plus);
 
-        const remove = element('button', 'cart-remove', removeLabel);
+        const meta = el('div', 'cart-row__meta');
+        if (product.brand) meta.appendChild(el('span', 'cart-row__brand', product.brand));
+        if (!isGiftCard) {
+            [product.gender, product.type, product.size]
+                .filter(Boolean)
+                .forEach(value => meta.appendChild(el('span', '', value)));
+        }
+
+        const info = el('div', 'cart-row__info');
+        info.append(name, meta);
+
+        const priceBox = el('div', 'cart-row__price');
+        priceBox.appendChild(el('div', 'cart-row__total', money(lineTotal)));
+        if (quantity > 1) priceBox.appendChild(el('div', 'cart-row__unit', `${quantity} × ${money(price)}`));
+
+        const head = el('div', 'cart-row__head');
+        head.append(info, priceBox);
+
+        const minus = actionButton('−', 'minus', id, t.decrease);
+        minus.disabled = quantity <= 1;
+        const plus = actionButton('+', 'plus', id, t.increase);
+
+        const qty = el('div', 'cart-qty');
+        qty.append(minus, el('span', '', quantity), plus);
+
+        const remove = el('button', 'cart-remove');
         remove.type = 'button';
         remove.dataset.action = 'remove';
-        remove.dataset.id = String(item.variant_id);
-        bottom.append(quantityControl, remove);
-        info.appendChild(bottom);
-        row.append(image, info);
-        itemsElement.appendChild(row);
+        remove.dataset.id = id;
+        remove.setAttribute('aria-label', `${t.remove}: ${product.name || ''}`);
+        remove.insertAdjacentHTML('afterbegin', TRASH_ICON);
+        remove.appendChild(el('span', '', t.remove));
 
-        const line = element('div', 'cart-summary__line');
-        line.append(element('span', '', product.name), element('strong', '', money(price * quantity)));
-        summaryElement.appendChild(line);
-        return price * quantity;
+        const actions = el('div', 'cart-row__actions');
+        actions.append(qty, remove);
+
+        const body = el('div', 'cart-row__body');
+        body.append(head, actions);
+
+        row.append(image, body);
+        return { row, lineTotal, quantity };
     }
 
+    /* ---------- totals ---------- */
+    function updateTotals() {
+        const promo = window.ParfumPromo || {};
+        const discount = Math.min(Number(promo.discount) || 0, state.subtotal);
+        const goods = round2(state.subtotal - discount);
+        const reachedFree = config.freeFrom > 0 && goods >= config.freeFrom;
+        const delivery = reachedFree ? 0 : config.deliveryFee;
+        const total = round2(goods + delivery);
+
+        els.count.textContent = state.count || '';
+        els.itemsLabel.textContent = String(t.itemsCount || '').replace(':count', state.count);
+        els.subtotal.textContent = money(state.subtotal);
+
+        els.discountRow.hidden = discount <= 0;
+        els.discount.textContent = '−' + money(discount);
+        els.discountCode.textContent = promo.code || '';
+
+        els.delivery.textContent = delivery > 0 ? money(delivery) : t.free;
+        els.delivery.classList.toggle('is-free', delivery === 0);
+
+        els.total.textContent = money(total);
+        els.mobileTotal.textContent = money(total);
+
+        // Pulsuz çatdırılma proqresi
+        const showFreeship = config.freeFrom > 0 && config.deliveryFee > 0 && state.count > 0;
+        els.freeship.hidden = !showFreeship;
+        if (showFreeship) {
+            els.freeship.classList.toggle('is-done', reachedFree);
+            els.freeshipText.replaceChildren(
+                reachedFree
+                    ? document.createTextNode(t.freeshipDone)
+                    : fill(t.freeshipLeft, { amount: strong(money(config.freeFrom - goods)) })
+            );
+            els.freeshipBar.style.width = Math.min(100, (goods / config.freeFrom) * 100) + '%';
+        }
+
+        // Bonus (çatdırılmasız, endirimdən sonrakı məbləğdən)
+        const bonus = round2(goods * config.bonusRate);
+        els.bonus.hidden = bonus <= 0;
+        els.bonusText.replaceChildren(fill(t.bonus, { amount: strong(money(bonus)) }));
+
+        // Hissəli ödəniş
+        const canInstall = config.installmentMonths > 0 && total > 0 && total >= config.installmentMin;
+        els.installment.hidden = !canInstall;
+        if (canInstall) {
+            const monthly = Math.ceil((total * (1 + config.installmentMarkup / 100) / config.installmentMonths) * 100) / 100;
+            els.installmentText.replaceChildren(
+                fill(t.installment, { amount: strong(money(monthly)), months: config.installmentMonths })
+            );
+        }
+    }
+
+    /* ---------- render ---------- */
     async function renderCart() {
         const version = ++renderVersion;
         const cart = getCart();
+
         if (!cart.length) {
-            layoutElement.style.display = 'none';
-            emptyElement.style.display = 'block';
-            itemsElement.replaceChildren();
-            summaryElement.replaceChildren();
-            subtotalElement.textContent = money(0);
-            totalElement.textContent = money(0);
+            root.classList.add('is-empty');
+            root.classList.remove('is-loading');
+            els.items.replaceChildren();
+            state.subtotal = 0;
+            state.count = 0;
+            updateTotals();
             return;
         }
 
-        layoutElement.style.display = 'grid';
-        emptyElement.style.display = 'none';
+        root.classList.remove('is-empty');
 
         try {
-            const url = new URL(productUrl, window.location.origin);
+            const url = new URL(config.productsUrl, window.location.origin);
             url.searchParams.set('variants', cart.map(item => item.variant_id).join(','));
-            const response = await fetch(url);
+            const response = await fetch(url, { headers: { Accept: 'application/json' } });
             if (!response.ok) throw new Error('Cart products request failed');
             const products = await response.json();
             if (version !== renderVersion) return;
 
-            const productMap = new Map(products.map(product => [Number(product.variant_id), product]));
-            itemsElement.replaceChildren();
-            summaryElement.replaceChildren();
+            const productMap = new Map(products.map(p => [Number(p.variant_id), p]));
+            const fragment = document.createDocumentFragment();
+            let subtotal = 0;
+            let count = 0;
 
-            let total = 0;
             for (const item of cart) {
                 const product = productMap.get(Number(item.variant_id));
-                if (product) total += addItem(item, product);
+                if (!product) continue;
+                const { row, lineTotal, quantity } = buildRow(item, product);
+                fragment.appendChild(row);
+                subtotal += lineTotal;
+                count += quantity;
             }
 
-            subtotalElement.textContent = money(total);
-            totalElement.textContent = money(total);
+            els.items.replaceChildren(fragment);
+            state.subtotal = round2(subtotal);
+            state.count = count;
+            updateTotals();
         } catch (error) {
             if (version === renderVersion) console.error('Səbət məlumatları yüklənmədi:', error);
+        } finally {
+            if (version === renderVersion) root.classList.remove('is-loading');
         }
     }
 
+    /* ---------- undo toast ---------- */
+    function hideToast() {
+        els.toast.classList.remove('is-visible');
+        undoEntry = null;
+    }
+
+    function showUndo(entry) {
+        undoEntry = entry;
+        els.toastText.textContent = t.removed;
+        els.toast.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(hideToast, 5000);
+    }
+
+    els.toastUndo.addEventListener('click', () => {
+        if (!undoEntry) return;
+        const cart = getCart();
+        const exists = cart.some(e => Number(e.variant_id) === Number(undoEntry.item.variant_id));
+        if (!exists) cart.splice(Math.min(undoEntry.index, cart.length), 0, undoEntry.item);
+        clearTimeout(toastTimer);
+        hideToast();
+        saveCart(cart);
+    });
+
+    /* ---------- actions ---------- */
     root.addEventListener('click', event => {
         const button = event.target.closest('button[data-action]');
         if (!button || !root.contains(button)) return;
 
-        let cart = getCart();
+        const cart = getCart();
         const id = Number(button.dataset.id);
-        const item = cart.find(entry => Number(entry.variant_id) === id);
-        if (!item) return;
+        const index = cart.findIndex(entry => Number(entry.variant_id) === id);
+        if (index === -1) return;
+        const item = cart[index];
 
         switch (button.dataset.action) {
             case 'plus':
@@ -146,9 +318,11 @@
             case 'minus':
                 item.quantity = Math.max(1, (Number(item.quantity) || 1) - 1);
                 break;
-            case 'remove':
-                cart = cart.filter(entry => Number(entry.variant_id) !== id);
+            case 'remove': {
+                const [removed] = cart.splice(index, 1);
+                showUndo({ item: removed, index });
                 break;
+            }
             default:
                 return;
         }
@@ -156,9 +330,17 @@
         saveCart(cart);
     });
 
+    window.addEventListener('parfumshop:promo-updated', updateTotals);
     window.addEventListener('storage', event => {
-        if (event.key === 'parfumshop_cart') renderCart();
+        if (event.key === CART_KEY) renderCart();
     });
+
+    // Mobil bar: səhifədəki əsas CTA görünəndə gizlənir
+    if ('IntersectionObserver' in window && els.checkout) {
+        new IntersectionObserver(([entry]) => {
+            els.mobilebar.classList.toggle('is-hidden', entry.isIntersecting);
+        }).observe(els.checkout);
+    }
 
     renderCart();
 })();

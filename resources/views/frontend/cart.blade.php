@@ -1,54 +1,138 @@
 @extends('frontend.layouts.app')
 
 @section('content')
+    @php
+        $checkoutUrl = auth()->check()
+            ? route('checkout')
+            : route('front.login', ['redirect' => route('checkout')]);
+
+        $cartI18n = [
+            'remove'       => __('cart_remove_from_cart'),
+            'removed'      => __('cart_item_removed'),
+            'free'         => __('cart_free'),
+            'itemsCount'   => __('cart_items_count'),
+            'freeshipLeft' => __('cart_free_delivery_left'),
+            'freeshipDone' => __('cart_free_delivery_done'),
+            'installment'  => __('cart_installment_hint'),
+            'bonus'        => __('cart_bonus_hint'),
+            'decrease'     => __('cart_decrease'),
+            'increase'     => __('cart_increase'),
+        ];
+    @endphp
+
     <main>
         <div id="cartPage"
-             class="cart-page"
+             class="cart-page is-loading"
              data-products-url="{{ route('cart.products') }}"
-             data-remove-label="{{ __('cart_remove_from_cart') }}">
+             data-delivery-fee="{{ config('shop.delivery_fee') }}"
+             data-free-delivery-from="{{ config('shop.free_delivery_from') }}"
+             data-bonus-rate="{{ config('shop.bonus_rate') }}"
+             data-installment-months="{{ config('shop.installment.months') }}"
+             data-installment-min="{{ config('shop.installment.min_amount') }}"
+             data-installment-markup="{{ config('shop.installment.markup_percent') }}"
+             data-i18n="{{ json_encode($cartI18n, JSON_UNESCAPED_UNICODE) }}">
 
             <a href="{{ route('home') }}" class="account-back">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 <span>{{ __('cart_go_back') }}</span>
             </a>
 
-            <h1 class="cart-title">{{ __('cart_cart') }}</h1>
+            <h1 class="cart-title">
+                {{ __('cart_cart') }}
+                <span id="cartCount" class="cart-title__count"></span>
+            </h1>
 
             <div class="cart-layout">
-                <div id="cartItems" class="cart-items"></div>
+                <section class="cart-main">
+                    <div id="cartFreeship" class="cart-freeship" hidden>
+                        <div id="cartFreeshipText" class="cart-freeship__text"></div>
+                        <div class="cart-freeship__bar"><span id="cartFreeshipBar"></span></div>
+                    </div>
+
+                    <div id="cartItems" class="cart-items"></div>
+                </section>
 
                 <aside class="cart-summary">
-                    <div id="cartSummaryLines" class="cart-summary__lines"></div>
+                    <h2 class="cart-summary__title">{{ __('cart_order_summary') }}</h2>
 
-                    <div class="cart-summary__row cart-summary__subtotal">
-                        <span>{{ __('cart_subtotal') }}</span>
-                        <strong id="cartSubtotal">0.00 ₼</strong>
+                    @include('frontend.partials.promo-code')
+
+                    <div class="cart-summary__rows">
+                        <div class="cart-summary__row">
+                            <span id="cartItemsLabel"></span>
+                            <strong id="cartSubtotal">0.00 ₼</strong>
+                        </div>
+                        <div id="cartDiscountRow" class="cart-summary__row cart-summary__row--discount" hidden>
+                            <span>{{ __('cart_discount') }} <em id="cartDiscountCode" class="cart-summary__code"></em></span>
+                            <strong id="cartDiscount"></strong>
+                        </div>
+                        <div class="cart-summary__row">
+                            <span>{{ __('cart_delivery') }}</span>
+                            <strong id="cartDelivery"></strong>
+                        </div>
                     </div>
-                    <div class="cart-summary__row cart-summary__discount">
-                        <span>{{ __('cart_discount') }}</span>
-                        <strong>0.00 ₼</strong>
-                    </div>
-                    <div class="cart-summary__row cart-summary__total">
+
+                    <div class="cart-summary__total">
                         <span>{{ __('cart_total') }}</span>
                         <strong id="cartTotal">0.00 ₼</strong>
                     </div>
 
-                    @auth
-                        <a class="btn btn-dark cart-checkout-button" href="{{ route('checkout') }}">{{ __('cart_checkout') }}</a>
-                    @else
-                        <a class="btn btn-dark cart-checkout-button" href="{{ route('front.login', ['redirect' => route('checkout')]) }}">{{ __('cart_checkout') }}</a>
-                    @endauth
+                    <p id="cartInstallment" class="cart-installment" hidden>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+                        <span id="cartInstallmentText"></span>
+                    </p>
+
+                    <a id="cartCheckout" class="btn btn-dark cart-checkout-button" href="{{ $checkoutUrl }}">
+                        {{ __('cart_checkout') }}
+                    </a>
+
+                    <p id="cartBonus" class="cart-bonus" hidden>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
+                        <span id="cartBonusText"></span>
+                    </p>
+
+                    <ul class="cart-trust">
+                        <li>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                            {{ __('cart_trust_secure') }}
+                        </li>
+                        <li>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                            {{ __('cart_trust_return') }}
+                        </li>
+                        <li>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+                            {{ __('cart_trust_original') }}
+                        </li>
+                    </ul>
                 </aside>
             </div>
 
-            <div id="cartEmpty" class="cart-empty">
+            <div class="cart-empty">
+                <div class="cart-empty__icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+                </div>
                 <p>{{ __('cart_your_cart_is_empty') }}</p>
                 <a href="{{ route('home') }}" class="btn btn-dark cart-empty__link">{{ __('cart_browse_products') }}</a>
+            </div>
+
+            <div id="cartMobilebar" class="cart-mobilebar">
+                <div class="cart-mobilebar__total">
+                    <span>{{ __('cart_total') }}</span>
+                    <strong id="cartMobileTotal">0.00 ₼</strong>
+                </div>
+                <a class="btn btn-dark" href="{{ $checkoutUrl }}">{{ __('cart_checkout') }}</a>
+            </div>
+
+            <div id="cartToast" class="cart-toast" role="status" aria-live="polite">
+                <span id="cartToastText"></span>
+                <button type="button" id="cartToastUndo">{{ __('cart_undo') }}</button>
             </div>
         </div>
     </main>
 @endsection
 
 @section('page-scripts')
+    <script src="{{ asset('frontend/js/promo.js') }}" defer></script>
     <script src="{{ asset('frontend/js/cart.js') }}" defer></script>
 @endsection
