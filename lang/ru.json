@@ -434,5 +434,6 @@
     "catalog_scent_family": "Семейство ароматов",
     "catalog_all_scent_families": "Все семейства ароматов",
     "catalog_clear": "Сбросить",
-    "catalog_apply": "Применить"
+    "catalog_apply": "Применить",
+    "catalog_search_size": "Поиск объёма"
 }
