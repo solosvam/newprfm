@@ -71,7 +71,6 @@
                                 <label class="pay-option" data-payment-code="{{ $m->code }}">
                                     <input type="radio" name="payment_method" value="{{ $m->id }}" data-code="{{ $m->code }}"
                                         @checked($selectedPayment == $m->id)>
-                                    <span class="pay-option__radio" aria-hidden="true"></span>
                                     <span class="pay-option__icon" aria-hidden="true">
                                         @switch($m->code)
                                             @case('cash')
