@@ -494,7 +494,7 @@
             let minVal = parseFloat(minInput.value);
             let maxVal = parseFloat(maxInput.value);
 
-            if (maxVal - minVal < minGap) {
+            if (max > min && maxVal - minVal < minGap) {
                 if (this === minInput) {
                     minVal = maxVal - minGap;
                     minInput.value = minVal;
@@ -504,14 +504,14 @@
                 }
             }
 
-            const minPercent = ((minVal - min) / (max - min)) * 100;
-            const maxPercent = ((maxVal - min) / (max - min)) * 100;
+            const minPercent = max > min ? ((minVal - min) / (max - min)) * 100 : 0;
+            const maxPercent = max > min ? ((maxVal - min) / (max - min)) * 100 : 100;
 
             rangeEl.style.left = minPercent + '%';
             rangeEl.style.right = (100 - maxPercent) + '%';
 
-            minLabel.textContent = minVal + ' ₼';
-            maxLabel.textContent = maxVal + ' ₼';
+            minLabel.textContent = minVal.toFixed(2) + ' ₼';
+            maxLabel.textContent = maxVal.toFixed(2) + ' ₼';
             minHidden.value = minVal;
             maxHidden.value = maxVal;
         }
