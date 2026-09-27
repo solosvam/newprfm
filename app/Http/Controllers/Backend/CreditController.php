@@ -67,7 +67,7 @@ class CreditController extends Controller
     public function applications()
     {
         return view('backend.credit.applications', [
-            'applications' => CreditApplication::with(['order.items.product', 'order.items.productVariant.size', 'customer', 'period', 'status'])->latest()->paginate(30),
+            'applications' => CreditApplication::with(['order.items.product', 'order.items.variant.size', 'customer', 'period', 'status'])->latest()->paginate(30),
         ]);
     }
 
