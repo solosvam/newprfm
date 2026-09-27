@@ -421,5 +421,7 @@
     "product_duration": "Срок",
     "product_description_empty": "Описание этого аромата пока не добавлено.",
     "product_notes": "Ноты аромата",
-    "product_similar": "Похожие товары"
+    "product_similar": "Похожие товары",
+    "nav_search_placeholder": "Поиск бренда или аромата...",
+    "nav_search_label": "Поиск товаров"
 }
