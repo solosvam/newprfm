@@ -92,6 +92,8 @@
             setPasswordUrl: @json(route('front.login.set-password')),
             registerUrl: '#',
             messages: {
+                resend: @json(__('auth_resend_code')),
+                inactiveHint: @json(__('auth_enter_the_otp_sent_to_mobile') === 'auth_enter_the_otp_sent_to_mobile' ? 'Hesabınızı təsdiqləmək üçün SMS kodunu daxil edin. Kodunuz yoxdursa, yenisini göndərin.' : __('auth_enter_the_otp_sent_to_mobile')),
                 notFound: @json(__('auth_no_account_found_for_this_number_please_register')),
                 otpSent: @json(__('auth_an_otp_was_sent_to_mobile')),
                 error: @json(__('auth_something_went_wrong')),
@@ -100,5 +102,5 @@
         };
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
-    <script src="{{ asset('frontend/js/login.js') }}"></script>
+    <script src="{{ asset('frontend/js/login.js') }}?v=20260927-2"></script>
 @endsection
