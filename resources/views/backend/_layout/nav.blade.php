@@ -216,6 +216,11 @@
                         </a>
                     </li>
                     @endcan
+                    @can('promo.list')
+                        <li>
+                            <a href="{{ route('admin.promo-codes.index') }}"><span class="label">Promo kodlar</span></a>
+                        </li>
+                    @endcan
                     @can('system.settings')
                         <li>
                             <a href="{{ route('admin.settings.index') }}">
