@@ -189,6 +189,7 @@ class CheckoutController extends Controller
                 'customer_id' => $customer -> id,
                 'customer_address_id' => $address -> id,
                 'payment_method_id' => $data['payment_method_id'],
+                'payment_status' => in_array($paymentMethod->code, ['bonus_balance'], true) ? 'paid' : ($paymentMethod->code === 'cash' ? 'cod' : 'pending'),
                 'source' => 'website',
                 'order_status_id' => $initialStatus -> id,
                 'gift_wrap' => (bool)($data['gift_wrap'] ?? false),
