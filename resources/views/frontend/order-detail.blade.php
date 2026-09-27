@@ -182,7 +182,7 @@
                                                     <strong>{{ number_format((float) $payment->amount, 2) }} ₼</strong>
                                                 </div>
                                                 <div style="margin-top: 4px; color: #777383; font-size: 13px;">
-                                                    <time datetime="{{ $payment->created_at?->toIso8601String() }}">{{ $payment->created_at?->format('d.m.Y, H:i') }}</time>
+                                                    <time datetime="{{ $payment->updated_at?->toIso8601String() }}">{{ $payment->updated_at?->format('d.m.Y, H:i') }}</time>
                                                     @if($displayPan)
                                                         <span> · {{ __('orders_card') }} {{ $displayPan }}</span>
                                                     @endif
