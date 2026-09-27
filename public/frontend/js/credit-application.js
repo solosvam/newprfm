@@ -111,7 +111,7 @@ function initCreditApplicationModal() {
 
             message.classList.add('credit-modal-message--success');
             message.textContent = data.message || successMessage;
-            form.querySelector('[name=accept_terms]').checked = false;
+            acceptTerms.checked = false;
         } catch (error) {
             message.classList.add('credit-modal-message--error');
             message.textContent = error.message || errorMessage;
