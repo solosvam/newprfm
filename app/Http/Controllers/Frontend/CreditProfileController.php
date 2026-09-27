@@ -23,29 +23,6 @@ class CreditProfileController extends Controller
         ]);
     }
 
-    public function image(Request $request, string $side)
-    {
-        abort_unless(in_array($side, ['front', 'back'], true), 404);
-
-        $field = $side === 'front'
-            ? 'id_card_front'
-            : 'id_card_back';
-
-        $path = $request->user()->creditProfile?->{$field};
-
-
-        abort_unless($path, 404);
-
-        $file = $this->resolveImagePath($path);
-
-        abort_unless($file && is_file($file), 404);
-
-        return response()->file($file, [
-            'Cache-Control' => 'private, no-store, max-age=0',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
-    }
-
     public function update(Request $request)
     {
         $user = $request->user();
@@ -103,11 +80,11 @@ class CreditProfileController extends Controller
             'message' => __('credit_saved'),
             'images' => [
                 'id_card_front' => $profile?->id_card_front
-                    ? route('profile.credit.image', ['side' => 'front'])
+                    ? asset(self::UPLOAD_PATH . basename($profile->id_card_front))
                     : null,
 
                 'id_card_back' => $profile?->id_card_back
-                    ? route('profile.credit.image', ['side' => 'back'])
+                    ? asset(self::UPLOAD_PATH . basename($profile->id_card_back))
                     : null,
             ],
         ]);
