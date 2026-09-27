@@ -33,16 +33,22 @@ class BirbankPaymentController extends Controller
     {
         // Bank verification is authoritative; never trust the redirect STATUS.
         $payment = $birbank->verify($payment);
-        if ($payment->status === Payment::PAID) {
-            DB::transaction(function () use ($payment) {
-                $order = Order::whereKey($payment->order_id)->lockForUpdate()->firstOrFail();
-                if ((float) $order->bonus_earned > 0) return;
-                $customer = $order->customer;
-                $bonus = app(BonusService::class)->earnForOrder($customer, $order, (float) $order->total);
-                // Zero-bonus settings must also be idempotent.
-                if ($bonus <= 0) $order->update(['bonus_earned' => 0]);
-            });
-        }
+        DB::transaction(function () use ($payment) {
+            $order = Order::whereKey($payment->order_id)->lockForUpdate()->firstOrFail();
+            if ($payment->status === Payment::PAID && $order->payment_status !== 'paid') {
+                $order->update(['payment_status' => 'paid']);
+                app(BonusService::class)->earnForOrder($order->customer, $order, (float) $order->total);
+                if (filter_var($order->customer->email, FILTER_VALIDATE_EMAIL)) {
+                    Mail::to($order->customer->email)->queue(
+                        (new OrderCreatedMail($order, app()->getLocale()))->afterCommit()
+                    );
+                }
+            } elseif ($payment->status === Payment::FAILED && $order->payment_status !== 'paid') {
+                $order->update(['payment_status' => 'failed']);
+            } elseif ($payment->status === Payment::CANCELLED && $order->payment_status !== 'paid') {
+                $order->update(['payment_status' => 'cancelled']);
+            }
+        });
 
         if (!$request->user()) {
             return redirect()->route('front.login', [
