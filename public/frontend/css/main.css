@@ -1616,6 +1616,43 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
    NOTIFY (jQuery notify toasts)
    ========================================================= */
 .notifyjs-corner { z-index: 99999 !important; top: 18px !important; right: 18px !important; }
+/* Legacy $.notify(message, 'error') calls use the Bootstrap preset.
+   Give them the same solid toast treatment as parfumshopNotify(). */
+.notifyjs-bootstrap-error {
+    box-sizing: border-box;
+    display: flex !important;
+    align-items: center;
+    gap: 14px;
+    max-width: min(90vw, 560px);
+    min-width: 260px;
+    padding: 18px 22px !important;
+    color: #fff !important;
+    background: #d9534f !important;
+    background-image: none !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 12px 32px rgba(0,0,0,.18) !important;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    white-space: normal;
+}
+.notifyjs-bootstrap-error::before {
+    content: '×';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fff;
+    color: #d9534f;
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .notifyjs-parfumshop-success-base,
 .notifyjs-parfumshop-error-base,
 .notifyjs-parfumshop-warning-base,
