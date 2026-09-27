@@ -452,5 +452,9 @@
     "credit_modal_accept": "Я ознакомился(-ась) и согласен(-на) с условиями",
     "credit_modal_error": "Не удалось отправить заявку.",
     "credit_modal_scroll_hint": "Прокрутите вниз, чтобы прочитать все условия",
-    "product_installment_schedule": "График платежей в рассрочку"
+    "product_installment_schedule": "График платежей в рассрочку",
+    "credit_address_title": "Рассрочка — адрес доставки",
+    "credit_address_continue": "Продолжить",
+    "credit_address_confirm": "Подтвердить заявку",
+    "credit_address_back": "Вернуться к товару"
 }
