@@ -273,7 +273,9 @@ class CheckoutController extends Controller
             return response()->json([
                 'ok' => true, 'order_no' => $order->order_no,
                 'redirect' => $redirect,
-                'clear_cart' => $paymentMethod->code !== 'card_online',
+                // The order and its items are already saved, including for card payments.
+                // A failed card payment can be retried from the existing order.
+                'clear_cart' => true,
             ]);
         });
     }
