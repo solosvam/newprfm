@@ -112,13 +112,21 @@
         if (code) apply(code);
     });
 
-    removeBtn.addEventListener('click', () => {
-        version++;
-        clear();
+    removeBtn.addEventListener('click', async () => {
+        const current = ++version;
+        removeBtn.disabled = true;
         showError('');
-        request(root.dataset.removeUrl, 'DELETE').catch(() => {});
-        render();
-        emit();
+        try {
+            await request(root.dataset.removeUrl, 'DELETE');
+            if (current !== version) return;
+            clear();
+            render();
+            emit();
+        } catch (error) {
+            if (current === version) showError(error.message);
+        } finally {
+            if (current === version) removeBtn.disabled = false;
+        }
     });
 
     // Səbət dəyişəndə endirim yenidən hesablanır (min. məbləğ, faiz və s.)
