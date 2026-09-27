@@ -27,6 +27,7 @@ class SettingsController extends Controller
             'deliveryMode' => Setting::valueOf('delivery_mode','free'),
             'deliveryFee' => Setting::valueOf('delivery_fee',0),
             'freeDeliveryFrom' => Setting::valueOf('free_delivery_from',0),
+            'orderTermsUrl' => Setting::valueOf('order_terms_url', ''),
         ]);
     }
 
@@ -34,6 +35,7 @@ class SettingsController extends Controller
     {
         $rules = [
             'order_bonus_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'order_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             'delivery_mode' => ['required', 'in:free,paid,threshold'],
             'delivery_fee' => ['required_if:delivery_mode,paid,threshold', 'nullable','numeric','min:0'],
             'free_delivery_from' => ['required_if:delivery_mode,threshold','nullable','numeric','gt:0'],
@@ -47,7 +49,7 @@ class SettingsController extends Controller
         $data = $request->validate($rules);
 
         foreach ($data as $key => $value) {
-            Setting::set($key, $value ?? 0);
+            Setting::set($key, $key === 'order_terms_url' ? ($value ?? '') : ($value ?? 0));
         }
 
         return back()->with('success', 'Ayarlar yeniləndi!');
