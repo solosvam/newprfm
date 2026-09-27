@@ -206,12 +206,28 @@ class CheckoutController extends Controller
             // Sifariş məhsulları
             $order -> items() -> createMany($items);
 
-            // Bonus hesablanması
-            app(BonusService::class) -> earnForOrder(
-                $customer,
-                $order,
-                (float)$order -> total
-            );
+            if ($paymentMethod->code === 'bonus_balance') {
+                $balance = (float) DB::table('customers')->where('id', $customer->id)->value('bonus_balance');
+                if (round($balance, 2) < round($subtotal, 2)) {
+                    return response()->json(['message' => 'Bonus balansınız kifayət etmir.'], 422);
+                }
+                DB::table('customers')->where('id', $customer->id)->decrement('bonus_balance', $subtotal);
+                $customer->bonusTransactions()->create([
+                    'order_id' => $order->id, 'type' => 'spend',
+                    'amount' => -$subtotal, 'note' => 'Sifariş bonusla ödənildi',
+                ]);
+            }
+            if ($paymentMethod->code === 'installment') {
+                CreditApplication::create([
+                    'customer_id' => $customer->id, 'order_id' => $order->id,
+                    'credit_period_id' => $period->id, 'interest_rate' => $period->interest_rate,
+                    'total' => $creditTotal, 'monthly' => round($creditTotal / $period->month, 2),
+                    'credit_status_id' => CreditStatus::where('code', 'pending')->firstOrFail()->id,
+                ]);
+            }
+            if ($paymentMethod->code === 'cash') {
+                app(BonusService::class)->earnForOrder($customer, $order, (float) $order->total);
+            }
 
             // Status tarixçəsi
             DB ::table('order_status_logs') -> insert([
