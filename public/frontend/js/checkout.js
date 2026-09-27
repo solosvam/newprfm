@@ -231,12 +231,14 @@
             els.giftWrapRow.hidden = !giftWrapSelected;
             els.giftWrapFee.textContent = giftWrapFee > 0 ? money(giftWrapFee) : (t.free || '0.00 ₼');
             els.giftWrapFee.classList.toggle('is-free', giftWrapFee === 0);
+            els.giftWrapFee.style.color = giftWrapFee === 0 ? '#16803c' : '';
         }
 
         els.discountRow.hidden = discount <= 0;
         els.discount.textContent = '−' + money(discount);
         els.delivery.textContent = fee > 0 ? money(fee) : (t.free || '0.00 ₼');
         els.delivery.classList.toggle('is-free', fee === 0);
+        els.delivery.style.color = fee === 0 ? '#16803c' : '';
         els.total.textContent = money(state.total);
 
         // Bonus is earned on paid/cash orders, not when paying with existing bonus
