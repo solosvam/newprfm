@@ -30,7 +30,7 @@
 <div class="cart-summary__row"><span>{{ __('credit_modal_monthly') }}</span><strong>{{ number_format($monthly,2) }} ₼</strong></div>
 <div class="cart-summary__row cart-summary__total"><span>{{ __('credit_modal_total') }}</span><strong>{{ number_format($total,2) }} ₼</strong></div>
 <button type="button" class="btn btn-dark checkout-submit" id="confirmCreditOrder">{{ __('credit_address_confirm') }}</button>
-<a href="{{ route('product',$variant->product->slug) }}">{{ __('credit_address_back') }}</a>
+<a class="btn btn-outline checkout-submit" style="display:flex;align-items:center;justify-content:center;margin-top:12px;text-decoration:none;" href="{{ route('product',$variant->product->slug) }}">{{ __('credit_address_back') }}</a>
 </aside>
 </div>
 </main>
