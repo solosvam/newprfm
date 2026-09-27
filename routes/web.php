@@ -18,6 +18,7 @@ use App\Http\Controllers\Frontend\CreditApplicationController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\OrdersController;
 use App\Http\Controllers\Frontend\BirbankPaymentController;
+use App\Http\Controllers\Frontend\PromoCodeController;
 
 
 /*
@@ -105,6 +106,8 @@ Route::controller(ProductController::class)->group(function () {
 */
 
 Route::view('/cart', 'frontend.cart')->name('cart');
+Route::post('/cart/promo', [PromoCodeController::class, 'apply'])->middleware('throttle:10,1')->name('promo.apply');
+Route::delete('/cart/promo', [PromoCodeController::class, 'remove'])->name('promo.remove');
 
 Route::controller(FavoriteController::class)->group(function () {
     Route::get('/wishlist', 'guest')->name('wishlist');
