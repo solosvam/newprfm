@@ -440,5 +440,16 @@
     "credit_application_success": "Ваша заявка на рассрочку зарегистрирована.",
     "credit_profile_required_title": "Данные для рассрочки",
     "credit_profile_required_message": "Вы не можете подать заявку, поскольку данные для рассрочки не заполнены. Пожалуйста, сначала заполните необходимые данные.",
-    "credit_profile_required_action": "Заполнить данные"
+    "credit_profile_required_action": "Заполнить данные",
+    "product_pay_in_installments": "Оплатить в рассрочку",
+    "credit_modal_title": "Заявка на рассрочку",
+    "credit_modal_subtitle": "Выберите объём и срок оплаты.",
+    "credit_modal_size": "Объём",
+    "credit_modal_period": "Срок рассрочки",
+    "credit_modal_monthly": "Ежемесячный платёж",
+    "credit_modal_total": "Общая сумма",
+    "credit_modal_rules": "Условия онлайн-рассрочки",
+    "credit_modal_accept": "Я ознакомился(-ась) и согласен(-на) с условиями",
+    "credit_modal_error": "Не удалось отправить заявку.",
+    "credit_modal_scroll_hint": "Прокрутите вниз, чтобы прочитать все условия"
 }
