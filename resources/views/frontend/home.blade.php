@@ -12,11 +12,11 @@
             ? route('category', $selectedCategory->slug)
             : route('home'));
 @endphp
-@section('title', $pageName ? $pageName . ' | Parfumshop.az' : 'Parfumshop.az — Ana səhifə')
-@section('og_title', $pageName ? $pageName . ' | Parfumshop.az' : 'Parfumshop.az — Ana səhifə')
+@section('title', $pageName ? $pageName . ' | Parfumshop.az' : __('home_title'))
+@section('og_title', $pageName ? $pageName . ' | Parfumshop.az' : __('home_title'))
 @section('canonical_url', $pageUrl)
 @if($pageName)
-@section('meta_description', $pageName . ' ətirlərini Parfumshop.az-da kəşf edin.')
+@section('meta_description', $pageName . ' ' . __('home_meta'))
 @endif
 
 @section('subnav')
@@ -39,8 +39,8 @@
     <div class="layout">
 
         <div class="sidebar-stack">
-            <select class="brand-select select2" aria-label="Brend seç" onchange="if(this.value) window.location.href=this.value">
-                <option value="">Brend Seç</option>
+            <select class="brand-select select2" aria-label="{{ __('home_select_brand') }}" onchange="if(this.value) window.location.href=this.value">
+                <option value="">{{ __('home_select_brand') }}</option>
                 @foreach($allBrands as $brand)
                     <option value="{{ route('brand.products', ['slug' => $brand->slug]) }}">{{ $brand->name }}</option>
                 @endforeach
@@ -52,7 +52,7 @@
                 @if(isset($recommendedProducts) && $recommendedProducts->count())
                     <div class="side-panel filter-card" data-collapsible-panel>
                         <button type="button" class="side-panel__toggle" data-panel-toggle aria-expanded="false" aria-controls="recommendedPanelBody">
-                            <h3>Tövsiyə olunanlar</h3>
+                            <h3>{{ __('home_recommended') }}</h3>
                             <svg class="side-panel__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                         </button>
 
@@ -82,7 +82,7 @@
                 @if(isset($bestSellers) && $bestSellers->count())
                 <div class="side-panel filter-card" data-collapsible-panel>
                     <button type="button" class="side-panel__toggle" data-panel-toggle aria-expanded="false" aria-controls="bestSellersPanelBody">
-                        <h3>Ən çox satılanlar</h3>
+                        <h3>{{ __('home_bestsellers') }}</h3>
                         <svg class="side-panel__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                     </button>
 
@@ -113,7 +113,7 @@
 
         <div>
             <div class="toolbar">
-                <span>{{ $products->total() }} nəticə</span>
+                <span>{{ $products->total() }} {{ __('home_results') }}</span>
 
                 @if(isset($selectedBrand))
                     <span class="toolbar-brand">{{ $selectedBrand->name }}</span>
@@ -127,11 +127,11 @@
                     @foreach(request()->except('sort', 'page') as $key => $value)
                         @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
                     @endforeach
-                    <select name="sort" class="sort-select" aria-label="Sırala" onchange="this.form.submit()">
-                        <option value="newest" @selected(request('sort', 'newest') === 'newest')>Ən yenilər</option>
-                        <option value="oldest" @selected(request('sort') === 'oldest')>Ən köhnələr</option>
-                        <option value="price_asc" @selected(request('sort') === 'price_asc')>Ucuzdan bahaya</option>
-                        <option value="price_desc" @selected(request('sort') === 'price_desc')>Bahadan ucuza</option>
+                    <select name="sort" class="sort-select" aria-label="{{ __('home_sort') }}" onchange="this.form.submit()">
+                        <option value="newest" @selected(request('sort', 'newest') === 'newest')>{{ __('home_newest') }}</option>
+                        <option value="oldest" @selected(request('sort') === 'oldest')>{{ __('home_oldest') }}</option>
+                        <option value="price_asc" @selected(request('sort') === 'price_asc')>{{ __('home_price_asc') }}</option>
+                        <option value="price_desc" @selected(request('sort') === 'price_desc')>{{ __('home_price_desc') }}</option>
                     </select>
                 </form>
             </div>
@@ -159,7 +159,7 @@
                                     type="button"
                                     class="icon-btn fav-btn"
                                     data-product-id="{{ $product->id }}"
-                                    aria-label="Seçilmişlərə əlavə et"
+                                    aria-label="{{ __('common_favorite') }}"
                                 >
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
                                 </button>
@@ -169,7 +169,7 @@
                                     class="icon-btn share-btn"
                                     data-url="{{ route('product', $product->slug) }}"
                                     data-title="{{ $product->name }}"
-                                    aria-label="Paylaş"
+                                    aria-label="{{ __('common_share') }}"
                                 >
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
                                 </button>
