@@ -1,14 +1,26 @@
 @php
-    $creditLocale = app()->getLocale();
+    $creditLocale = in_array(app()->getLocale(), ['az', 'ru', 'en'], true) ? app()->getLocale() : 'az';
     $creditCopy = [
-        'az' => ['title'=>'Hissə-hissə ödəniş üçün müraciət', 'subtitle'=>'Ölçünü və ödəniş müddətini seçin.', 'size'=>'Ətrin həcmi', 'period'=>'Kredit müddəti', 'price'=>'Qiymət', 'monthly'=>'Aylıq ödəniş', 'total'=>'Ümumi məbləğ', 'rules'=>'Onlayn hissə-hissə müraciət üçün qaydalar', 'accept'=>'Şərtlər və qaydalarla tanış oldum və qəbul edirəm', 'submit'=>'Müraciət et', 'close'=>'Bağla', 'success'=>'Müraciətiniz qəbul edildi.', 'error'=>'Müraciət göndərilmədi. Yenidən cəhd edin.', 'month'=>'ay', 'free'=>'Faizsiz', 'scrollHint'=>'Bütün qaydaları oxumaq üçün aşağı sürüşdürün'],
-        'ru' => ['title'=>'Заявка на рассрочку', 'subtitle'=>'Выберите объём и срок оплаты.', 'size'=>'Объём', 'period'=>'Срок рассрочки', 'price'=>'Цена', 'monthly'=>'Ежемесячный платёж', 'total'=>'Общая сумма', 'rules'=>'Условия онлайн-рассрочки', 'accept'=>'Я ознакомился(-ась) и согласен(-на) с условиями', 'submit'=>'Отправить заявку', 'close'=>'Закрыть', 'success'=>'Ваша заявка принята.', 'error'=>'Не удалось отправить заявку.', 'month'=>'мес.', 'free'=>'Без процентов', 'scrollHint'=>'Прокрутите вниз, чтобы прочитать все условия'],
-        'en' => ['title'=>'Installment application', 'subtitle'=>'Select a size and payment term.', 'size'=>'Fragrance size', 'period'=>'Payment term', 'price'=>'Price', 'monthly'=>'Monthly payment', 'total'=>'Total', 'rules'=>'Online installment terms and conditions', 'accept'=>'I have read and accept the terms and conditions', 'submit'=>'Submit application', 'close'=>'Close', 'success'=>'Your application has been received.', 'error'=>'Unable to submit your application.', 'month'=>'months', 'free'=>'Interest-free', 'scrollHint'=>'Scroll down to read all the terms'],
-    ][$creditLocale] ?? null;
+        'title' => __('credit_modal_title'),
+        'subtitle' => __('credit_modal_subtitle'),
+        'size' => __('credit_modal_size'),
+        'period' => __('credit_modal_period'),
+        'price' => __('product_price'),
+        'monthly' => __('credit_modal_monthly'),
+        'total' => __('credit_modal_total'),
+        'rules' => __('credit_modal_rules'),
+        'accept' => __('credit_modal_accept'),
+        'submit' => __('product_apply'),
+        'close' => __('common_close'),
+        'success' => __('credit_application_success'),
+        'error' => __('credit_modal_error'),
+        'month' => __('product_month'),
+        'free' => __('product_interest_free'),
+        'scrollHint' => __('credit_modal_scroll_hint'),
+    ];
     $creditErrorMessage = $creditCopy['error'];
     $creditSuccessMessage = $creditCopy['success'];
 @endphp
-
 <dialog id="creditApplicationDialog" class="credit-application-dialog" aria-labelledby="creditDialogTitle">
     <div class="credit-modal-head">
         <div>
