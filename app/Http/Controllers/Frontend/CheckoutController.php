@@ -78,6 +78,7 @@ class CheckoutController extends Controller
                 ],
 
                 'credit_period_id' => ['nullable', 'integer', 'exists:credit_periods,id'],
+                'birbank_installment_months' => ['nullable', 'integer', Rule::in([2, 3, 6])],
                 'accept_terms' => ['nullable', 'boolean'],
                 'gift_wrap' => ['nullable', 'boolean'],
                 'customer_note' => ['nullable', 'string', 'max:1500'],
@@ -87,8 +88,13 @@ class CheckoutController extends Controller
         );
 
         $paymentMethod = PaymentMethod::whereKey($data['payment_method_id'])->where('active', 1)->firstOrFail();
-        if (!in_array($paymentMethod->code, ['cash', 'card_online', 'installment', 'bonus_balance'], true)) {
+        if (!in_array($paymentMethod->code, ['cash', 'card_online', 'birbank_installment', 'installment', 'bonus_balance'], true)) {
             return response()->json(['message' => 'Bu ödəniş üsulu deaktivdir.'], 422);
+        }
+
+        if ($paymentMethod->code === 'birbank_installment'
+            && !in_array((int) ($data['birbank_installment_months'] ?? 0), [2, 3, 6], true)) {
+            return response()->json(['message' => 'Birbank taksit müddətini seçin.'], 422);
         }
 
         $customer = $request->user();
@@ -246,7 +252,7 @@ class CheckoutController extends Controller
             }
 
             // Onlayn kartda istifadə limiti yalnız bank ödənişi təsdiqləyəndə tutulur.
-            if ($promo && $paymentMethod->code !== 'card_online') {
+            if ($promo && !in_array($paymentMethod->code, ['card_online', 'birbank_installment'], true)) {
                 $promo->increment('used_count');
             }
             session()->forget('promo_code');
@@ -259,14 +265,16 @@ class CheckoutController extends Controller
                 'updated_at' => now(),
             ]);
 
-            if ($paymentMethod->code === 'card_online') {
-                $bank = app(Birbank::class)->createOrder($order->load('paymentMethod'), app()->getLocale());
+            if (in_array($paymentMethod->code, ['card_online', 'birbank_installment'], true)) {
+                $months = $paymentMethod->code === 'birbank_installment'
+                    ? (int) $data['birbank_installment_months'] : null;
+                $bank = app(Birbank::class)->createOrder($order->load('paymentMethod'), app()->getLocale(), $months);
                 $redirect = $bank['url'];
             } else {
                 $redirect = route('checkout.success', $order);
             }
 
-            if ($paymentMethod->code !== 'card_online' && filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
+            if (!in_array($paymentMethod->code, ['card_online', 'birbank_installment'], true) && filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
                 Mail::to($customer->email)->queue(new OrderCreatedMail($order, app()->getLocale()));
             }
 
@@ -287,7 +295,7 @@ class CheckoutController extends Controller
             403
         );
 
-        if ($order->paymentMethod?->code === 'card_online'
+        if (in_array($order->paymentMethod?->code, ['card_online', 'birbank_installment'], true)
             && !$order->payments()->where('status', Payment::PAID)->exists()) {
             return redirect()->route('order.details', $order)->with('error', 'Ödəniş hələ təsdiqlənməyib.');
         }
