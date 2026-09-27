@@ -71,6 +71,7 @@
                 <span>{{ $creditCopy['accept'] }}</span>
             </label>
         </aside>
+        <button type="submit" form="creditApplicationForm" class="btn btn-dark credit-modal-mobile-submit">{{ $creditCopy['submit'] }}</button>
     </div>
 </dialog>
 
@@ -94,7 +95,7 @@
 .credit-modal-summary .credit-modal-product span{font-size:18px;font-weight:700;line-height:1.35}
 .credit-modal-summary div {display:flex;justify-content:space-between;gap:12px;padding:9px 0}.credit-modal-summary > div:not(.credit-modal-product) + div:not(.credit-modal-product) {border-top:1px solid #ded6e6}
 .credit-modal-accept {display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;cursor:pointer}.credit-modal-accept input {margin-top:4px}
-.credit-modal-submit {width:100%;margin-top:20px}.credit-modal-message {font-size:14px;margin:14px 0 0}
+.credit-modal-submit {width:100%;margin-top:20px}.credit-modal-mobile-submit{display:none}.credit-modal-message {font-size:14px;margin:14px 0 0}
 .credit-modal-rules {background:rgba(143,113,178,.07);border-radius:12px;padding:20px;align-self:start;height:min(540px,calc(100dvh - 230px));min-height:260px;display:flex;flex-direction:column;overflow:hidden}
 .credit-modal-rules-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-width:thin;scrollbar-color:#8771a5 #e9e2f1}
 .credit-modal-scroll-hint{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0;font-size:12px;font-weight:600;color:#624b83;padding:10px 4px 0}
@@ -102,7 +103,18 @@
 .credit-modal-scroll-hint[hidden]{display:none}
 .credit-modal-rules-accept{flex-shrink:0;border-top:1px solid #ddd4e5;padding-top:16px;margin-top:12px}
 .credit-modal-rules h3 {font-size:17px;margin:0 0 18px}.credit-rule-text{border-top:1px solid #ddd4e5;padding:13px 0;margin:0;line-height:1.65;white-space:pre-line;font-size:14px}
-@media(max-width:720px){.credit-modal-layout{grid-template-columns:1fr;padding:20px}.credit-modal-head{padding:20px}.credit-modal-rules{height:360px;min-height:260px}}
+@media(max-width:720px){
+.credit-application-dialog{position:fixed;inset:12px;margin:auto;width:calc(100vw - 24px);max-width:480px;max-height:calc(100dvh - 24px);height:calc(100dvh - 24px);display:none;flex-direction:column;overflow:hidden}
+.credit-application-dialog[open]{display:flex}
+.credit-modal-head{flex-shrink:0;padding:18px 20px}
+.credit-modal-layout{display:flex;flex-direction:column;gap:16px;padding:20px;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.credit-modal-layout form{flex-shrink:0}
+.credit-modal-submit{display:none}
+.credit-modal-mobile-submit{display:block;width:100%;flex-shrink:0;margin:0 0 4px}
+.credit-modal-rules{width:100%;height:340px;min-height:280px;flex-shrink:0;align-self:stretch;padding:16px}
+.credit-modal-rules h3{flex-shrink:0;margin-bottom:12px}
+.credit-modal-rules-accept{font-size:13px;padding-top:12px;margin-top:8px}
+}
 </style>
 
 <script>
@@ -112,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const variantOptions = document.getElementById('creditVariantOptions');
     const periodOptions = document.getElementById('creditPeriodOptions');
     const message = document.getElementById('creditApplicationMessage');
-    const submit = form.querySelector('[type=submit]');
+    const submitButtons = [form.querySelector('[type=submit]'), dialog.querySelector('.credit-modal-mobile-submit')];
     const rulesScroll = dialog.querySelector('.credit-modal-rules-scroll');
     const rulesHint = document.getElementById('creditRulesScrollHint');
     const acceptTerms = dialog.querySelector('[name=accept_terms]');
@@ -161,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         if (!form.reportValidity()) return;
-        submit.disabled = true;
+        submitButtons.forEach(button => { button.disabled = true; });
         message.textContent = '';
         try {
             const response = await fetch(form.action, {
@@ -181,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             message.style.color = '#b42318';
             message.textContent = error.message || @json($creditErrorMessage);
-        } finally {submit.disabled = false;}
+        } finally {submitButtons.forEach(button => { button.disabled = false; });}
     });
 });
 </script>
