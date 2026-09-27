@@ -192,6 +192,7 @@ Route::prefix('admin')
                 ->name('crm.')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
+                    Route::post('/one-click/{order}/assign', 'assignOneClick')->name('one-click.assign');
                     Route::get('/customer/{customer}', 'show')->name('show');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
