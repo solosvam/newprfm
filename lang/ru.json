@@ -456,5 +456,7 @@
     "credit_address_title": "Рассрочка — адрес доставки",
     "credit_address_continue": "Продолжить",
     "credit_address_confirm": "Подтвердить заявку",
-    "credit_address_back": "Вернуться к товару"
+    "credit_address_back": "Вернуться к товару",
+    "credit_success_title": "Ваша заявка зарегистрирована.",
+    "credit_success_contact": "Мы свяжемся с вами в течение одного рабочего дня."
 }
