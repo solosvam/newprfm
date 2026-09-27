@@ -93,7 +93,7 @@
             registerUrl: '#',
             messages: {
                 resend: @json(__('auth_resend_code')),
-                inactiveHint: @json(__('auth_enter_the_otp_sent_to_mobile') === 'auth_enter_the_otp_sent_to_mobile' ? 'Hesabınızı təsdiqləmək üçün SMS kodunu daxil edin. Kodunuz yoxdursa, yenisini göndərin.' : __('auth_enter_the_otp_sent_to_mobile')),
+                inactiveHint: @json(['az' => 'Hesabınızı təsdiqləmək üçün SMS kodunu daxil edin. Kodunuz yoxdursa, yenisini göndərin.', 'ru' => 'Введите SMS-код для подтверждения аккаунта. Если кода нет, запросите новый.', 'en' => 'Enter the SMS code to verify your account. If you do not have a code, request a new one.'][app()->getLocale()] ?? 'Hesabınızı təsdiqləmək üçün SMS kodunu daxil edin.'),
                 notFound: @json(__('auth_no_account_found_for_this_number_please_register')),
                 otpSent: @json(__('auth_an_otp_was_sent_to_mobile')),
                 error: @json(__('auth_something_went_wrong')),
