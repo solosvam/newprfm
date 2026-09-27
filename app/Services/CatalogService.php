@@ -123,13 +123,12 @@ class CatalogService
             'genders' => Gender::all(),
             'types' => Type::orderBy('id')->get(),
             'filterSizes' => Size::query()
-                ->whereHas('products', fn ($query) => $query->where('active', 1))
                 ->whereIn('id', ProductVariant::query()
                     ->select('size_id')
                     ->where('active', 1)
                     ->whereIn('product_id', Product::query()->select('id')->where('active', 1)))
                 ->get()
-                ->sortBy(fn ($size) => (float) preg_replace('/[^0-9.]/', '', (string) ($size->name_az ?: $size->name_en)))
+                ->sortBy(fn ($size) => (float) ($size->name_az ?: $size->name_en))
                 ->values(),
             // Bestseller satış statistikası hələ qoşulmayıb; mövcud təsadüfi seçim saxlanılır.
             'recommendedProducts' => $sidebarQuery(),
