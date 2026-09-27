@@ -4,6 +4,7 @@ use App\Models\Credit\CreditApplication;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerAddress;
 use App\Models\PaymentMethod;
+use App\Models\Payment;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model {
@@ -19,7 +20,7 @@ class Order extends Model {
     }
     public function payments()
     {
-        return $this->hasMany(\\App\\Models\\Payment::class);
+        return $this->hasMany(Payment::class);
     }
 
     public function statusLogs()
