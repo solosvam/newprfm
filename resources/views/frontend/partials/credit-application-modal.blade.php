@@ -5,7 +5,8 @@
         'ru' => ['title'=>'Заявка на рассрочку', 'subtitle'=>'Выберите объём и срок оплаты.', 'size'=>'Объём', 'period'=>'Срок рассрочки', 'price'=>'Цена', 'monthly'=>'Ежемесячный платёж', 'total'=>'Общая сумма', 'rules'=>'Условия онлайн-рассрочки', 'accept'=>'Я ознакомился(-ась) и согласен(-на) с условиями', 'submit'=>'Отправить заявку', 'close'=>'Закрыть', 'success'=>'Ваша заявка принята.', 'error'=>'Не удалось отправить заявку.', 'month'=>'мес.'],
         'en' => ['title'=>'Installment application', 'subtitle'=>'Select a size and payment term.', 'size'=>'Fragrance size', 'period'=>'Payment term', 'price'=>'Price', 'monthly'=>'Monthly payment', 'total'=>'Total', 'rules'=>'Online installment terms and conditions', 'accept'=>'I have read and accept the terms and conditions', 'submit'=>'Submit application', 'close'=>'Close', 'success'=>'Your application has been received.', 'error'=>'Unable to submit your application.', 'month'=>'months'],
     ][$creditLocale] ?? null;
-    $creditCopy ??= ['title'=>'Hissə-hissə ödəniş üçün müraciət'];
+    $creditErrorMessage = $creditCopy['error'];
+    $creditSuccessMessage = $creditCopy['success'];
 @endphp
 
 <dialog id="creditApplicationDialog" class="credit-application-dialog" aria-labelledby="creditDialogTitle">
@@ -140,14 +141,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
             if (!response.ok) {
                 if (data.redirect) {window.location.href = data.redirect;return;}
-                throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || @json($creditCopy['error']));
+                throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || @json($creditErrorMessage));
             }
             message.style.color = '#168047';
-            message.textContent = data.message || @json($creditCopy['success']);
+            message.textContent = data.message || @json($creditSuccessMessage);
             form.querySelector('[name=accept_terms]').checked = false;
         } catch (error) {
             message.style.color = '#b42318';
-            message.textContent = error.message || @json($creditCopy['error']);
+            message.textContent = error.message || @json($creditErrorMessage);
         } finally {submit.disabled = false;}
     });
 });
