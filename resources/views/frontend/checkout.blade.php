@@ -194,11 +194,11 @@
                         </div>
                         <div class="cart-summary__row">
                             <span>{{ __('cart_delivery') }}</span>
-                            <strong id="checkoutDelivery" style="color:#16803c;">0.00 ₼</strong>
+                            <strong id="checkoutDelivery">0.00 ₼</strong>
                         </div>
                         <div id="checkoutGiftWrapRow" class="cart-summary__row" hidden>
                             <span>{{ __('checkout_gift_wrap_label') }}</span>
-                            <strong id="checkoutGiftWrapFee" style="color:#16803c;"></strong>
+                            <strong id="checkoutGiftWrapFee"></strong>
                         </div>
                     </div>
 
