@@ -2,152 +2,79 @@
 @extends('backend.layout', ['title' => $title])
 
 @section('content')
-    <div class="container">
-        <div class="page-title-container d-flex align-items-center justify-content-between mb-4">
-            <h1 class="mb-0 pb-0 display-4">Ayarlar</h1>
-            <button type="submit" form="settingsForm" class="btn btn-primary">Yadda saxla</button>
-        </div>
-
-        <form id="settingsForm" method="POST" action="{{ route('admin.settings.update') }}">
-            @csrf
-
-            <div class="row g-4 align-items-start">
-                {{-- Sifariş və çatdırılma --}}
-                <div class="col-xl-5">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="mb-3">Sifariş və çatdırılma</h5>
-
-                            <div class="row g-3">
-                                <div class="col-sm-6">
-                                    <label for="order_bonus_percent" class="form-label">Sifariş bonusu</label>
-                                    <div class="input-group has-validation">
-                                        <input id="order_bonus_percent" type="number" step="0.01" min="0" max="100"
-                                               name="order_bonus_percent"
-                                               value="{{ old('order_bonus_percent', $bonusPercent) }}"
-                                               @class(['form-control', 'is-invalid' => $errors->has('order_bonus_percent')]) required>
-                                        <span class="input-group-text">%</span>
-                                        @error('order_bonus_percent')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label for="delivery_mode" class="form-label">Çatdırılma qaydası</label>
-                                    <select id="delivery_mode" name="delivery_mode"
-                                        @class(['form-select', 'is-invalid' => $errors->has('delivery_mode')])>
-                                        <option value="free" @selected(old('delivery_mode', $deliveryMode) === 'free')>Tam pulsuz</option>
-                                        <option value="paid" @selected(old("delivery_mode",$deliveryMode)==="paid")>Pullu çatdırılma</option>
-                    <option value="threshold" @selected(old('delivery_mode', $deliveryMode) === 'threshold')>Məbləğdən yuxarı pulsuz</option>
-                                    </select>
-                                    </div>
-                @error('delivery_mode')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div id="deliveryThreshold"
-                                @class(['row g-3 mt-0', 'd-none' => old('delivery_mode', $deliveryMode) !== 'threshold'])>
-                                <div class="col-sm-6">
-                                    <label for="delivery_fee" class="form-label">Çatdırılma haqqı</label>
-                                    <div class="input-group has-validation">
-                                        <input id="delivery_fee" name="delivery_fee" type="number" min="0" step="0.01"
-                                               value="{{ old('delivery_fee', $deliveryFee) }}"
-                                            @class(['form-control', 'is-invalid' => $errors->has('delivery_fee')])>
-                                        <span class="input-group-text">₼</span>
-                                        @error('delivery_fee')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div id="deliveryThreshold" @if(old('delivery_mode',$deliveryMode)!=='threshold') style="display:none" @endif>
-                    <label for="free_delivery_from" class="form-label">Pulsuz olduğu məbləğ</label>
-                                    <div class="input-group has-validation">
-                                        <span class="input-group-text">≥</span>
-                                        <input id="free_delivery_from" name="free_delivery_from" type="number" min="0.01" step="0.01"
-                                               value="{{ old('free_delivery_from', $freeDeliveryFrom) }}"
-                                            @class(['form-control', 'is-invalid' => $errors->has('free_delivery_from')])>
-                                        <span class="input-group-text">₼</span>
-                                        @error('free_delivery_from')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-text mt-3">
-                                Bonus sifariş məbləğinin faizi kimi hesablanır (çatdırılma daxil deyil).
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Banner ölçüləri --}}
-                <div class="col-xl-7">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-baseline justify-content-between gap-3 mb-3">
-                                <h5 class="mb-0">Banner ölçüləri</h5>
-                                <span class="text-muted small">Yeni bannerlər bu ölçülərə kəsiləcək</span>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0 settings-banner-table">
-                                    <thead>
-                                    <tr class="text-muted small">
-                                        <th class="fw-normal">Yer</th>
-                                        <th class="fw-normal">En</th>
-                                        <th class="fw-normal">Hündürlük</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    @foreach ([
-                                        'banner_web_top'       => 'Veb — yuxarı',
-                                        'banner_web_bottom'    => 'Veb — aşağı',
-                                        'banner_mobile_top'    => 'Mobil — yuxarı',
-                                        'banner_mobile_bottom' => 'Mobil — aşağı',
-                                    ] as $key => $label)
-                                        <tr>
-                                            <th scope="row" class="fw-medium text-nowrap pe-3">{{ $label }}</th>
-                                            @foreach (['width' => 'En', 'height' => 'Hündürlük'] as $dimension => $caption)
-                                                @php $field = "{$key}_{$dimension}"; @endphp
-                                                <td>
-                                                    <div class="input-group input-group-sm has-validation">
-                                                        <input id="{{ $field }}" type="number" name="{{ $field }}"
-                                                               min="1" max="10000" step="1"
-                                                               aria-label="{{ $label }} — {{ $caption }}"
-                                                               value="{{ old($field, $bannerSizes[$key][$dimension]) }}"
-                                                               @class(['form-control', 'is-invalid' => $errors->has($field)]) required>
-                                                        <span class="input-group-text">px</span>
-                                                        @error($field)
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                        @enderror
-                                                    </div>
-                                                </td>
-                                            @endforeach
-                                        </tr>
-                                    @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
+<div class="container">
+    <div class="page-title-container mb-4">
+        <h1 class="mb-0 pb-0 display-4">Ayarlar</h1>
     </div>
 
-    <style>
-        .settings-banner-table td { min-width: 140px; }
-        .settings-banner-table tr:last-child > * { border-bottom: 0; }
-    </style>
+    <form method="POST" action="{{ route('admin.settings.update') }}">
+        @csrf
 
-    <script>
-        document.getElementById('delivery_mode').addEventListener('change', function () {
-            document.getElementById('deliveryThreshold').classList.toggle('d-none', this.value !== 'threshold');
-        });
-    </script>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">Sifariş ayarları</h5>
+                <label for="order_bonus_percent" class="form-label">Sifariş bonusu (%)</label>
+                <input id="order_bonus_percent" type="number" step="0.01" min="0" max="100"
+                       name="order_bonus_percent"
+                       value="{{ old('order_bonus_percent', $bonusPercent) }}"
+                       @class(['form-control', 'is-invalid' => $errors->has('order_bonus_percent')]) required>
+                <div class="form-text">Sifariş məbləğinin bonus kimi qaytarılacaq faizi.</div>
+                @error('order_bonus_percent')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                <hr class="my-4">
+                <h5 class="mb-3">Çatdırılma ayarları</h5>
+                <label for="delivery_mode" class="form-label">Çatdırılma qaydası</label>
+                <select id="delivery_mode" name="delivery_mode" class="form-select mb-3">
+                    <option value="free" @selected(old('delivery_mode',$deliveryMode)==='free')>Tam pulsuz</option>
+                    <option value="threshold" @selected(old('delivery_mode',$deliveryMode)==='threshold')>Müəyyən məbləğdən yuxarı pulsuz</option>
+                </select>
+                <div id="deliveryThreshold" @if(old('delivery_mode',$deliveryMode)!=='threshold') style="display:none" @endif>
+                    <label for="delivery_fee" class="form-label">Çatdırılma haqqı (AZN)</label>
+                    <input id="delivery_fee" name="delivery_fee" type="number" min="0" step="0.01" class="form-control mb-3" value="{{ old('delivery_fee',$deliveryFee) }}">
+                    <label for="free_delivery_from" class="form-label">Pulsuz çatdırılma üçün minimum məbləğ (AZN)</label>
+                    <input id="free_delivery_from" name="free_delivery_from" type="number" min="0.01" step="0.01" class="form-control" value="{{ old('free_delivery_from',$freeDeliveryFrom) }}">
+                </div>
+                @error('delivery_mode')<p class="text-danger">{{ $message }}</p>@enderror
+                @error('delivery_fee')<p class="text-danger">{{ $message }}</p>@enderror
+                @error('free_delivery_from')<p class="text-danger">{{ $message }}</p>@enderror
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-2">Banner ölçüləri</h5>
+                <p class="text-muted mb-4">Bütün ölçülər piksellə (px) göstərilir. Yeni yüklənən bannerlər bu ölçülərə uyğun kəsiləcək.</p>
+
+                @foreach ([
+                    'banner_web_top' => 'Veb — yuxarı',
+                    'banner_web_bottom' => 'Veb — aşağı',
+                    'banner_mobile_top' => 'Mobil — yuxarı',
+                    'banner_mobile_bottom' => 'Mobil — aşağı',
+                ] as $key => $label)
+                    <div class="mb-4">
+                        <h6 class="mb-3">{{ $label }}</h6>
+                        <div class="row g-3">
+                            @foreach (['width' => 'En (px)', 'height' => 'Hündürlük (px)'] as $dimension => $caption)
+                                @php $field = "{$key}_{$dimension}"; @endphp
+                                <div class="col-md-6">
+                                    <label for="{{ $field }}" class="form-label">{{ $caption }}</label>
+                                    <input id="{{ $field }}" type="number" name="{{ $field }}"
+                                           min="1" max="10000" step="1"
+                                           value="{{ old($field, $bannerSizes[$key][$dimension]) }}"
+                                           @class(['form-control', 'is-invalid' => $errors->has($field)]) required>
+                                    @error($field)
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Yadda saxla</button>
+    </form>
+</div>
+<script>document.getElementById('delivery_mode').addEventListener('change',function(){document.getElementById('deliveryThreshold').style.display=this.value==='threshold'?'':'none';});</script>
 @endsection
