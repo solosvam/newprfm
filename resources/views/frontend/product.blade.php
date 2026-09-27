@@ -2,7 +2,7 @@
 
 @php
 $seoTitle = trim(($product->brand?->name ? $product->brand->name . ' ' : '') . $product->name);
-$seoDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\\s+/u', ' ', strip_tags($product->{'content_' . app()->getLocale()} ?: ($product->content_az ?: $seoTitle)))), 160, '');
+$seoDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/u', ' ', strip_tags($product->{'content_' . app()->getLocale()} ?: ($product->content_az ?: $seoTitle)))), 160, '');
 $seoImage = $product->images->first() ? asset('frontend/uploads/products/' . $product->images->first()->image) : null;
 $seoUrl = route('product', $product->slug);
 $seoVariants = $product->variants->where('active', 1);
