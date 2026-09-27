@@ -242,7 +242,7 @@
             cartUrl: @json(route('cart')),
             csrf: @json(csrf_token()),
             bonusBalance: @json($bonusBalance),
-            bonusRate: @json(app(\\App\\Services\\ShopPricing::class)->bonusRate()),
+            bonusRate: @json(app(\App\Services\ShopPricing::class)->bonusRate()),
             delivery: @json(app(\App\Services\ShopPricing::class)->delivery()),
             creditProfileComplete: @json($creditProfileComplete),
             messages: {
