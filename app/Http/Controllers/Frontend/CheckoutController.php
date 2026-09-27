@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
+use App\Mail\OrderCreatedMail;
 use App\Models\Order\OrderStatus;
 use App\Models\PaymentMethod;
 use App\Models\Product\ProductVariant;
@@ -10,6 +11,7 @@ use App\Services\BonusService;
 use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller
@@ -189,6 +191,10 @@ class CheckoutController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            if (filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($customer->email)->queue(new OrderCreatedMail($order, app()->getLocale()));
+            }
 
             return response() -> json([
                 'ok' => true,
