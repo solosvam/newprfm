@@ -7,23 +7,32 @@
         <div class="filter-section">
             <p class="filter-section__label">{{ __('catalog_price_range') }}</p>
 
-            <div class="price-slider" data-price-slider data-min="0" data-max="2400" data-step="10">
+            @php
+                $sliderMin = (float) ($priceMin ?? 0);
+                $sliderMax = (float) ($priceMax ?? $sliderMin);
+                $selectedMin = min($sliderMax, max($sliderMin, (float) request('min_price', $sliderMin)));
+                $selectedMax = max($selectedMin, min($sliderMax, (float) request('max_price', $sliderMax)));
+            @endphp
+            <div class="price-slider" data-price-slider
+                 data-min="{{ $sliderMin }}" data-max="{{ $sliderMax }}" data-step="0.01">
                 <div class="price-slider__track">
                     <div class="price-slider__range" data-price-range></div>
                 </div>
-                <input type="range" class="price-slider__input price-slider__input--min" min="0" max="2400" step="10"
-                       value="{{ request('min_price', 0) }}" data-price-min-range>
-                <input type="range" class="price-slider__input price-slider__input--max" min="0" max="2400" step="10"
-                       value="{{ request('max_price', 2400) }}" data-price-max-range>
+                <input type="range" class="price-slider__input price-slider__input--min"
+                       min="{{ $sliderMin }}" max="{{ $sliderMax }}" step="0.01"
+                       value="{{ $selectedMin }}" data-price-min-range>
+                <input type="range" class="price-slider__input price-slider__input--max"
+                       min="{{ $sliderMin }}" max="{{ $sliderMax }}" step="0.01"
+                       value="{{ $selectedMax }}" data-price-max-range>
             </div>
 
             <div class="price-slider__values">
-                <span data-price-min-label>{{ request('min_price', 0) }} ₼</span>
-                <span data-price-max-label>{{ request('max_price', 2400) }} ₼</span>
+                <span data-price-min-label>{{ number_format($selectedMin, 2) }} ₼</span>
+                <span data-price-max-label>{{ number_format($selectedMax, 2) }} ₼</span>
             </div>
 
-            <input type="hidden" name="min_price" value="{{ request('min_price', 0) }}" data-price-min-hidden>
-            <input type="hidden" name="max_price" value="{{ request('max_price', 2400) }}" data-price-max-hidden>
+            <input type="hidden" name="min_price" value="{{ $selectedMin }}" data-price-min-hidden>
+            <input type="hidden" name="max_price" value="{{ $selectedMax }}" data-price-max-hidden>
         </div>
 
         @if(isset($genders) && $genders->count())
