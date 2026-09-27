@@ -63,6 +63,6 @@ class BirbankPaymentController extends Controller
         }
 
         return redirect()->route('order.details', $payment->order_id)
-            ->with('error', __('credit_modal_error'));
+            ->with('error', 'Ödəniş təsdiqlənmədi. Yenidən cəhd edin.');
     }
 }
