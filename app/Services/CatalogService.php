@@ -87,6 +87,15 @@ class CatalogService
 
     public function catalogData(): array
     {
+        $priceBounds = ProductVariant::query()
+            ->join('products', 'products.id', '=', 'product_variants.product_id')
+            ->where('products.active', 1)
+            ->where('product_variants.active', 1)
+            ->selectRaw('MIN(product_variants.price) as min_price, MAX(product_variants.price) as max_price')
+            ->first();
+
+        $priceMin = (float) ($priceBounds?->min_price ?? 0);
+        $priceMax = (float) ($priceBounds?->max_price ?? $priceMin);
         $sidebarQuery = fn () => Product::query()
             ->with([
                 'brand',
@@ -111,6 +120,8 @@ class CatalogService
 
         return [
             'banners' => $banners,
+            'priceMin' => $priceMin,
+            'priceMax' => $priceMax,
             'brands' => Brand::query()
                 ->where('active', 1)
                 ->withCount(['products as products_count' => fn ($query) => $query->where('active', 1)])
