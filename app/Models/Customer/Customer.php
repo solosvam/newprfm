@@ -22,11 +22,14 @@ class Customer extends Authenticatable
         'password',
         'active',
         'bonus_balance',
+        'registration_otp_hash',
+        'registration_otp_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'registration_otp_hash',
     ];
 
     protected function casts(): array
@@ -34,6 +37,7 @@ class Customer extends Authenticatable
         return [
             'password' => 'hashed',
             'active' => 'boolean',
+            'registration_otp_expires_at' => 'datetime',
         ];
     }
     public function addresses(){
