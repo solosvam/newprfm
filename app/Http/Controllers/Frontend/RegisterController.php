@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
+use App\Mail\WelcomeMail;
 use App\Services\SmsService;
 use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -85,6 +87,10 @@ class RegisterController extends Controller
         Cache::forget($this->otpKey($customer));
         RateLimiter::clear($attemptKey);
         $request->session()->forget('register.customer_id');
+
+        if (filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
+            Mail::to($customer->email)->queue(new WelcomeMail($customer->name, app()->getLocale()));
+        }
 
         Auth::login($customer);
         $request->session()->regenerate();
