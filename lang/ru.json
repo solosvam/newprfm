@@ -426,5 +426,13 @@
     "nav_search_label": "Поиск товаров",
     "profile_gender": "Пол",
     "profile_male": "Мужской",
-    "profile_female": "Женский"
+    "profile_female": "Женский",
+    "catalog_filter_title": "Фильтр",
+    "catalog_gender": "Пол",
+    "catalog_volume": "Объём",
+    "catalog_volume_hint": "Выберите диапазон объёма аромата.",
+    "catalog_scent_family": "Семейство ароматов",
+    "catalog_all_scent_families": "Все семейства ароматов",
+    "catalog_clear": "Сбросить",
+    "catalog_apply": "Применить"
 }
