@@ -204,6 +204,14 @@
 
                     <button id="placeOrder" type="button" class="btn btn-dark checkout-submit">{{ __('checkout_confirm_order') }}</button>
 
+                    @php $orderTermsUrl = \App\Models\Setting::valueOf('order_terms_url', ''); @endphp
+                    @if($orderTermsUrl)
+                        <p class="checkout-terms-notice">
+                            {{ __('checkout_terms_before') }}
+                            <a href="{{ $orderTermsUrl }}" target="_blank" rel="noopener noreferrer">{{ __('checkout_terms_link') }}</a>{{ __('checkout_terms_after') }}
+                        </p>
+                    @endif
+
                     <ul class="cart-trust">
                         <li>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
