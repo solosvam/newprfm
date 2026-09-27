@@ -370,5 +370,7 @@
     "catalog_all_scent_families": "Bütün qoxu ailələri",
     "catalog_clear": "Təmizlə",
     "catalog_apply": "Tətbiq et",
-    "catalog_search_size": "Ölçü axtar"
+    "catalog_search_size": "Ölçü axtar",
+    "credit_application_complete_profile": "Müraciət üçün əvvəlcə şəxsi kabinetdə hissəli ödəniş məlumatlarını tamamlayın.",
+    "credit_application_success": "Hissəli ödəniş müraciətiniz qeydə alındı."
 }
