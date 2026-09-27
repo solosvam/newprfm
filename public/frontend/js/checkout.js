@@ -20,6 +20,8 @@
         discount: $('checkoutDiscount'),
         discountRow: $('checkoutDiscountRow'),
         delivery: $('checkoutDelivery'),
+        giftWrapRow: $('checkoutGiftWrapRow'),
+        giftWrapFee: $('checkoutGiftWrapFee'),
         total: $('checkoutTotal'),
         earnedBonus: $('checkoutEarnedBonus'),
         earnedBonusText: $('checkoutEarnedBonusText'),
@@ -221,7 +223,15 @@
         const freeFrom = Number(delivery.free_from) || 0;
         const fee = delivery.mode === 'free' || (freeFrom > 0 && goods >= freeFrom) ? 0 : Number(delivery.fee) || 0;
 
-        state.total = round2(goods + fee);
+        const giftWrapSelected = Boolean($('giftWrap')?.checked);
+        const giftWrapFee = giftWrapSelected && config.giftWrap?.mode === 'paid'
+            ? Math.max(0, Number(config.giftWrap.fee) || 0) : 0;
+        state.total = round2(goods + fee + giftWrapFee);
+        if (els.giftWrapRow && els.giftWrapFee) {
+            els.giftWrapRow.hidden = !giftWrapSelected;
+            els.giftWrapFee.textContent = giftWrapFee > 0 ? money(giftWrapFee) : (t.free || '0.00 ₼');
+            els.giftWrapFee.classList.toggle('is-free', giftWrapFee === 0);
+        }
 
         els.discountRow.hidden = discount <= 0;
         els.discount.textContent = '−' + money(discount);
@@ -243,6 +253,7 @@
     }
 
     window.addEventListener('parfumshop:promo-updated', updateTotals);
+    $('giftWrap')?.addEventListener('change', updateTotals);
 
     /* =========================================================
        Items
