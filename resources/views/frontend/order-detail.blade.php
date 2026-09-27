@@ -135,6 +135,27 @@
                                     {{ $order->paymentMethod?->localized_name ?? '-' }}
                                 </div>
 
+                                @if($order->paymentMethod?->code === 'card_online'
+                                    && in_array($order->payment_status, ['failed', 'cancelled'], true))
+                                    <div class="od-payment-retry">
+                                        <p>{{ match(app()->getLocale()) {
+                                            'ru' => 'Оплата не прошла. Вы можете повторить попытку без нового заказа.',
+                                            'en' => 'Payment was unsuccessful. You can retry without placing a new order.',
+                                            default => 'Ödəniş alınmadı. Yeni sifariş yaratmadan yenidən cəhd edə bilərsiniz.',
+                                        } }}</p>
+                                        <form method="POST" action="{{ route('payment.birbank.start', $order) }}">
+                                            @csrf
+                                            <button type="submit" class="btn btn-dark">
+                                                {{ match(app()->getLocale()) {
+                                                    'ru' => 'Оплатить повторно',
+                                                    'en' => 'Retry payment',
+                                                    default => 'Yenidən ödə',
+                                                } }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+
                                 @if($cardFormatted)
                                     <div class="od-paycard">
                                         <span class="od-paycard__brand">{{ $cardBrand ?? __('orders_card') }}</span>
