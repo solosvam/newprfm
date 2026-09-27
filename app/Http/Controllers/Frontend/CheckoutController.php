@@ -83,15 +83,23 @@ class CheckoutController extends Controller
             LocalizedValidation ::attributes()
         );
 
-        // Installments must go through the credit application and address confirmation flow.
         $paymentMethod = PaymentMethod::whereKey($data['payment_method_id'])->where('active', 1)->firstOrFail();
-        if ($paymentMethod->code === 'installment') {
-            return response()->json(['message' => __('credit_address_title')], 422);
+        if (!in_array($paymentMethod->code, ['cash', 'card_online', 'installment', 'bonus_balance'], true)) {
+            return response()->json(['message' => 'Bu ödəniş üsulu deaktivdir.'], 422);
         }
 
-        $customer = $request -> user();
+        $customer = $request->user();
+        if ($paymentMethod->code === 'installment') {
+            if (!$customer->creditProfile?->isComplete()) {
+                return response()->json(['message' => __('credit_application_complete_profile'), 'redirect' => route('profile.credit')], 422);
+            }
+            if (empty($data['credit_period_id']) || empty($data['accept_terms'])) {
+                return response()->json(['message' => 'Kredit müddətini və şərtləri təsdiqləyin.'], 422);
+            }
+        }
 
-        return DB ::transaction(function() use ($data, $customer) {
+        return DB ::transaction(function() use ($data, $customer, $paymentMethod) {
+            DB::table('customers')->where('id', $customer->id)->lockForUpdate()->first();
 
             // İlkin sifariş statusu
             $initialStatus = OrderStatus ::where('code', 'new')
