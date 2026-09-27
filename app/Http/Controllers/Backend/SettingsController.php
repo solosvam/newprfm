@@ -28,6 +28,7 @@ class SettingsController extends Controller
             'deliveryFee' => Setting::valueOf('delivery_fee',0),
             'freeDeliveryFrom' => Setting::valueOf('free_delivery_from',0),
             'orderTermsUrl' => Setting::valueOf('order_terms_url', ''),
+            'creditTermsUrl' => Setting::valueOf('credit_terms_url', ''),
             'giftWrapMode' => Setting::valueOf('gift_wrap_mode', 'free'),
             'giftWrapFee' => Setting::valueOf('gift_wrap_fee', 0),
         ]);
@@ -38,6 +39,7 @@ class SettingsController extends Controller
         $rules = [
             'order_bonus_percent' => ['required', 'numeric', 'min:0', 'max:100'],
             'order_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
+            'credit_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             'delivery_mode' => ['required', 'in:free,paid,threshold'],
             'gift_wrap_mode' => ['required', 'in:free,paid'],
             'gift_wrap_fee' => ['required_if:gift_wrap_mode,paid', 'nullable', 'numeric', 'min:0'],
@@ -53,7 +55,7 @@ class SettingsController extends Controller
         $data = $request->validate($rules);
 
         foreach ($data as $key => $value) {
-            Setting::set($key, $key === 'order_terms_url' ? ($value ?? '') : ($value ?? 0));
+            Setting::set($key, in_array($key, ['order_terms_url', 'credit_terms_url'], true) ? ($value ?? '') : ($value ?? 0));
         }
 
         return back()->with('success', 'Ayarlar yeniləndi!');
