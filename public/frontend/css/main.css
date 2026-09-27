@@ -1476,3 +1476,4 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 }
 .logo--svg { display: inline-flex; align-items: center; color: var(--accent); }
 .logo-svg { width: 132px; height: auto; display: block; }
+footer .logo--svg { color: var(--on-accent-bg); }
