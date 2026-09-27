@@ -230,6 +230,11 @@
                         </a>
                         <ul id="credit_menu">
                             <li>
+                                <a href="{{ route('admin.credit.applications') }}">
+                                    <span class="label">Müraciətlər</span>
+                                </a>
+                            </li>
+                            <li>
                                 <a href="{{ route('admin.credit.periods') }}">
                                     <span class="label">Faizlər</span>
                                 </a>
