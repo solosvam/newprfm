@@ -27,6 +27,25 @@
 
         <div class="card mb-4">
             <div class="card-body">
+                <h5 class="mb-3">Çatdırılma</h5>
+                <label for="delivery_mode" class="form-label">Çatdırılma qaydası</label>
+                <select id="delivery_mode" name="delivery_mode" class="form-select mb-3">
+                    <option value="free" @selected(old('delivery_mode',$deliveryMode)==='free')>Tam pulsuz</option>
+                    <option value="threshold" @selected(old('delivery_mode',$deliveryMode)==='threshold')>Müəyyən məbləğdən yuxarı pulsuz</option>
+                </select>
+                <div id="deliveryThreshold" @if(old('delivery_mode',$deliveryMode)!=='threshold') style="display:none" @endif>
+                    <label for="delivery_fee" class="form-label">Çatdırılma haqqı (AZN)</label>
+                    <input id="delivery_fee" name="delivery_fee" type="number" min="0" step="0.01" class="form-control mb-3" value="{{ old('delivery_fee',$deliveryFee) }}">
+                    <label for="free_delivery_from" class="form-label">Pulsuz çatdırılma üçün minimum məbləğ (AZN)</label>
+                    <input id="free_delivery_from" name="free_delivery_from" type="number" min="0.01" step="0.01" class="form-control" value="{{ old('free_delivery_from',$freeDeliveryFrom) }}">
+                </div>
+                @error('delivery_mode')<p class="text-danger">{{ $message }}</p>@enderror
+                @error('delivery_fee')<p class="text-danger">{{ $message }}</p>@enderror
+                @error('free_delivery_from')<p class="text-danger">{{ $message }}</p>@enderror
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
                 <h5 class="mb-2">Banner ölçüləri</h5>
                 <p class="text-muted mb-4">Bütün ölçülər piksellə (px) göstərilir. Yeni yüklənən bannerlər bu ölçülərə uyğun kəsiləcək.</p>
 
@@ -61,4 +80,5 @@
         <button type="submit" class="btn btn-primary">Yadda saxla</button>
     </form>
 </div>
+<script>document.getElementById('delivery_mode').addEventListener('change',function(){document.getElementById('deliveryThreshold').style.display=this.value==='threshold'?'':'none';});</script>
 @endsection
