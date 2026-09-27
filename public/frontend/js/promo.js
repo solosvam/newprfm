@@ -77,10 +77,16 @@
         const items = cartItems();
 
         if (!items.length) {
-            clear();
-            request(root.dataset.removeUrl, 'DELETE').catch(() => {});
-            render();
-            emit();
+            try {
+                await request(root.dataset.removeUrl, 'DELETE');
+                if (current !== version) return;
+                clear();
+                showError('');
+                render();
+                emit();
+            } catch (error) {
+                if (current === version) showError(error.message);
+            }
             return;
         }
 
