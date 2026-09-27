@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const otpError = document.getElementById('otpError');
     const otpMessage = document.getElementById('otpMessage');
     const setPasswordSection = document.getElementById('setPasswordSection');
+    const inactiveArea = document.getElementById('inactiveOtpArea');
+    const inactiveOtp = document.getElementById('inactiveOtpInput');
+    const inactiveError = document.getElementById('inactiveOtpError');
+    const inactiveResend = document.getElementById('inactiveResendBtn');
     let mode = 'check';
     let currentMobile = '';
     let timer = null;
@@ -66,6 +70,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     mobile.addEventListener('input', function () {
+        if (mode === 'inactive') {
+            mode = 'check';
+            inactiveArea.classList.add('hide-form');
+            lastCheckedMobile = '';
+        }
         if (mobileCompleted()) checkMobileAutomatically();
     });
 
@@ -104,6 +113,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (data.status === 'not_found') {
                 error(loginError, window.customerAuth.messages.notFound);
+            } else if (data.status === 'inactive') {
+                mode = 'inactive';
+                inactiveArea.classList.remove('hide-form');
+                document.getElementById('inactiveOtpMessage').textContent = window.customerAuth.messages.otpSent.replace(':mobile', data.mobile);
+                inactiveOtp.focus();
             } else if (data.status === 'password') {
                 mode = 'password';
                 mobile.disabled = true;
@@ -163,6 +177,36 @@ document.addEventListener('DOMContentLoaded', function () {
             error(loginError, e.message);
         } finally {
             submit.disabled = false;
+        }
+    });
+
+    document.getElementById('inactiveVerifyBtn').addEventListener('click', async function () {
+        error(inactiveError, '');
+        this.disabled = true;
+        try {
+            const data = await post(window.customerAuth.inactiveVerifyUrl, {
+                mobile: currentMobile,
+                otp: inactiveOtp.value
+            });
+            location.href = data.redirect;
+        } catch (e) {
+            error(inactiveError, e.message);
+        } finally {
+            this.disabled = false;
+        }
+    });
+
+    inactiveResend.addEventListener('click', async function () {
+        this.disabled = true;
+        error(inactiveError, '');
+        document.getElementById('inactiveResendMessage').textContent = '';
+        try {
+            await post(window.customerAuth.inactiveResendUrl, {mobile: currentMobile});
+            document.getElementById('inactiveResendMessage').textContent = window.customerAuth.messages.otpSent.replace(':mobile', mobile.value);
+            setTimeout(() => { inactiveResend.disabled = false; }, 60000);
+        } catch (e) {
+            error(inactiveError, e.message);
+            this.disabled = false;
         }
     });
 
