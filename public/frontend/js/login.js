@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let mode = 'check';
     let currentMobile = '';
     let timer = null;
+    let inactiveResendTimer = null;
     let checkingMobile = false;
     let lastCheckedMobile = '';
 
@@ -73,6 +74,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (mode === 'inactive') {
             mode = 'check';
             inactiveArea.classList.add('hide-form');
+            clearInterval(inactiveResendTimer);
+            inactiveResend.disabled = false;
+            inactiveResend.textContent = window.customerAuth.messages.resend;
+            document.getElementById('inactiveResendMessage').textContent = '';
             lastCheckedMobile = '';
         }
         if (mobileCompleted()) checkMobileAutomatically();
@@ -116,7 +121,11 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (data.status === 'inactive') {
                 mode = 'inactive';
                 inactiveArea.classList.remove('hide-form');
-                document.getElementById('inactiveOtpMessage').textContent = window.customerAuth.messages.otpSent.replace(':mobile', data.mobile);
+                document.getElementById('inactiveOtpMessage').textContent = window.customerAuth.messages.inactiveHint.replace(':mobile', data.mobile);
+                document.getElementById('inactiveResendMessage').textContent = '';
+                inactiveResend.disabled = false;
+                inactiveResend.textContent = window.customerAuth.messages.resend;
+                document.getElementById('inactiveOtpMessage').dataset.maskedMobile = data.mobile;
                 inactiveOtp.focus();
             } else if (data.status === 'password') {
                 mode = 'password';
@@ -196,14 +205,36 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function startInactiveResendTimer(seconds = 60) {
+        clearInterval(inactiveResendTimer);
+        const deadline = Date.now() + seconds * 1000;
+        inactiveResend.disabled = true;
+
+        function update() {
+            const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+            if (remaining === 0) {
+                clearInterval(inactiveResendTimer);
+                inactiveResend.disabled = false;
+                inactiveResend.textContent = window.customerAuth.messages.resend;
+            } else {
+                inactiveResend.textContent = window.customerAuth.messages.resend + ' (' + remaining + 's)';
+            }
+        }
+
+        update();
+        inactiveResendTimer = setInterval(update, 250);
+    }
+
     inactiveResend.addEventListener('click', async function () {
         this.disabled = true;
         error(inactiveError, '');
-        document.getElementById('inactiveResendMessage').textContent = '';
+        const notice = document.getElementById('inactiveResendMessage');
+        notice.textContent = '';
         try {
             await post(window.customerAuth.inactiveResendUrl, {mobile: currentMobile});
-            document.getElementById('inactiveResendMessage').textContent = window.customerAuth.messages.otpSent.replace(':mobile', mobile.value);
-            setTimeout(() => { inactiveResend.disabled = false; }, 60000);
+            notice.textContent = window.customerAuth.messages.otpSent.replace(':mobile', document.getElementById('inactiveOtpMessage').dataset.maskedMobile || currentMobile);
+            notice.style.color = '#25834b';
+            startInactiveResendTimer();
         } catch (e) {
             error(inactiveError, e.message);
             this.disabled = false;
