@@ -56,7 +56,7 @@
                     <div class="checkout-payment">
                         @foreach($paymentMethods as $m)
                             <label class="checkout-payment-option">
-                                <input type="radio" name="payment_method" value="{{ $m->id }}" @checked($loop->first)>
+                                <input type="radio" name="payment_method" value="{{ $m->id }}" @checked(old('payment_method', $paymentMethods->first()?->id) == $m->id)>
                                 <span>{{ $m->localized_name }}</span>
                             </label>
                         @endforeach

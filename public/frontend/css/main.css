@@ -936,14 +936,64 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 .checkout-address-form.checkout-hidden { display: none; }
 .checkout-address-select { width: 100%; max-width: 420px; padding: 14px 36px 14px 16px; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
 
-.checkout-payment { display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
-.checkout-payment-option {
-    display: flex; flex: 1; min-width: 160px; align-items: center; justify-content: center; gap: 10px;
-    padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius, 8px);
-    font-size: 14px; color: var(--text); cursor: pointer;
+.checkout-payment {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
-.checkout-payment-option input { accent-color: var(--accent); }
-.checkout-payment-option:has(input:checked) { border-color: var(--accent); background: var(--surface-2); }
+
+.checkout-payment-option {
+    position: relative;
+    cursor: pointer;
+}
+
+/* Radio gizli qalır, amma klaviatura və screen reader üçün işləyir */
+.checkout-payment-option input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+.checkout-payment-option span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 22px;
+    border: 1.5px solid var(--pill-color, #261f4d);
+    border-radius: 10px;
+    background: var(--pill-bg, #fff);
+    color: var(--pill-color, #261f4d);
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+    user-select: none;
+}
+
+.checkout-payment-option:hover span {
+    background: var(--pill-hover-bg, #f3f0fa);
+}
+
+.checkout-payment-option input:checked + span {
+    background: var(--pill-color, #261f4d);
+    color: var(--pill-bg, #fff);
+}
+
+.checkout-payment-option input:focus-visible + span {
+    outline: 2px solid var(--pill-color, #261f4d);
+    outline-offset: 2px;
+}
+
+/* Dark theme — öz theme selektorunuza uyğunlaşdırın */
+[data-theme="dark"] .checkout-payment-option {
+    --pill-color: #e9e4ff;
+    --pill-bg: #17141f;
+    --pill-hover-bg: #241f33;
+}
 
 .checkout-check { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); margin-bottom: 12px; cursor: pointer; }
 .checkout-check input { accent-color: var(--accent); }
