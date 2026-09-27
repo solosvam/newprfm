@@ -435,5 +435,7 @@
     "catalog_all_scent_families": "All fragrance families",
     "catalog_clear": "Clear",
     "catalog_apply": "Apply filters",
-    "catalog_search_size": "Search size"
+    "catalog_search_size": "Search size",
+    "credit_application_complete_profile": "Complete your installment profile before submitting an application.",
+    "credit_application_success": "Your installment application has been recorded."
 }
