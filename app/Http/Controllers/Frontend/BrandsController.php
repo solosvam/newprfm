@@ -4,12 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product\Brand;
-use App\Models\Product\Category;
-use App\Models\Product\Gender;
-use App\Models\Product\Product;
-use App\Models\Banners;
-use App\Models\Product\Type;
-use App\Services\SeoUrl;
+use App\Services\CatalogService;
 use Illuminate\Http\Request;
 
 class BrandsController extends Controller
@@ -19,13 +14,12 @@ class BrandsController extends Controller
         $brands = Brand::where('active', 1)
             ->orderBy('name')
             ->get()
-            ->groupBy(function($brand) {
-                return strtoupper(substr($brand->name, 0, 1)); // İlk hərfə görə qrupla
-            });
+            ->groupBy(fn ($brand) => strtoupper(substr($brand->name, 0, 1)));
 
         return view('frontend.brands', compact('brands'));
     }
-    public function products(string $slug)
+
+    public function products(Request $request, string $slug, CatalogService $catalog)
     {
         $brand = Brand::where('slug', $slug)->where('active', 1)->first();
 
@@ -36,83 +30,18 @@ class BrandsController extends Controller
 
         abort_unless($brand, 404);
 
-        $banners = Banners::where('active', 1)->get();
-
-        $products = Product::with([
-            'brand',
-            'type',
-            'images',
-            'genders',
-            'variants' => function ($query) {
-                $query->where('active', 1)->orderBy('price');
-            },
-            'variants.size',
-        ])
-            ->where('active', 1)
-            ->where('brand_id', $brand->id)
-            ->orderByDesc('id')
+        $query = $catalog->productQuery()->where('brand_id', $brand->id);
+        $query = $catalog->applyFilters($query, $request);
+        $products = $catalog->applySort($query, $request->input('sort'))
             ->paginate(12)
             ->withQueryString();
 
-        $formattedBanners = [];
-        foreach ($banners as $banner) {
-            $formattedBanners[$banner->location . $banner->device] = $banner->imageForLocale();
-        }
-
-        $brands = Brand::query()
-            ->where('active', 1)
-            ->withCount([
-                'products as products_count' => fn ($query) => $query->where('active', 1),
-            ])
-            ->having('products_count', '>', 0)
-            ->orderByDesc('products_count')
-            ->orderBy('name')
-            ->limit(12)
-            ->get();
-        $allBrands = Brand::where('active',1)->get();
-        $genders = Gender::all();
-        $types = Type::orderBy('id')->get();
-
-        $recommendedProducts = Product::with([
-            'brand',
-            'type',
-            'images',
-            'variants' => fn ($query) => $query
-                ->where('active', 1)
-                ->orderBy('price'),
-            'variants.size',
-        ])
-            ->where('active', 1)
-            ->whereHas('variants', fn ($query) => $query->where('active', 1))
-            ->inRandomOrder()
-            ->limit(6)
-            ->get();
-
-        $bestSellers = Product::with([
-            'brand',
-            'type',
-            'images',
-            'variants' => fn ($query) => $query
-                ->where('active', 1)
-                ->orderBy('price'),
-            'variants.size',
-        ])
-            ->where('active', 1)
-            ->whereHas('variants', fn ($query) => $query->where('active', 1))
-            ->inRandomOrder()
-            ->limit(6)
-            ->get();
-
-        return view('frontend.home', [
-            'banners' => $formattedBanners,
-            'products' => $products,
-            'selectedBrand' => $brand,
-            'brands' => $brands,
-            'allBrands' => $allBrands,
-            'bestSellers' => $bestSellers,
-            'recommendedProducts' => $recommendedProducts,
-            'genders' => $genders,
-            'types' => $types,
-        ]);
+        return view('frontend.home', array_merge(
+            $catalog->catalogData(),
+            [
+                'products' => $products,
+                'selectedBrand' => $brand,
+            ]
+        ));
     }
 }
