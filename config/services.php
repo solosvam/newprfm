@@ -14,6 +14,16 @@ return [
     |
     */
 
+    'birbank' => [
+        'test_mode' => env('BIRBANK_TEST_MODE', true),
+        'test_url' => env('BIRBANK_TEST_URL', 'https://txpgtst.kapitalbank.az/api'),
+        'live_url' => env('BIRBANK_LIVE_URL', 'https://e-commerce.kapitalbank.az/api'),
+        'test_username' => env('BIRBANK_TEST_USERNAME'),
+        'test_password' => env('BIRBANK_TEST_PASSWORD'),
+        'username' => env('BIRBANK_USERNAME'),
+        'password' => env('BIRBANK_PASSWORD'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
