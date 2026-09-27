@@ -24,7 +24,7 @@
 
                     <div class="actions login-register-link auth-register">
                         <span class="auth-register-hint">{{ __('auth_dont_have_account_yet') }}</span>
-                        <button type="button" id="registerBtn" class="auth-register-btn">{{ __('auth_register') }}</button>
+                        <a href="{{ route('front.register') }}" id="registerBtn" class="auth-register-btn">{{ __('auth_register') }}</a>
                     </div>
                 </div>
             </div>

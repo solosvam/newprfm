@@ -1,0 +1,85 @@
+@extends('frontend.layouts.app')
+
+@section('title', __('auth_register') . ' | parfumshop')
+
+@section('content')
+    <main>
+        <div class="auth-page">
+            <div class="auth-card">
+                <h1 class="auth-title">{{ __('auth_register') }}</h1>
+
+                <form method="POST" action="{{ route('front.register.store') }}" class="auth-form">
+                    @csrf
+
+                    <div class="form-field">
+                        <label>{{ __('profile_first_name') }}</label>
+                        <input type="text" name="name" class="auth-input @error('name') is-invalid @enderror" value="{{ old('name') }}" placeholder="{{ __('profile_first_name') }}" required>
+                        <div class="invalid-feedback">{{ $errors->first('name') }}</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>{{ __('profile_last_name') }}</label>
+                        <input type="text" name="surname" class="auth-input @error('surname') is-invalid @enderror" value="{{ old('surname') }}" placeholder="{{ __('profile_last_name') }}" required>
+                        <div class="invalid-feedback">{{ $errors->first('surname') }}</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>{{ __('profile_your_email') }}</label>
+                        <input type="email" name="email" class="auth-input @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="{{ __('profile_your_email') }}" required>
+                        <div class="invalid-feedback">{{ $errors->first('email') }}</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>{{ __('profile_your_phone_number') }}</label>
+                        <input type="tel" name="mobile" id="registerMobile" class="auth-input @error('mobile') is-invalid @enderror" value="{{ old('mobile') }}" placeholder="994 __ ___ __ __" inputmode="numeric" required>
+                        <div class="invalid-feedback">{{ $errors->first('mobile') }}</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>{{ __('profile_gender') }}</label>
+                        <div class="gender-pills">
+                            @foreach([1 => __('profile_male'), 0 => __('profile_female')] as $value => $label)
+                                <label class="gender-pill">
+                                    <input type="radio" name="gender" value="{{ $value }}" @checked((int) old('gender') === $value)>
+                                    <span>{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <div class="invalid-feedback">{{ $errors->first('gender') }}</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>{{ __('auth_password') }}</label>
+                        <input type="password" name="password" class="auth-input @error('password') is-invalid @enderror" placeholder="{{ __('auth_password') }}" autocomplete="new-password" required>
+                        <div class="invalid-feedback">{{ $errors->first('password') }}</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark auth-submit">{{ __('auth_register') }}</button>
+                </form>
+
+                <div class="auth-register">
+                    <span class="auth-register-hint">{{ __('auth_already_have_account') }}</span>
+                    <a href="{{ route('front.login') }}" class="auth-register-btn">{{ __('auth_sign_in') }}</a>
+                </div>
+            </div>
+        </div>
+    </main>
+@endsection
+
+@section('page-scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var mobileInput = document.getElementById('registerMobile');
+            if (mobileInput && window.Inputmask) {
+                Inputmask({
+                    mask: '\\9\\9\\4 99 999 99 99',
+                    placeholder: '_',
+                    showMaskOnHover: false,
+                    showMaskOnFocus: true,
+                    clearIncomplete: false
+                }).mask(mobileInput);
+            }
+        });
+    </script>
+@endsection

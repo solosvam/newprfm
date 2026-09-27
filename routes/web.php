@@ -117,6 +117,8 @@ Route::middleware('guest')
     ->controller(AuthController::class)
     ->group(function () {
         Route::get('/login', 'login')->name('front.login');
+        Route::get('/register', 'register')->name('front.register');
+        Route::post('/register', 'registerStore')->name('front.register.store');
         Route::post('/login/check', 'checkMobile')->name('front.login.check');
         Route::post('/login/password', 'passwordLogin')->name('front.login.password');
         Route::post('/login/otp', 'verifyOtp')->name('front.login.otp');

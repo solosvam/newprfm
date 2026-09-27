@@ -221,10 +221,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    document.getElementById('registerBtn').addEventListener('click', function (e) {
-        e.preventDefault();
-        error(loginError, window.customerAuth.messages.registration);
-    });
 
     function startTimer() {
         clearInterval(timer);
