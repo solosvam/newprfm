@@ -1,9 +1,9 @@
 @php
     $creditLocale = app()->getLocale();
     $creditCopy = [
-        'az' => ['title'=>'Hissə-hissə ödəniş üçün müraciət', 'subtitle'=>'Ölçünü və ödəniş müddətini seçin.', 'size'=>'Ətrin həcmi', 'period'=>'Kredit müddəti', 'price'=>'Qiymət', 'monthly'=>'Aylıq ödəniş', 'total'=>'Ümumi məbləğ', 'rules'=>'Onlayn hissə-hissə müraciət üçün qaydalar', 'accept'=>'Şərtlər və qaydalarla tanış oldum və qəbul edirəm', 'submit'=>'Müraciət et', 'close'=>'Bağla', 'success'=>'Müraciətiniz qəbul edildi.', 'error'=>'Müraciət göndərilmədi. Yenidən cəhd edin.', 'month'=>'ay', 'free'=>'Faizsiz'],
-        'ru' => ['title'=>'Заявка на рассрочку', 'subtitle'=>'Выберите объём и срок оплаты.', 'size'=>'Объём', 'period'=>'Срок рассрочки', 'price'=>'Цена', 'monthly'=>'Ежемесячный платёж', 'total'=>'Общая сумма', 'rules'=>'Условия онлайн-рассрочки', 'accept'=>'Я ознакомился(-ась) и согласен(-на) с условиями', 'submit'=>'Отправить заявку', 'close'=>'Закрыть', 'success'=>'Ваша заявка принята.', 'error'=>'Не удалось отправить заявку.', 'month'=>'мес.', 'free'=>'Без процентов'],
-        'en' => ['title'=>'Installment application', 'subtitle'=>'Select a size and payment term.', 'size'=>'Fragrance size', 'period'=>'Payment term', 'price'=>'Price', 'monthly'=>'Monthly payment', 'total'=>'Total', 'rules'=>'Online installment terms and conditions', 'accept'=>'I have read and accept the terms and conditions', 'submit'=>'Submit application', 'close'=>'Close', 'success'=>'Your application has been received.', 'error'=>'Unable to submit your application.', 'month'=>'months', 'free'=>'Interest-free'],
+        'az' => ['title'=>'Hissə-hissə ödəniş üçün müraciət', 'subtitle'=>'Ölçünü və ödəniş müddətini seçin.', 'size'=>'Ətrin həcmi', 'period'=>'Kredit müddəti', 'price'=>'Qiymət', 'monthly'=>'Aylıq ödəniş', 'total'=>'Ümumi məbləğ', 'rules'=>'Onlayn hissə-hissə müraciət üçün qaydalar', 'accept'=>'Şərtlər və qaydalarla tanış oldum və qəbul edirəm', 'submit'=>'Müraciət et', 'close'=>'Bağla', 'success'=>'Müraciətiniz qəbul edildi.', 'error'=>'Müraciət göndərilmədi. Yenidən cəhd edin.', 'month'=>'ay', 'free'=>'Faizsiz', 'scrollHint'=>'Bütün qaydaları oxumaq üçün aşağı sürüşdürün'],
+        'ru' => ['title'=>'Заявка на рассрочку', 'subtitle'=>'Выберите объём и срок оплаты.', 'size'=>'Объём', 'period'=>'Срок рассрочки', 'price'=>'Цена', 'monthly'=>'Ежемесячный платёж', 'total'=>'Общая сумма', 'rules'=>'Условия онлайн-рассрочки', 'accept'=>'Я ознакомился(-ась) и согласен(-на) с условиями', 'submit'=>'Отправить заявку', 'close'=>'Закрыть', 'success'=>'Ваша заявка принята.', 'error'=>'Не удалось отправить заявку.', 'month'=>'мес.', 'free'=>'Без процентов', 'scrollHint'=>'Прокрутите вниз, чтобы прочитать все условия'],
+        'en' => ['title'=>'Installment application', 'subtitle'=>'Select a size and payment term.', 'size'=>'Fragrance size', 'period'=>'Payment term', 'price'=>'Price', 'monthly'=>'Monthly payment', 'total'=>'Total', 'rules'=>'Online installment terms and conditions', 'accept'=>'I have read and accept the terms and conditions', 'submit'=>'Submit application', 'close'=>'Close', 'success'=>'Your application has been received.', 'error'=>'Unable to submit your application.', 'month'=>'months', 'free'=>'Interest-free', 'scrollHint'=>'Scroll down to read all the terms'],
     ][$creditLocale] ?? null;
     $creditErrorMessage = $creditCopy['error'];
     $creditSuccessMessage = $creditCopy['success'];
@@ -63,6 +63,9 @@
                     <p>—</p>
                 @endforelse
             </div>
+            <div class="credit-modal-scroll-hint" id="creditRulesScrollHint" aria-live="polite">
+                <span>{{ $creditCopy['scrollHint'] }}</span><span aria-hidden="true">↓</span>
+            </div>
             <label class="credit-modal-accept credit-modal-rules-accept">
                 <input type="checkbox" name="accept_terms" form="creditApplicationForm" value="1" required>
                 <span>{{ $creditCopy['accept'] }}</span>
@@ -93,7 +96,10 @@
 .credit-modal-accept {display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;cursor:pointer}.credit-modal-accept input {margin-top:4px}
 .credit-modal-submit {width:100%;margin-top:20px}.credit-modal-message {font-size:14px;margin:14px 0 0}
 .credit-modal-rules {background:rgba(143,113,178,.07);border-radius:12px;padding:20px;align-self:start;height:min(540px,calc(100dvh - 230px));min-height:260px;display:flex;flex-direction:column;overflow:hidden}
-.credit-modal-rules-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
+.credit-modal-rules-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-width:thin;scrollbar-color:#8771a5 #e9e2f1}
+.credit-modal-scroll-hint{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0;font-size:12px;font-weight:600;color:#624b83;padding:10px 4px 0}
+.credit-modal-scroll-hint span:last-child{font-size:22px;line-height:1}
+.credit-modal-scroll-hint[hidden]{display:none}
 .credit-modal-rules-accept{flex-shrink:0;border-top:1px solid #ddd4e5;padding-top:16px;margin-top:12px}
 .credit-modal-rules h3 {font-size:17px;margin:0 0 18px}.credit-rule-text{border-top:1px solid #ddd4e5;padding:13px 0;margin:0;line-height:1.65;white-space:pre-line;font-size:14px}
 @media(max-width:720px){.credit-modal-layout{grid-template-columns:1fr;padding:20px}.credit-modal-head{padding:20px}.credit-modal-rules{height:360px;min-height:260px}}
@@ -107,6 +113,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const periodOptions = document.getElementById('creditPeriodOptions');
     const message = document.getElementById('creditApplicationMessage');
     const submit = form.querySelector('[type=submit]');
+    const rulesScroll = dialog.querySelector('.credit-modal-rules-scroll');
+    const rulesHint = document.getElementById('creditRulesScrollHint');
+    const acceptTerms = dialog.querySelector('[name=accept_terms]');
+    const rulesAtBottom = () => rulesScroll.scrollTop + rulesScroll.clientHeight >= rulesScroll.scrollHeight - 5;
+    function updateRulesHint() {
+        rulesHint.hidden = rulesScroll.scrollHeight <= rulesScroll.clientHeight + 5 || rulesAtBottom();
+    }
+    rulesScroll.addEventListener('scroll', updateRulesHint, {passive:true});
+    acceptTerms.addEventListener('click', function (event) {
+        if (!rulesAtBottom()) {
+            event.preventDefault();
+            acceptTerms.checked = false;
+            rulesScroll.scrollTo({top:rulesScroll.scrollHeight,behavior:'smooth'});
+        }
+    });
     const currency = new Intl.NumberFormat(document.documentElement.lang || 'az', {minimumFractionDigits:2,maximumFractionDigits:2});
     const format = value => currency.format(value) + ' ₼';
     function calculate() {
@@ -130,7 +151,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         message.textContent = '';
         calculate();
+        rulesScroll.scrollTop = 0;
+        acceptTerms.checked = false;
         dialog.showModal();
+        updateRulesHint();
     }));
     dialog.querySelector('[data-credit-close]').addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => {if (event.target === dialog) dialog.close();});
