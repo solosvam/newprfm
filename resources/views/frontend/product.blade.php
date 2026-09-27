@@ -139,8 +139,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             @if(!auth()->check())
                 <a class="btn btn-dark" href="{{ route('front.login', ['redirect' => route('product', $product->slug)]) }}">{{ __('product_apply') }}</a>
             @elseif(!$creditProfileComplete)
-                <a class="btn btn-dark" href="{{ route('profile.credit', ['return' => route('product', $product->slug)]) }}">{{ __('product_apply') }}</a>
-                <p class="subtitle" style="font-size:13px;margin-top:10px;">{{ __('credit_application_complete_profile') }}</p>
+                <button type="button" class="btn btn-dark" data-credit-profile-required>{{ __('product_apply') }}</button>
             @else
                 <button type="button" class="btn btn-dark" data-credit-apply @disabled($variants->isEmpty() || $creditPeriods->isEmpty())>{{ __('product_apply') }}</button>
             @endif
@@ -220,6 +219,27 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             </div>
         @endforeach
     </div>
+    @if(auth()->check() && !$creditProfileComplete)
+        <dialog id="creditProfileRequiredDialog" class="credit-application-dialog" aria-labelledby="creditProfileRequiredTitle" style="width:min(460px,calc(100vw - 32px));max-width:100%;border:0;border-radius:18px;padding:0;box-shadow:0 20px 80px #0003;">
+            <div style="padding:28px;position:relative;text-align:center;">
+                <button type="button" data-credit-profile-close aria-label="{{ __('common_close') }}" style="position:absolute;right:16px;top:10px;border:0;background:transparent;font-size:28px;cursor:pointer;color:inherit;">×</button>
+                <h2 id="creditProfileRequiredTitle" style="margin:12px 0 16px;font-size:23px;">{{ __('credit_profile_required_title') }}</h2>
+                <p style="line-height:1.65;margin-bottom:24px;">{{ __('credit_profile_required_message') }}</p>
+                <a class="btn btn-dark" style="display:block;text-align:center;" href="{{ route('profile.credit', ['return' => route('product', $product->slug)]) }}">{{ __('credit_profile_required_action') }}</a>
+            </div>
+        </dialog>
+        <style>#creditProfileRequiredDialog::backdrop{background:rgba(17,12,29,.68)}</style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const dialog = document.getElementById('creditProfileRequiredDialog');
+                document.querySelectorAll('[data-credit-profile-required]').forEach(button =>
+                    button.addEventListener('click', () => dialog.showModal())
+                );
+                dialog.querySelector('[data-credit-profile-close]').addEventListener('click', () => dialog.close());
+                dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+            });
+        </script>
+    @endif
     @if(auth()->check() && $creditProfileComplete && $variants->isNotEmpty() && $creditPeriods->isNotEmpty())
         @include('frontend.partials.credit-application-modal')
     @endif
