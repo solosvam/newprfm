@@ -76,6 +76,18 @@
                                 </div>
                             </div>
 
+                            <div class="mt-3">
+                                <label for="order_terms_url" class="form-label">Sifariş şərtlərinin URL-i</label>
+                                <input id="order_terms_url" name="order_terms_url" type="url" maxlength="2048"
+                                       placeholder="https://parfumshop.az/..."
+                                       value="{{ old('order_terms_url', $orderTermsUrl) }}"
+                                       @class(['form-control', 'is-invalid' => $errors->has('order_terms_url')])>
+                                @error('order_terms_url')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">Checkout səhifəsində “şərtlər” keçidi üçün istifadə olunur.</div>
+                            </div>
+
                             <div class="form-text mt-3">
                                 Bonus sifariş məbləğinin faizi kimi hesablanır (çatdırılma daxil deyil).
                             </div>
