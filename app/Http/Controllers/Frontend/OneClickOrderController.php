@@ -67,7 +67,7 @@ class OneClickOrderController extends Controller
                 'product_id' => $variant->product_id,
                 'product_variant_id' => $variant->id,
                 'quantity' => $quantity,
-                'price' => $variant->price,
+                'unit_price' => $variant->price,
                 'total' => $subtotal,
             ]);
             DB::table('order_status_logs')->insert([
