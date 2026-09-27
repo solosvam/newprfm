@@ -19,7 +19,7 @@
                 <span>{{ $star <= round($average) ? '★' : '☆' }}</span>
             @endfor
         </span>
-        <small>{{ $approvedReviews->count() }} rəy</small>
+        <small>{{ $approvedReviews->count() }} {{ __('review_count') }}</small>
     </div>
     <div class="review-bars">
         @for($rating = 5; $rating >= 1; $rating--)
@@ -36,12 +36,12 @@
 
 <div class="review-accordion open" data-accordion>
     <button type="button" class="accordion-toggle" data-accordion-toggle aria-expanded="true">
-        <span>Son rəylər</span><span class="chevron">⌃</span>
+        <span>{{ __('review_latest') }}</span><span class="chevron">⌃</span>
     </button>
     <div class="accordion-body" data-accordion-body>
         @forelse($approvedReviews as $review)
             <article class="review-item">
-                <p class="review-author">{{ $review->customer?->name ?? 'Müştəri' }}</p>
+                <p class="review-author">{{ $review->customer?->name ?? __('review_customer') }}</p>
                 <p class="review-item-stars" aria-label="{{ $review->rating }} / 5">
                     @for($star = 1; $star <= 5; $star++)
                         {{ $star <= $review->rating ? '★' : '☆' }}
@@ -53,7 +53,7 @@
                 @endif
             </article>
         @empty
-            <p class="review-empty">Bu məhsula hələ təsdiqlənmiş rəy yazılmayıb.</p>
+            <p class="review-empty">{{ __('review_empty') }}</p>
         @endforelse
     </div>
 </div>
@@ -61,7 +61,7 @@
 <dialog class="review-dialog" data-review-modal aria-label="{{ __('product_write_a_review') }}">
     <div class="review-dialog-head">
         <h2>{{ __('product_write_a_review') }}</h2>
-        <button type="button" data-review-close aria-label="Bağla">×</button>
+        <button type="button" data-review-close aria-label="{{ __('common_close') }}">×</button>
     </div>
     @auth
         <form method="POST" action="{{ route('product.review', $product->id) }}" class="review-form">
@@ -72,15 +72,15 @@
                 </div>
             @endif
             <fieldset class="review-rating">
-                <legend>Qiymətləndirmə</legend>
+                <legend>{{ __('review_rating') }}</legend>
                 @for($star = 5; $star >= 1; $star--)
                     <input type="radio" name="rating" id="new-rating-{{ $star }}" value="{{ $star }}" @checked(old('rating') == $star) required>
                     <label for="new-rating-{{ $star }}" title="{{ $star }} / 5">★</label>
                 @endfor
             </fieldset>
-            <label for="new-review-comment">Rəyiniz</label>
+            <label for="new-review-comment">{{ __('review_yours') }}</label>
             <textarea id="new-review-comment" name="comment" rows="5" minlength="3" maxlength="2000" required>{{ old('comment') }}</textarea>
-            <p class="review-hint">Rəyiniz administrator təsdiq etdikdən sonra görünəcək.</p>
+            <p class="review-hint">{{ __('review_moderation') }}</p>
             <button type="submit" class="btn btn-dark">{{ __('product_submit_review') }}</button>
         </form>
     @else
