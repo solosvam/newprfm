@@ -46,6 +46,19 @@
     }
 
     let checkoutTotal = 0;
+    let checkoutSubtotal = 0;
+    function updateCheckoutTotals() {
+        const discount = Math.min(checkoutSubtotal, Number(window.ParfumPromo?.discount) || 0);
+        const goods = Math.max(0, checkoutSubtotal - discount);
+        const delivery = config.delivery || {};
+        const fee = delivery.mode === 'free' || (Number(delivery.free_from) > 0 && goods >= Number(delivery.free_from)) ? 0 : Number(delivery.fee) || 0;
+        checkoutTotal = Math.round((goods + fee) * 100) / 100;
+        document.getElementById('checkoutDiscount').textContent = '−' + discount.toFixed(2) + ' ₼';
+        document.getElementById('checkoutDelivery').textContent = fee ? fee.toFixed(2) + ' ₼' : 'Pulsuz';
+        document.getElementById('checkoutTotal').textContent = checkoutTotal.toFixed(2) + ' ₼';
+        refreshPayment();
+    }
+    window.addEventListener('parfumshop:promo-updated', updateCheckoutTotals);
     const selectedMethod = () => document.querySelector('[name=payment_method]:checked')?.dataset.code;
     function refreshPayment() {
         const code = selectedMethod();
@@ -94,9 +107,8 @@
             );
         });
 
-        checkoutTotal = total;
-        document.getElementById('checkoutTotal').textContent = total.toFixed(2) + ' ₼';
-        refreshPayment();
+        checkoutSubtotal = total;
+        updateCheckoutTotals();
     })();
 
     document.getElementById('placeOrder').onclick = async function () {
