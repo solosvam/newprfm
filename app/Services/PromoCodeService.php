@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\PromoCodeException;
+use Carbon\CarbonImmutable;
 use App\Models\Product\ProductVariant;
 use App\Models\PromoCode;
 
@@ -43,12 +44,25 @@ class PromoCodeService
 
         $promo = ($lock ? $query->lockForUpdate() : $query)->first();
 
-        if (!$promo || !$promo->is_active || ($promo->starts_at && now()->lt($promo->starts_at)))
+        if (!$promo || !$promo->is_active)
         {
             throw new PromoCodeException(__('promo_invalid'));
         }
 
-        if ($promo->expires_at && now()->gt($promo->expires_at))
+        // Admin datetime-local fields are entered in Azerbaijan local time.
+        // Interpret the stored DATETIME values in that timezone rather than
+        // treating them as UTC when APP_TIMEZONE is UTC.
+        $timezone = 'Asia/Baku';
+        $now = CarbonImmutable::now($timezone);
+        $startsAt = $promo->getRawOriginal('starts_at');
+        $expiresAt = $promo->getRawOriginal('expires_at');
+
+        if ($startsAt && $now->lt(CarbonImmutable::parse($startsAt, $timezone)))
+        {
+            throw new PromoCodeException(__('promo_invalid'));
+        }
+
+        if ($expiresAt && $now->gt(CarbonImmutable::parse($expiresAt, $timezone)))
         {
             throw new PromoCodeException(__('promo_expired'));
         }
