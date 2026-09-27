@@ -194,11 +194,11 @@
                         </div>
                         <div class="cart-summary__row">
                             <span>{{ __('cart_delivery') }}</span>
-                            <strong id="checkoutDelivery">0.00 ₼</strong>
+                            <strong id="checkoutDelivery" style="color:#16803c;">0.00 ₼</strong>
                         </div>
                         <div id="checkoutGiftWrapRow" class="cart-summary__row" hidden>
-                            <span>{{ __('checkout_gift_wrap_the_order') }}</span>
-                            <strong id="checkoutGiftWrapFee"></strong>
+                            <span>{{ __('checkout_gift_wrap_label') }}</span>
+                            <strong id="checkoutGiftWrapFee" style="color:#16803c;"></strong>
                         </div>
                     </div>
 
@@ -207,7 +207,7 @@
                         <strong id="checkoutTotal">0.00 ₼</strong>
                     </div>
 
-                    <p id="checkoutEarnedBonus" class="cart-bonus" hidden>
+                    <p id="checkoutEarnedBonus" class="cart-bonus" style="color:#16803c;" hidden>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
                         <span id="checkoutEarnedBonusText"></span>
                     </p>
