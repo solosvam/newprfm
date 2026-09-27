@@ -1,5 +1,10 @@
 {
-    "car_list": "Auto Park",
+    "product_one_click_buy": "Buy in one click",
+    "product_one_click_phone_hint": "Enter your mobile number. Our operator will contact you to confirm your order.",
+    "product_one_click_mobile": "Mobile number",
+    "product_one_click_submit": "Place order",
+    "product_one_click_contact": "Our operator will contact you to confirm the delivery address and payment method.",
+"car_list": "Auto Park",
     "services": "Services",
     "rules": "Terms of lease",
     "faq": "Question and answer",
