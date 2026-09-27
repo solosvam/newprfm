@@ -4,15 +4,6 @@
     @php
         $statusKey = $order->status?->code ?? 'received';
 
-        // Kart: sütun adlarını öz cədvəlinizə uyğunlaşdırın
-        $cardMask = $order->card_mask;
-        $cardBrand = $order->card_brand ?? match (true) {
-            str_starts_with((string) $cardMask, '4') => 'Visa',
-            preg_match('/^(5[1-5]|2[2-7])/', (string) $cardMask) === 1 => 'Mastercard',
-            default => null,
-        };
-        $cardFormatted = $cardMask ? trim(chunk_split(str_replace('*', '•', $cardMask), 4, ' ')) : null;
-
         $credit = $order->creditApplication;
 
         $addressExtra = collect([
@@ -139,27 +130,64 @@
                                     && in_array($order->payment_status, ['failed', 'cancelled'], true))
                                     <div class="od-payment-retry">
                                         <p>{{ match(app()->getLocale()) {
-                                            'ru' => 'Оплата не прошла. Вы можете повторить попытку без нового заказа.',
-                                            'en' => 'Payment was unsuccessful. You can retry without placing a new order.',
-                                            default => 'Ödəniş alınmadı. Yeni sifariş yaratmadan yenidən cəhd edə bilərsiniz.',
+                                            'ru' => 'Оплата не прошла.',
+                                            'en' => 'Payment was unsuccessful.',
+                                            default => 'Ödəniş alınmadı.',
                                         } }}</p>
                                         <form method="POST" action="{{ route('payment.birbank.start', $order) }}">
                                             @csrf
                                             <button type="submit" class="btn btn-dark">
                                                 {{ match(app()->getLocale()) {
-                                                    'ru' => 'Оплатить повторно',
-                                                    'en' => 'Retry payment',
-                                                    default => 'Yenidən ödə',
+                                                    'ru' => 'Попробовать снова',
+                                                    'en' => 'Try again',
+                                                    default => 'Təkrar cəhd et',
                                                 } }}
                                             </button>
                                         </form>
                                     </div>
                                 @endif
 
-                                @if($cardFormatted)
-                                    <div class="od-paycard">
-                                        <span class="od-paycard__brand">{{ $cardBrand ?? __('orders_card') }}</span>
-                                        <span class="od-paycard__no">{{ $cardFormatted }}</span>
+                                @if($order->paymentMethod?->code === 'card_online' && $order->payments->isNotEmpty())
+                                    <div class="od-payment-attempts" style="margin: 16px 0;">
+                                        <strong>{{ match(app()->getLocale()) {
+                                            'ru' => 'История платежей',
+                                            'en' => 'Payment attempts',
+                                            default => 'Ödəniş cəhdləri',
+                                        } }}</strong>
+                                        @foreach($order->payments as $payment)
+                                            @php
+                                                // Display only the last four digits of an already masked PAN.
+                                                $maskedPan = (string) $payment->card_pan;
+                                                $lastFour = str_contains($maskedPan, '*') && preg_match('/(\\d{4})$/', $maskedPan, $matches)
+                                                    ? $matches[1] : null;
+                                                $paymentStatus = match($payment->status) {
+                                                    'paid' => match(app()->getLocale()) {
+                                                        'ru' => 'Оплачено', 'en' => 'Paid', default => 'Ödənilib',
+                                                    },
+                                                    'failed' => match(app()->getLocale()) {
+                                                        'ru' => 'Не удалось', 'en' => 'Failed', default => 'Uğursuz',
+                                                    },
+                                                    'cancelled' => match(app()->getLocale()) {
+                                                        'ru' => 'Отменено', 'en' => 'Cancelled', default => 'Ləğv edilib',
+                                                    },
+                                                    default => match(app()->getLocale()) {
+                                                        'ru' => 'Ожидается', 'en' => 'Pending', default => 'Gözləmədə',
+                                                    },
+                                                };
+                                            @endphp
+                                            <div style="padding: 12px 0; border-bottom: 1px solid #e9e6f3;">
+                                                <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                                                    <span>{{ $paymentStatus }}</span>
+                                                    <strong>{{ number_format((float) $payment->amount, 2) }} ₼</strong>
+                                                </div>
+                                                <div style="margin-top: 4px; color: #777383; font-size: 13px;">
+                                                    <time datetime="{{ $payment->created_at?->toIso8601String() }}">{{ $payment->created_at?->format('d.m.Y, H:i') }}</time>
+                                                    @if($lastFour)
+                                                        <span> · {{ __('orders_card') }} •••• {{ $lastFour }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
 
