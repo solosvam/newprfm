@@ -144,9 +144,27 @@
     </style>
 
     <script>
-        document.getElementById('delivery_mode').addEventListener('change', function () {
-            document.getElementById('deliveryFields').classList.toggle('d-none', this.value === 'free');
-            document.getElementById('deliveryThreshold').classList.toggle('d-none', this.value !== 'threshold');
-        });
+        (() => {
+            const mode = document.getElementById('delivery_mode');
+            const fields = document.getElementById('deliveryFields');
+            const threshold = document.getElementById('deliveryThreshold');
+            const feeInput = document.getElementById('delivery_fee');
+            const thresholdInput = document.getElementById('free_delivery_from');
+
+            function syncDeliveryFields() {
+                const isFree = mode.value === 'free';
+                const isThreshold = mode.value === 'threshold';
+
+                fields.classList.toggle('d-none', isFree);
+                threshold.classList.toggle('d-none', !isThreshold);
+                feeInput.disabled = isFree;
+                feeInput.required = !isFree;
+                thresholdInput.disabled = !isThreshold;
+                thresholdInput.required = isThreshold;
+            }
+
+            mode.addEventListener('change', syncDeliveryFields);
+            syncDeliveryFields();
+        })();
     </script>
 @endsection
