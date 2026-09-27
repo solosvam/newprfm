@@ -1,5 +1,10 @@
 {
-    "car_list": "Автопарк",
+    "product_one_click_buy": "Купить в один клик",
+    "product_one_click_phone_hint": "Введите номер телефона. Наш оператор свяжется с вами для подтверждения заказа.",
+    "product_one_click_mobile": "Номер телефона",
+    "product_one_click_submit": "Оформить заказ",
+    "product_one_click_contact": "Наш оператор свяжется с вами, чтобы уточнить адрес и способ оплаты.",
+"car_list": "Автопарк",
     "services": "Услуги",
     "rules": "Условия аренды",
     "faq": "Вопросы и ответы",
