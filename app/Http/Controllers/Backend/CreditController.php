@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\CreditPeriod;
 use App\Models\CreditTerms;
+use App\Models\CreditTermItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -65,20 +66,33 @@ class CreditController extends Controller
     public function terms()
     {
         return view('backend.credit.terms', [
-            'terms' => CreditTerms::first() ?? new CreditTerms(),
+            'items' => CreditTermItem::orderBy('sort_order')->orderBy('id')->get(),
         ]);
     }
 
     public function updateTerms(Request $request)
     {
         $data = $request->validate([
-            'content_az' => ['nullable', 'string'],
-            'content_en' => ['nullable', 'string'],
-            'content_ru' => ['nullable', 'string'],
+            'items' => ['nullable', 'array', 'max:100'],
+            'items.*.id' => ['nullable', 'integer', 'exists:credit_term_items,id'],
+            'items.*.title_az' => ['required', 'string', 'max:255'],
+            'items.*.title_en' => ['nullable', 'string', 'max:255'],
+            'items.*.title_ru' => ['nullable', 'string', 'max:255'],
+            'items.*.content_az' => ['required', 'string'],
+            'items.*.content_en' => ['nullable', 'string'],
+            'items.*.content_ru' => ['nullable', 'string'],
         ]);
 
-        $terms = CreditTerms::first() ?? new CreditTerms();
-        $terms->fill($data)->save();
+        DB::transaction(function () use ($data) {
+            $ids = [];
+            foreach (array_values($data['items'] ?? []) as $index => $row) {
+                $item = !empty($row['id']) ? CreditTermItem::findOrFail($row['id']) : new CreditTermItem();
+                unset($row['id']);
+                $item->fill($row + ['sort_order' => $index + 1])->save();
+                $ids[] = $item->id;
+            }
+            CreditTermItem::when($ids, fn ($q) => $q->whereNotIn('id', $ids))->delete();
+        });
 
         return back()->with('success', 'Şərtlər və qaydalar yeniləndi!');
     }
