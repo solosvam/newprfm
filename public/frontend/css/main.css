@@ -205,6 +205,7 @@ a.mini-card:hover .mini-info .n { color: var(--accent); }
 .toolbar-brand { font-size: 15px; font-weight: 700; color: var(--text); }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
 .grid.similar-products{grid-template-columns: repeat(4, minmax(0,1fr));}
+#guestWishlist.grid{grid-template-columns: repeat(4, minmax(0,1fr));}
 .card {cursor: pointer; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; transition: border-color 0.15s; }
 .card:hover { border-color: var(--accent); }
 .badge { position: absolute; top: 8px; left: 8px; background: var(--accent); color: var(--on-accent); font-size: 10px; padding: 3px 8px; border-radius: 999px; font-weight: 700; }
