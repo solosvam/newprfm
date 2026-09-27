@@ -1206,6 +1206,8 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
     margin: 12px 0 0; font-size: 13px; font-weight: 600; color: var(--cart-success);
 }
 .cart-bonus strong { font-weight: 800; }
+.cart-installment__how { display: inline-block; margin-top: 5px; font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
+.checkout-summary .cart-bonus { margin: 12px 0 16px; }
 
 /* Trust */
 .cart-trust {
