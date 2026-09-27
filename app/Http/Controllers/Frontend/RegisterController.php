@@ -76,7 +76,11 @@ class RegisterController extends Controller
         $request->session()->forget('register.customer_id');
 
         if (filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
-            Mail::to($customer->email)->queue(new WelcomeMail($customer->name, app()->getLocale()));
+            try {
+                Mail::to($customer->email)->queue(new WelcomeMail($customer->name, app()->getLocale()));
+            } catch (Throwable $e) {
+                report($e);
+            }
         }
 
         Auth::login($customer);
@@ -88,7 +92,7 @@ class RegisterController extends Controller
     public function resend(Request $request, SmsService $sms)
     {
         $customer = $this->pendingCustomer($request);
-        $this->sendOtp($customer, $sms);
+        app(RegistrationOtpService::class)->send($customer, $sms);
 
         return back()->with('success', __('auth_an_otp_was_sent_to_mobile'));
     }
