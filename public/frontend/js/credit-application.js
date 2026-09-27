@@ -109,6 +109,8 @@ function initCreditApplicationModal() {
                 throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || errorMessage);
             }
 
+            if (data.redirect) { window.location.href = data.redirect; return; }
+
             message.classList.add('credit-modal-message--success');
             message.textContent = data.message || successMessage;
             acceptTerms.checked = false;
