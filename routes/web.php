@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
 
 use App\Http\Controllers\Frontend\AuthController;
+use App\Http\Controllers\Frontend\RegisterController;
 use App\Http\Controllers\Frontend\MainController;
 use App\Http\Controllers\Frontend\CategoryController;
 use App\Http\Controllers\Frontend\BrandsController;
@@ -117,13 +118,22 @@ Route::middleware('guest')
     ->controller(AuthController::class)
     ->group(function () {
         Route::get('/login', 'login')->name('front.login');
-        Route::get('/register', 'register')->name('front.register');
-        Route::post('/register', 'registerStore')->name('front.register.store');
         Route::post('/login/check', 'checkMobile')->name('front.login.check');
         Route::post('/login/password', 'passwordLogin')->name('front.login.password');
         Route::post('/login/otp', 'verifyOtp')->name('front.login.otp');
         Route::post('/login/otp/resend', 'resendOtp')->name('front.login.otp.resend');
         Route::post('/login/set-password', 'setPassword')->name('front.login.set-password');
+    });
+
+
+Route::middleware(['web', 'guest', 'throttle:10,1'])
+    ->controller(RegisterController::class)
+    ->group(function () {
+        Route::get('/register', 'create')->name('front.register');
+        Route::post('/register', 'store')->name('front.register.store');
+        Route::get('/register/verify', 'showVerify')->name('front.register.verify');
+        Route::post('/register/verify', 'verify')->name('front.register.verify.store');
+        Route::post('/register/resend', 'resend')->name('front.register.resend');
     });
 
 
