@@ -21,16 +21,6 @@ class AuthController extends Controller
         return view('frontend.login');
     }
 
-    public function register()
-    {
-        return view('frontend.register');
-    }
-
-    public function registerStore()
-    {
-
-    }
-
     public function checkMobile(Request $request, SmsService $sms)
     {
         $mobile = $this->normalizeMobile($request->input('mobile'));
