@@ -8,6 +8,10 @@
             <div class="auth-card">
                 <h1 class="auth-title">{{ __('auth_register') }}</h1>
 
+                @if(session()->has('register.customer_id'))
+                    <p class="auth-subtext"><a href="{{ route('front.register.verify') }}">{{ __('auth_verify_account') }}</a></p>
+                @endif
+
                 <form method="POST" action="{{ route('front.register.store') }}" class="auth-form">
                     @csrf
 
@@ -40,7 +44,7 @@
                         <div class="gender-pills">
                             @foreach([1 => __('profile_male'), 0 => __('profile_female')] as $value => $label)
                                 <label class="gender-pill">
-                                    <input type="radio" name="gender" value="{{ $value }}" @checked((int) old('gender') === $value)>
+                                    <input type="radio" name="gender" value="{{ $value }}" @checked(old('gender') !== null && (int) old('gender') === $value)>
                                     <span>{{ $label }}</span>
                                 </label>
                             @endforeach
@@ -50,8 +54,13 @@
 
                     <div class="form-field">
                         <label>{{ __('auth_password') }}</label>
-                        <input type="password" name="password" class="auth-input @error('password') is-invalid @enderror" placeholder="{{ __('auth_password') }}" autocomplete="new-password" required>
+                        <input type="password" name="password" class="auth-input @error('password') is-invalid @enderror" placeholder="{{ __('auth_password') }}" autocomplete="new-password" minlength="6" required>
                         <div class="invalid-feedback">{{ $errors->first('password') }}</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>{{ __('auth_confirm_password') }}</label>
+                        <input type="password" name="password_confirmation" class="auth-input" placeholder="{{ __('auth_confirm_password') }}" autocomplete="new-password" minlength="6" required>
                     </div>
 
                     <button type="submit" class="btn btn-dark auth-submit">{{ __('auth_register') }}</button>
