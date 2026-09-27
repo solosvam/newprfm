@@ -53,7 +53,7 @@ class Birbank
         $order->loadMissing('paymentMethod');
 
         // The project's payment method code is online_card.
-        if ($order->paymentMethod?->code !== 'online_card') {
+        if ($order->paymentMethod?->code !== 'card_online') {
             throw ValidationException::withMessages([
                 'payment' => 'This order is not configured for online card payment.',
             ]);
@@ -229,7 +229,7 @@ class Birbank
     public function createStoredCardOrder(Order $order, string $language = 'az'): array
     {
         $order->loadMissing('paymentMethod');
-        if ($order->paymentMethod?->code !== 'online_card' || !$order->customer_id) {
+        if ($order->paymentMethod?->code !== 'card_online' || !$order->customer_id) {
             throw ValidationException::withMessages(['payment' => 'Invalid online payment order.']);
         }
         if ($order->payments()->where('status', Payment::PAID)->exists()) {
