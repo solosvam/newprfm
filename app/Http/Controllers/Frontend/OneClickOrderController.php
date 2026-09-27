@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Http\Controllers\Frontend;
+
+use App\Http\Controllers\Controller;
+use App\Models\Order\Order;
+use App\Models\Order\OrderStatus;
+use App\Models\PaymentMethod;
+use App\Models\Product\ProductVariant;
+use App\Services\ShopPricing;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
+
+class OneClickOrderController extends Controller
+{
+    public function store(Request $request, ShopPricing $pricing)
+    {
+        $data = $request->validate([
+            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:99'],
+            'mobile' => ['nullable', 'string', 'max:24'],
+        ]);
+
+        $customer = auth()->user();
+        $mobile = $customer
+            ? preg_replace('/\D+/', '', (string) $customer->mobile)
+            : preg_replace('/\D+/', '', (string) ($data['mobile'] ?? ''));
+
+        if (strlen($mobile) === 9) {
+            $mobile = '994' . $mobile;
+        }
+        if (!preg_match('/^994(?:10|50|51|55|70|77|99|60)[0-9]{7}$/', $mobile)) {
+            return response()->json(['message' => 'Mobil nömrəni 994XXXXXXXXX formatında daxil edin.'], 422);
+        }
+
+        $order = DB::transaction(function () use ($data, $customer, $mobile, $pricing) {
+            $variant = ProductVariant::with('product')->whereKey($data['variant_id'])
+                ->where('active', 1)->firstOrFail();
+            abort_unless($variant->product && (int) $variant->product->active === 1, 404);
+
+            $cash = PaymentMethod::where('code', 'cash')->where('active', 1)->firstOrFail();
+            $status = OrderStatus::where('code', 'new')->where('active', 1)->firstOrFail();
+            $quantity = (int) $data['quantity'];
+            $subtotal = round((float) $variant->price * $quantity, 2);
+            // Address is deliberately unknown: the operator confirms the delivery fee later.
+            $order = Order::create([
+                'order_no' => 'TMP' . Str::random(20),
+                'customer_id' => $customer?->id,
+                'customer_address_id' => null,
+                'guest_mobile' => $mobile,
+                'one_click' => true,
+                'payment_method_id' => $cash->id,
+                'payment_status' => 'cod',
+                'source' => 'website',
+                'order_status_id' => $status->id,
+                'gift_wrap' => false,
+                'subtotal' => $subtotal,
+                'discount' => 0,
+                'delivery_fee' => 0,
+                'gift_wrap_fee' => 0,
+                'total' => $subtotal,
+            ]);
+            $order->update(['order_no' => 'PS' . now()->format('ymd') . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT)]);
+            $order->items()->create([
+                'product_id' => $variant->product_id,
+                'product_variant_id' => $variant->id,
+                'quantity' => $quantity,
+                'price' => $variant->price,
+                'total' => $subtotal,
+            ]);
+            DB::table('order_status_logs')->insert([
+                'order_id' => $order->id, 'status_id' => $status->id,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            return $order;
+        });
+
+        $redirect = $customer
+            ? route('checkout.success', $order)
+            : URL::temporarySignedRoute('one-click.success', now()->addMinutes(30), ['order' => $order->id]);
+
+        return response()->json(['ok' => true, 'redirect' => $redirect, 'order_no' => $order->order_no]);
+    }
+
+    public function success(Request $request, Order $order)
+    {
+        abort_unless($request->hasValidSignature() && $order->one_click && $order->customer_id === null, 403);
+        return view('frontend.checkout-success', ['order' => $order, 'guestOneClick' => true]);
+    }
+}
