@@ -17,9 +17,7 @@
                             <article class="card wishlist-card product-item" data-product-id="{{ $product->id }}">
                                 <div class="thumb">
                                     <div class="thumb-actions">
-                                        <button type="button" class="icon-btn fav-btn active is-favorite" data-product-id="{{ $product->id }}" aria-label="{{ __('wishlist_remove_from_favorites') }}" aria-pressed="true">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-                                        </button>
+                                        @include('frontend.includes.favorite-button', ['product' => $product, 'selected' => true])
                                     </div>
                                     <a href="{{ route('product', $product->slug) }}">
                                         @if($image)
