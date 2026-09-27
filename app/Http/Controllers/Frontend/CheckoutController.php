@@ -209,7 +209,7 @@ class CheckoutController extends Controller
             if ($paymentMethod->code === 'bonus_balance') {
                 $balance = (float) DB::table('customers')->where('id', $customer->id)->value('bonus_balance');
                 if (round($balance, 2) < round($subtotal, 2)) {
-                    return response()->json(['message' => 'Bonus balansınız kifayət etmir.'], 422);
+                    abort(422, 'Bonus balansınız kifayət etmir.');
                 }
                 DB::table('customers')->where('id', $customer->id)->decrement('bonus_balance', $subtotal);
                 $customer->bonusTransactions()->create([
