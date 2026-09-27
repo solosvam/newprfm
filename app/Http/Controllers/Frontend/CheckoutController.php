@@ -3,6 +3,12 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
+use App\Models\Credit\CreditApplication;
+use App\Models\Credit\CreditPeriod;
+use App\Models\Credit\CreditStatus;
+use App\Models\Payment;
+use App\Services\Payment\Birbank;
+use Illuminate\Support\Str;
 use App\Mail\OrderCreatedMail;
 use App\Models\Order\OrderStatus;
 use App\Models\PaymentMethod;
@@ -24,13 +30,17 @@ class CheckoutController extends Controller
             -> latest()
             -> get();
 
-        $paymentMethods = PaymentMethod ::where('active', 1)
+        $paymentMethods = PaymentMethod ::where('active', 1)->where('code', '!=', 'm10')
             -> orderBy('sort_order')
             -> get();
 
+        $creditPeriods = CreditPeriod::where('active', 1)->orderBy('sort_order')->get();
+        $bonusBalance = (float) auth()->user()->bonus_balance;
+        $creditProfileComplete = (bool) auth()->user()->creditProfile?->isComplete();
+
         return view('frontend.checkout', compact(
             'addresses',
-            'paymentMethods'
+            'paymentMethods', 'creditPeriods', 'bonusBalance', 'creditProfileComplete'
         ));
     }
 
@@ -64,6 +74,8 @@ class CheckoutController extends Controller
                     'exists:payment_methods,id',
                 ],
 
+                'credit_period_id' => ['nullable', 'integer', 'exists:credit_periods,id'],
+                'accept_terms' => ['nullable', 'boolean'],
                 'gift_wrap' => ['nullable', 'boolean'],
                 'customer_note' => ['nullable', 'string', 'max:1500'],
             ],
