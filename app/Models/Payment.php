@@ -33,6 +33,11 @@ class Payment extends Model
         return ['amount' => 'decimal:2'];
     }
 
+    public function operations()
+    {
+        return $this->hasMany(PaymentOperation::class);
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
