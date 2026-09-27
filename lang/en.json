@@ -437,5 +437,8 @@
     "catalog_apply": "Apply filters",
     "catalog_search_size": "Search size",
     "credit_application_complete_profile": "Complete your installment profile before submitting an application.",
-    "credit_application_success": "Your installment application has been recorded."
+    "credit_application_success": "Your installment application has been recorded.",
+    "credit_profile_required_title": "Installment payment details",
+    "credit_profile_required_message": "You cannot submit an application because your installment payment details are incomplete. Please complete your details first.",
+    "credit_profile_required_action": "Complete details"
 }
