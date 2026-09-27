@@ -7,7 +7,6 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderStatus;
 use App\Models\PaymentMethod;
 use App\Models\Product\ProductVariant;
-use App\Services\ShopPricing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
@@ -15,7 +14,7 @@ use Illuminate\Support\Str;
 
 class OneClickOrderController extends Controller
 {
-    public function store(Request $request, ShopPricing $pricing)
+    public function store(Request $request)
     {
         $data = $request->validate([
             'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
@@ -35,7 +34,7 @@ class OneClickOrderController extends Controller
             return response()->json(['message' => 'Mobil nömrəni 994XXXXXXXXX formatında daxil edin.'], 422);
         }
 
-        $order = DB::transaction(function () use ($data, $customer, $mobile, $pricing) {
+        $order = DB::transaction(function () use ($data, $mobile) {
             $variant = ProductVariant::with('product')->whereKey($data['variant_id'])
                 ->where('active', 1)->firstOrFail();
             abort_unless($variant->product && (int) $variant->product->active === 1, 404);
@@ -47,7 +46,7 @@ class OneClickOrderController extends Controller
             // Address is deliberately unknown: the operator confirms the delivery fee later.
             $order = Order::create([
                 'order_no' => 'TMP' . Str::random(20),
-                'customer_id' => $customer?->id,
+                'customer_id' => null,
                 'customer_address_id' => null,
                 'guest_mobile' => $mobile,
                 'one_click' => true,
@@ -77,9 +76,7 @@ class OneClickOrderController extends Controller
             return $order;
         });
 
-        $redirect = $customer
-            ? route('checkout.success', $order)
-            : URL::temporarySignedRoute('one-click.success', now()->addMinutes(30), ['order' => $order->id]);
+        $redirect = URL::temporarySignedRoute('one-click.success', now()->addMinutes(30), ['order' => $order->id]);
 
         return response()->json(['ok' => true, 'redirect' => $redirect, 'order_no' => $order->order_no]);
     }
