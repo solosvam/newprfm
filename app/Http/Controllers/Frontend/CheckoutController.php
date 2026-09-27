@@ -14,6 +14,9 @@ use App\Models\Order\OrderStatus;
 use App\Models\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use App\Services\BonusService;
+use App\Services\PromoCodeService;
+use App\Services\ShopPricing;
+use App\Exceptions\PromoCodeException;
 use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -178,8 +181,21 @@ class CheckoutController extends Controller
                 ];
             }
 
+            $subtotal = round($subtotal, 2);
+            $discount = 0;
+            $promo = null;
+            if ($code = session('promo_code')) {
+                try {
+                    ['promo' => $promo, 'discount' => $discount] = app(PromoCodeService::class)->resolve($code, $subtotal, true);
+                } catch (PromoCodeException) {
+                    session()->forget('promo_code');
+                }
+            }
+            $goods = round($subtotal - $discount, 2);
+            $delivery = app(ShopPricing::class)->deliveryFee($goods);
+            $payable = round($goods + $delivery, 2);
             $period = $paymentMethod->code === 'installment' ? CreditPeriod::whereKey($data['credit_period_id'])->where('active', 1)->firstOrFail() : null;
-            $creditTotal = $period ? round($subtotal * (1 + (float) $period->interest_rate / 100), 2) : $subtotal;
+            $creditTotal = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
 
             $orderNo = 'TMP'.Str::random(20);
 
@@ -195,7 +211,9 @@ class CheckoutController extends Controller
                 'gift_wrap' => (bool)($data['gift_wrap'] ?? false),
                 'customer_note' => $data['customer_note'] ?? null,
                 'subtotal' => $subtotal,
-                'discount' => 0,
+                'discount' => $discount,
+                'delivery_fee' => $delivery,
+                'promo_code_id' => $promo?->id,
                 'total' => $creditTotal,
             ]);
 
@@ -206,13 +224,13 @@ class CheckoutController extends Controller
 
             if ($paymentMethod->code === 'bonus_balance') {
                 $balance = (float) DB::table('customers')->where('id', $customer->id)->value('bonus_balance');
-                if (round($balance, 2) < round($subtotal, 2)) {
+                if (round($balance, 2) < round($creditTotal, 2)) {
                     abort(422, 'Bonus balansınız kifayət etmir.');
                 }
-                DB::table('customers')->where('id', $customer->id)->decrement('bonus_balance', $subtotal);
+                DB::table('customers')->where('id', $customer->id)->decrement('bonus_balance', $creditTotal);
                 $customer->bonusTransactions()->create([
                     'order_id' => $order->id, 'type' => 'spend',
-                    'amount' => -$subtotal, 'note' => 'Sifariş bonusla ödənildi',
+                    'amount' => -$creditTotal, 'note' => 'Sifariş bonusla ödənildi',
                 ]);
             }
             if ($paymentMethod->code === 'installment') {
@@ -226,6 +244,12 @@ class CheckoutController extends Controller
             if ($paymentMethod->code === 'cash') {
                 app(BonusService::class)->earnForOrder($customer, $order, (float) $order->total);
             }
+
+            // Onlayn kartda istifadə limiti yalnız bank ödənişi təsdiqləyəndə tutulur.
+            if ($promo && $paymentMethod->code !== 'card_online') {
+                $promo->increment('used_count');
+            }
+            session()->forget('promo_code');
 
             // Status tarixçəsi
             DB ::table('order_status_logs') -> insert([
