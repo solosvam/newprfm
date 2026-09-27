@@ -32,6 +32,7 @@ class OrdersController extends Controller
             'items.product.images',
             'items.variant.size',
             'paymentMethod',
+            'payments' => fn ($query) => $query->latest(),
             'statusLogs.status',
             'address',
         ]);
