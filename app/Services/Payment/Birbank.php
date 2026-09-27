@@ -224,18 +224,8 @@ class Birbank
     }
 
     /**
-     * Capture a card only when the customer has explicitly opted in.
-     * The bank issues the stored token after successful hosted checkout.
+     * Create a hosted payment with explicit card-storage consent.
      */
-    public function createOrderWithCardConsent(Order $order, string $language = 'az'): array
-    {
-        $result = $this->createOrder($order, $language);
-        // Ordinary createOrder intentionally does not request COF capture.
-        // To capture consent, the capture purposes must be included BEFORE
-        // POST /order, so use the dedicated createStoredCardOrder below instead.
-        return $result;
-    }
-
     public function createStoredCardOrder(Order $order, string $language = 'az'): array
     {
         $order->loadMissing('paymentMethod');
@@ -487,7 +477,9 @@ class Birbank
     private function bankPost(string $path, array $data): array
     {
         $response = $this->http()->post($this->endpoint().$path, $data);
-        if (!$response->successful() || $response->json('errorCode')) {
+        if (!$response->successful() || $response->json('errorCode')
+            || ($response->json('tran.pmoResultCode') !== null
+                && (string) $response->json('tran.pmoResultCode') !== '1')) {
             throw new RuntimeException('Birbank operation failed (HTTP '.$response->status().').');
         }
         return $response->json() ?? [];
