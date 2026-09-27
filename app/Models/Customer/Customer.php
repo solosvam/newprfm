@@ -43,6 +43,11 @@ class Customer extends Authenticatable
     public function addresses(){
         return $this->hasMany(CustomerAddress::class);
     }
+    public function payments()
+    {
+        return $this->hasMany(\\App\\Models\\Payment::class);
+    }
+
     public function orders(){
         return $this->hasMany(Order::class);
     }
