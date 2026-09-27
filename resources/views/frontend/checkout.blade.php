@@ -111,7 +111,6 @@
                                     <label class="installment__period">
                                         <input type="radio" name="birbank_installment_months" value="{{ $months }}">
                                         <span class="installment__months">{{ $months }} ay</span>
-                                        <span class="installment__monthly" data-birbank-monthly>—</span>
                                     </label>
                                 @endforeach
                             </div>
