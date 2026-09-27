@@ -1566,6 +1566,20 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
     border-radius: 12px; font-size: 15px; font-weight: 700;
 }
 
+.checkout-terms-notice {
+    margin: 12px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    text-align: center;
+}
+.checkout-terms-notice a {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 /* Promo locked note (partial) */
 .promo__locked {
     margin: 0; padding: 10px 12px;
