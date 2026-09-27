@@ -3,166 +3,27 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Banners;
-use App\Models\Product\Brand;
-use App\Models\Product\Category;
-use App\Models\Product\Gender;
-use App\Models\Product\Type;
 use App\Models\CreditPeriod;
 use App\Models\Faq;
 use App\Models\CreditTerms;
 use App\Models\Product\Product;
-use App\Models\Product\ProductVariant;
-use App\Services\SeoUrl;
+use App\Services\CatalogService;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, CatalogService $catalog)
     {
-        $banners = Banners::where('active', 1)->get();
-        $genders = Gender::all();
-        $types = Type::orderBy('id')->get();
-        $brands = Brand::query()
-            ->where('active', 1)
-            ->withCount([
-                'products as products_count' => fn ($query) => $query->where('active', 1),
-            ])
-            ->having('products_count', '>', 0)
-            ->orderByDesc('products_count')
-            ->orderBy('name')
-            ->limit(12)
-            ->get();
-        $allBrands = Brand::where('active',1)->get();
-
-        $recommendedProducts = Product::with([
-            'brand',
-            'type',
-            'images',
-            'variants' => fn ($query) => $query
-                ->where('active', 1)
-                ->orderBy('price'),
-            'variants.size',
-        ])
-            ->where('active', 1)
-            ->whereHas('variants', fn ($query) => $query->where('active', 1))
-            ->inRandomOrder()
-            ->limit(6)
-            ->get();
-
-        $bestSellers = Product::with([
-            'brand',
-            'type',
-            'images',
-            'variants' => fn ($query) => $query
-                ->where('active', 1)
-                ->orderBy('price'),
-            'variants.size',
-        ])
-            ->where('active', 1)
-            ->whereHas('variants', fn ($query) => $query->where('active', 1))
-            ->inRandomOrder()
-            ->limit(6)
-            ->get();
-
-//        $bestSellers = Product::with([
-//            'brand',
-//            'type',
-//            'images',
-//            'variants' => fn ($query) => $query
-//                ->where('active', 1)
-//                ->orderBy('price'),
-//            'variants.size',
-//        ])
-//            ->where('active', 1)
-//            ->whereHas('variants', fn ($query) => $query->where('active', 1))
-//            ->withSum('orderItems as sold_count', 'quantity')
-//            ->orderByDesc('sold_count')
-//            ->limit(6)
-//            ->get();
-
-        $query = Product::with([
-            'brand',
-            'type',
-            'images',
-            'genders',
-            'variants' => function ($query) {
-                $query
-                    ->where('active', 1)
-                    ->orderBy('price');
-            },
-            'variants.size',
-        ])->where('active', 1);
-
-        if ($request->filled('gender')) {
-            $query->whereHas(
-                'genders',
-                fn ($q) => $q->whereKey($request->integer('gender'))
-            );
-        }
-
-
-        if ($request->filled('min_price') || $request->filled('max_price')) {
-            $min = max(0, (float) $request->input('min_price', 0));
-            $max = (float) $request->input('max_price', 0);
-            $query->whereHas('variants', function ($q) use ($min, $max) {
-                $q->where('active', 1)->where('price', '>=', $min);
-                if ($max > 0) $q->where('price', '<=', $max);
-            });
-        }
-
-        if ($request->filled('type')) {
-            $query->whereHas('type', fn ($q) => $q->where('id', (int) $request->input('type')));
-        }
-
-        switch ($request->get('sort')) {
-            case 'oldest':
-                $query->orderBy('products.id');
-                break;
-
-            case 'price_asc':
-            case 'price_desc':
-                $priceQuery = ProductVariant::query()
-                    ->selectRaw('MIN(price)')
-                    ->whereColumn('product_id', 'products.id')
-                    ->where('active', 1);
-
-                $query->orderBy(
-                    $priceQuery,
-                    $request->get('sort') === 'price_asc' ? 'asc' : 'desc'
-                );
-                break;
-
-            case 'newest':
-            default:
-                $query->orderByDesc('products.id');
-                break;
-        }
-
-
-        $products = $query
+        $query = $catalog->applyFilters($catalog->productQuery(), $request);
+        $products = $catalog->applySort($query, $request->input('sort'))
             ->paginate(12)
             ->withQueryString();
 
-        $formattedBanners = [];
-
-        foreach ($banners as $banner) {
-            $key = $banner->location . $banner->device;
-            $formattedBanners[$key] = ['image' => $banner->imageForLocale(), 'url' => $banner->link_url];
-        }
-
-        return view('frontend.home', [
-            'banners' => $formattedBanners,
-            'products' => $products,
-            'brands' => $brands,
-            'types' => $types,
-            'genders' => $genders,
-            'allBrands' => $allBrands,
-            'bestSellers' => $bestSellers,
-            'recommendedProducts' => $recommendedProducts
-        ]);
+        return view('frontend.home', array_merge(
+            $catalog->catalogData(),
+            ['products' => $products]
+        ));
     }
-
 
     public function product($slug)
     {
@@ -225,14 +86,12 @@ class MainController extends Controller
             fn ($rating) => [$rating => $product->reviews->where('rating', $rating)->count()]
         );
 
-        $categories = Category::where('active', 1)->orderBy('id')->get();
         return view('frontend.product', compact(
             'product',
             'similarProducts',
             'ratingAverage',
             'ratingCounts',
-            'creditPeriods',
-            'categories'
+            'creditPeriods'
         ));
     }
 
