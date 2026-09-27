@@ -21,6 +21,8 @@
         discountRow: $('checkoutDiscountRow'),
         delivery: $('checkoutDelivery'),
         total: $('checkoutTotal'),
+        earnedBonus: $('checkoutEarnedBonus'),
+        earnedBonusText: $('checkoutEarnedBonusText'),
         placeOrder: $('placeOrder'),
         error: $('checkoutError'),
         installment: $('installmentDetails'),
@@ -192,6 +194,7 @@
         // promo.js endirimi 0 edir və yenidən promo-updated göndərir → updateTotals
         window.dispatchEvent(new CustomEvent('parfumshop:promo-lock', { detail: { locked: isInstallment } }));
         updateCredit();
+        updateTotals();
     }
 
     paymentRadios.forEach(radio => radio.addEventListener('change', syncPayment));
@@ -225,6 +228,15 @@
         els.delivery.textContent = fee > 0 ? money(fee) : (t.free || '0.00 ₼');
         els.delivery.classList.toggle('is-free', fee === 0);
         els.total.textContent = money(state.total);
+
+        // Bonus is earned on paid/cash orders, not when paying with existing bonus
+        // or submitting an internal credit application.
+        if (els.earnedBonus && els.earnedBonusText) {
+            const eligible = ![BONUS, INSTALLMENT].includes(selectedCode());
+            const earned = round2(goods * (Number(config.bonusRate) || 0));
+            els.earnedBonus.hidden = !eligible || earned <= 0;
+            els.earnedBonusText.textContent = String(t.earnedBonus || '').replace(':amount', money(earned));
+        }
 
         syncBonus();
         updateCredit();
