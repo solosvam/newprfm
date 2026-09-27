@@ -7,6 +7,7 @@ use App\Models\Order\Order;
 use App\Models\Payment;
 use App\Services\Payment\Birbank;
 use App\Services\BonusService;
+use App\Models\PromoCode;
 use App\Mail\OrderCreatedMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -37,6 +38,7 @@ class BirbankPaymentController extends Controller
             $order = Order::whereKey($payment->order_id)->lockForUpdate()->firstOrFail();
             if ($payment->status === Payment::PAID && $order->payment_status !== 'paid') {
                 $order->update(['payment_status' => 'paid']);
+                if ($order->promo_code_id) PromoCode::whereKey($order->promo_code_id)->increment('used_count');
                 app(BonusService::class)->earnForOrder($order->customer, $order, (float) $order->total);
                 if (filter_var($order->customer->email, FILTER_VALIDATE_EMAIL)) {
                     Mail::to($order->customer->email)->queue(
