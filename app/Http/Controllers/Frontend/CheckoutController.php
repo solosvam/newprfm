@@ -71,6 +71,12 @@ class CheckoutController extends Controller
             LocalizedValidation ::attributes()
         );
 
+        // Installments must go through the credit application and address confirmation flow.
+        $paymentMethod = PaymentMethod::whereKey($data['payment_method_id'])->where('active', 1)->firstOrFail();
+        if ($paymentMethod->code === 'installment') {
+            return response()->json(['message' => __('credit_address_title')], 422);
+        }
+
         $customer = $request -> user();
 
         return DB ::transaction(function() use ($data, $customer) {
