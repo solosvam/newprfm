@@ -155,10 +155,15 @@
 
                                 <p id="creditEstimate" hidden></p>
 
-                                <label class="checkout-check installment__terms">
-                                    <input type="checkbox" id="creditTerms">
-                                    <span>{{ __('checkout_credit_accept_terms') }}</span>
-                                </label>
+                                @php $creditTermsUrl = \App\Models\Setting::valueOf('credit_terms_url', ''); @endphp
+                                <div class="checkout-check installment__terms">
+                                    <input type="checkbox" id="creditTerms" aria-labelledby="creditTermsText">
+                                    @if($creditTermsUrl)
+                                        <a id="creditTermsText" href="{{ $creditTermsUrl }}" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; text-underline-offset: 2px;">{{ __('checkout_credit_accept_terms') }}</a>
+                                    @else
+                                        <label id="creditTermsText" for="creditTerms">{{ __('checkout_credit_accept_terms') }}</label>
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </section>
