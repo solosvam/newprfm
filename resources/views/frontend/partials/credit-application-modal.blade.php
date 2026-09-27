@@ -1,9 +1,9 @@
 @php
     $creditLocale = app()->getLocale();
     $creditCopy = [
-        'az' => ['title'=>'Hissə-hissə ödəniş üçün müraciət', 'subtitle'=>'Ölçünü və ödəniş müddətini seçin.', 'size'=>'Ətrin həcmi', 'period'=>'Kredit müddəti', 'price'=>'Qiymət', 'monthly'=>'Aylıq ödəniş', 'total'=>'Ümumi məbləğ', 'rules'=>'Onlayn hissə-hissə müraciət üçün qaydalar', 'accept'=>'Şərtlər və qaydalarla tanış oldum və qəbul edirəm', 'submit'=>'Müraciət et', 'close'=>'Bağla', 'success'=>'Müraciətiniz qəbul edildi.', 'error'=>'Müraciət göndərilmədi. Yenidən cəhd edin.', 'month'=>'ay'],
-        'ru' => ['title'=>'Заявка на рассрочку', 'subtitle'=>'Выберите объём и срок оплаты.', 'size'=>'Объём', 'period'=>'Срок рассрочки', 'price'=>'Цена', 'monthly'=>'Ежемесячный платёж', 'total'=>'Общая сумма', 'rules'=>'Условия онлайн-рассрочки', 'accept'=>'Я ознакомился(-ась) и согласен(-на) с условиями', 'submit'=>'Отправить заявку', 'close'=>'Закрыть', 'success'=>'Ваша заявка принята.', 'error'=>'Не удалось отправить заявку.', 'month'=>'мес.'],
-        'en' => ['title'=>'Installment application', 'subtitle'=>'Select a size and payment term.', 'size'=>'Fragrance size', 'period'=>'Payment term', 'price'=>'Price', 'monthly'=>'Monthly payment', 'total'=>'Total', 'rules'=>'Online installment terms and conditions', 'accept'=>'I have read and accept the terms and conditions', 'submit'=>'Submit application', 'close'=>'Close', 'success'=>'Your application has been received.', 'error'=>'Unable to submit your application.', 'month'=>'months'],
+        'az' => ['title'=>'Hissə-hissə ödəniş üçün müraciət', 'subtitle'=>'Ölçünü və ödəniş müddətini seçin.', 'size'=>'Ətrin həcmi', 'period'=>'Kredit müddəti', 'price'=>'Qiymət', 'monthly'=>'Aylıq ödəniş', 'total'=>'Ümumi məbləğ', 'rules'=>'Onlayn hissə-hissə müraciət üçün qaydalar', 'accept'=>'Şərtlər və qaydalarla tanış oldum və qəbul edirəm', 'submit'=>'Müraciət et', 'close'=>'Bağla', 'success'=>'Müraciətiniz qəbul edildi.', 'error'=>'Müraciət göndərilmədi. Yenidən cəhd edin.', 'month'=>'ay', 'free'=>'Faizsiz'],
+        'ru' => ['title'=>'Заявка на рассрочку', 'subtitle'=>'Выберите объём и срок оплаты.', 'size'=>'Объём', 'period'=>'Срок рассрочки', 'price'=>'Цена', 'monthly'=>'Ежемесячный платёж', 'total'=>'Общая сумма', 'rules'=>'Условия онлайн-рассрочки', 'accept'=>'Я ознакомился(-ась) и согласен(-на) с условиями', 'submit'=>'Отправить заявку', 'close'=>'Закрыть', 'success'=>'Ваша заявка принята.', 'error'=>'Не удалось отправить заявку.', 'month'=>'мес.', 'free'=>'Без процентов'],
+        'en' => ['title'=>'Installment application', 'subtitle'=>'Select a size and payment term.', 'size'=>'Fragrance size', 'period'=>'Payment term', 'price'=>'Price', 'monthly'=>'Monthly payment', 'total'=>'Total', 'rules'=>'Online installment terms and conditions', 'accept'=>'I have read and accept the terms and conditions', 'submit'=>'Submit application', 'close'=>'Close', 'success'=>'Your application has been received.', 'error'=>'Unable to submit your application.', 'month'=>'months', 'free'=>'Interest-free'],
     ][$creditLocale] ?? null;
     $creditErrorMessage = $creditCopy['error'];
     $creditSuccessMessage = $creditCopy['success'];
@@ -21,24 +21,26 @@
         <form id="creditApplicationForm" action="{{ route('credit.application.store') }}" method="POST">
             @csrf
             <div class="credit-modal-field">
-                <label for="creditVariant">{{ $creditCopy['size'] }}</label>
-                <select id="creditVariant" name="product_variant_id" required>
+                <label>{{ $creditCopy['size'] }}</label>
+                <div class="credit-modal-options" id="creditVariantOptions">
                     @foreach($variants as $variant)
-                        <option value="{{ $variant->id }}" data-price="{{ $variant->price }}">
-                            {{ $variant->size?->{'name_'.$creditLocale} ?: ($variant->size?->name_az ?: $variant->id) }}
-                        </option>
+                        <label class="credit-modal-pill">
+                            <input type="radio" name="product_variant_id" value="{{ $variant->id }}" data-price="{{ $variant->price }}" @checked($loop->first) required>
+                            <span>{{ $variant->size?->{'name_'.$creditLocale} ?: ($variant->size?->name_az ?: $variant->id) }}</span>
+                        </label>
                     @endforeach
-                </select>
+                </div>
             </div>
             <div class="credit-modal-field">
-                <label for="creditPeriod">{{ $creditCopy['period'] }}</label>
-                <select id="creditPeriod" name="credit_period_id" required>
+                <label>{{ $creditCopy['period'] }}</label>
+                <div class="credit-modal-options" id="creditPeriodOptions">
                     @foreach($creditPeriods as $period)
-                        <option value="{{ $period->id }}" data-months="{{ $period->month }}" data-rate="{{ $period->interest_rate }}">
-                            {{ $period->month }} {{ $creditCopy['month'] }}{{ (float)$period->interest_rate === 0.0 ? ' · 0%' : ' · '.$period->interest_rate.'%' }}
-                        </option>
+                        <label class="credit-modal-pill">
+                            <input type="radio" name="credit_period_id" value="{{ $period->id }}" data-months="{{ $period->month }}" data-rate="{{ $period->interest_rate }}" @checked($loop->first) required>
+                            <span>{{ $period->month }} {{ $creditCopy['month'] }}{{ (float)$period->interest_rate === 0.0 ? ' · '.$creditCopy['free'] : '' }}</span>
+                        </label>
                     @endforeach
-                </select>
+                </div>
             </div>
             <div class="credit-modal-summary">
                 <div><span>{{ $creditCopy['price'] }}</span><strong id="creditPrice">—</strong></div>
@@ -55,15 +57,9 @@
         <aside class="credit-modal-rules">
             <h3>{{ $creditCopy['rules'] }}</h3>
             @forelse($creditTermItems as $item)
-                @php
-                    $title = $item->{'title_'.$creditLocale} ?: $item->title_az;
-                    $content = $item->{'content_'.$creditLocale} ?: $item->content_az;
-                @endphp
-                @if($title || $content)
-                    <details class="credit-rule" @if($loop->first) open @endif>
-                        <summary>{{ $title ?: $creditCopy['rules'] }}</summary>
-                        <div>{{ $content }}</div>
-                    </details>
+                @php $rule = $item->{'content_'.$creditLocale} ?: $item->content_az; @endphp
+                @if($rule)
+                    <p class="credit-rule-text"><strong>{{ $loop->iteration }}.</strong> {{ $rule }}</p>
                 @endif
             @empty
                 <p>—</p>
@@ -80,14 +76,18 @@
 .credit-modal-close {background:transparent;border:0;font-size:32px;line-height:1;cursor:pointer;color:inherit}
 .credit-modal-layout {display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:26px;padding:28px 30px}
 .credit-modal-field {margin-bottom:20px}.credit-modal-field label {display:block;font-weight:600;margin-bottom:9px}
-.credit-modal-field select {width:100%;padding:13px;border:1px solid #dcd5e6;border-radius:9px;background:var(--surface,#fff);color:inherit;font:inherit}
+.credit-modal-options{display:flex;flex-wrap:wrap;gap:10px}
+.credit-modal-pill{position:relative;cursor:pointer;margin:0!important}
+.credit-modal-pill input{position:absolute;opacity:0;width:1px;height:1px}
+.credit-modal-pill span{display:block;border:1px solid #dcd5e6;border-radius:10px;padding:12px 17px;background:var(--surface,#fff);color:inherit;transition:background .15s,border-color .15s}
+.credit-modal-pill input:checked+span{border-color:#30214f;background:#f2edf9;color:#30214f;font-weight:700}
+.credit-modal-pill input:focus-visible+span{outline:2px solid #30214f;outline-offset:3px}
 .credit-modal-summary {background:rgba(143,113,178,.09);border-radius:12px;padding:16px;margin:22px 0}
 .credit-modal-summary div {display:flex;justify-content:space-between;gap:12px;padding:9px 0}.credit-modal-summary div+div {border-top:1px solid #ded6e6}
 .credit-modal-accept {display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;cursor:pointer}.credit-modal-accept input {margin-top:4px}
 .credit-modal-submit {width:100%;margin-top:20px}.credit-modal-message {font-size:14px;margin:14px 0 0}
 .credit-modal-rules {background:rgba(143,113,178,.07);border-radius:12px;padding:20px;align-self:start;max-height:540px;overflow:auto}
-.credit-modal-rules h3 {font-size:17px;margin:0 0 18px}.credit-rule {border-top:1px solid #ddd4e5;padding:13px 0}
-.credit-rule summary {font-weight:600;cursor:pointer;line-height:1.45}.credit-rule div {padding-top:10px;line-height:1.65;white-space:pre-line;font-size:14px}
+.credit-modal-rules h3 {font-size:17px;margin:0 0 18px}.credit-rule-text{border-top:1px solid #ddd4e5;padding:13px 0;margin:0;line-height:1.65;white-space:pre-line;font-size:14px}
 @media(max-width:720px){.credit-modal-layout{grid-template-columns:1fr;padding:20px}.credit-modal-head{padding:20px}.credit-modal-rules{max-height:none}}
 </style>
 
@@ -95,30 +95,30 @@
 document.addEventListener('DOMContentLoaded', function () {
     const dialog = document.getElementById('creditApplicationDialog');
     const form = document.getElementById('creditApplicationForm');
-    const variant = document.getElementById('creditVariant');
-    const period = document.getElementById('creditPeriod');
+    const variantOptions = document.getElementById('creditVariantOptions');
+    const periodOptions = document.getElementById('creditPeriodOptions');
     const message = document.getElementById('creditApplicationMessage');
     const submit = form.querySelector('[type=submit]');
     const currency = new Intl.NumberFormat(document.documentElement.lang || 'az', {minimumFractionDigits:2,maximumFractionDigits:2});
     const format = value => currency.format(value) + ' ₼';
     function calculate() {
-        const price = Number(variant.selectedOptions[0]?.dataset.price || 0);
-        const rate = Number(period.selectedOptions[0]?.dataset.rate || 0);
-        const months = Number(period.selectedOptions[0]?.dataset.months || 1);
+        const price = Number(variantOptions.querySelector('input:checked')?.dataset.price || 0);
+        const rate = Number(periodOptions.querySelector('input:checked')?.dataset.rate || 0);
+        const months = Number(periodOptions.querySelector('input:checked')?.dataset.months || 1);
         const total = Math.round(price * (1 + rate / 100) * 100) / 100;
         document.getElementById('creditPrice').textContent = format(price);
         document.getElementById('creditMonthly').textContent = format(total / months);
         document.getElementById('creditTotal').textContent = format(total);
     }
-    variant.addEventListener('change', calculate);
-    period.addEventListener('change', calculate);
+    variantOptions.addEventListener('change', calculate);
+    periodOptions.addEventListener('change', calculate);
     document.querySelectorAll('[data-credit-apply]').forEach(button => button.addEventListener('click', function () {
         const selectedVariant = document.querySelector('[data-buybox] .size-pill.active-size-amount');
         const selectedPeriod = document.querySelector('[data-installment] input[name=installment]:checked');
-        if (selectedVariant) variant.value = selectedVariant.dataset.variantId;
+        if (selectedVariant) { const radio = variantOptions.querySelector('input[value="' + selectedVariant.dataset.variantId + '"]'); if (radio) radio.checked = true; }
         if (selectedPeriod) {
-            const option = [...period.options].find(option => Number(option.dataset.months) === Number(selectedPeriod.value));
-            if (option) period.value = option.value;
+            const radio = [...periodOptions.querySelectorAll('input')].find(input => Number(input.dataset.months) === Number(selectedPeriod.value));
+            if (radio) radio.checked = true;
         }
         message.textContent = '';
         calculate();
