@@ -7,6 +7,7 @@
             'bonusBalance'      => __('checkout_bonus_balance'),
             'bonusInsufficient' => __('checkout_bonus_insufficient'),
             'perMonth'          => __('checkout_credit_per_month'),
+            'earnedBonus'       => __('cart_bonus_hint'),
             'errPayment'        => __('checkout_select_payment_error'),
             'errProfile'        => __('credit_application_complete_profile'),
             'errPeriod'         => __('checkout_credit_select_period_error'),
@@ -202,6 +203,11 @@
                         <strong id="checkoutTotal">0.00 ₼</strong>
                     </div>
 
+                    <p id="checkoutEarnedBonus" class="cart-bonus" hidden>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
+                        <span id="checkoutEarnedBonusText"></span>
+                    </p>
+
                     <button id="placeOrder" type="button" class="btn btn-dark checkout-submit">{{ __('checkout_confirm_order') }}</button>
 
                     @php $orderTermsUrl = \App\Models\Setting::valueOf('order_terms_url', ''); @endphp
@@ -236,6 +242,7 @@
             cartUrl: @json(route('cart')),
             csrf: @json(csrf_token()),
             bonusBalance: @json($bonusBalance),
+            bonusRate: @json(app(\\App\\Services\\ShopPricing::class)->bonusRate()),
             delivery: @json(app(\App\Services\ShopPricing::class)->delivery()),
             creditProfileComplete: @json($creditProfileComplete),
             messages: {
