@@ -13,6 +13,10 @@
                     <p class="auth-subtext">{{ session('success') }}</p>
                 @endif
 
+                @if($errors->has('otp'))
+                    <p class="auth-error">{{ $errors->first('otp') }}</p>
+                @endif
+
                 <form method="POST" action="{{ route('front.register.verify.store') }}" class="auth-form">
                     @csrf
                     <div class="form-field">
