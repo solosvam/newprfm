@@ -76,6 +76,26 @@
                                 </div>
                             </div>
 
+                            <div class="row g-3 mt-1">
+                                <div class="col-sm-6">
+                                    <label for="gift_wrap_mode" class="form-label">Hədiyyəlik bükülmə</label>
+                                    <select id="gift_wrap_mode" name="gift_wrap_mode" class="form-select">
+                                        <option value="free" @selected(old('gift_wrap_mode', $giftWrapMode) === 'free')>Pulsuz</option>
+                                        <option value="paid" @selected(old('gift_wrap_mode', $giftWrapMode) === 'paid')>Pullu</option>
+                                    </select>
+                                </div>
+                                <div id="giftWrapFeeField" class="col-sm-6 {{ old('gift_wrap_mode', $giftWrapMode) === 'paid' ? '' : 'd-none' }}">
+                                    <label for="gift_wrap_fee" class="form-label">Bükülmə haqqı</label>
+                                    <div class="input-group has-validation">
+                                        <input id="gift_wrap_fee" name="gift_wrap_fee" type="number" min="0" step="0.01"
+                                               value="{{ old('gift_wrap_fee', $giftWrapFee) }}"
+                                               @class(['form-control', 'is-invalid' => $errors->has('gift_wrap_fee')])>
+                                        <span class="input-group-text">₼</span>
+                                        @error('gift_wrap_fee')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="mt-3">
                                 <label for="order_terms_url" class="form-label">Sifariş şərtlərinin URL-i</label>
                                 <input id="order_terms_url" name="order_terms_url" type="url" maxlength="2048"
@@ -174,6 +194,18 @@
                 thresholdInput.disabled = !isThreshold;
                 thresholdInput.required = isThreshold;
             }
+
+            const giftMode = document.getElementById('gift_wrap_mode');
+            const giftFeeField = document.getElementById('giftWrapFeeField');
+            const giftFeeInput = document.getElementById('gift_wrap_fee');
+            function syncGiftWrapFields() {
+                const paid = giftMode.value === 'paid';
+                giftFeeField.classList.toggle('d-none', !paid);
+                giftFeeInput.disabled = !paid;
+                giftFeeInput.required = paid;
+            }
+            giftMode.addEventListener('change', syncGiftWrapFields);
+            syncGiftWrapFields();
 
             mode.addEventListener('change', syncDeliveryFields);
             syncDeliveryFields();
