@@ -3,6 +3,7 @@
 namespace App\Models\Customer;
 
 use App\Models\Order\Order;
+use App\Models\Payment;
 use App\Models\Product\Product;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -45,7 +46,7 @@ class Customer extends Authenticatable
     }
     public function payments()
     {
-        return $this->hasMany(\\App\\Models\\Payment::class);
+        return $this->hasMany(Payment::class);
     }
 
     public function orders(){
