@@ -199,7 +199,8 @@ class CheckoutController extends Controller
             }
             $goods = round($subtotal - $discount, 2);
             $delivery = app(ShopPricing::class)->deliveryFee($goods);
-            $payable = round($goods + $delivery, 2);
+            $giftWrapFee = app(ShopPricing::class)->giftWrapFee((bool)($data['gift_wrap'] ?? false));
+            $payable = round($goods + $delivery + $giftWrapFee, 2);
             $period = $paymentMethod->code === 'installment' ? CreditPeriod::whereKey($data['credit_period_id'])->where('active', 1)->firstOrFail() : null;
             $creditTotal = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
 
@@ -221,6 +222,7 @@ class CheckoutController extends Controller
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'delivery_fee' => $delivery,
+                'gift_wrap_fee' => $giftWrapFee,
                 'promo_code_id' => $promo?->id,
                 'total' => $creditTotal,
             ]);
