@@ -41,7 +41,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
         $firstPeriod = $creditPeriods->first();
     @endphp
 
-    <p class="crumb"><a href="{{ route('home') }}">Ana səhifə</a> / <a href="#">{{ $product->brand?->name }}</a> / {{ $product->name }}</p>
+    <p class="crumb"><a href="{{ route('home') }}">{{ __('product_home') }}</a> / <a href="#">{{ $product->brand?->name }}</a> / {{ $product->name }}</p>
 
     <div class="product-top">
         <div class="product-header">
@@ -64,10 +64,10 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             @endif
 
             <div class="thumb-actions">
-                <button type="button" class="icon-btn fav-btn" data-product-id="{{ $product->id }}" aria-label="Seçilmişlərə əlavə et">
+                <button type="button" class="icon-btn fav-btn" data-product-id="{{ $product->id }}" aria-label="{{ __('common_favorite') }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
                 </button>
-                <button type="button" class="icon-btn share-btn" data-url="{{ route('product', $product->slug) }}" data-title="{{ $product->name }}" aria-label="Paylaş">
+                <button type="button" class="icon-btn share-btn" data-url="{{ route('product', $product->slug) }}" data-title="{{ $product->name }}" aria-label="{{ __('common_share') }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
                 </button>
             </div>
@@ -78,7 +78,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                 @for($star = 1; $star <= 5; $star++)
                     <span>{{ $star <= round($ratingAverage) ? '★' : '☆' }}</span>
                 @endfor
-                <span style="color:var(--text-muted);font-size:12px;">({{ $product->reviews->count() }} rəy)</span>
+                <span style="color:var(--text-muted);font-size:12px;">({{ $product->reviews->count() }} {{ __('review_count') }})</span>
             </div>
 
             <div class="price-qty-row">
@@ -101,24 +101,24 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                 @endforeach
             </div>
 
-            <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>Səbətə əlavə et</button>
-            <a class="btn btn-outline" href="{{ auth()->check() ? route('checkout') : route('front.login', ['redirect' => route('checkout')]) }}">Sifarişi rəsmiləşdir</a>
+            <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>{{ __('product_add_to_cart') }}</button>
+            <a class="btn btn-outline" href="{{ auth()->check() ? route('checkout') : route('front.login', ['redirect' => route('checkout')]) }}">{{ __('product_checkout') }}</a>
         </div>
 
         <div class="installment-full" data-installment>
             <div class="installment-hero">
-                <img src="{{ asset('frontend/images/birbank-card.png') }}" alt="Birbank taksit kartı">
+                <img src="{{ asset('frontend/images/birbank-card.png') }}" alt="{{ __('product_card') }}">
                 <div>
                     <p class="headline" data-installment-headline>
                         {{ number_format($initialPrice / 6, 2) }} ₼ x 6 ay
                     </p>
-                    <p class="sub">Birbank taksit kartı ilə aktiv kredit müddətlərindən birini seçərək ödə!</p>
+                    <p class="sub">{{ __('product_card_info') }}</p>
                 </div>
             </div>
 
             <table class="installment-table">
                 <thead>
-                <tr><th></th><th>Müddət</th><th>Ayda</th><th>Qiymət</th></tr>
+                <tr><th></th><th>{{ __('product_duration') }}</th><th>{{ __('product_monthly') }}</th><th>{{ __('product_price') }}</th></tr>
                 </thead>
                 <tbody>
                 @foreach ($creditPeriods as $period)
@@ -138,7 +138,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                                 {{ $loop->first ? 'checked' : '' }}
                             >
                         </td>
-                        <td>{{ $period->month }} ay{{ $rate == 0 ? ' Faizsiz' : '' }}</td>
+                        <td>{{ $period->month }} {{ __('product_month') }}{{ $rate == 0 ? ' ' . __('product_interest_free') : '' }}</td>
                         <td data-installment-monthly>{{ number_format($installmentMonthly, 2) }} ₼</td>
                         <td data-installment-total>{{ number_format($installmentTotal, 2) }} ₼</td>
                     </tr>
@@ -146,16 +146,16 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                 </tbody>
             </table>
 
-            <a class="btn btn-dark" href="{{ auth()->check() ? route('profile.credit') : route('front.login', ['redirect' => route('profile.credit')]) }}">Müraciət et</a>
+            <a class="btn btn-dark" href="{{ auth()->check() ? route('profile.credit') : route('front.login', ['redirect' => route('profile.credit')]) }}">{{ __('product_apply') }}</a>
         </div>
 
     </div>
 
     <div class="tabs" data-tabs @if(session('review_success') || $errors->has('rating') || $errors->has('comment')) data-show-reviews @endif>
         <div class="tab-list">
-            <button type="button" class="tab-btn active" data-tab="about">Ətir haqqında</button>
+            <button type="button" class="tab-btn active" data-tab="about">{{ __('product_about_the_perfume') }}</button>
             <button type="button" class="tab-btn" data-tab="reviews">
-                Rəylər <span class="tab-count">{{ $product->reviews->count() }}</span>
+                {{ __('product_reviews') }} <span class="tab-count">{{ $product->reviews->count() }}</span>
             </button>
         </div>
 
@@ -169,11 +169,11 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             @if($description)
                 <div class="product-description">{!! nl2br(e($description)) !!}</div>
             @else
-                <p>Bu ətir haqqında təsvir hələ əlavə edilməyib.</p>
+                <p>{{ __('product_description_empty') }}</p>
             @endif
             @if($ingredientNames->isNotEmpty())
                 <div class="notes">
-                    <div><p class="k">Ətir notları</p><p class="v">{{ $ingredientNames->join(', ') }}</p></div>
+                    <div><p class="k">{{ __('product_notes') }}</p><p class="v">{{ $ingredientNames->join(', ') }}</p></div>
                 </div>
             @endif
         </div>
@@ -184,7 +184,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
     </div>
 
     <div class="section-head" style="margin-top:40px;">
-        <h2>Bənzər məhsullar</h2>
+        <h2>{{ __('product_similar') }}</h2>
     </div>
     <div class="grid similar-products">
         @foreach ($similarProducts ?? [] as $item)
@@ -195,7 +195,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                             type="button"
                             class="icon-btn fav-btn"
                             data-product-id="{{ $product->id }}"
-                            aria-label="Seçilmişlərə əlavə et"
+                            aria-label="{{ __('common_favorite') }}"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
                         </button>
@@ -205,7 +205,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                             class="icon-btn share-btn"
                             data-url="{{ route('product', $product->slug) }}"
                             data-title="{{ $product->name }}"
-                            aria-label="Paylaş"
+                            aria-label="{{ __('common_share') }}"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
                         </button>
