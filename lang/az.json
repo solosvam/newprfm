@@ -426,7 +426,7 @@
     "promo_expired": "Promo kodun müddəti bitib",
     "promo_limit_reached": "Promo kodun istifadə limiti dolub",
     "promo_min_amount": "Bu kod minimum :amount sifariş üçün keçərlidir",
-    "checkout_payment_hint_cash": "Kuryerə nağd və ya kartla",
+    "checkout_payment_hint_cash": "Nağd və ya kart",
     "checkout_payment_hint_card": "Visa, Mastercard",
     "checkout_payment_hint_installment": "Aylıq ödənişlə",
     "checkout_bonus_balance": "Balans: :amount",
