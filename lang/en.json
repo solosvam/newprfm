@@ -329,7 +329,7 @@
     "product_enter_your_mobile_number": "Enter your mobile number",
     "catalog_filter": "Filter",
     "catalog_price_range": "Price range",
-    "catalog_perfume_type": "Perfume type",
+    "catalog_perfume_type": "Fragrance type",
     "catalog_bottle_size": "Bottle size",
     "catalog_fragrance_family": "Fragrance family",
     "catalog_search": "Search",
@@ -426,5 +426,13 @@
     "nav_search_label": "Search products",
     "profile_gender": "Gender",
     "profile_male": "Male",
-    "profile_female": "Female"
+    "profile_female": "Female",
+    "catalog_filter_title": "Filter",
+    "catalog_gender": "Gender",
+    "catalog_volume": "Volume",
+    "catalog_volume_hint": "Choose a fragrance volume range.",
+    "catalog_scent_family": "Fragrance family",
+    "catalog_all_scent_families": "All fragrance families",
+    "catalog_clear": "Clear",
+    "catalog_apply": "Apply filters"
 }
