@@ -22,15 +22,4 @@ class MainController extends Controller
             ['products' => $products]
         ));
     }
-
-    public function credit()
-    {
-        $faqs = Faq::all();
-        $creditTerms = CreditTerms::first();
-
-        return view('frontend.internal-credit', [
-            'faqs' => $faqs,
-            'creditTerms' => $creditTerms,
-        ]);
-    }
 }

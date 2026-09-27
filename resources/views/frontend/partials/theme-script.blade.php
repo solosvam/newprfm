@@ -13,7 +13,7 @@
     $(document).ready(function () {
         if ($.fn.select2) {
             $('.select2').select2({
-                placeholder: 'Brend seçin',
+                placeholder: @json(__('home_select_brand')),
                 width: '100%'
             });
         }

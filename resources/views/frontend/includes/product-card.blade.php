@@ -58,5 +58,19 @@
                             @endif
                         </p>
                         <p class="pname">{{ $product->name }}</p>
-                        <p class="price">@if($firstVariant){{ $firstVariant->size?->{'name_' . $locale} ?? $firstVariant->size?->name_az }} / {{ number_format((float) $firstVariant->price, 2) }} ₼@endif</p>
+
+                        <div class="price-wrap">
+                            <p class="price">@if($firstVariant){{ $firstVariant->size?->{'name_' . $locale} ?? $firstVariant->size?->name_az }} / {{ number_format((float) $firstVariant->price, 2) }} ₼@endif</p>
+
+                            @if($variants->count() > 1)
+                                <div class="price-all">
+                                    @foreach($variants as $variant)
+                                        <div class="price-all__row">
+                                            <span>{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
+                                            <strong>{{ number_format((float) $variant->price, 2) }} ₼</strong>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
                     </div>
