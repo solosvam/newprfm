@@ -15,7 +15,11 @@
 <meta property="og:image:alt" content="@yield('og_title', 'Parfumshop.az')">
 <meta name="twitter:image" content="@yield('og_image')">
 @endif
-<meta name="twitter:card" content="@hasSection('og_image')summary_large_image@else summary@endif">
+@hasSection('og_image')
+<meta name="twitter:card" content="summary_large_image">
+@else
+<meta name="twitter:card" content="summary">
+@endif
 <meta name="twitter:title" content="@yield('og_title', 'Parfumshop.az | Ətirlər')">
 <meta name="twitter:description" content="@yield('meta_description', 'Parfumshop.az — ətirlər və parfümeriya')">
 @yield('structured_data')
