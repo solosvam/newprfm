@@ -15,10 +15,22 @@ html, body { overflow-x: hidden; }
    HEADER — mobile wrap (icons/search stacking)
    ========================================================= */
 @media (max-width: 760px) {
-    .header-row { flex-wrap: wrap; gap: 12px; margin-top: 15px}
+    .header-row { flex-wrap: wrap; gap: 12px; margin-top: 15px; }
     .header-row .search { order: 3; flex-basis: 100%; }
     .header-profile span { display: none; }
     .icons { margin-left: auto; }
+
+    /* Axtarış dropdown-u indi header-in axtarış qutusuna nisbətən mövqelənir
+       (fixed deyil), beləcə həmişə input-un tam altına düşür, ekran
+       yuxarısına "atlamır". */
+    .search { position: relative; }
+    .search-results {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        max-height: 60vh;
+    }
 }
 
 /* =========================================================
@@ -28,6 +40,33 @@ html, body { overflow-x: hidden; }
     .layout { grid-template-columns: 1fr; }
     .filters { position: static; display: flex; gap: 16px; overflow-x: auto; padding-bottom: 4px; }
     .filter-group { flex-shrink: 0; min-width: 160px; border-bottom: none; }
+
+    .sidebar-stack { flex-direction: row; flex-wrap: wrap; }
+    .sidebar-stack .brand-select { flex-shrink: 0; width: auto; }
+    .sidebar-stack .filter-card { flex: 1; min-width: 260px; }
+
+    .side-panel__toggle { cursor: pointer; }
+    .side-panel__chevron { display: block; }
+
+    [data-collapsible-panel] .side-panel__body { display: none; }
+    [data-collapsible-panel].is-open .side-panel__body { display: flex; }
+
+    .side-panel.filter-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        border-radius: 14px;
+    }
+    .side-panel.filter-card .side-panel__toggle {
+        padding: 0;
+    }
+    .side-panel.filter-card .side-panel__toggle h3 {
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: none;
+        letter-spacing: normal;
+        color: var(--text);
+    }
 }
 
 @media (max-width: 720px) {
@@ -135,15 +174,6 @@ html, body { overflow-x: hidden; }
         align-items: flex-start;
         gap: 10px;
     }
-    .search-results {
-        position: fixed;
-        top: auto;
-        left: 12px;
-        right: 12px;
-        max-height: 60vh;
-    }
-
-
 }
 
 /* =========================================================
@@ -175,45 +205,9 @@ html, body { overflow-x: hidden; }
     }
 }
 
-@media (max-width: 1024px) {
-    .sidebar-stack { flex-direction: row; flex-wrap: wrap; }
-    .sidebar-stack .brand-select { flex-shrink: 0; width: auto; }
-    .sidebar-stack .filter-card { flex: 1; min-width: 260px; }
-}
-
-@media (max-width: 1024px) {
-    .side-panel__toggle { cursor: pointer; }
-    .side-panel__chevron { display: block; }
-
-    [data-collapsible-panel] .side-panel__body { display: none; }
-    [data-collapsible-panel].is-open .side-panel__body { display: flex; }
-}
-
-@media (max-width: 1024px) {
-    .side-panel__toggle { cursor: pointer; }
-    .side-panel__chevron { display: block; }
-
-    [data-collapsible-panel] .side-panel__body { display: none; }
-    [data-collapsible-panel].is-open .side-panel__body { display: flex; }
-
-    .side-panel.filter-card {
-        padding: 18px;
-        border: 1px solid var(--border);
-        background: var(--bg);
-        border-radius: 14px;
-    }
-    .side-panel.filter-card .side-panel__toggle {
-        padding: 0;
-    }
-    .side-panel.filter-card .side-panel__toggle h3 {
-        font-size: 15px;
-        font-weight: 700;
-        text-transform: none;
-        letter-spacing: normal;
-        color: var(--text);
-    }
-}
-
+/* =========================================================
+   CART PAGE
+   ========================================================= */
 @media (max-width: 900px) {
     .cart-layout { grid-template-columns: 1fr; }
     .cart-summary { position: static; }
@@ -237,6 +231,9 @@ html, body { overflow-x: hidden; }
     .cart-checkout-button { margin-top: 20px; }
 }
 
+/* =========================================================
+   CHECKOUT PAGE
+   ========================================================= */
 @media (max-width: 900px) {
     .checkout-grid { grid-template-columns: 1fr; }
 }
@@ -244,14 +241,31 @@ html, body { overflow-x: hidden; }
 @media (max-width: 600px) {
     .checkout-fields { grid-template-columns: 1fr; }
 }
+
+/* =========================================================
+   ORDER DETAIL
+   ========================================================= */
 @media (max-width: 800px) {
     .order-info-grid { grid-template-columns: 1fr; }
     .order-table { font-size: 13px; }
     .order-table th, .order-table td { padding: 10px 12px; }
     .order-product__image { width: 44px; height: 52px; }
 }
+
+/* =========================================================
+   ERROR PAGE (404)
+   ========================================================= */
 @media (max-width: 600px) {
     .error-page { margin: 32px auto; padding: 36px 22px; }
     .error-page__actions { flex-direction: column; }
     .error-page__code { font-size: 52px; }
+}
+
+/* =========================================================
+   HERO BANNER — mobile image swap
+   ========================================================= */
+@media (max-width: 760px) {
+    .hero-banner__desktop { display: none !important; }
+    .hero-banner__mobile,
+    .hero-banner__link--mobile { display: block !important; }
 }
