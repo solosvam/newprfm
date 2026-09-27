@@ -7,7 +7,7 @@ $(function () {
     const changeLabel = form.data('change-label');
     const genericError = form.data('error-message');
 
-    // Şəkil route-u 404 qaytararsa, boş/broken preview göstərmə.
+    // Şəkil faylı açıla bilmirsə, boş preview göstər.
     form.find('.credit-preview').on('error', function () {
         const card = $(this).closest('.credit-photo');
         $(this).prop('hidden', true);
