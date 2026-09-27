@@ -1,11 +1,11 @@
 <form class="filter-card" method="GET" action="{{ url()->current() }}">
     <button type="button" class="filter-card__head" data-filter-toggle aria-expanded="false" aria-controls="filterBody">
-        <h3>Filter</h3>
+        <h3>{{ __('catalog_filter_title') }}</h3>
         <svg class="filter-card__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </button>
     <div class="filter-card__body" id="filterBody" hidden>
         <div class="filter-section">
-            <p class="filter-section__label">Qiymət aralığı</p>
+            <p class="filter-section__label">{{ __('catalog_price_range') }}</p>
 
             <div class="price-slider" data-price-slider data-min="0" data-max="2400" data-step="10">
                 <div class="price-slider__track">
@@ -28,7 +28,7 @@
 
         @if(isset($genders) && $genders->count())
             <div class="filter-section">
-                <p class="filter-section__label">Cinsiyyət</p>
+                <p class="filter-section__label">{{ __('catalog_gender') }}</p>
                 <div class="filter-pills">
                     @foreach($genders as $gender)
                         <label class="filter-pill">
@@ -41,7 +41,7 @@
         @endif
 
         <div class="filter-section">
-            <p class="filter-section__label">Ətrin növü</p>
+            <p class="filter-section__label">{{ __('catalog_perfume_type') }}</p>
             @foreach($types as $type)
                 <label class="filter-radio-row">
                     <input type="radio" name="type" value="{{ $type->id }}" @checked((int)request('type') === $type->id)>
@@ -52,7 +52,7 @@
 
         @if(isset($volumeRanges))
             <div class="filter-section">
-                <p class="filter-section__label">Ətrin həcmi</p>
+                <p class="filter-section__label">{{ __('catalog_volume') }}</p>
                 <div class="filter-volume-grid">
                     @foreach($volumeRanges as $range)
                         <label class="filter-radio-row">
@@ -61,13 +61,13 @@
                         </label>
                     @endforeach
                 </div>
-                <p class="filter-hint">Burada bütün ölçülər deyil, ölçü aralıqlarını göstərmək kifayətdir.</p>
+                <p class="filter-hint">{{ __('catalog_volume_hint') }}</p>
             </div>
         @endif
 
         @if(isset($scentFamilies) && $scentFamilies->count())
             <div class="filter-section">
-                <p class="filter-section__label">Qoxu ailəsi</p>
+                <p class="filter-section__label">{{ __('catalog_scent_family') }}</p>
                 @foreach($scentFamilies->take(6) as $family)
                     <label class="filter-checkbox-row">
                         <input type="checkbox" name="scent[]" value="{{ $family->id }}" @checked(in_array($family->id, (array) request('scent', [])))>
@@ -76,7 +76,7 @@
                 @endforeach
 
                 @if($scentFamilies->count() > 6)
-                    <button type="button" class="filter-expand" data-filter-expand>Bütün qoxu ailələri</button>
+                    <button type="button" class="filter-expand" data-filter-expand>{{ __('catalog_all_scent_families') }}</button>
                     <div class="filter-checkbox-more" hidden>
                         @foreach($scentFamilies->skip(6) as $family)
                             <label class="filter-checkbox-row">
@@ -90,8 +90,8 @@
         @endif
 
         <div class="filter-card__footer">
-            <a class="btn btn-outline filter-clear" href="{{ route('home') }}">Təmizlə</a>
-            <button type="submit" class="btn btn-dark filter-apply">Filter</button>
+            <a class="btn btn-outline filter-clear" href="{{ url()->current() }}">{{ __('catalog_clear') }}</a>
+            <button type="submit" class="btn btn-dark filter-apply">{{ __('catalog_apply') }}</button>
         </div>
     </div>
 </form>
