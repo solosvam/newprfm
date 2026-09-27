@@ -70,7 +70,7 @@ class PromoCodesController extends Controller
             'value' => ['required', 'numeric', 'gt:0', 'max:99999999', Rule::when($request->input('type') === 'percent', ['lte:100'])],
             'min_amount' => ['nullable', 'numeric', 'min:0'],
             'max_discount' => ['nullable', 'numeric', 'gt:0'],
-            'usage_limit' => ['nullable', 'integer', 'min:1'],
+            'usage_limit' => ['nullable', 'integer', 'min:' . max(1, (int) ($promo?->used_count ?? 0))],
             'starts_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date', 'after:starts_at'],
             'is_active' => ['nullable', 'boolean'],
