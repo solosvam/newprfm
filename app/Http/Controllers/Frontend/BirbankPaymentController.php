@@ -27,7 +27,7 @@ class BirbankPaymentController extends Controller
 
         // A retry is allowed only after a confirmed failed/cancelled attempt.
         // An unresolved pending payment may still succeed at the bank.
-        if ($order->paymentMethod?->code !== 'card_online'
+        if (!in_array($order->paymentMethod?->code, ['card_online', 'birbank_installment'], true)
             || !in_array($order->payment_status, ['failed', 'cancelled'], true)) {
             return redirect()->route('order.details', $order)
                 ->with('error', 'Bu sifariş üçün təkrar ödəniş hazırda mümkün deyil.');
@@ -38,7 +38,9 @@ class BirbankPaymentController extends Controller
                 ->with('error', 'Əvvəlki ödənişin nəticəsi hələ dəqiqləşməyib.');
         }
 
-        $result = $birbank->createOrder($order->load('paymentMethod'), app()->getLocale());
+        $months = $order->paymentMethod?->code === 'birbank_installment'
+            ? (int) $order->birbank_installment_months : null;
+        $result = $birbank->createOrder($order->load('paymentMethod'), app()->getLocale(), $months);
 
         return redirect()->away($result['url']);
     }
