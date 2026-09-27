@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CreditPeriod;
 use App\Models\CreditTerms;
 use App\Models\CreditTermItem;
+use App\Models\CreditApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -61,6 +62,20 @@ class CreditController extends Controller
         });
 
         return back()->with('success', 'Kredit faizləri yeniləndi!');
+    }
+
+    public function applications()
+    {
+        return view('backend.credit.applications', [
+            'applications' => CreditApplication::query()
+                ->join('customers', 'customers.id', '=', 'credit_applications.customer_id')
+                ->join('product_variants', 'product_variants.id', '=', 'credit_applications.product_variant_id')
+                ->join('products', 'products.id', '=', 'product_variants.product_id')
+                ->select('credit_applications.*', 'customers.name as customer_name', 'customers.surname as customer_surname',
+                    'customers.mobile as customer_mobile', 'products.name as product_name')
+                ->orderByDesc('credit_applications.id')
+                ->paginate(30),
+        ]);
     }
 
     public function terms()
