@@ -375,5 +375,16 @@
     "credit_application_success": "Hissəli ödəniş müraciətiniz qeydə alındı.",
     "credit_profile_required_title": "Hissəli ödəniş məlumatları",
     "credit_profile_required_message": "Hissəli ödəniş məlumatlarınız doldurulmadığı üçün müraciət edə bilmirsiniz. Zəhmət olmasa, əvvəlcə məlumatlarınızı tamamlayın.",
-    "credit_profile_required_action": "Məlumatları doldur"
+    "credit_profile_required_action": "Məlumatları doldur",
+    "product_pay_in_installments": "Hissə-hissə ödə",
+    "credit_modal_title": "Hissə-hissə ödəniş üçün müraciət",
+    "credit_modal_subtitle": "Ölçünü və ödəniş müddətini seçin.",
+    "credit_modal_size": "Ətrin həcmi",
+    "credit_modal_period": "Kredit müddəti",
+    "credit_modal_monthly": "Aylıq ödəniş",
+    "credit_modal_total": "Ümumi məbləğ",
+    "credit_modal_rules": "Onlayn hissə-hissə müraciət üçün qaydalar",
+    "credit_modal_accept": "Şərtlər və qaydalarla tanış oldum və qəbul edirəm",
+    "credit_modal_error": "Müraciət göndərilmədi. Yenidən cəhd edin.",
+    "credit_modal_scroll_hint": "Bütün qaydaları oxumaq üçün aşağı sürüşdürün"
 }
