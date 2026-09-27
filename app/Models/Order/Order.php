@@ -17,6 +17,11 @@ class Order extends Model {
             'total'=>'decimal:2'
         ];
     }
+    public function statusLogs()
+    {
+        return $this->hasMany(OrderStatusLog::class)->orderBy('created_at');
+    }
+
     public function creditApplication()
     {
         return $this->hasOne(CreditApplication::class);
