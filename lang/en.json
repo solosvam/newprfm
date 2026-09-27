@@ -434,5 +434,6 @@
     "catalog_scent_family": "Fragrance family",
     "catalog_all_scent_families": "All fragrance families",
     "catalog_clear": "Clear",
-    "catalog_apply": "Apply filters"
+    "catalog_apply": "Apply filters",
+    "catalog_search_size": "Search size"
 }
