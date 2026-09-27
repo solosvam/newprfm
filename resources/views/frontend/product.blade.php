@@ -111,7 +111,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                 @else
                     <button type="button" class="btn btn-dark product-mobile-credit" data-credit-apply>{{ __('product_pay_in_installments') }}</button>
                 @endif
-            @endif>
+            @endif
         </div>
 
         <div class="installment-full" data-installment>
