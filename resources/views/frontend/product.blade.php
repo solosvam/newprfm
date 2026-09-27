@@ -102,7 +102,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             </div>
 
             <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>{{ __('product_add_to_cart') }}</button>
-            <a class="btn btn-outline" href="{{ auth()->check() ? route('checkout') : route('front.login', ['redirect' => route('checkout')]) }}">{{ __('product_checkout') }}</a>
+            <button type="button" class="btn btn-outline" data-one-click data-url="{{ route('one-click.store') }}" data-auth="{{ auth()->check() ? 1 : 0 }}" @disabled(!$firstVariant)>{{ __('product_one_click_buy') }}</button>
             @if($creditPeriods->isNotEmpty() && $variants->isNotEmpty())
                 @if(!auth()->check())
                     <a class="btn btn-dark product-mobile-credit" href="{{ route('front.login', ['redirect' => route('product', $product->slug)]) }}">{{ __('product_pay_in_installments') }}</a>
@@ -230,6 +230,17 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             </div>
         @endforeach
     </div>
+    <dialog id="oneClickDialog" class="credit-profile-dialog" aria-labelledby="oneClickTitle">
+        <form id="oneClickForm" class="credit-profile-dialog__body">
+            <button type="button" class="credit-profile-dialog__close" data-one-click-close aria-label="{{ __('common_close') }}">×</button>
+            <h2 id="oneClickTitle" class="credit-profile-dialog__title">{{ __('product_one_click_buy') }}</h2>
+            <p class="credit-profile-dialog__text">{{ __('product_one_click_phone_hint') }}</p>
+            <label for="oneClickMobile">{{ __('product_one_click_mobile') }}</label>
+            <input id="oneClickMobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="994 __ ___ __ __" maxlength="16" required class="form-control" style="width:100%;margin:12px 0;">
+            <p id="oneClickError" role="alert" style="color:#dc2626;display:none;"></p>
+            <button type="submit" class="btn btn-dark" style="width:100%;">{{ __('product_one_click_submit') }}</button>
+        </form>
+    </dialog>
     @if(auth()->check() && !$creditProfileComplete)
         <dialog id="creditProfileRequiredDialog" class="credit-profile-dialog" aria-labelledby="creditProfileRequiredTitle">
             <div class="credit-profile-dialog__body">
@@ -246,4 +257,5 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
 @endsection
 @section('page-scripts')
     <script src="{{ asset('frontend/js/credit-application.js') }}" defer></script>
+    <script src="{{ asset('frontend/js/one-click.js') }}" defer></script>
 @endsection
