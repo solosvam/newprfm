@@ -16,7 +16,7 @@ class Order extends Model {
             'total'=>'decimal:2'
         ];
     }
-    public function items()
+    public function creditApplication()\n    {\n        return $this->hasOne(\\App\\Models\\CreditApplication::class);\n    }\n    public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
