@@ -38,9 +38,11 @@
                                     <select id="delivery_mode" name="delivery_mode"
                                         @class(['form-select', 'is-invalid' => $errors->has('delivery_mode')])>
                                         <option value="free" @selected(old('delivery_mode', $deliveryMode) === 'free')>Tam pulsuz</option>
-                                        <option value="threshold" @selected(old('delivery_mode', $deliveryMode) === 'threshold')>Məbləğdən yuxarı pulsuz</option>
+                                        <option value="paid" @selected(old("delivery_mode",$deliveryMode)==="paid")>Pullu çatdırılma</option>
+                    <option value="threshold" @selected(old('delivery_mode', $deliveryMode) === 'threshold')>Məbləğdən yuxarı pulsuz</option>
                                     </select>
-                                    @error('delivery_mode')
+                                    </div>
+                @error('delivery_mode')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -61,7 +63,8 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <label for="free_delivery_from" class="form-label">Pulsuz olduğu məbləğ</label>
+                                    <div id="deliveryThreshold" @if(old('delivery_mode',$deliveryMode)!=='threshold') style="display:none" @endif>
+                    <label for="free_delivery_from" class="form-label">Pulsuz olduğu məbləğ</label>
                                     <div class="input-group has-validation">
                                         <span class="input-group-text">≥</span>
                                         <input id="free_delivery_from" name="free_delivery_from" type="number" min="0.01" step="0.01"
