@@ -17,7 +17,7 @@
                 {{ __('reviews_order_number') }} <strong>{{ $order->order_no }}</strong>
             </p>
 
-            <a href="{{ route('profile.orders') }}" class="btn btn-dark order-success__link">{{ __('reviews_view_my_orders') }}</a>
+            <a href="{{ route('orders') }}" class="btn btn-dark order-success__link">{{ __('reviews_view_my_orders') }}</a>
         </div>
     </main>
 @endsection
