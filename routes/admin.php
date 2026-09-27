@@ -150,6 +150,7 @@ Route::prefix('admin')
                 ->prefix('credit')
                 ->name('credit.')
                 ->group(function () {
+                    Route::get('/applications', 'applications')->name('applications');
                     Route::get('/periods', 'periods')->name('periods');
                     Route::post('/periods', 'updatePeriods')->name('periods.update');
                     Route::get('/terms', 'terms')->name('terms');
