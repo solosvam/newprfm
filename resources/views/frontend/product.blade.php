@@ -103,6 +103,15 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
 
             <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>{{ __('product_add_to_cart') }}</button>
             <a class="btn btn-outline" href="{{ auth()->check() ? route('checkout') : route('front.login', ['redirect' => route('checkout')]) }}">{{ __('product_checkout') }}</a>
+            @if($creditPeriods->isNotEmpty() && $variants->isNotEmpty())
+                @if(!auth()->check())
+                    <a class="btn btn-dark product-mobile-credit" href="{{ route('front.login', ['redirect' => route('product', $product->slug)]) }}">{{ __('product_pay_in_installments') }}</a>
+                @elseif(!$creditProfileComplete)
+                    <button type="button" class="btn btn-dark product-mobile-credit" data-credit-profile-required>{{ __('product_pay_in_installments') }}</button>
+                @else
+                    <button type="button" class="btn btn-dark product-mobile-credit" data-credit-apply>{{ __('product_pay_in_installments') }}</button>
+                @endif
+            @endif>
         </div>
 
         <div class="installment-full" data-installment>
@@ -146,6 +155,13 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
         </div>
 
     </div>
+
+    <style>
+        .product-mobile-credit {display:none}
+        @media (max-width:720px) {
+            .product-mobile-credit {display:block;width:100%;text-align:center}
+        }
+    </style>
 
     <div class="tabs" data-tabs @if(session('review_success') || $errors->has('rating') || $errors->has('comment')) data-show-reviews @endif>
         <div class="tab-list">
