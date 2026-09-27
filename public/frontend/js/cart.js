@@ -221,8 +221,10 @@
         if (canInstall) {
             const monthly = Math.ceil((total * (1 + config.installmentMarkup / 100) / config.installmentMonths) * 100) / 100;
             els.installmentText.replaceChildren(
-                fill(t.installment, { amount: strong(money(monthly)), months: config.installmentMonths })
+                fill(config.installmentMarkup === 0 ? t.installment : t.installmentWithInterest,
+                    { amount: strong(money(monthly)), months: config.installmentMonths })
             );
+            els.installmentText.append(document.createElement('br'), el('small', 'cart-installment__how', t.installmentHow));
         }
     }
 
