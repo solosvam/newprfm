@@ -119,6 +119,8 @@ Route::middleware('guest')
     ->group(function () {
         Route::get('/login', 'login')->name('front.login');
         Route::post('/login/check', 'checkMobile')->name('front.login.check');
+        Route::post('/login/inactive/verify', 'verifyInactive')->name('front.login.inactive.verify');
+        Route::post('/login/inactive/resend', 'resendInactive')->name('front.login.inactive.resend');
         Route::post('/login/password', 'passwordLogin')->name('front.login.password');
         Route::post('/login/otp', 'verifyOtp')->name('front.login.otp');
         Route::post('/login/otp/resend', 'resendOtp')->name('front.login.otp.resend');
