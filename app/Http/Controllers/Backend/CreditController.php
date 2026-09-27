@@ -67,14 +67,7 @@ class CreditController extends Controller
     public function applications()
     {
         return view('backend.credit.applications', [
-            'applications' => CreditApplication::query()
-                ->join('customers', 'customers.id', '=', 'credit_applications.customer_id')
-                ->join('product_variants', 'product_variants.id', '=', 'credit_applications.product_variant_id')
-                ->join('products', 'products.id', '=', 'product_variants.product_id')
-                ->select('credit_applications.*', 'customers.name as customer_name', 'customers.surname as customer_surname',
-                    'customers.mobile as customer_mobile', 'products.name as product_name')
-                ->orderByDesc('credit_applications.id')
-                ->paginate(30),
+            'applications' => CreditApplication::with(['order.items.product', 'order.items.productVariant.size', 'customer', 'period', 'status'])->latest()->paginate(30),
         ]);
     }
 
