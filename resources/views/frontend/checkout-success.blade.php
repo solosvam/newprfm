@@ -7,7 +7,18 @@
                 <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
             </div>
 
-            @if ($order->creditApplication()->exists())
+            @if ($order->paymentMethod?->code === 'card_online' && $order->payment_status === 'paid')
+                <h1 class="order-success__title">{{ match(app()->getLocale()) {
+                    'ru' => 'Оплата прошла успешно',
+                    'en' => 'Payment successful',
+                    default => 'Ödəniş uğurla tamamlandı',
+                } }}</h1>
+                <p class="order-success__subtitle">{{ match(app()->getLocale()) {
+                    'ru' => 'Ваш заказ принят.',
+                    'en' => 'Your order has been received.',
+                    default => 'Sifarişiniz qəbul edildi.',
+                } }}</p>
+            @elseif ($order->creditApplication()->exists())
                 <h1 class="order-success__title">{{ __('credit_success_title') }}</h1>
                 <p class="order-success__subtitle">{{ __('credit_success_contact') }}</p>
             @else
