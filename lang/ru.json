@@ -435,5 +435,7 @@
     "catalog_all_scent_families": "Все семейства ароматов",
     "catalog_clear": "Сбросить",
     "catalog_apply": "Применить",
-    "catalog_search_size": "Поиск объёма"
+    "catalog_search_size": "Поиск объёма",
+    "credit_application_complete_profile": "Для подачи заявки сначала заполните данные для рассрочки в личном кабинете.",
+    "credit_application_success": "Ваша заявка на рассрочку зарегистрирована."
 }
