@@ -136,7 +136,14 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                 </tbody>
             </table>
 
-            <a class="btn btn-dark" href="{{ auth()->check() ? route('profile.credit') : route('front.login', ['redirect' => route('profile.credit')]) }}">{{ __('product_apply') }}</a>
+            @if(!auth()->check())
+                <a class="btn btn-dark" href="{{ route('front.login', ['redirect' => route('product', $product->slug)]) }}">{{ __('product_apply') }}</a>
+            @elseif(!$creditProfileComplete)
+                <a class="btn btn-dark" href="{{ route('profile.credit', ['return' => route('product', $product->slug)]) }}">{{ __('product_apply') }}</a>
+                <p class="subtitle" style="font-size:13px;margin-top:10px;">{{ __('credit_application_complete_profile') }}</p>
+            @else
+                <button type="button" class="btn btn-dark" data-credit-apply @disabled($variants->isEmpty() || $creditPeriods->isEmpty())>{{ __('product_apply') }}</button>
+            @endif
         </div>
 
     </div>
@@ -213,4 +220,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             </div>
         @endforeach
     </div>
+    @if(auth()->check() && $creditProfileComplete && $variants->isNotEmpty() && $creditPeriods->isNotEmpty())
+        @include('frontend.partials.credit-application-modal')
+    @endif
 @endsection
