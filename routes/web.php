@@ -14,6 +14,7 @@ use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\FavoriteController;
 use App\Http\Controllers\Frontend\CreditProfileController;
+use App\Http\Controllers\Frontend\CreditApplicationController;
 use App\Http\Controllers\Frontend\SearchController;
 
 
@@ -182,6 +183,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/reviews', 'reviews')->name('profile.reviews');
         Route::delete('/profile/reviews/{review}', 'destroyReview')->name('profile.reviews.destroy');
     });
+
+    Route::post('/credit/applications', [CreditApplicationController::class, 'store'])
+        ->middleware('throttle:5,1')->name('credit.application.store');
 
     // Credit Profile
     Route::controller(CreditProfileController::class)->group(function () {
