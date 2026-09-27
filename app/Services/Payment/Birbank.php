@@ -48,12 +48,14 @@ class Birbank
      * Standard hosted payment page (Order_SMS).
      * The bank's hppUrl may already end in /flex; never append it twice.
      */
-    public function createOrder(Order $order, string $language = 'az'): array
+    public function createOrder(Order $order, string $language = 'az', ?int $installmentMonths = null): array
     {
         $order->loadMissing('paymentMethod');
 
-        // The project's payment method code is online_card.
-        if ($order->paymentMethod?->code !== 'card_online') {
+        $method = $order->paymentMethod?->code;
+        if (!in_array($method, ['card_online', 'birbank_installment'], true)
+            || ($method === 'birbank_installment' && !in_array($installmentMonths, [2, 3, 6], true))
+            || ($method === 'card_online' && $installmentMonths !== null)) {
             throw ValidationException::withMessages([
                 'payment' => 'This order is not configured for online card payment.',
             ]);
