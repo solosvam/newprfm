@@ -14,6 +14,8 @@
     const amountEl = root.querySelector('.promo__amount');
     const removeBtn = root.querySelector('.promo__remove');
     const errorEl = root.querySelector('.promo__error');
+    const lockedEl = root.querySelector('.promo__locked');
+
 
     const state = { code: root.dataset.code || null, discount: 0 };
     window.ParfumPromo = state;
@@ -51,6 +53,14 @@
     }
 
     function render() {
+        if (state.locked) {
+            details.hidden = true;
+            applied.hidden = true;
+            if (lockedEl) lockedEl.hidden = false;
+            return;
+        }
+        if (lockedEl) lockedEl.hidden = true;
+
         const hasCode = Boolean(state.code);
         applied.hidden = !hasCode;
         details.hidden = hasCode;
@@ -73,6 +83,7 @@
     }
 
     async function apply(code) {
+        if (state.locked) return;
         const current = ++version;
         const items = cartItems();
 
@@ -137,6 +148,26 @@
 
     // Səbət dəyişəndə endirim yenidən hesablanır (min. məbləğ, faiz və s.)
     const revalidate = () => { if (state.code) apply(state.code); };
+    window.addEventListener('parfumshop:promo-lock', event => {
+        const locked = Boolean(event.detail?.locked);
+        if (locked === state.locked) return;
+
+        state.locked = locked;
+        version++;
+
+        if (locked) {
+            state.discount = 0;
+            showError('');
+            render();
+            emit();
+        } else if (state.code) {
+            render();
+            apply(state.code);
+        } else {
+            render();
+            emit();
+        }
+    });
     window.addEventListener('parfumshop:cart-updated', revalidate);
     window.addEventListener('storage', e => { if (e.key === CART_KEY) revalidate(); });
 

@@ -21,6 +21,6 @@
         <span class="promo__amount"></span>
         <button type="button" class="promo__remove" aria-label="{{ __('promo_remove') }}">×</button>
     </div>
-
+    <p class="promo__locked" hidden>{{ __('checkout_promo_not_for_installment') }}</p>
     <p class="promo__error" role="alert" hidden></p>
 </div>

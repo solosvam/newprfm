@@ -1,107 +1,208 @@
 @extends('frontend.layouts.app')
 
 @section('content')
+    @php
+        $checkoutI18n = [
+            'free'              => __('cart_free'),
+            'bonusBalance'      => __('checkout_bonus_balance'),
+            'bonusInsufficient' => __('checkout_bonus_insufficient'),
+            'perMonth'          => __('checkout_credit_per_month'),
+            'errPayment'        => __('checkout_select_payment_error'),
+            'errProfile'        => __('credit_application_complete_profile'),
+            'errPeriod'         => __('checkout_credit_select_period_error'),
+            'errTerms'          => __('checkout_credit_accept_terms_error'),
+        ];
+        $selectedPayment = old('payment_method', $paymentMethods->first()?->id);
+    @endphp
+
     <main>
-        <div class="checkout-page">
+        <div class="checkout-page" data-i18n="{{ json_encode($checkoutI18n, JSON_UNESCAPED_UNICODE) }}">
             <h1 class="cart-title">{{ __('cart_checkout') }}</h1>
 
             <div class="checkout-grid">
-                <section class="account-panel">
-                    <h2 class="checkout-section-title">{{ __('checkout_delivery_address') }}</h2>
+                <div class="checkout-main">
 
-                    @if($addresses->isNotEmpty())
-                        <select id="addressSelect" class="brand-select checkout-address-select select2">
-                            @foreach($addresses as $a)
-                                <option value="{{ $a->id }}">{{ $a->label }}</option>
+                    {{-- 1. Ünvan --}}
+                    <section class="checkout-card">
+                        <header class="checkout-step">
+                            <span class="checkout-step__num">1</span>
+                            <h2 class="checkout-step__title">{{ __('checkout_delivery_address') }}</h2>
+                        </header>
+
+                        @if($addresses->isNotEmpty())
+                            <select id="addressSelect" class="brand-select checkout-address-select select2">
+                                @foreach($addresses as $a)
+                                    <option value="{{ $a->id }}">{{ $a->label }}</option>
+                                @endforeach
+                                <option value="new">{{ __('checkout_add_new_address') }}</option>
+                            </select>
+                        @else
+                            <input type="hidden" id="addressSelect" value="new">
+                        @endif
+
+                        <div id="newAddress" class="checkout-address-form {{ $addresses->isNotEmpty() ? 'checkout-hidden' : '' }}">
+                            <div class="checkout-fields">
+                                <div class="checkout-field checkout-field--full"><input type="text" id="addressTitle" placeholder="{{ __('checkout_address_name_home_work') }}"></div>
+                                <div class="checkout-field"><input type="text" id="city" placeholder="{{ __('checkout_city') }}"></div>
+                                <div class="checkout-field"><input type="text" id="district" placeholder="{{ __('checkout_district') }}"></div>
+                                <div class="checkout-field checkout-field--full"><input type="text" id="address" placeholder="{{ __('checkout_street_and_address') }}"></div>
+                                <div class="checkout-field"><input type="text" id="building" placeholder="{{ __('checkout_building') }}"></div>
+                                <div class="checkout-field"><input type="text" id="entrance" placeholder="{{ __('checkout_entrance') }}"></div>
+                                <div class="checkout-field"><input type="text" id="floor" placeholder="{{ __('checkout_floor') }}"></div>
+                                <div class="checkout-field"><input type="text" id="apartment" placeholder="{{ __('checkout_apartment') }}"></div>
+                                <div class="checkout-field checkout-field--full"><textarea id="addressNote" placeholder="{{ __('checkout_address_note') }}"></textarea></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- 2. Ödəniş --}}
+                    <section class="checkout-card">
+                        <header class="checkout-step">
+                            <span class="checkout-step__num">2</span>
+                            <h2 class="checkout-step__title">{{ __('checkout_payment_method') }}</h2>
+                        </header>
+
+                        <div class="checkout-payment" role="radiogroup">
+                            @foreach($paymentMethods as $m)
+                                @php
+                                    $hintKey = "checkout_payment_hint_{$m->code}";
+                                    $hint = \Illuminate\Support\Facades\Lang::has($hintKey) ? __($hintKey) : null;
+                                @endphp
+                                <label class="pay-option" data-payment-code="{{ $m->code }}">
+                                    <input type="radio" name="payment_method" value="{{ $m->id }}" data-code="{{ $m->code }}"
+                                        @checked($selectedPayment == $m->id)>
+                                    <span class="pay-option__radio" aria-hidden="true"></span>
+                                    <span class="pay-option__icon" aria-hidden="true">
+                                        @switch($m->code)
+                                            @case('cash')
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+                                                @break
+                                            @case('card')
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+                                                @break
+                                            @case('installment')
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14h2M14 14h2M8 17h2"/></svg>
+                                                @break
+                                            @case('bonus_balance')
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
+                                                @break
+                                            @default
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H5a2 2 0 0 1 0-4h13v4zM3 5v14a2 2 0 0 0 2 2h15V7"/><circle cx="16" cy="14" r="1.5"/></svg>
+                                        @endswitch
+                                    </span>
+                                    <span class="pay-option__text">
+                                        <span class="pay-option__title">{{ $m->localized_name }}</span>
+                                        @if($m->code === 'bonus_balance')
+                                            <span class="pay-option__hint" data-bonus-hint>
+                                                {{ str_replace(':amount', number_format($bonusBalance, 2) . ' ₼', __('checkout_bonus_balance')) }}
+                                            </span>
+                                        @elseif($hint)
+                                            <span class="pay-option__hint">{{ $hint }}</span>
+                                        @endif
+                                    </span>
+                                </label>
                             @endforeach
-                            <option value="new">{{ __('checkout_add_new_address') }}</option>
-                        </select>
-                    @else
-                        <input type="hidden" id="addressSelect" value="new">
-                    @endif
-
-                    <div id="newAddress" class="checkout-address-form {{ $addresses->isNotEmpty() ? 'checkout-hidden' : '' }}">
-                        <div class="checkout-fields">
-                            <div class="checkout-field">
-                                <input type="text" id="addressTitle" placeholder="{{ __('checkout_address_name_home_work') }}">
-                            </div>
-                            <div class="checkout-field">
-                                <input type="text" id="city" placeholder="{{ __('checkout_city') }}">
-                            </div>
-                            <div class="checkout-field">
-                                <input type="text" id="district" placeholder="{{ __('checkout_district') }}">
-                            </div>
-                            <div class="checkout-field">
-                                <input type="text" id="address" placeholder="{{ __('checkout_street_and_address') }}">
-                            </div>
-                            <div class="checkout-field">
-                                <input type="text" id="building" placeholder="{{ __('checkout_building') }}">
-                            </div>
-                            <div class="checkout-field">
-                                <input type="text" id="entrance" placeholder="{{ __('checkout_entrance') }}">
-                            </div>
-                            <div class="checkout-field">
-                                <input type="text" id="floor" placeholder="{{ __('checkout_floor') }}">
-                            </div>
-                            <div class="checkout-field">
-                                <input type="text" id="apartment" placeholder="{{ __('checkout_apartment') }}">
-                            </div>
                         </div>
-                        <div class="checkout-field checkout-field--textarea">
-                            <textarea id="addressNote" placeholder="{{ __('checkout_address_note') }}"></textarea>
-                        </div>
-                    </div>
 
-                    <h2 class="checkout-section-title">{{ __('checkout_payment_method') }}</h2>
-                    <div class="checkout-payment">
-                        @foreach($paymentMethods as $m)
-                            <label class="checkout-payment-option" data-payment-code="{{ $m->code }}">
-                                <input type="radio" name="payment_method" value="{{ $m->id }}" data-code="{{ $m->code }}" @checked(old('payment_method', $paymentMethods->first()?->id) == $m->id)>
-                                <span>{{ $m->localized_name }}</span>
-                                @if($m->code === 'bonus_balance')
-                                    <small>{{ number_format($bonusBalance, 2) }} ₼</small>
-                                @endif
-                            </label>
-                        @endforeach
                         <p id="bonusWarning" class="form-alert form-alert-error" hidden></p>
-                        <div id="installmentDetails" hidden>
+
+                        <div id="installmentDetails" class="installment" hidden>
                             @if(!$creditProfileComplete)
-                                <p>{{ __('credit_application_complete_profile') }} <a href="{{ route('profile.credit') }}">{{ __('credit_application_complete_profile') }}</a></p>
+                                <div class="installment__notice">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                                    <span>{{ __('credit_application_complete_profile') }}</span>
+                                    <a href="{{ route('profile.credit') }}" class="installment__notice-link">{{ __('credit_complete_profile_link') }} →</a>
+                                </div>
                             @else
-                                <label for="creditPeriod">Kredit müddəti</label>
-                                <select id="creditPeriod" class="brand-select">
-                                    <option value="">Seçin</option>
+                                <div class="installment__label">{{ __('checkout_credit_choose_period') }}</div>
+
+                                {{-- checkout.js bu input-un value-sunu oxuyur --}}
+                                <input type="hidden" id="creditPeriod" value="">
+
+                                <div class="installment__periods">
                                     @foreach($creditPeriods as $period)
-                                        <option value="{{ $period->id }}" data-months="{{ $period->month }}" data-rate="{{ $period->interest_rate }}">{{ $period->month }} ay ({{ $period->interest_rate }}%)</option>
+                                        <label class="installment__period">
+                                            <input type="radio" name="credit_period_choice" value="{{ $period->id }}"
+                                                   data-months="{{ $period->month }}" data-rate="{{ $period->interest_rate }}">
+                                            <span class="installment__months">{{ $period->month }} {{ __('checkout_months') }}</span>
+                                            <span class="installment__monthly" data-monthly>—</span>
+                                            <span class="installment__rate">
+                                                {{ (float) $period->interest_rate > 0
+                                                    ? '+' . rtrim(rtrim(number_format($period->interest_rate, 2), '0'), '.') . '%'
+                                                    : __('checkout_credit_no_interest') }}
+                                            </span>
+                                        </label>
                                     @endforeach
-                                </select>
-                                <p id="creditEstimate"></p>
-                                <label><input type="checkbox" id="creditTerms"> Şərtləri qəbul edirəm</label>
+                                </div>
+
+                                <dl class="installment__summary" hidden>
+                                    <div><dt>{{ __('checkout_credit_monthly') }}</dt><dd data-credit-monthly></dd></div>
+                                    <div><dt>{{ __('checkout_credit_total') }}</dt><dd data-credit-total></dd></div>
+                                    <div><dt>{{ __('checkout_credit_overpay') }}</dt><dd data-credit-overpay></dd></div>
+                                </dl>
+
+                                <p id="creditEstimate" hidden></p>
+
+                                <label class="checkout-check installment__terms">
+                                    <input type="checkbox" id="creditTerms">
+                                    <span>{{ __('checkout_credit_accept_terms') }}</span>
+                                </label>
                             @endif
                         </div>
-                    </div>
+                    </section>
 
-                    <h2 class="checkout-section-title">{{ __('checkout_additional_options') }}</h2>
-                    <label class="checkout-check">
-                        <input type="checkbox" id="giftWrap" value="1">
-                        <span>{{ __('checkout_gift_wrap_the_order') }}</span>
-                    </label>
-                    <textarea id="customerNote" class="checkout-note" placeholder="{{ __('checkout_order_note') }}"></textarea>
+                    {{-- 3. Əlavə --}}
+                    <section class="checkout-card">
+                        <header class="checkout-step">
+                            <span class="checkout-step__num">3</span>
+                            <h2 class="checkout-step__title">{{ __('checkout_additional_options') }}</h2>
+                        </header>
+
+                        <label class="checkout-check">
+                            <input type="checkbox" id="giftWrap" value="1">
+                            <span>{{ __('checkout_gift_wrap_the_order') }}</span>
+                        </label>
+                        <textarea id="customerNote" class="checkout-note" placeholder="{{ __('checkout_order_note') }}"></textarea>
+                    </section>
 
                     <div id="checkoutError" class="form-alert form-alert-error checkout-error" hidden></div>
-                </section>
+                </div>
 
+                {{-- Xülasə --}}
                 <aside class="cart-summary checkout-summary">
-                    <h2 class="checkout-section-title">{{ __('checkout_your_order') }}</h2>
+                    <h2 class="cart-summary__title">{{ __('checkout_your_order') }}</h2>
                     <div id="checkoutItems" class="checkout-items"></div>
+
                     @include('frontend.partials.promo-code')
-                    <div class="cart-summary__row"><span>{{ __('cart_discount') }}</span><strong id="checkoutDiscount">0.00 ₼</strong></div>
-                    <div class="cart-summary__row"><span>{{ __('cart_delivery') }}</span><strong id="checkoutDelivery">0.00 ₼</strong></div>
-                    <div class="cart-summary__row cart-summary__total checkout-total">
+
+                    <div class="cart-summary__rows">
+                        <div id="checkoutDiscountRow" class="cart-summary__row cart-summary__row--discount" hidden>
+                            <span>{{ __('cart_discount') }}</span>
+                            <strong id="checkoutDiscount">0.00 ₼</strong>
+                        </div>
+                        <div class="cart-summary__row">
+                            <span>{{ __('cart_delivery') }}</span>
+                            <strong id="checkoutDelivery">0.00 ₼</strong>
+                        </div>
+                    </div>
+
+                    <div class="cart-summary__total">
                         <span>{{ __('checkout_total') }}</span>
                         <strong id="checkoutTotal">0.00 ₼</strong>
                     </div>
+
                     <button id="placeOrder" type="button" class="btn btn-dark checkout-submit">{{ __('checkout_confirm_order') }}</button>
+
+                    <ul class="cart-trust">
+                        <li>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                            {{ __('cart_trust_secure') }}
+                        </li>
+                        <li>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+                            {{ __('cart_trust_original') }}
+                        </li>
+                    </ul>
                 </aside>
             </div>
         </div>
