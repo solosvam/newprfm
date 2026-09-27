@@ -45,6 +45,31 @@
         syncAddressForm();
     }
 
+    let checkoutTotal = 0;
+    const selectedMethod = () => document.querySelector('[name=payment_method]:checked')?.dataset.code;
+    function refreshPayment() {
+        const code = selectedMethod();
+        const bonusWarning = document.getElementById('bonusWarning');
+        const installment = document.getElementById('installmentDetails');
+        const button = document.getElementById('placeOrder');
+        if (installment) installment.hidden = code !== 'installment';
+        const insufficient = code === 'bonus_balance' && checkoutTotal > Number(config.bonusBalance || 0);
+        if (bonusWarning) {
+            bonusWarning.hidden = !insufficient;
+            bonusWarning.textContent = 'Bonus balansınız sifariş məbləğindən azdır. Mövcud balans: ' + Number(config.bonusBalance || 0).toFixed(2) + ' ₼';
+        }
+        if (button) button.disabled = insufficient || (code === 'installment' && !config.creditProfileComplete);
+        const period = document.getElementById('creditPeriod')?.selectedOptions[0];
+        const estimate = document.getElementById('creditEstimate');
+        if (estimate && period?.value) {
+            const months = Number(period.dataset.months);
+            const total = checkoutTotal * (1 + Number(period.dataset.rate) / 100);
+            estimate.textContent = 'Ümumi: ' + total.toFixed(2) + ' ₼ · Aylıq: ' + (total / months).toFixed(2) + ' ₼';
+        }
+    }
+    document.querySelectorAll('[name=payment_method]').forEach(input => input.addEventListener('change', refreshPayment));
+    document.getElementById('creditPeriod')?.addEventListener('change', refreshPayment);
+
     (async () => {
         const cart = getCheckoutCart();
         if (!cart.length) {
@@ -69,7 +94,9 @@
             );
         });
 
+        checkoutTotal = total;
         document.getElementById('checkoutTotal').textContent = total.toFixed(2) + ' ₼';
+        refreshPayment();
     })();
 
     document.getElementById('placeOrder').onclick = async function () {
@@ -93,6 +120,8 @@
             apartment: val('apartment'),
             address_note: val('addressNote'),
             payment_method_id: Number(document.querySelector('[name=payment_method]:checked')?.value),
+            credit_period_id: Number(document.getElementById('creditPeriod')?.value) || null,
+            accept_terms: document.getElementById('creditTerms')?.checked ? 1 : 0,
             gift_wrap: document.getElementById('giftWrap').checked ? 1 : 0,
             customer_note: val('customerNote'),
         };
@@ -125,7 +154,7 @@
             }
 
             document.querySelectorAll('.checkout-field.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-            localStorage.removeItem('parfumshop_cart');
+            if (data.clear_cart) localStorage.removeItem('parfumshop_cart');
             location.href = data.redirect;
         } catch (error) {
             const message = error.message || messages.error;
