@@ -452,5 +452,9 @@
     "credit_modal_accept": "I have read and accept the terms and conditions",
     "credit_modal_error": "Unable to submit your application.",
     "credit_modal_scroll_hint": "Scroll down to read all the terms",
-    "product_installment_schedule": "Installment payment schedule"
+    "product_installment_schedule": "Installment payment schedule",
+    "credit_address_title": "Installment application — delivery address",
+    "credit_address_continue": "Continue",
+    "credit_address_confirm": "Confirm application",
+    "credit_address_back": "Back to product"
 }
