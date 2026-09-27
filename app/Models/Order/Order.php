@@ -1,5 +1,6 @@
 <?php
 namespace App\Models\Order;
+use App\Models\Credit\CreditApplication;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerAddress;
 use App\Models\PaymentMethod;
@@ -18,7 +19,7 @@ class Order extends Model {
     }
     public function creditApplication()
     {
-        return $this->hasOne(\App\Models\Credit\CreditApplication::class);
+        return $this->hasOne(CreditApplication::class);
     }
     public function items()
     {

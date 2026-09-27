@@ -219,38 +219,6 @@ class AuthController extends Controller
         return back()->with('success', __('validation_your_details_have_been_updated'));
     }
 
-    public function orders()
-    {
-        $orders = Order::with([
-            'items.product.brand',
-            'items.product.images',
-            'items.variant.size',
-            'paymentMethod',
-            'status',
-        ])
-            ->where('customer_id', auth()->id())
-            ->latest()
-            ->paginate(10);
-
-        return view('frontend.orders', compact('orders'));
-    }
-
-    public function order(Order $order)
-    {
-        abort_unless($order->customer_id === auth()->id(), 403);
-
-        $order->load([
-            'items.product.brand',
-            'items.product.images',
-            'items.variant.size',
-            'paymentMethod',
-            'status',
-            'address',
-        ]);
-
-        return view('frontend.order-detail', compact('order'));
-    }
-
     public function bonus()
     {
         $transactions = auth()->user()->bonusTransactions()

@@ -27,7 +27,7 @@
                 <small class="account-nav-note">({{ __('credit_sidebar_incomplete') }})</small>
             @endif
         </a>
-        <a href="{{ route('profile.orders') }}" class="{{ request()->routeIs('profile.orders') ? 'active' : '' }}">{{ __('orders_history') }}</a>
+        <a href="{{ route('orders') }}" class="{{ request()->routeIs('orders') ? 'active' : '' }}">{{ __('orders_history') }}</a>
         <a href="{{ route('profile.bonus') }}" class="{{ request()->routeIs('profile.bonus') ? 'active' : '' }}">{{ __('bonus_bonus_history') }}</a>
         <a href="{{ route('profile.wishlist') }}" class="{{ request()->routeIs('profile.wishlist') ? 'active' : '' }}">
             {{ __('wishlist_my_favorites') }}

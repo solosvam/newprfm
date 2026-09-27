@@ -32,7 +32,7 @@
                                 <tr>
                                     <td>
                                         @if($transaction->order)
-                                            <a href="{{ route('profile.orders.show', $transaction->order) }}">{{ $transaction->order->order_no }}</a>
+                                            <a href="{{ route('order.details', $transaction->order) }}">{{ $transaction->order->order_no }}</a>
                                         @else
                                             —
                                         @endif

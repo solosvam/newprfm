@@ -16,6 +16,7 @@ use App\Http\Controllers\Frontend\FavoriteController;
 use App\Http\Controllers\Frontend\CreditProfileController;
 use App\Http\Controllers\Frontend\CreditApplicationController;
 use App\Http\Controllers\Frontend\SearchController;
+use App\Http\Controllers\Frontend\OrdersController;
 
 
 /*
@@ -168,20 +169,24 @@ Route::middleware('auth')->group(function () {
         Route::get('/checkout/success/{order}', 'success')->name('checkout.success');
     });
 
-    // Profile & Orders
+    // Profile
     Route::controller(AuthController::class)->group(function () {
         Route::get('/profile', 'profile')->name('profile');
 
         Route::get('/profile/personal', 'personal')->name('profile.personal');
         Route::post('/profile/personal', 'updatePersonal')->name('profile.personal.update');
 
-        Route::get('/profile/orders', 'orders')->name('profile.orders');
-        Route::get('/profile/orders/{order}', 'order')->name('profile.orders.show');
-
         Route::get('/profile/bonus', 'bonus')->name('profile.bonus');
 
         Route::get('/profile/reviews', 'reviews')->name('profile.reviews');
         Route::delete('/profile/reviews/{review}', 'destroyReview')->name('profile.reviews.destroy');
+    });
+
+    // Orders
+
+    Route::controller(OrdersController::class)->group(function () {
+        Route::get('/orders', 'index')->name('orders');
+        Route::get('/order/{order}', 'details')->name('order.details');
     });
 
     Route::post('/credit/applications', [CreditApplicationController::class, 'store'])

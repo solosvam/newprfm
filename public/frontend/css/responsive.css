@@ -295,3 +295,15 @@ html, body { overflow-x: hidden; }
 @media (max-width: 720px) {
     .product-mobile-credit { display: block; width: 100%; text-align: center; }
 }
+
+@media (max-width: 640px) {
+    .order-card {
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "main main" "products side";
+        gap: 14px;
+        padding: 14px 16px;
+    }
+    .order-card__main { grid-area: main; }
+    .order-card__products { grid-area: products; }
+    .order-card__side { grid-area: side; border-left: 0; padding-left: 0; min-width: 0; }
+}
