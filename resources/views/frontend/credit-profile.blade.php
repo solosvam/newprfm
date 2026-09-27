@@ -84,7 +84,7 @@
 
                                     <div class="credit-photo" data-photo="{{ $field }}">
                                         <img class="credit-preview"
-                                             src="{{ $hasImage ? route('profile.credit.image', ['side' => $side]) : '' }}"
+                                             src="{{ $hasImage ? route('profile.credit.image', ['side' => $side, 'v' => time()]) : '' }}"
                                              alt="{{ $label }}"
                                              @if (!$hasImage) hidden @endif>
 
