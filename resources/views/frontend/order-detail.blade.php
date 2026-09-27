@@ -149,17 +149,18 @@
 
                                 @if($order->paymentMethod?->code === 'card_online' && $order->payments->isNotEmpty())
                                     <div class="od-payment-attempts" style="margin: 16px 0;">
-                                        <strong>{{ match(app()->getLocale()) {
-                                            'ru' => 'История платежей',
-                                            'en' => 'Payment attempts',
-                                            default => 'Ödəniş cəhdləri',
-                                        } }}</strong>
+                                        @unless($order->payments->count() === 1 && $order->payments->first()->status === 'paid')
+                                            <strong>{{ match(app()->getLocale()) {
+                                                'ru' => 'История платежей',
+                                                'en' => 'Payment attempts',
+                                                default => 'Ödəniş cəhdləri',
+                                            } }}</strong>
+                                        @endunless
                                         @foreach($order->payments as $payment)
                                             @php
-                                                // Display only the last four digits of an already masked PAN.
+                                                // Show only the already-masked PAN returned by the payment provider.
                                                 $maskedPan = (string) $payment->card_pan;
-                                                $lastFour = str_contains($maskedPan, '*') && preg_match('/(\\d{4})$/', $maskedPan, $matches)
-                                                    ? $matches[1] : null;
+                                                $displayPan = preg_match('/^\\d{4,8}\\*+\\d{4}$/', $maskedPan) ? $maskedPan : null;
                                                 $paymentStatus = match($payment->status) {
                                                     'paid' => match(app()->getLocale()) {
                                                         'ru' => 'Оплачено', 'en' => 'Paid', default => 'Ödənilib',
@@ -182,8 +183,8 @@
                                                 </div>
                                                 <div style="margin-top: 4px; color: #777383; font-size: 13px;">
                                                     <time datetime="{{ $payment->created_at?->toIso8601String() }}">{{ $payment->created_at?->format('d.m.Y, H:i') }}</time>
-                                                    @if($lastFour)
-                                                        <span> · {{ __('orders_card') }} •••• {{ $lastFour }}</span>
+                                                    @if($displayPan)
+                                                        <span> · {{ __('orders_card') }} {{ $displayPan }}</span>
                                                     @endif
                                                 </div>
                                             </div>
