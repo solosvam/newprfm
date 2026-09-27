@@ -7,7 +7,12 @@
                 <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
             </div>
 
-            <h1 class="order-success__title">{{ __('reviews_your_order_has_been_received') }}</h1>
+            @if ($order->creditApplication()->exists())
+                <h1 class="order-success__title">{{ __('credit_success_title') }}</h1>
+                <p class="order-success__subtitle">{{ __('credit_success_contact') }}</p>
+            @else
+                <h1 class="order-success__title">{{ __('reviews_your_order_has_been_received') }}</h1>
+            @endif
             <p class="order-success__subtitle">
                 {{ __('reviews_order_number') }} <strong>{{ $order->order_no }}</strong>
             </p>
