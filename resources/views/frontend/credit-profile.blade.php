@@ -81,7 +81,7 @@
 
                                 <div class="credit-field">
                                     <label for="{{ $field }}">{{ $label }} *</label>
-
+{{route('profile.credit.image', ['side' => $side, 'v' => time()])  }}
                                     <div class="credit-photo" data-photo="{{ $field }}">
                                         <img class="credit-preview"
                                              src="{{ $hasImage ? route('profile.credit.image', ['side' => $side, 'v' => time()]) : '' }}"

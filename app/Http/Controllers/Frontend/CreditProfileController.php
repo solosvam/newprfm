@@ -33,6 +33,7 @@ class CreditProfileController extends Controller
 
         $path = $request->user()->creditProfile?->{$field};
 
+
         abort_unless($path, 404);
 
         $file = $this->resolveImagePath($path);
@@ -333,14 +334,14 @@ class CreditProfileController extends Controller
 
     private function resolveImagePath(string $filename): ?string
     {
-        // Mövcud DB qeydlərində yol varsa, yalnız fayl adını götür.
-        // Şəkillər yalnız frontend/uploads/customers qovluğundan oxunur.
         $filename = basename(str_replace('\\\\', '/', $filename));
 
-        if (!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}[.]webp$/i', $filename)) {
+        if (!preg_match(
+            '/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.webp$/i',
+            $filename
+        )) {
             return null;
         }
-
         return public_path(self::UPLOAD_PATH . $filename);
     }
 
