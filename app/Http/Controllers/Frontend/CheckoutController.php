@@ -237,14 +237,21 @@ class CheckoutController extends Controller
                 'updated_at' => now(),
             ]);
 
-            if (filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
+            if ($paymentMethod->code === 'card_online') {
+                $bank = app(Birbank::class)->createOrder($order->load('paymentMethod'), app()->getLocale());
+                $redirect = $bank['url'];
+            } else {
+                $redirect = route('checkout.success', $order);
+            }
+
+            if ($paymentMethod->code !== 'card_online' && filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
                 Mail::to($customer->email)->queue(new OrderCreatedMail($order, app()->getLocale()));
             }
 
-            return response() -> json([
-                'ok' => true,
-                'order_no' => $order -> order_no,
-                'redirect' => route('checkout.success', $order),
+            return response()->json([
+                'ok' => true, 'order_no' => $order->order_no,
+                'redirect' => $redirect,
+                'clear_cart' => $paymentMethod->code !== 'card_online',
             ]);
         });
     }
@@ -256,6 +263,10 @@ class CheckoutController extends Controller
             403
         );
 
+        if ($order->paymentMethod?->code === 'card_online'
+            && !$order->payments()->where('status', Payment::PAID)->exists()) {
+            return redirect()->route('order.details', $order)->with('error', 'Ödəniş hələ təsdiqlənməyib.');
+        }
         return view('frontend.checkout-success', compact('order'));
     }
 }
