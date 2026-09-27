@@ -1,6 +1,26 @@
 @extends('frontend.layouts.app')
 
-@section('title', $product->name . ' | parfumshop')
+@php
+$seoTitle = trim(($product->brand?->name ? $product->brand->name . ' ' : '') . $product->name);
+$seoDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\\s+/u', ' ', strip_tags($product->{'content_' . app()->getLocale()} ?: ($product->content_az ?: $seoTitle)))), 160, '');
+$seoImage = $product->images->first() ? asset('frontend/uploads/products/' . $product->images->first()->image) : null;
+$seoUrl = route('product', $product->slug);
+$seoVariants = $product->variants->where('active', 1);
+$seoSchema = ['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $seoTitle, 'description' => $seoDescription, 'url' => $seoUrl, 'image' => $seoImage ? [$seoImage] : []];
+if ($product->brand) $seoSchema['brand'] = ['@type' => 'Brand', 'name' => $product->brand->name];
+if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOffer', 'lowPrice' => number_format((float) $seoVariants->min('price'), 2, '.', ''), 'highPrice' => number_format((float) $seoVariants->max('price'), 2, '.', ''), 'priceCurrency' => 'AZN', 'offerCount' => $seoVariants->count(), 'url' => $seoUrl];
+@endphp
+@section('title', $seoTitle . ' | Parfumshop.az')
+@section('meta_description', $seoDescription)
+@section('canonical_url', $seoUrl)
+@section('og_type', 'product')
+@section('og_title', $seoTitle)
+@if($seoImage)
+@section('og_image', $seoImage)
+@endif
+@section('structured_data')
+<script type="application/ld+json">{!! json_encode($seoSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+@endsection
 
 @section('subnav')
     @include('frontend.partials.subnav')
