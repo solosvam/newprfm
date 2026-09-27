@@ -31,7 +31,7 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:30'],
             'surname' => ['required', 'string', 'max:30'],
             'email' => ['required', 'email', 'max:50', Rule::unique('customers', 'email')],
-            'mobile' => ['required', 'regex:/^994(?:10|50|51|55|70|77|99|60)\\d{7}$/', Rule::unique('customers', 'mobile')],
+            'mobile' => ['required', 'regex:/^994\\d{9}$/', Rule::unique('customers', 'mobile')],
             'gender' => ['required', Rule::in(['0', '1'])],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ], LocalizedValidation::messages(), LocalizedValidation::attributes());
