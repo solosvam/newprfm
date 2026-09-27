@@ -127,9 +127,9 @@
                                             <span class="installment__months">{{ $period->month }} {{ __('checkout_months') }}</span>
                                             <span class="installment__monthly" data-monthly>—</span>
                                             <span class="installment__rate">
-                                                {{ (float) $period->interest_rate > 0
-                                                    ? '+' . rtrim(rtrim(number_format($period->interest_rate, 2), '0'), '.') . '%'
-                                                    : __('checkout_credit_no_interest') }}
+                                                @if((float) $period->interest_rate == 0)
+                                                    {{ __('checkout_credit_no_interest') }}
+                                                @endif
                                             </span>
                                         </label>
                                     @endforeach
