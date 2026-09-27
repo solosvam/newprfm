@@ -48,23 +48,25 @@
                 <div><span>{{ $creditCopy['monthly'] }}</span><strong id="creditMonthly">—</strong></div>
                 <div><span>{{ $creditCopy['total'] }}</span><strong id="creditTotal">—</strong></div>
             </div>
-            <label class="credit-modal-accept">
-                <input type="checkbox" name="accept_terms" value="1" required>
-                <span>{{ $creditCopy['accept'] }}</span>
-            </label>
             <p id="creditApplicationMessage" class="credit-modal-message" role="status" aria-live="polite"></p>
             <button type="submit" class="btn btn-dark credit-modal-submit">{{ $creditCopy['submit'] }}</button>
         </form>
         <aside class="credit-modal-rules">
             <h3>{{ $creditCopy['rules'] }}</h3>
-            @forelse($creditTermItems as $item)
-                @php $rule = $item->{'content_'.$creditLocale} ?: $item->content_az; @endphp
-                @if($rule)
-                    <p class="credit-rule-text"><strong>{{ $loop->iteration }}.</strong> {{ $rule }}</p>
-                @endif
-            @empty
-                <p>—</p>
-            @endforelse
+            <div class="credit-modal-rules-scroll">
+                @forelse($creditTermItems as $item)
+                    @php $rule = $item->{'content_'.$creditLocale} ?: $item->content_az; @endphp
+                    @if($rule)
+                        <p class="credit-rule-text"><strong>{{ $loop->iteration }}.</strong> {{ $rule }}</p>
+                    @endif
+                @empty
+                    <p>—</p>
+                @endforelse
+            </div>
+            <label class="credit-modal-accept credit-modal-rules-accept">
+                <input type="checkbox" name="accept_terms" form="creditApplicationForm" value="1" required>
+                <span>{{ $creditCopy['accept'] }}</span>
+            </label>
         </aside>
     </div>
 </dialog>
@@ -90,9 +92,11 @@
 .credit-modal-summary div {display:flex;justify-content:space-between;gap:12px;padding:9px 0}.credit-modal-summary > div:not(.credit-modal-product) + div:not(.credit-modal-product) {border-top:1px solid #ded6e6}
 .credit-modal-accept {display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;cursor:pointer}.credit-modal-accept input {margin-top:4px}
 .credit-modal-submit {width:100%;margin-top:20px}.credit-modal-message {font-size:14px;margin:14px 0 0}
-.credit-modal-rules {background:rgba(143,113,178,.07);border-radius:12px;padding:20px;align-self:start;max-height:540px;overflow:auto}
+.credit-modal-rules {background:rgba(143,113,178,.07);border-radius:12px;padding:20px;align-self:start;height:min(540px,calc(100dvh - 230px));min-height:260px;display:flex;flex-direction:column;overflow:hidden}
+.credit-modal-rules-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
+.credit-modal-rules-accept{flex-shrink:0;border-top:1px solid #ddd4e5;padding-top:16px;margin-top:12px}
 .credit-modal-rules h3 {font-size:17px;margin:0 0 18px}.credit-rule-text{border-top:1px solid #ddd4e5;padding:13px 0;margin:0;line-height:1.65;white-space:pre-line;font-size:14px}
-@media(max-width:720px){.credit-modal-layout{grid-template-columns:1fr;padding:20px}.credit-modal-head{padding:20px}.credit-modal-rules{max-height:none}}
+@media(max-width:720px){.credit-modal-layout{grid-template-columns:1fr;padding:20px}.credit-modal-head{padding:20px}.credit-modal-rules{height:360px;min-height:260px}}
 </style>
 
 <script>
