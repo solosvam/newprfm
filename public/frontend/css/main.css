@@ -1166,7 +1166,7 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
     font-size: 14px; color: var(--text-secondary); font-variant-numeric: tabular-nums;
 }
 .cart-summary__row strong { font-weight: 600; color: var(--text); white-space: nowrap; }
-.cart-summary__row--discount strong,
+.cart-summary__row--discount strong { color: #dc2626; }
 .cart-summary__row strong.is-free { color: var(--cart-success); }
 .cart-summary__code {
     margin-left: 6px; padding: 1px 6px; border-radius: 5px;
