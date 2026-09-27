@@ -22,12 +22,8 @@
                 @error('order_bonus_percent')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="mb-3">Çatdırılma</h5>
+                <hr class="my-4">
+                <h5 class="mb-3">Çatdırılma ayarları</h5>
                 <label for="delivery_mode" class="form-label">Çatdırılma qaydası</label>
                 <select id="delivery_mode" name="delivery_mode" class="form-select mb-3">
                     <option value="free" @selected(old('delivery_mode',$deliveryMode)==='free')>Tam pulsuz</option>
