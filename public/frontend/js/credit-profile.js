@@ -61,6 +61,7 @@ $(function () {
                 });
 
                 $.notify(response.message, 'success');
+                if (form.data('return-url')) window.location.assign(form.data('return-url'));
             },
             error: function (xhr) {
                 if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
