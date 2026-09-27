@@ -9,7 +9,7 @@
                 <h1 class="account-panel-title">{{ __('credit_title') }}</h1>
                 <p class="account-panel-desc">{{ __('credit_description') }}</p>
 
-                <form id="creditProfileForm" class="credit-form" novalidate method="POST" action="{{ route('profile.credit.update') }}"
+                <form id="creditProfileForm" class="credit-form" data-return-url="{{ $returnUrl ?? '' }}" novalidate method="POST" action="{{ route('profile.credit.update') }}"
                       enctype="multipart/form-data"
                       data-change-label="{{ __('credit_change') }}"
                       data-error-message="{{ __('credit_generic_error') }}">
