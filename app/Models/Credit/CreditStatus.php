@@ -1,6 +1,7 @@
 <?php
-namespace App\Models;
+namespace App\Models\Credit;
 use Illuminate\Database\Eloquent\Model;
+
 class CreditStatus extends Model {
     protected $guarded = [];
     public function getLocalizedNameAttribute(): string {

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Faq;
-use App\Models\CreditTerms;
 use App\Services\CatalogService;
 use Illuminate\Http\Request;
 

@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\CreditPeriod;
-use App\Models\CreditTerms;
-use App\Models\CreditTermItem;
-use App\Models\CreditApplication;
+use App\Models\Credit\CreditApplication;
+use App\Models\Credit\CreditPeriod;
+use App\Models\Credit\CreditTermItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

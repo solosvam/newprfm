@@ -2,9 +2,9 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\CreditApplication;
-use App\Models\CreditPeriod;
-use App\Models\CreditStatus;
+use App\Models\Credit\CreditApplication;
+use App\Models\Credit\CreditPeriod;
+use App\Models\Credit\CreditStatus;
 use App\Models\Order\Order;
 use App\Models\Order\OrderStatus;
 use App\Models\PaymentMethod;

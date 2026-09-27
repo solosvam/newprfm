@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\CreditPeriod;
-use App\Models\CreditTermItem;
+use App\Models\Credit\CreditPeriod;
+use App\Models\Credit\CreditTermItem;
 use App\Models\Product\Product;
 use Illuminate\Support\Collection;
 

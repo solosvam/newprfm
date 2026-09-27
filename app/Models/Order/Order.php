@@ -18,7 +18,7 @@ class Order extends Model {
     }
     public function creditApplication()
     {
-        return $this->hasOne(\App\Models\CreditApplication::class);
+        return $this->hasOne(\App\Models\Credit\CreditApplication::class);
     }
     public function items()
     {

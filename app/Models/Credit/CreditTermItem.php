@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Credit;
 
 use Illuminate\Database\Eloquent\Model;
 
