@@ -14,7 +14,12 @@ class CreditProfileController extends Controller
 
     public function edit(Request $request)
     {
+        $return = $request->query('return');
+        $returnUrl = is_string($return) && parse_url($return, PHP_URL_HOST) === $request->getHost()
+            ? $return : null;
+
         return view('frontend.credit-profile', [
+            'returnUrl' => $returnUrl,
             'profile' => $request->user()->creditProfile,
         ]);
     }
