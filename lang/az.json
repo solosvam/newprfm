@@ -356,5 +356,7 @@
     "product_duration": "Müddət",
     "product_description_empty": "Bu ətir haqqında təsvir hələ əlavə edilməyib.",
     "product_notes": "Ətir notları",
-    "product_similar": "Bənzər məhsullar"
+    "product_similar": "Bənzər məhsullar",
+    "nav_search_placeholder": "Brend və ya ətir axtar...",
+    "nav_search_label": "Məhsul axtar"
 }
