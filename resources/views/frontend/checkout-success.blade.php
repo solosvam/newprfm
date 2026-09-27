@@ -28,7 +28,12 @@
                 {{ __('reviews_order_number') }} <strong>{{ $order->order_no }}</strong>
             </p>
 
-            <a href="{{ route('orders') }}" class="btn btn-dark order-success__link">{{ __('reviews_view_my_orders') }}</a>
+            @if(!($guestOneClick ?? false))
+                <a href="{{ route('orders') }}" class="btn btn-dark order-success__link">{{ __('reviews_view_my_orders') }}</a>
+            @else
+                <p class="order-success__subtitle">{{ __('product_one_click_contact') }}</p>
+                <a href="{{ route('home') }}" class="btn btn-dark order-success__link">{{ __('product_home') }}</a>
+            @endif
         </div>
     </main>
 @endsection
