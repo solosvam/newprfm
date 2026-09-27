@@ -386,5 +386,6 @@
     "credit_modal_rules": "Onlayn hissə-hissə müraciət üçün qaydalar",
     "credit_modal_accept": "Şərtlər və qaydalarla tanış oldum və qəbul edirəm",
     "credit_modal_error": "Müraciət göndərilmədi. Yenidən cəhd edin.",
-    "credit_modal_scroll_hint": "Bütün qaydaları oxumaq üçün aşağı sürüşdürün"
+    "credit_modal_scroll_hint": "Bütün qaydaları oxumaq üçün aşağı sürüşdürün",
+    "product_installment_schedule": "Hissə-hissə ödəniş cədvəli"
 }
