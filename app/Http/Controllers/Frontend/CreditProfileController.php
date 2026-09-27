@@ -335,7 +335,7 @@ class CreditProfileController extends Controller
     {
         // Şəxsiyyət vəsiqəsi şəkilləri yalnız sahibinə aid qorunan route ilə göstərilir.
         // Bazada yalnız UUID.webp formatlı fayl adı saxlanılır.
-        if (!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.webp$/i', $filename)) {
+        if (!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}[.]webp$/i', $filename)) {
             return null;
         }
 
