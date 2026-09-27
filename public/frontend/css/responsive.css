@@ -307,3 +307,23 @@ html, body { overflow-x: hidden; }
     .order-card__products { grid-area: products; }
     .order-card__side { grid-area: side; border-left: 0; padding-left: 0; min-width: 0; }
 }
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .od-grid { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+@media (max-width: 860px) {
+    .od-grid { display: flex; flex-direction: column; }
+    .od-main, .od-aside { display: contents; }
+    .od-timeline-card { order: 1; }
+    .od-products      { order: 2; }
+    .od-payment       { order: 3; }
+    .od-delivery      { order: 4; }
+}
+@media (max-width: 480px) {
+    .od-header__title h1 { font-size: 20px; }
+    .od-item { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; padding: 12px 16px; }
+    .od-item__img { width: 44px; height: 52px; }
+    .od-card__head { padding: 14px 16px 4px; }
+    .od-card__body { padding: 12px 16px 16px; }
+}

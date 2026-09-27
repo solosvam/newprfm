@@ -458,5 +458,14 @@
     "credit_address_confirm": "Confirm application",
     "credit_address_back": "Back to product",
     "credit_success_title": "Your application has been received.",
-    "credit_success_contact": "We will contact you within one business day."
+    "credit_success_contact": "We will contact you within one business day.",
+    "orders_items": "Items",
+    "orders_timeline": "Order history",
+    "orders_card": "Card",
+    "orders_installment_period": "Term",
+    "orders_months": "mo.",
+    "orders_monthly_payment": "Monthly",
+    "orders_installment_total": "Total",
+    "orders_installment_details": "Installment schedule",
+    "orders_bonus_earned_note": "bonus earned"
 }

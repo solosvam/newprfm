@@ -393,5 +393,14 @@
     "credit_address_confirm": "Müraciəti təsdiqlə",
     "credit_address_back": "Məhsula qayıt",
     "credit_success_title": "Müraciətiniz qeydə alındı.",
-    "credit_success_contact": "Bir iş günü ərzində sizinlə əlaqə saxlanılacaq."
+    "credit_success_contact": "Bir iş günü ərzində sizinlə əlaqə saxlanılacaq.",
+    "orders_items": "Məhsullar",
+    "orders_timeline": "Sifarişin hərəkəti",
+    "orders_card": "Kart",
+    "orders_installment_period": "Müddət",
+    "orders_months": "ay",
+    "orders_monthly_payment": "Aylıq",
+    "orders_installment_total": "Cəmi",
+    "orders_installment_details": "Hissəli ödəniş cədvəli",
+    "orders_bonus_earned_note": "bonus qazandınız"
 }

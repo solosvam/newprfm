@@ -458,5 +458,14 @@
     "credit_address_confirm": "Подтвердить заявку",
     "credit_address_back": "Вернуться к товару",
     "credit_success_title": "Ваша заявка зарегистрирована.",
-    "credit_success_contact": "Мы свяжемся с вами в течение одного рабочего дня."
+    "credit_success_contact": "Мы свяжемся с вами в течение одного рабочего дня.",
+    "orders_items": "Товары",
+    "orders_timeline": "История заказа",
+    "orders_card": "Карта",
+    "orders_installment_period": "Срок",
+    "orders_months": "мес.",
+    "orders_monthly_payment": "Ежемесячно",
+    "orders_installment_total": "Итого",
+    "orders_installment_details": "График платежей",
+    "orders_bonus_earned_note": "бонусов начислено"
 }
