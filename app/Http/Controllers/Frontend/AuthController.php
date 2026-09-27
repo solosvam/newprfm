@@ -7,6 +7,9 @@ use App\Models\Customer\Customer;
 use App\Models\Order\Order;
 use App\Models\Product\ProductReview;
 use App\Services\SmsService;
+use App\Services\RegistrationOtpService;
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,7 +39,7 @@ class AuthController extends Controller
         }
 
         if (!$customer->active) {
-            return response()->json(['status' => 'inactive'], 403);
+            return response()->json(['status' => 'inactive', 'mobile' => $this->maskedMobile($mobile)]);
         }
 
         if ($customer->password) {
@@ -49,6 +52,47 @@ class AuthController extends Controller
             'status' => 'otp',
             'mobile' => $this->maskedMobile($mobile),
         ]);
+    }
+
+    public function verifyInactive(Request $request, RegistrationOtpService $registrationOtp)
+    {
+        $mobile = $this->normalizeMobile($request->input('mobile'));
+        $request->merge(['mobile' => $mobile]);
+        $request->validate([
+            'mobile' => ['required', 'regex:/^994\\d{9}$/'],
+            'otp' => ['required', 'digits:6'],
+        ], LocalizedValidation::messages(), LocalizedValidation::attributes());
+
+        $customer = Customer::where('mobile', $mobile)->where('active', false)->firstOrFail();
+
+        if (!$registrationOtp->verify($customer, (string) $request->input('otp'))) {
+            throw ValidationException::withMessages(['otp' => __('validation_incorrect_or_expired_otp_code')]);
+        }
+
+        if (filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
+            try {
+                Mail::to($customer->email)->queue(new WelcomeMail($customer->name, app()->getLocale()));
+            } catch (\\Throwable $e) {
+                report($e);
+            }
+        }
+
+        Auth::login($customer);
+        $request->session()->regenerate();
+
+        return response()->json(['status' => 'success', 'redirect' => route('home')]);
+    }
+
+    public function resendInactive(Request $request, SmsService $sms, RegistrationOtpService $registrationOtp)
+    {
+        $mobile = $this->normalizeMobile($request->input('mobile'));
+        $request->merge(['mobile' => $mobile]);
+        $request->validate(['mobile' => ['required', 'regex:/^994\\d{9}$/']], LocalizedValidation::messages(), LocalizedValidation::attributes());
+
+        $customer = Customer::where('mobile', $mobile)->where('active', false)->firstOrFail();
+        $registrationOtp->send($customer, $sms);
+
+        return response()->json(['status' => 'sent']);
     }
 
     public function passwordLogin(Request $request)
