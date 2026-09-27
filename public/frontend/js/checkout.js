@@ -58,18 +58,25 @@
         }
     }
 
+
     function showError(message) {
         const text = message || messages.error;
-        els.error.hidden = true;
 
-        if (window.jQuery && typeof window.jQuery.notify === 'function') {
-            window.jQuery.notify(text, { className: 'error', position: 'top right', autoHideDelay: 5000 });
+        els.error.hidden = true;
+        els.error.textContent = '';
+
+        if (typeof window.parfumshopNotify === 'function') {
+            window.parfumshopNotify(text, 'error');
         } else {
             els.error.textContent = text;
             els.error.hidden = false;
-            els.error.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            els.error.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
         }
     }
+
 
     function clearError() {
         els.error.hidden = true;
