@@ -10,7 +10,7 @@
         'total' => __('credit_modal_total'),
         'rules' => __('credit_modal_rules'),
         'accept' => __('credit_modal_accept'),
-        'submit' => __('product_apply'),
+        'submit' => __('credit_address_continue'),
         'close' => __('common_close'),
         'success' => __('credit_application_success'),
         'error' => __('credit_modal_error'),
