@@ -32,9 +32,9 @@
                     <button type="submit" class="btn btn-dark auth-submit">{{ __('auth_confirm') }}</button>
                 </form>
 
-                <form method="POST" action="{{ route('front.register.resend') }}" class="auth-form">
+                <form method="POST" action="{{ route('front.register.resend') }}" style="margin-top:14px;">
                     @csrf
-                    <button type="submit" class="auth-register-btn">{{ __('auth_resend_code') }}</button>
+                    <button type="submit" class="btn btn-outline auth-submit" style="width:100%;">{{ __('auth_resend_code') }}</button>
                 </form>
             </div>
         </div>
