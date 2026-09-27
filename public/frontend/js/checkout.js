@@ -7,6 +7,7 @@
     const CART_KEY = 'parfumshop_cart';
     const BONUS = 'bonus_balance';
     const INSTALLMENT = 'installment';
+    const BIRBANK_INSTALLMENT = 'birbank_installment';
 
     const config = window.checkoutConfig || {};
     const { storeUrl, cartProductsUrl, cartUrl, csrf, messages = {} } = config;
@@ -23,6 +24,7 @@
         placeOrder: $('placeOrder'),
         error: $('checkoutError'),
         installment: $('installmentDetails'),
+        birbankInstallment: $('birbankInstallmentDetails'),
         periodInput: $('creditPeriod'),
         creditTerms: $('creditTerms'),
         bonusHint: page.querySelector('[data-bonus-hint]'),
@@ -32,6 +34,7 @@
     const paymentRadios = [...page.querySelectorAll('input[name="payment_method"]')];
     const bonusRadio = paymentRadios.find(r => r.dataset.code === BONUS);
     const periodRadios = [...page.querySelectorAll('input[name="credit_period_choice"]')];
+    const birbankMonthRadios = [...page.querySelectorAll('input[name="birbank_installment_months"]')];
 
     const state = { subtotal: 0, total: 0 };
 
@@ -182,6 +185,7 @@
         const isInstallment = selectedCode() === INSTALLMENT;
 
         if (els.installment) els.installment.hidden = !isInstallment;
+        if (els.birbankInstallment) els.birbankInstallment.hidden = selectedCode() !== BIRBANK_INSTALLMENT;
         if (els.placeOrder) els.placeOrder.disabled = isInstallment && !config.creditProfileComplete;
         clearError();
 
@@ -224,6 +228,10 @@
 
         syncBonus();
         updateCredit();
+        birbankMonthRadios.forEach(radio => {
+            const target = radio.closest('.installment__period')?.querySelector('[data-birbank-monthly]');
+            if (target) target.textContent = money(Math.ceil(state.total * 100 / Number(radio.value)) / 100) + (t.perMonth || '');
+        });
     }
 
     window.addEventListener('parfumshop:promo-updated', updateTotals);
@@ -307,6 +315,10 @@
             return String(t.bonusInsufficient || '').replace(':amount', money(state.total - bonusBalance));
         }
 
+        if (code === BIRBANK_INSTALLMENT && !birbankMonthRadios.some(r => r.checked)) {
+            return t.errPeriod || messages.error;
+        }
+
         if (code === INSTALLMENT) {
             if (!config.creditProfileComplete) return t.errProfile;
             if (!els.periodInput?.value) return t.errPeriod;
@@ -348,6 +360,8 @@
             address_note: val('addressNote'),
             payment_method_id: Number(paymentRadios.find(r => r.checked)?.value),
             credit_period_id: isInstallment ? (Number(els.periodInput?.value) || null) : null,
+            birbank_installment_months: selectedCode() === BIRBANK_INSTALLMENT
+                ? (Number(birbankMonthRadios.find(r => r.checked)?.value) || null) : null,
             accept_terms: isInstallment && els.creditTerms?.checked ? 1 : 0,
             gift_wrap: $('giftWrap')?.checked ? 1 : 0,
             customer_note: val('customerNote'),
