@@ -513,6 +513,9 @@ class Birbank
                 '/order/'.rawurlencode($payment->provider_order_id).'/exec-tran',
                 ['tran' => $tran]
             );
+            if ((string) data_get($result, 'tran.pmoResultCode') !== '1') {
+                throw new RuntimeException('Birbank did not confirm the transaction.');
+            }
             $operation->update([
                 'status' => 'succeeded',
                 'bank_action_id' => data_get($result, 'tran.match.tranActionId'),
