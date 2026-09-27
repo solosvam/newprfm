@@ -14,6 +14,8 @@
             'freeshipLeft' => __('cart_free_delivery_left'),
             'freeshipDone' => __('cart_free_delivery_done'),
             'installment'  => __('cart_installment_hint'),
+            'installmentWithInterest' => __('cart_installment_with_interest'),
+            'installmentHow' => __('cart_installment_how'),
             'bonus'        => __('cart_bonus_hint'),
             'decrease'     => __('cart_decrease'),
             'increase'     => __('cart_increase'),
