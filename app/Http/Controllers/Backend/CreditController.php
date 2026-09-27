@@ -90,9 +90,6 @@ class CreditController extends Controller
         $data = $request->validate([
             'items' => ['nullable', 'array', 'max:100'],
             'items.*.id' => ['nullable', 'integer', 'exists:credit_term_items,id'],
-            'items.*.title_az' => ['required', 'string', 'max:255'],
-            'items.*.title_en' => ['nullable', 'string', 'max:255'],
-            'items.*.title_ru' => ['nullable', 'string', 'max:255'],
             'items.*.content_az' => ['required', 'string'],
             'items.*.content_en' => ['nullable', 'string'],
             'items.*.content_ru' => ['nullable', 'string'],
