@@ -264,7 +264,7 @@
     "product_enter_your_mobile_number": "Mobil nömrənizi qeyd edin",
     "catalog_filter": "Filter",
     "catalog_price_range": "Qiymət aralığı",
-    "catalog_perfume_type": "Ətirin növü",
+    "catalog_perfume_type": "Ətrin növü",
     "catalog_bottle_size": "Ətirin həcmi",
     "catalog_fragrance_family": "Qoxu qrupu",
     "catalog_search": "Axtarış",
@@ -361,5 +361,13 @@
     "nav_search_label": "Məhsul axtar",
     "profile_gender": "Cinsiyyət",
     "profile_male": "Kişi",
-    "profile_female": "Qadın"
+    "profile_female": "Qadın",
+    "catalog_filter_title": "Filtr",
+    "catalog_gender": "Cinsiyyət",
+    "catalog_volume": "Ətrin həcmi",
+    "catalog_volume_hint": "Ətirin həcminə görə seçim edin.",
+    "catalog_scent_family": "Qoxu ailəsi",
+    "catalog_all_scent_families": "Bütün qoxu ailələri",
+    "catalog_clear": "Təmizlə",
+    "catalog_apply": "Tətbiq et"
 }
