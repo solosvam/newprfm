@@ -9,7 +9,7 @@
                     <span class="toolbar-brand">{{ $selectedCategory->{'name_' . app()->getLocale()} ?: $selectedCategory->name_az }}</span>
                 @endif
 
-                <form method="GET" action="{{ route('home') }}">
+                <form method="GET" action="{{ url()->current() }}">
                     @foreach(request()->except('sort', 'page') as $key => $value)
                         @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
                     @endforeach
