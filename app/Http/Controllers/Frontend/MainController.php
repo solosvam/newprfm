@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\CreditPeriod;
 use App\Models\Faq;
 use App\Models\CreditTerms;
 use App\Models\Product\Product;
 use App\Services\CatalogService;
+use App\Services\ProductDetailService;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
@@ -25,74 +25,23 @@ class MainController extends Controller
         ));
     }
 
-    public function product($slug)
+    public function product(string $slug, ProductDetailService $details)
     {
-        $product = Product::with([
-            'brand',
-            'type',
-            'images',
-            'genders',
-            'ingredients',
-            'variants' => fn ($query) => $query->where('active', 1)->orderBy('price'),
-            'variants.size',
-            'reviews' => fn ($query) => $query->where('active', true)->with('customer')->latest(),
-        ])->where('slug', $slug)->first();
+        $product = $details->findBySlug($slug);
 
         if (!$product && preg_match('/^(\\d+)(?:-|$)/', $slug, $matches)) {
             $legacyProduct = Product::findOrFail((int) $matches[1]);
+
             return redirect()->route('product', $legacyProduct->slug, 301);
         }
 
         abort_unless($product, 404);
 
-        $canonicalSlug = $product->slug;
-        if ($slug !== $canonicalSlug) {
-            return redirect()->route('product', $canonicalSlug, 301);
+        if ($slug !== $product->slug) {
+            return redirect()->route('product', $product->slug, 301);
         }
 
-        $ingredientIds = $product->ingredients->pluck('id');
-
-        $similarProducts = collect();
-
-        if ($ingredientIds->isNotEmpty()) {
-            $similarProducts = Product::query()
-                ->where('id', '!=', $product->id)
-                ->where('active', 1)
-                ->whereHas('ingredients', fn ($query) => $query->whereIn('ingredients.id', $ingredientIds))
-                ->withCount([
-                    'ingredients as shared_ingredients_count' => fn ($query) =>
-                    $query->whereIn('ingredients.id', $ingredientIds),
-                ])
-                ->with([
-                    'brand',
-                    'type',
-                    'images',
-                    'genders',
-                    'variants' => fn ($query) => $query->where('active', 1)->orderBy('price'),
-                    'variants.size',
-                ])
-                ->orderByDesc('shared_ingredients_count')
-                ->limit(4)
-                ->get();
-        }
-
-        $creditPeriods = CreditPeriod::where('active', 1)
-            ->orderBy('sort_order')
-            ->orderBy('month')
-            ->get();
-
-        $ratingAverage = round((float) $product->reviews->avg('rating'), 1);
-        $ratingCounts = collect(range(1, 5))->mapWithKeys(
-            fn ($rating) => [$rating => $product->reviews->where('rating', $rating)->count()]
-        );
-
-        return view('frontend.product', compact(
-            'product',
-            'similarProducts',
-            'ratingAverage',
-            'ratingCounts',
-            'creditPeriods'
-        ));
+        return view('frontend.product', $details->viewData($product));
     }
 
     public function credit()
