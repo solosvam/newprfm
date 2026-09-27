@@ -12,6 +12,10 @@
                     <p class="auth-subtext"><a href="{{ route('front.register.verify') }}">{{ __('auth_verify_account') }}</a></p>
                 @endif
 
+                @if($errors->has('otp'))
+                    <p class="auth-error">{{ $errors->first('otp') }}</p>
+                @endif
+
                 <form method="POST" action="{{ route('front.register.store') }}" class="auth-form">
                     @csrf
 
