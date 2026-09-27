@@ -187,6 +187,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/credit/applications', [CreditApplicationController::class, 'store'])
         ->middleware('throttle:5,1')->name('credit.application.store');
 
+    Route::get('/credit/application/address', [CreditApplicationController::class, 'address'])
+        ->name('credit.application.address');
+    Route::post('/credit/application/confirm', [CreditApplicationController::class, 'confirm'])
+        ->middleware('throttle:5,1')->name('credit.application.confirm');
+
     // Credit Profile
     Route::controller(CreditProfileController::class)->group(function () {
         Route::get('/profile/credit', 'edit')->name('profile.credit');
