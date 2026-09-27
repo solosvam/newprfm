@@ -12,10 +12,7 @@ class PromoCodesController extends Controller
 {
     public function index(Request $request)
     {
-        $promos = PromoCode::query()
-            ->when($request->filled('q'), fn ($q) => $q->where('code', 'like', '%' . trim($request->q) . '%'))
-            ->orderByDesc('id')
-            ->paginate(20)->withQueryString();
+        $promos = PromoCode::query()->orderByDesc('id')->get();
 
         return view('backend.promo-codes.index', compact('promos'));
     }
