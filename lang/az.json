@@ -1,5 +1,10 @@
 {
-    "filter": "Filter",
+    "product_one_click_buy": "Bir kliklə al",
+    "product_one_click_phone_hint": "Mobil nömrənizi daxil edin. Operatorumuz sifarişinizi dəqiqləşdirmək üçün sizinlə əlaqə saxlayacaq.",
+    "product_one_click_mobile": "Mobil nömrə",
+    "product_one_click_submit": "Sifarişi tamamla",
+    "product_one_click_contact": "Operatorumuz sizinlə əlaqə saxlayaraq ünvanı və ödəniş üsulunu dəqiqləşdirəcək.",
+"filter": "Filter",
     "brands": "Brendlər",
     "gift_card": "Hədiyyə kartı",
     "rules": "Qaydalar",
