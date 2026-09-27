@@ -18,18 +18,20 @@
             'decrease'     => __('cart_decrease'),
             'increase'     => __('cart_increase'),
         ];
+        $delivery = app(\App\Services\ShopPricing::class)->delivery();
+        $creditPeriod = \App\Models\Credit\CreditPeriod::where('active',1)->orderBy('sort_order')->first();
     @endphp
 
     <main>
         <div id="cartPage"
              class="cart-page is-loading"
              data-products-url="{{ route('cart.products') }}"
-             data-delivery-fee="{{ config('shop.delivery_fee') }}"
-             data-free-delivery-from="{{ config('shop.free_delivery_from') }}"
-             data-bonus-rate="{{ config('shop.bonus_rate') }}"
-             data-installment-months="{{ config('shop.installment.months') }}"
-             data-installment-min="{{ config('shop.installment.min_amount') }}"
-             data-installment-markup="{{ config('shop.installment.markup_percent') }}"
+             data-delivery-fee="{{ $delivery['fee'] }}"
+             data-free-delivery-from="{{ $delivery['free_from'] }}"
+             data-bonus-rate="{{ app(\App\Services\ShopPricing::class)->bonusRate() }}"
+             data-installment-months="{{ $creditPeriod?->month ?? 0 }}"
+             data-installment-min="{{ 0 }}"
+             data-installment-markup="{{ $creditPeriod?->interest_rate ?? 0 }}"
              data-i18n="{{ json_encode($cartI18n, JSON_UNESCAPED_UNICODE) }}">
 
             <a href="{{ route('home') }}" class="account-back">
