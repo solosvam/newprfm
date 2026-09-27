@@ -1,4 +1,4 @@
-<form class="filter-card" method="GET" action="{{ route('home') }}">
+<form class="filter-card" method="GET" action="{{ url()->current() }}">
     <button type="button" class="filter-card__head" data-filter-toggle aria-expanded="false" aria-controls="filterBody">
         <h3>Filter</h3>
         <svg class="filter-card__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
