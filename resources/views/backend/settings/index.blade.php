@@ -38,6 +38,7 @@
                                     <select id="delivery_mode" name="delivery_mode"
                                         @class(['form-select', 'is-invalid' => $errors->has('delivery_mode')])>
                                         <option value="free" @selected(old('delivery_mode', $deliveryMode) === 'free')>Tam pulsuz</option>
+                                        <option value="paid" @selected(old('delivery_mode', $deliveryMode) === 'paid')>Pullu çatdırılma</option>
                                         <option value="threshold" @selected(old('delivery_mode', $deliveryMode) === 'threshold')>Məbləğdən yuxarı pulsuz</option>
                                     </select>
                                     @error('delivery_mode')
@@ -46,8 +47,8 @@
                                 </div>
                             </div>
 
-                            <div id="deliveryThreshold"
-                                @class(['row g-3 mt-0', 'd-none' => old('delivery_mode', $deliveryMode) !== 'threshold'])>
+                            <div id="deliveryFields"
+                                @class(['row g-3 mt-0', 'd-none' => old('delivery_mode', $deliveryMode) === 'free'])>
                                 <div class="col-sm-6">
                                     <label for="delivery_fee" class="form-label">Çatdırılma haqqı</label>
                                     <div class="input-group has-validation">
@@ -60,7 +61,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
+                                <div id="deliveryThreshold" class="col-sm-6 {{ old('delivery_mode', $deliveryMode) === 'threshold' ? '' : 'd-none' }}">
                                     <label for="free_delivery_from" class="form-label">Pulsuz olduğu məbləğ</label>
                                     <div class="input-group has-validation">
                                         <span class="input-group-text">≥</span>
@@ -144,6 +145,7 @@
 
     <script>
         document.getElementById('delivery_mode').addEventListener('change', function () {
+            document.getElementById('deliveryFields').classList.toggle('d-none', this.value === 'free');
             document.getElementById('deliveryThreshold').classList.toggle('d-none', this.value !== 'threshold');
         });
     </script>
