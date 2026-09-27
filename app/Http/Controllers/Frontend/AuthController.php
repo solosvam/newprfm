@@ -72,7 +72,7 @@ class AuthController extends Controller
         if (filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
             try {
                 Mail::to($customer->email)->queue(new WelcomeMail($customer->name, app()->getLocale()));
-            } catch (\\Throwable $e) {
+            } catch (\Throwable $e) {
                 report($e);
             }
         }
