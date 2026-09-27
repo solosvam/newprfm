@@ -228,10 +228,6 @@
 
         syncBonus();
         updateCredit();
-        birbankMonthRadios.forEach(radio => {
-            const target = radio.closest('.installment__period')?.querySelector('[data-birbank-monthly]');
-            if (target) target.textContent = money(Math.ceil(state.total * 100 / Number(radio.value)) / 100) + (t.perMonth || '');
-        });
     }
 
     window.addEventListener('parfumshop:promo-updated', updateTotals);
