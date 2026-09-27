@@ -181,12 +181,7 @@ class CheckoutController extends Controller
             $period = $paymentMethod->code === 'installment' ? CreditPeriod::whereKey($data['credit_period_id'])->where('active', 1)->firstOrFail() : null;
             $creditTotal = $period ? round($subtotal * (1 + (float) $period->interest_rate / 100), 2) : $subtotal;
 
-            // Sifariş nömrəsi
-            $nextOrderId = (Order ::max('id') ?? 0) + 1;
-
-            $orderNo = 'PS'
-                . now() -> format('ymd')
-                . str_pad((string)$nextOrderId, 6, '0', STR_PAD_LEFT);
+            $orderNo = 'TMP'.Str::random(20);
 
             // Sifarişin yaradılması
             $order = Order ::create([
@@ -202,6 +197,8 @@ class CheckoutController extends Controller
                 'discount' => 0,
                 'total' => $creditTotal,
             ]);
+
+            $order->update(['order_no' => 'PS'.now()->format('ymd').str_pad((string) $order->id, 6, '0', STR_PAD_LEFT)]);
 
             // Sifariş məhsulları
             $order -> items() -> createMany($items);
