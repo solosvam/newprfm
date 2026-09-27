@@ -75,7 +75,6 @@
                         <div class="credit-photos-row">
                             @foreach (['id_card_front' => __('credit_id_card_front'), 'id_card_back' => __('credit_id_card_back')] as $field => $label)
                                 @php
-                                    $side = $field === 'id_card_front' ? 'front' : 'back';
                                     $hasImage = (bool) $profile?->{$field};
                                 @endphp
 
@@ -84,7 +83,7 @@
 
                                     <div class="credit-photo" data-photo="{{ $field }}">
                                         <img class="credit-preview"
-                                             src="{{ $hasImage ? route('profile.credit.image', ['side' => $side, 'v' => time()]) : '' }}"
+                                             src="{{ $hasImage ? asset('frontend/uploads/customers/' . basename($profile->{$field})) : '' }}"
                                              alt="{{ $label }}"
                                              @if (!$hasImage) hidden @endif>
 
