@@ -46,9 +46,6 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 .qty { display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 999px; width: fit-content; padding: 6px 16px; margin-bottom: 16px; font-size: 15px; color: var(--text); }
 .qty button { border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; padding: 2px 6px; }
 
-.btn { display: block; width: 100%; text-align: center; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 700; margin-bottom: 10px; border: none; cursor: pointer; }
-.btn-dark { background: var(--accent); color: var(--on-accent); }
-.btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
 
 /* Tabs */
 .tabs { margin-top: 24px; }

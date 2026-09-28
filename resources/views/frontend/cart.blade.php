@@ -90,7 +90,7 @@
                         <span id="cartInstallmentText"></span>
                     </p>
 
-                    <a id="cartCheckout" class="dark-button" href="{{ $checkoutUrl }}">
+                    <a id="cartCheckout" class="btn btn-dark" href="{{ $checkoutUrl }}">
                         {{ __('cart_checkout') }}
                     </a>
 

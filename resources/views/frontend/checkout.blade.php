@@ -221,7 +221,7 @@
                         <span id="checkoutEarnedBonusText"></span>
                     </p>
 
-                    <button id="placeOrder" type="button" class="dark-button">{{ __('checkout_confirm_order') }}</button>
+                    <button id="placeOrder" type="button" class="btn btn-dark">{{ __('checkout_confirm_order') }}</button>
 
                     @php $orderTermsUrl = \App\Models\Setting::valueOf('order_terms_url', ''); @endphp
                     @if($orderTermsUrl)
