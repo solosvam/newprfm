@@ -29,11 +29,11 @@
                             {{ $order->created_at?->format('d.m.Y H:i') }}
                         </td>
                         <td>
-                            {{ $order->paymentMethod?->name ?? '—' }}
+                            {{ $order->paymentMethod?->localized_name ?? '—' }}
                         </td>
                         <td>
                             <span class="badge bg-light text-dark">
-                                {{ $order->status?->name ?? '—' }}
+                                {{ $order->status?->localized_name ?? '—' }}
                             </span>
                         </td>
                         <td>
