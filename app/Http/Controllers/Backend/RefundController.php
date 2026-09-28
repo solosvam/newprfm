@@ -3,53 +3,78 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Common\PaymentRefund;
 use App\Models\Payment;
+use App\Services\Payment\Birbank;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class RefundController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request, Birbank $birbank): JsonResponse
     {
-        $request->validate([
-            'payment_id' => 'required|exists:payments,id',
-            'amount'     => 'required|numeric|min:0.01',
+        $data = $request->validate([
+            'payment_id' => ['required', 'integer', 'exists:payments,id'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
         ], [
             'payment_id.required' => 'Ödəniş seçilməyib',
-            'payment_id.exists'   => 'Ödəniş tapılmadı',
-            'amount.required'     => 'Məbləğ daxil edilməyib',
-            'amount.numeric'      => 'Məbləğ rəqəm olmalıdır',
-            'amount.min'          => 'Məbləğ 0.01-dən böyük olmalıdır',
+            'payment_id.exists' => 'Ödəniş tapılmadı',
+            'amount.required' => 'Məbləğ daxil edilməyib',
+            'amount.numeric' => 'Məbləğ rəqəm olmalıdır',
+            'amount.min' => 'Məbləğ 0.01-dən böyük olmalıdır',
         ]);
 
-        $payment = Payment::with('customerable')->findOrFail($request->payment_id);
+        $payment = Payment::findOrFail($data['payment_id']);
 
-        if (!in_array($payment->provider, [
-            Payment::PROVIDER_PAYTR,
-            Payment::PROVIDER_BIRBANK,
-        ])) {
+        if ($payment->provider !== 'birbank') {
             return response()->json([
                 'success' => false,
-                'message' => 'Bu ödəniş növü üçün geri ödəmə mümkün deyil',
-            ]);
+                'message' => 'Bu ödəniş növü üçün geri ödəmə mümkün deyil.',
+            ], 422);
         }
 
-        $result = RefundService::refund(
-            payment:  $payment,
-            amount:   (float) $request->amount,
-            provider: $payment->provider
-        );
+        if ($payment->status !== Payment::PAID) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Yalnız təsdiqlənmiş ödəniş geri qaytarıla bilər.',
+            ], 422);
+        }
 
-        return response()->json($result);
+        $amount = (float) $data['amount'];
+        if ($amount > $payment->refundableAmount()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Məbləğ qaytarıla bilən məbləğdən çoxdur.',
+            ], 422);
+        }
+
+        try {
+            $operation = $birbank->refund(
+                $payment,
+                number_format($amount, 2, '.', '')
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Geri ödəmə uğurla həyata keçirildi.',
+                'operation_id' => $operation->id,
+            ]);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
     }
 
-    public function byPayment(int $id)
+    public function byPayment(Payment $payment): View
     {
-        $refunds = PaymentRefund::with('user')
-            ->where('payment_id', $id)
-            ->orderBy('id', 'desc')
+        $refunds = $payment->refunds()
+            ->latest()
             ->get();
 
-        return view('admin.common.refund.by-payment', compact('refunds'));
+        return view('backend.crm.refunds', compact('payment', 'refunds'));
     }
 }
