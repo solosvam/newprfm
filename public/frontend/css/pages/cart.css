@@ -126,68 +126,8 @@
 }
 .cart-remove:hover { color: var(--cart-danger); background: color-mix(in srgb, var(--cart-danger) 8%, transparent); }
 
-/* Summary */
-.cart-summary {
-    position: sticky;
-    top: calc(var(--header-height, 88px) + 16px);
-    padding: 24px;
-    border: 1px solid var(--border); border-radius: 16px; background: var(--surface);
-}
-.cart-summary__title { margin: 0 0 16px; font-size: 17px; font-weight: 700; color: var(--text); }
-
-.cart-summary__rows {
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 16px 0; border-top: 1px solid var(--border);
-}
-.cart-summary__row {
-    display: flex; justify-content: space-between; gap: 16px;
-    font-size: 14px; color: var(--text-secondary); font-variant-numeric: tabular-nums;
-}
-.cart-summary__row strong { font-weight: 600; color: var(--text); white-space: nowrap; }
-.cart-summary__row--discount strong { color: #dc2626; }
-.cart-summary__row strong.is-free { color: var(--cart-success); }
-.cart-summary__code {
-    margin-left: 6px; padding: 1px 6px; border-radius: 5px;
-    font-size: 11.5px; font-style: normal; font-weight: 700; letter-spacing: .3px;
-    color: var(--cart-success); background: color-mix(in srgb, var(--cart-success) 12%, transparent);
-}
-.cart-summary__code:empty { display: none; }
-
-.cart-summary__total {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-    padding-top: 16px; border-top: 1px solid var(--border);
-    font-size: 15px; font-weight: 600; color: var(--text);
-}
-.cart-summary__total strong { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-/* Installment hint */
-.cart-installment {
-    display: flex; align-items: center; gap: 10px;
-    margin: 14px 0 15px; padding: 10px 12px; border-radius: 10px;
-    font-size: 13px; line-height: 1.4; color: var(--text);
-    background: color-mix(in srgb, var(--accent) 7%, var(--bg));
-    border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
-}
-.cart-installment svg { flex-shrink: 0; color: var(--accent); }
-.cart-installment strong { font-weight: 700; white-space: nowrap; }
-
-/* Bonus */
-.cart-bonus {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin: 12px 0 0; font-size: 13px; font-weight: 600; color: var(--cart-success);
-}
-.cart-bonus strong { font-weight: 800; }
-.cart-installment__how { display: inline-block; margin-top: 5px; font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
-.checkout-summary .cart-bonus { margin: 12px 0 16px; }
-
-/* Trust */
-.cart-trust {
-    display: flex; flex-direction: column; gap: 10px;
-    margin: 18px 0 0; padding: 16px 0 0; list-style: none;
-    border-top: 1px solid var(--border);
-}
-.cart-trust li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); }
-.cart-trust svg { flex-shrink: 0; color: var(--accent); }
+/* Installment hint — cart-da altda boşluq */
+.cart-page .cart-installment { margin-bottom: 15px; }
 
 /* Empty */
 .cart-empty { display: none; }
@@ -258,59 +198,6 @@
     .cart-summary { padding: 20px 16px; }
 }
 
-
-/* =========================================================
-   PROMO CODE (cart + checkout)
-   ========================================================= */
-.promo { margin-bottom: 16px; }
-
-.promo__toggle {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 4px 0; list-style: none; cursor: pointer;
-    font-size: 14px; font-weight: 600; color: var(--text);
-}
-.promo__toggle::-webkit-details-marker { display: none; }
-.promo__toggle::after {
-    content: ""; width: 7px; height: 7px; margin-right: 4px;
-    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-    transform: rotate(45deg); transition: transform .2s;
-}
-.promo__details[open] .promo__toggle::after { transform: rotate(-135deg); }
-
-.promo__form { display: flex; gap: 8px; margin-top: 10px; }
-.promo__input {
-    flex: 1; min-width: 0; height: 44px; padding: 0 14px;
-    border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
-    font-size: 14px; color: var(--text); text-transform: uppercase; letter-spacing: .5px;
-}
-.promo__input::placeholder { text-transform: none; letter-spacing: 0; color: var(--text-secondary); }
-.promo__input:focus {
-    outline: none; border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
-}
-.promo__apply {
-    height: 44px; padding: 0 18px; border: 1px solid var(--accent); border-radius: 10px;
-    background: var(--bg); color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer;
-    transition: background .15s, color .15s;
-}
-.promo__apply:hover { background: var(--accent); color: var(--on-accent); }
-.promo__form.is-loading .promo__apply { opacity: .6; pointer-events: none; }
-
-.promo__applied {
-    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
-    color: var(--cart-success);
-    border: 1px dashed color-mix(in srgb, var(--cart-success) 50%, transparent);
-    background: color-mix(in srgb, var(--cart-success) 8%, transparent);
-}
-.promo__code { font-size: 13.5px; font-weight: 700; letter-spacing: .5px; color: var(--text); }
-.promo__amount { margin-left: auto; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.promo__remove {
-    width: 26px; height: 26px; border: 0; border-radius: 50%; background: transparent;
-    font-size: 18px; line-height: 1; color: var(--text-secondary); cursor: pointer;
-}
-.promo__remove:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
-
-.promo__error { margin: 8px 0 0; font-size: 12.5px; color: var(--cart-danger); }
 
 /* =========================================================
    CART SKELETON
