@@ -19,7 +19,11 @@
     --info: #2b6cb0;
 
     /* Hər iki temada eyni */
-    --success-solid: #16883c;   /* ağ mətnli dolu fon */
+    /* Ağ mətnli dolu fonlar (toast, ikon dairələri) */
+    --success-solid: #16883c;
+    --danger-solid: #c53030;
+    --warning-solid: #975a16;
+    --info-solid: #2b6cb0;
     --on-solid: #ffffff;
     --image-bg: #ffffff;        /* məhsul şəkilləri ağ fonda */
 }

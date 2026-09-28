@@ -35,39 +35,30 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
    NOTIFY (jQuery notify toasts)
    ========================================================= */
 .notifyjs-corner { z-index: 99999 !important; top: 18px !important; right: 18px !important; }
-/* parfumshopNotify(): neytral fon + tipə görə rəngli zolaq və ikon.
-   Rənglər --success / --danger / --warning / --info dəyişənlərindən gəlir. */
-
-.notifyjs-parfumshop-success-base { --toast: var(--success); }
-.notifyjs-parfumshop-error-base   { --toast: var(--danger); }
-.notifyjs-parfumshop-warning-base { --toast: var(--warning); }
-.notifyjs-parfumshop-info-base    { --toast: var(--info); }
+/* parfumshopNotify(): dolu rəngli fon, ağ mətn (hər iki temada eyni).
+   Rənglər --*-solid dəyişənlərindən gəlir, ağ mətnlə kontrast ≥ 4.5:1. */
+.notifyjs-parfumshop-success-base { --toast: var(--success-solid); }
+.notifyjs-parfumshop-error-base   { --toast: var(--danger-solid); }
+.notifyjs-parfumshop-warning-base { --toast: var(--warning-solid); }
+.notifyjs-parfumshop-info-base    { --toast: var(--info-solid); }
 
 .notifyjs-parfumshop-success-base,
 .notifyjs-parfumshop-error-base,
 .notifyjs-parfumshop-warning-base,
 .notifyjs-parfumshop-info-base {
     min-width: 260px; max-width: 360px;
-    padding: 14px 18px 14px 16px;
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--toast);
-    border-radius: 10px;
-    background: var(--surface);
-    color: var(--text);
-    box-shadow: 0 10px 30px -8px rgba(0,0,0,.18);
+    padding: 14px 18px;
+    border: 0; border-radius: 10px;
+    background: var(--toast);
+    color: var(--on-solid);
+    box-shadow: 0 10px 30px -6px rgba(0,0,0,.35);
     font-size: 14px; font-weight: 600; line-height: 1.4;
 }
-[data-theme="dark"] .notifyjs-parfumshop-success-base,
-[data-theme="dark"] .notifyjs-parfumshop-error-base,
-[data-theme="dark"] .notifyjs-parfumshop-warning-base,
-[data-theme="dark"] .notifyjs-parfumshop-info-base {
-    box-shadow: 0 12px 32px -8px rgba(0,0,0,.6);
-}
-.ps-notify { display: flex; align-items: center; gap: 12px; }
+.ps-notify { display: flex; align-items: center; gap: 10px; }
 .ps-notify__check {
     display: inline-flex; align-items: center; justify-content: center;
-    flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%;
-    background: color-mix(in srgb, var(--toast) 14%, transparent);
+    flex: 0 0 23px; width: 23px; height: 23px; border-radius: 50%;
+    background: var(--on-solid);
     color: var(--toast);
     font-size: 13px; font-weight: 800; line-height: 1;
     font-variant-emoji: text; /* ✓ emoji kimi göstərilməsin */
