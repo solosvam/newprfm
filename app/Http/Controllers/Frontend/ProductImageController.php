@@ -20,7 +20,7 @@ class ProductImageController extends Controller
 
         abort_unless(is_file($sourcePath), 404);
 
-        $cacheDirectory = public_path('frontend/cache/products/' . $size);
+        $cacheDirectory = public_path('frontend/uploads/products/cache/' . $size);
         $cachePath = $cacheDirectory . '/' . $image;
 
         if (!is_file($cachePath) || filemtime($cachePath) < filemtime($sourcePath)) {
