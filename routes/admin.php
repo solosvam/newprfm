@@ -75,6 +75,11 @@ Route::prefix('admin')
             Route::get('/', [MainController::class, 'index'])
                 ->name('dashboard');
 
+            Route::get('/search-pages', function (\App\Services\AdminMenuService $menu) {
+                return response()->json($menu->searchPages())
+                    ->header('Cache-Control', 'private, no-store');
+            })->name('search-pages');
+
             Route::get('/main', [MainController::class, 'index'])
                 ->name('main');
 
