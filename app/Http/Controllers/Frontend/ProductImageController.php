@@ -32,8 +32,7 @@ class ProductImageController extends Controller
             $manager
                 ->decode(file_get_contents($sourcePath))
                 ->scaleDown(width: $size, height: $size)
-                ->toWebp(quality: 80)
-                ->save($cachePath);
+                ->save($cachePath, quality: 80);
         }
 
         return response(file_get_contents($cachePath), 200, [
