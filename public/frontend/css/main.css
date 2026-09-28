@@ -1783,3 +1783,19 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
 }
 .credit-profile-dialog__title { margin: 12px 0 16px; font-size: 23px; color: var(--text); }
 .credit-profile-dialog__text { line-height: 1.65; margin-bottom: 24px; color: var(--text-secondary); }
+
+/* One-click purchase: match the customer login phone input. */
+#oneClickDialog .one-click-mobile {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 18px 0 16px;
+    text-align: left;
+    font: inherit;
+}
+#oneClickDialog label[for="oneClickMobile"] {
+    display: block;
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
