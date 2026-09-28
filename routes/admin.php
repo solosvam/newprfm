@@ -190,6 +190,7 @@ Route::prefix('admin')
             Route::prefix('easy-orders')->name('easy-orders.')->controller(EasyOrdersController::class)->middleware('can:crm')->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('/{order}', 'show')->name('show');
+                Route::get('/{order}/customer-lookup', 'lookup')->name('lookup');
                 Route::post('/{order}/confirm', 'confirm')->name('confirm');
             });
 
