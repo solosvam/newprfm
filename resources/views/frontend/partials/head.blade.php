@@ -1,4 +1,11 @@
 <meta charset="UTF-8">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('frontend/images/favicon/apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('frontend/images/favicon/favicon-32x32.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ asset('frontend/images/favicon/favicon-16x16.png') }}">
+<link rel="icon" type="image/x-icon" href="{{ asset('frontend/images/favicon/favicon.ico') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ asset('frontend/images/favicon/android-chrome-192x192.png') }}">
+<link rel="icon" type="image/png" sizes="512x512" href="{{ asset('frontend/images/favicon/android-chrome-512x512.png') }}">
+
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>@yield('title', 'Parfumshop.az | Ətirlər')</title>
@@ -24,7 +31,6 @@
 <meta name="twitter:description" content="@yield('meta_description', 'Parfumshop.az — ətirlər və parfümeriya')">
 @yield('structured_data')
 
-{{-- Flash-ın qarşısını almaq üçün tema CSS-dən əvvəl tətbiq olunur --}}
 <script>
     (function () {
         var saved = localStorage.getItem('theme');
