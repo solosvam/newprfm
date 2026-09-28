@@ -38,26 +38,39 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 /* Legacy $.notify(message, 'error') calls use the Bootstrap preset.
    Give them the same solid toast treatment as parfumshopNotify(). */
 
+.notifyjs-parfumshop-success-base { --toast: var(--success); }
+.notifyjs-parfumshop-error-base   { --toast: var(--danger); }
+.notifyjs-parfumshop-warning-base { --toast: var(--warning); }
+.notifyjs-parfumshop-info-base    { --toast: var(--info); }
+
 .notifyjs-parfumshop-success-base,
 .notifyjs-parfumshop-error-base,
 .notifyjs-parfumshop-warning-base,
 .notifyjs-parfumshop-info-base {
-    color: #fff; border: 0; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,.18);
-    padding: 14px 18px; min-width: 260px; font-size: 14px; font-weight: 600;
+    min-width: 260px; max-width: 360px;
+    padding: 14px 18px 14px 16px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--toast);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 10px 30px -8px rgba(0,0,0,.18);
+    font-size: 14px; font-weight: 600; line-height: 1.4;
 }
-.notifyjs-parfumshop-success-base { background: #20c95a; }
-.notifyjs-parfumshop-error-base { background: #d9534f; }
-.notifyjs-parfumshop-warning-base { background: #d89a21; }
-.notifyjs-parfumshop-info-base { background: #377db8; }
-.ps-notify { display: flex; align-items: center; gap: 10px; }
+[data-theme="dark"] .notifyjs-parfumshop-success-base,
+[data-theme="dark"] .notifyjs-parfumshop-error-base,
+[data-theme="dark"] .notifyjs-parfumshop-warning-base,
+[data-theme="dark"] .notifyjs-parfumshop-info-base {
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,.6);
+}
+.ps-notify { display: flex; align-items: center; gap: 12px; }
 .ps-notify__check {
-    display: inline-flex; align-items: center; justify-content: center; width: 23px; height: 23px;
-    flex: 0 0 23px; border-radius: 50%; background: #fff; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%;
+    background: color-mix(in srgb, var(--toast) 14%, transparent);
+    color: var(--toast);
+    font-size: 13px; font-weight: 800;
 }
-.notifyjs-parfumshop-success-base .ps-notify__check { color: #20c95a; }
-.notifyjs-parfumshop-error-base .ps-notify__check { color: #d9534f; }
-.notifyjs-parfumshop-warning-base .ps-notify__check { color: #d89a21; }
-.notifyjs-parfumshop-info-base .ps-notify__check { color: #377db8; }
 
 /* =========================================================
    SELECT2
