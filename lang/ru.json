@@ -524,5 +524,20 @@
     "wishlist_added": "Добавлено ✓",
     "wishlist_added_message": "Товар добавлен в корзину",
     "wishlist_out_of_stock": "Нет в наличии",
-    "profile_change_password": "Изменить пароль"
+    "profile_change_password": "Изменить пароль",
+    "credit_section_personal": "Личные данные",
+    "credit_section_relatives": "Близкие родственники",
+    "credit_section_relatives_hint": "При необходимости банк может связаться с этими людьми.",
+    "credit_section_work": "Место работы",
+    "credit_section_documents": "Удостоверение личности",
+    "credit_section_documents_hint": "Фото должно быть чётким, весь текст — читаемым.",
+    "orders_delivery": "Доставка",
+    "orders_payment_failed": "Оплата не прошла",
+    "orders_payment_failed_hint": "Ваш заказ сохранён. Вы можете повторить оплату.",
+    "orders_payment_retry": "Попробовать снова",
+    "orders_payment_attempts": "История платежей",
+    "orders_payment_paid": "Оплачено",
+    "orders_payment_failed_short": "Не удалось",
+    "orders_payment_cancelled": "Отменено",
+    "orders_payment_pending": "Ожидается"
 }

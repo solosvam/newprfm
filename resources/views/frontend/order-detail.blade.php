@@ -17,6 +17,14 @@
             $order->address?->floor     ? __('orders_floor') . ' ' . $order->address->floor : null,
             $order->address?->apartment ? __('orders_apartment') . ' ' . $order->address->apartment : null,
         ])->filter()->implode(' · ');
+        $locale = app()->getLocale();
+        $paymentFailed = $order->paymentMethod?->code === 'card_online'
+            && in_array($order->payment_status, ['failed', 'cancelled'], true);
+        $paymentLabels = [
+            'paid'      => __('orders_payment_paid'),
+            'failed'    => __('orders_payment_failed_short'),
+            'cancelled' => __('orders_payment_cancelled'),
+        ];
     @endphp
 
     <main>
@@ -38,7 +46,18 @@
                         @if($order->paymentMethod)<span>{{ $order->paymentMethod->localized_name }}</span>@endif
                     </p>
                 </header>
-
+                @if($paymentFailed)
+                    <div class="od-alert" role="alert">
+                        <div class="od-alert__text">
+                            <strong>{{ __('orders_payment_failed') }}</strong>
+                            <span>{{ __('orders_payment_failed_hint') }}</span>
+                        </div>
+                        <form method="POST" action="{{ route('payment.birbank.start', $order) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-dark od-alert__btn">{{ __('orders_payment_retry') }}</button>
+                        </form>
+                    </div>
+                @endif
                 <div class="od-grid">
                     <div class="od-main">
                         {{-- Products --}}
@@ -131,69 +150,33 @@
                                     {{ $order->paymentMethod?->localized_name ?? '-' }}
                                 </div>
 
-                                @if($order->paymentMethod?->code === 'card_online'
-                                    && in_array($order->payment_status, ['failed', 'cancelled'], true))
-                                    <div class="od-payment-retry">
-                                        <p>{{ match(app()->getLocale()) {
-                                            'ru' => 'Оплата не прошла.',
-                                            'en' => 'Payment was unsuccessful.',
-                                            default => 'Ödəniş alınmadı.',
-                                        } }}</p>
-                                        <form method="POST" action="{{ route('payment.birbank.start', $order) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-dark">
-                                                {{ match(app()->getLocale()) {
-                                                    'ru' => 'Попробовать снова',
-                                                    'en' => 'Try again',
-                                                    default => 'Təkrar cəhd et',
-                                                } }}
-                                            </button>
-                                        </form>
-                                    </div>
-                                @endif
-
                                 @if($order->paymentMethod?->code === 'card_online' && $order->payments->isNotEmpty())
-                                    <div class="od-payment-attempts" style="margin: 16px 0;">
-                                        @unless($order->payments->count() === 1 && $order->payments->first()->status === 'paid')
-                                            <strong>{{ match(app()->getLocale()) {
-                                                'ru' => 'История платежей',
-                                                'en' => 'Payment attempts',
-                                                default => 'Ödəniş cəhdləri',
-                                            } }}</strong>
+                                    @php
+                                        $onlyOnePaid = $order->payments->count() === 1 && $order->payments->first()->status === 'paid';
+                                    @endphp
+                                    <div class="od-attempts">
+                                        @unless($onlyOnePaid)
+                                            <div class="od-attempts__title">{{ __('orders_payment_attempts') }}</div>
                                         @endunless
-                                        @foreach($order->payments as $payment)
-                                            @php
-                                                // Show only the already-masked PAN returned by the payment provider.
-                                                $maskedPan = (string) $payment->card_pan;
-                                                $displayPan = preg_match('/^\\d{4,8}\\*+\\d{4}$/', $maskedPan) ? $maskedPan : null;
-                                                $paymentStatus = match($payment->status) {
-                                                    'paid' => match(app()->getLocale()) {
-                                                        'ru' => 'Оплачено', 'en' => 'Paid', default => 'Ödənilib',
-                                                    },
-                                                    'failed' => match(app()->getLocale()) {
-                                                        'ru' => 'Не удалось', 'en' => 'Failed', default => 'Uğursuz',
-                                                    },
-                                                    'cancelled' => match(app()->getLocale()) {
-                                                        'ru' => 'Отменено', 'en' => 'Cancelled', default => 'Ləğv edilib',
-                                                    },
-                                                    default => match(app()->getLocale()) {
-                                                        'ru' => 'Ожидается', 'en' => 'Pending', default => 'Gözləmədə',
-                                                    },
-                                                };
-                                            @endphp
-                                            <div style="padding: 12px 0; border-bottom: 1px solid #e9e6f3;">
-                                                <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-                                                    <span>{{ $paymentStatus }}</span>
-                                                    <strong>{{ number_format((float) $payment->amount, 2) }} ₼</strong>
-                                                </div>
-                                                <div style="margin-top: 4px; color: #777383; font-size: 13px;">
-                                                    <time datetime="{{ $payment->updated_at?->toIso8601String() }}">{{ $payment->updated_at?->format('d.m.Y, H:i') }}</time>
-                                                    @if($displayPan)
-                                                        <span> · {{ __('orders_card') }} {{ $displayPan }}</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endforeach
+                                        <ul class="od-attempts__list">
+                                            @foreach($order->payments as $payment)
+                                                @php
+                                                    $maskedPan = (string) $payment->card_pan;
+                                                    $displayPan = preg_match('/^\d{4,8}\*+\d{4}$/', $maskedPan) ? $maskedPan : null;
+                                                    $statusKey = array_key_exists($payment->status, $paymentLabels) ? $payment->status : 'pending';
+                                                @endphp
+                                                <li class="od-attempt od-attempt--{{ $statusKey }}">
+                                                    <div class="od-attempt__row">
+                                                        <span class="od-attempt__status">{{ $paymentLabels[$statusKey] ?? __('orders_payment_pending') }}</span>
+                                                        <strong>{{ number_format((float) $payment->amount, 2) }} ₼</strong>
+                                                    </div>
+                                                    <div class="od-attempt__meta">
+                                                        <time datetime="{{ $payment->updated_at?->toIso8601String() }}">{{ $payment->updated_at?->format('d.m.Y, H:i') }}</time>
+                                                        @if($displayPan)<span>{{ __('orders_card') }} {{ $displayPan }}</span>@endif
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
                                     </div>
                                 @endif
 
@@ -227,11 +210,7 @@
                                         <div class="od-row od-row--discount"><span>{{ __('orders_discount') }}</span><span>−{{ number_format($order->discount, 2) }} ₼</span></div>
                                     @endif
                                     @if((float) $order->delivery_fee > 0)
-                                        <div class="od-row"><span>{{ match(app()->getLocale()) {
-                                            'ru' => 'Доставка',
-                                            'en' => 'Delivery',
-                                            default => 'Çatdırılma',
-                                        } }}</span><span>{{ number_format((float) $order->delivery_fee, 2) }} ₼</span></div>
+                                        <div class="od-row"><span>{{ __('orders_delivery') }}</span><span>{{ number_format((float) $order->delivery_fee, 2) }} ₼</span></div>
                                     @endif
                                     @if($order->bonus_used > 0)
                                         <div class="od-row od-row--discount"><span>{{ __('orders_paid_with_bonuses') }}</span><span>−{{ number_format($order->bonus_used, 2) }} ₼</span></div>

@@ -9,9 +9,19 @@ $(function () {
 
     // Şəkil faylı açıla bilmirsə, boş preview göstər.
     form.find('.credit-preview').on('error', function () {
-        const card = $(this).closest('.credit-photo');
-        $(this).prop('hidden', true);
-        card.find('.credit-empty').prop('hidden', false);
+        const selectLabel = form.data('select-label');
+
+        form.find('.credit-preview').on('error', function () {
+            const card = $(this).closest('.credit-photo');
+            $(this).prop('hidden', true);
+            card.find('.credit-empty').prop('hidden', false);
+            card.find('.credit-change').text(selectLabel);
+            card.find('.credit-file').prop('required', true);   // fayl serverdə yoxdursa, yenidən yükləmək məcburidir
+        }).on('load', function () {
+            const card = $(this).closest('.credit-photo');
+            $(this).prop('hidden', false);
+            card.find('.credit-empty').prop('hidden', true);
+        });
     }).on('load', function () {
         const card = $(this).closest('.credit-photo');
         $(this).prop('hidden', false);
@@ -68,7 +78,6 @@ $(function () {
                     preview.attr('src', url + '?v=' + Date.now()).prop('hidden', false);
                     card.find('.credit-empty').prop('hidden', true);
                     card.find('.credit-change').text(changeLabel);
-                    card.find('.credit-file').val('').prop('required', false).removeClass('is-visible');
                 });
 
                 $.notify(response.message, 'success');

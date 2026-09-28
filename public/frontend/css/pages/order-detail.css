@@ -123,3 +123,45 @@
 .order-success__subtitle strong { color: var(--text); font-weight: 700; }
 .order-success__link { width: auto; display: inline-block; padding: 13px 32px; margin: 0; }
 
+/* Ödəniş xəbərdarlığı */
+.od-alert {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    margin-bottom: 16px; padding: 14px 16px; border-radius: 12px;
+    background: color-mix(in srgb, #c53030 8%, var(--bg));
+    border: 1px solid color-mix(in srgb, #c53030 30%, var(--border));
+}
+.od-alert__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.od-alert__text strong { font-size: 14px; color: #c53030; }
+.od-alert__text span { font-size: 13px; color: var(--text-secondary); }
+.od-alert__btn { flex-shrink: 0; height: 40px; padding: 0 18px; margin: 0; border-radius: 10px; white-space: nowrap; }
+[data-theme="dark"] .od-alert__text strong { color: #f07171; }
+
+/* Ödəniş cəhdləri */
+.od-attempts { margin-top: 14px; }
+.od-attempts__title { margin-bottom: 4px; font-size: 13px; font-weight: 700; color: var(--text); }
+.od-attempts__list { list-style: none; margin: 0; padding: 0; }
+.od-attempt { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.od-attempt:last-child { border-bottom: 0; }
+.od-attempt__row {
+    display: flex; justify-content: space-between; gap: 12px;
+    font-size: 13.5px; color: var(--text); font-variant-numeric: tabular-nums;
+}
+.od-attempt__status { font-weight: 600; }
+.od-attempt--paid .od-attempt__status { color: #16883c; }
+.od-attempt--failed .od-attempt__status,
+.od-attempt--cancelled .od-attempt__status { color: #c53030; }
+.od-attempt--pending .od-attempt__status { color: #b7791f; }
+[data-theme="dark"] .od-attempt--paid .od-attempt__status { color: #4ccf7a; }
+[data-theme="dark"] .od-attempt--failed .od-attempt__status,
+[data-theme="dark"] .od-attempt--cancelled .od-attempt__status { color: #f07171; }
+[data-theme="dark"] .od-attempt--pending .od-attempt__status { color: #f0b44c; }
+.od-attempt__meta {
+    display: flex; flex-wrap: wrap; margin-top: 2px;
+    font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums;
+}
+.od-attempt__meta > * + *::before { content: "·"; margin: 0 6px; opacity: .6; }
+
+@media (max-width: 560px) {
+    .od-alert { flex-direction: column; align-items: stretch; }
+    .od-alert__btn { width: 100%; }
+}

@@ -135,8 +135,6 @@ html, body { overflow-x: hidden; }
     .account-cards { grid-template-columns: 1fr; }
     .account-card-birkart,
     .account-card-invite { grid-column: span 1; flex-direction: column; text-align: center; }
-    .bonus-head { flex-direction: column; align-items: flex-start; }
-    .bonus-table th, .bonus-table td { padding: 10px 12px; }
     .review-entry__head { flex-direction: column; align-items: flex-start; gap: 8px; }
     .review-entry__product { flex-direction: column; }
 }
@@ -290,7 +288,7 @@ html, body { overflow-x: hidden; }
     .od-grid { grid-template-columns: minmax(0, 1fr) 300px; }
 }
 @media (max-width: 860px) {
-    .od-grid { display: flex; flex-direction: column; }
+    .od-grid { display: flex; flex-direction: column; align-items: stretch; }
     .od-main, .od-aside { display: contents; }
     .od-timeline-card { order: 1; }
     .od-products      { order: 2; }

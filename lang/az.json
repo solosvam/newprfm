@@ -460,5 +460,20 @@
     "wishlist_added": "Əlavə edildi ✓",
     "wishlist_added_message": "Məhsul səbətə əlavə edildi",
     "wishlist_out_of_stock": "Hazırda mövcud deyil",
-    "profile_change_password": "Şifrəni dəyiş"
+    "profile_change_password": "Şifrəni dəyiş",
+    "credit_section_personal": "Şəxsi məlumatlar",
+    "credit_section_relatives": "Yaxın qohumlar",
+    "credit_section_relatives_hint": "Bank lazım gələrsə, bu şəxslərlə əlaqə saxlaya bilər.",
+    "credit_section_work": "İş yeri",
+    "credit_section_documents": "Şəxsiyyət vəsiqəsi",
+    "credit_section_documents_hint": "Şəkil aydın olmalı, bütün yazılar oxunmalıdır.",
+    "orders_delivery": "Çatdırılma",
+    "orders_payment_failed": "Ödəniş alınmadı",
+    "orders_payment_failed_hint": "Sifarişiniz saxlanılıb. Ödənişi yenidən edə bilərsiniz.",
+    "orders_payment_retry": "Təkrar cəhd et",
+    "orders_payment_attempts": "Ödəniş cəhdləri",
+    "orders_payment_paid": "Ödənilib",
+    "orders_payment_failed_short": "Uğursuz",
+    "orders_payment_cancelled": "Ləğv edilib",
+    "orders_payment_pending": "Gözləmədə"
 }

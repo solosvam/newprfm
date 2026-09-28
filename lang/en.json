@@ -524,5 +524,20 @@
     "wishlist_added": "Added ✓",
     "wishlist_added_message": "Product added to cart",
     "wishlist_out_of_stock": "Currently unavailable",
-    "profile_change_password": "Change password"
+    "profile_change_password": "Change password",
+    "credit_section_personal": "Personal details",
+    "credit_section_relatives": "Close relatives",
+    "credit_section_relatives_hint": "The bank may contact these people if needed.",
+    "credit_section_work": "Employment",
+    "credit_section_documents": "ID card",
+    "credit_section_documents_hint": "The photo must be clear and all text readable.",
+    "orders_delivery": "Delivery",
+    "orders_payment_failed": "Payment was unsuccessful",
+    "orders_payment_failed_hint": "Your order has been saved. You can try paying again.",
+    "orders_payment_retry": "Try again",
+    "orders_payment_attempts": "Payment attempts",
+    "orders_payment_paid": "Paid",
+    "orders_payment_failed_short": "Failed",
+    "orders_payment_cancelled": "Cancelled",
+    "orders_payment_pending": "Pending"
 }

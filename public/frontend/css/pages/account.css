@@ -372,7 +372,8 @@
 
     /* Formalar — tək sütun, iOS zoom-suz */
     .account-form-grid,
-    .credit-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .credit-grid,
+    .credit-grid--3 { grid-template-columns: minmax(0, 1fr); gap: 14px; }
     .credit-work-row,
     .credit-photos-row { grid-template-columns: minmax(0, 1fr); }
 
@@ -388,4 +389,23 @@
     .gender-pill span { height: 46px; }
 
     .account-form-submit { width: 100%; }
+}
+
+/* Kredit profili — bölmələr */
+.credit-section + .credit-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+.credit-section__title { margin: 0 0 14px; font-size: 15px; font-weight: 700; color: var(--text); }
+.credit-section__hint { margin: -8px 0 14px; font-size: 12.5px; line-height: 1.45; color: var(--text-secondary); }
+.credit-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.credit-field input.is-upper { text-transform: uppercase; letter-spacing: .5px; }
+
+@media (max-width: 760px) {
+    .order-card__payment {
+        flex-basis: 100%;
+        margin-top: 2px;
+    }
+    .order-card__meta > .order-card__payment::before { content: none; }
 }
