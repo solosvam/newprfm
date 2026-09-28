@@ -36,10 +36,10 @@ class BrandsController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        return view('frontend.home', array_merge(
+        return view('frontend.brand', array_merge(
             $catalog->catalogData(),
             [
-                'products' => $products,
+                'products'      => $products,
                 'selectedBrand' => $brand,
             ]
         ));

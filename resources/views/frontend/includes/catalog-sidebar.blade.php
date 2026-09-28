@@ -8,9 +8,11 @@
 
             @include('frontend.includes.filter-form')
 
+            @if($showExtras ?? true)
             <div id="sidebarExtras">
                 @include('frontend.includes.sidebar-products', ['items' => $recommendedProducts, 'title' => __('home_recommended'), 'panelId' => 'recommendedPanelBody'])
                 @include('frontend.includes.sidebar-products', ['items' => $bestSellers, 'title' => __('home_bestsellers'), 'panelId' => 'bestSellersPanelBody'])
             </div>
+            @endif
         </div>
 

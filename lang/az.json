@@ -476,5 +476,8 @@
     "orders_payment_failed_short": "Uğursuz",
     "orders_payment_cancelled": "Ləğv edilib",
     "orders_payment_pending": "Gözləmədə",
-    "reviews_pending_note": "Yoxlanıldıqdan sonra dərc olunacaq"
+    "reviews_pending_note": "Yoxlanıldıqdan sonra dərc olunacaq",
+    "brands_all": "Brendlər",
+    "catalog_products_count": ":count ətir",
+    "catalog_no_products": "Bu seçimə uyğun ətir tapılmadı"
 }

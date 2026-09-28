@@ -10,7 +10,7 @@
     padding: 14px 16px;
     border: 1px solid var(--border);
     border-radius: 14px;
-    background: var(--bg);
+    background: var(--surface);
 }
 
 .review-card__top {
@@ -61,7 +61,7 @@ a.review-card__name:hover { color: var(--accent); }
 /* Şərh */
 .review-card__comment {
     margin: 12px 0 0; padding: 10px 12px; border-radius: 10px;
-    background: var(--surface);
+    background: var(--surface-2);
     font-size: 14px; line-height: 1.55; color: var(--text);
     white-space: pre-line; overflow-wrap: anywhere;
 }

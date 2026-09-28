@@ -21,7 +21,7 @@ class CategoryController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        return view('frontend.home', array_merge(
+        return view('frontend.category', array_merge(
             $catalog->catalogData(),
             [
                 'products' => $products,

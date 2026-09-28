@@ -540,5 +540,8 @@
     "orders_payment_failed_short": "Не удалось",
     "orders_payment_cancelled": "Отменено",
     "orders_payment_pending": "Ожидается",
-    "reviews_pending_note": "Будет опубликован после проверки"
+    "reviews_pending_note": "Будет опубликован после проверки",
+    "brands_all": "Бренды",
+    "catalog_products_count": "{1} :count аромат|[2,4] :count аромата|[5,*] :count ароматов",
+    "catalog_no_products": "Ароматы по вашему запросу не найдены"
 }

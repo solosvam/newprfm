@@ -29,7 +29,7 @@
 .bonus-list {
     list-style: none; margin: 0; padding: 0;
     border: 1px solid var(--border); border-radius: 14px;
-    background: var(--bg); overflow: hidden;
+    background: var(--surface); overflow: hidden;
 }
 .bonus-row {
     display: grid;

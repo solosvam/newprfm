@@ -540,5 +540,8 @@
     "orders_payment_failed_short": "Failed",
     "orders_payment_cancelled": "Cancelled",
     "orders_payment_pending": "Pending",
-    "reviews_pending_note": "Will be published after moderation"
+    "reviews_pending_note": "Will be published after moderation",
+    "brands_all": "Brands",
+    "catalog_products_count": "{1} :count fragrance|[2,*] :count fragrances",
+    "catalog_no_products": "No fragrances match your selection"
 }

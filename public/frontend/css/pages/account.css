@@ -74,7 +74,7 @@
     margin-top: 24px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: var(--bg);
+    background: var(--surface);
 }
 .account-password__toggle {
     display: flex; align-items: center; justify-content: space-between;
@@ -167,7 +167,7 @@
     padding: 16px 20px;
     border: 1px solid var(--border);
     border-radius: 14px;
-    background: var(--bg);
+    background: var(--surface);
     transition: border-color .15s, box-shadow .15s;
 }
 .order-card:hover {
