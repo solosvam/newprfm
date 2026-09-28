@@ -143,11 +143,11 @@
                                                 ['Ata adı', $creditProfile?->father_name],
                                                 ['Cinsiyyət', (string) $customer->gender === '1' ? 'Kişi' : ((string) $customer->gender === '0' ? 'Qadın' : '-')],
                                                 ['FİN', $creditProfile?->fin],
-                                                ['1-ci qohumun adı', $creditProfile?->relative_1_name],
-                                                ['1-ci qohumun nömrəsi', $creditProfile?->relative_1_phone],
-                                                ['2-ci qohumun adı', $creditProfile?->relative_2_name],
-                                                ['2-ci qohumun nömrəsi', $creditProfile?->relative_2_phone],
-                                                ['İş yerinin adı', $creditProfile?->workplace_name],
+                                                ['Qohum ad', $creditProfile?->relative_1_name],
+                                                ['Qohum mobil', $creditProfile?->relative_1_phone],
+                                                ['Qohum ad', $creditProfile?->relative_2_name],
+                                                ['Qohum mobil', $creditProfile?->relative_2_phone],
+                                                ['İş yeri', $creditProfile?->workplace_name],
                                                 ['Əmək haqqı', $creditProfile?->salary],
                                                 ['Vəzifə', $creditProfile?->position],
                                         ] as [$label, $value])
@@ -168,8 +168,8 @@
                                         <div class="col-12">
                                             <div class="text-muted mb-1" style="font-size:11px;">{{ $label }}</div>
                                             @if($image)
-                                                <a href="{{ asset($image) }}" target="_blank">
-                                                    <img src="{{ asset($image) }}" alt="{{ $label }}" class="img-fluid rounded border w-100">
+                                                <a href="{{ asset('frontend/uploads/customers/' . ltrim($image, '/')) }}" target="_blank">
+                                                    <img src="{{ asset('frontend/uploads/customers/' . ltrim($image, '/')) }}" alt="{{ $label }}" class="img-fluid rounded border w-100">
                                                 </a>
                                             @else
                                                 <div class="text-muted">-</div>
