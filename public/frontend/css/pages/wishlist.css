@@ -9,7 +9,18 @@
 
 .wishlist-card { display: flex; flex-direction: column; }
 .wishlist-variant { margin-top: 10px; }
+.wishlist-title { margin: 0; font-size: 26px; font-weight: 800; color: var(--text); }
 
+.wishlist-page--guest [hidden] { display: none !important; }
+
+@media (min-width: 761px) {
+    .wishlist-page--guest .wishlist-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+    .wishlist-page--guest { padding: 16px 0 40px; }
+    .wishlist-title { font-size: 22px; }
+}
 .wishlist-select {
     display: flex; align-items: center;
     width: 100%; height: 36px; padding: 0 32px 0 12px;

@@ -140,7 +140,6 @@ a.mini-card:hover .mini-info .n { color: var(--accent); }
 
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
 .grid.similar-products { grid-template-columns: repeat(4, minmax(0,1fr)); }
-#guestWishlist.grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
 
 .card { position: relative; cursor: pointer; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; transition: border-color 0.15s; }
 .card:hover { border-color: var(--accent); }

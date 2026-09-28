@@ -51,26 +51,39 @@ class ProductController extends Controller
     public function wishlist(Request $request)
     {
         $ids = collect(explode(',', (string) $request->query('ids')))
-            ->filter()->map(fn ($id) => (int) $id)->unique()->values();
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->take(100)
+            ->values();
 
-        return Product::with([
-            'images',
-            'brand',
-            'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'),
-            'variants.size',
-        ])
-            ->whereIn('id', $ids)
-            ->where('active', 1)
+        $locale = app()->getLocale();
+
+        $products = Product::whereIn('id', $ids)
+            ->with([
+                'images',
+                'brand',
+                'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'),
+                'variants.size',
+            ])
             ->get()
-            ->sortBy(fn ($product) => $ids->search($product->id))
-            ->values()
-            ->map(fn ($product) => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'brand' => $product->brand?->name,
-                'url' => route('product', $product->slug),
-                'image' => $product->images->first() ? asset('frontend/uploads/products/'.$product->images->first()->image) : null,
-            ]);
+            ->sortBy(fn ($p) => $ids->search($p->id))   // sevimlilərə əlavə olunma sırası
+            ->values();
+
+        return response()->json([
+            'products' => $products->map(fn ($p) => [
+                'id'       => $p->id,
+                'name'     => $p->name,
+                'brand'    => $p->brand?->name,
+                'url'      => route('product', $p->slug),
+                'image'    => ($img = $p->images->first()) ? asset('frontend/uploads/products/' . $img->image) : null,
+                'variants' => $p->variants->map(fn ($v) => [
+                    'id'    => $v->id,
+                    'price' => (float) $v->price,
+                    'size'  => $v->size?->{'name_' . $locale} ?: $v->size?->name_az,
+                ])->values(),
+            ]),
+        ]);
     }
 
     public function cart(Request $request)
