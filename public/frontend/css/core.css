@@ -116,11 +116,46 @@ nav.cats a.active { color: var(--text); font-weight: 600; border-color: var(--ac
     right: 0;
     max-height: 420px;
     overflow-y: auto;
-    background: var(--bg);
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 14px;
     box-shadow: 0 12px 28px rgba(0,0,0,0.12);
     z-index: 50;
+}
+.search-results {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 16px 40px rgba(0,0,0,.18);
+}
+[data-theme="dark"] .search-results {
+    border-color: rgba(255,255,255,.08);
+    box-shadow: 0 18px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.4);
+}
+.search-results .search-result-thumb,
+[data-theme="dark"] .search-results .search-result-thumb {
+    background: #fff;
+}
+.search-results .search-result-thumb img {
+    mix-blend-mode: multiply;
+    filter: none;
+    opacity: 1;
+}
+/* hover / klaviatura seçimi – bir pillə yuxarı */
+.search-result-item:hover,
+.search-result-item.is-active { background: var(--surface-2); }
+
+/* şəkillər kartlardakı kimi ağ fonda */
+.search-result-thumb { background: #fff; }
+.search-result-thumb img { mix-blend-mode: multiply; }
+
+/* iOS/Chrome-un mavi "x" düyməsi əvəzinə öz rəngimiz */
+.search input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    background: var(--text-muted);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center/contain no-repeat;
+    cursor: pointer;
 }
 .search-result-item {
     display: flex;
@@ -189,7 +224,13 @@ nav.cats a.active { color: var(--text); font-weight: 600; border-color: var(--ac
 .logo-svg { width: 132px; height: auto; display: block; }
 footer .logo--svg { color: var(--on-accent-bg); }
 
-
+.search { position: relative; }
+.search-results {
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    max-height: min(460px, 70vh);
+}
 
 .btn { display: block; width: 100%; text-align: center; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 700; margin-bottom: 10px; border: none; cursor: pointer; }
 .btn-dark { background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent); }
