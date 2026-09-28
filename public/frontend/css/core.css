@@ -192,5 +192,5 @@ footer .logo--svg { color: var(--on-accent-bg); }
 
 
 .btn { display: block; width: 100%; text-align: center; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 700; margin-bottom: 10px; border: none; cursor: pointer; }
-.btn-dark { background: var(--accent); color: var(--on-accent); }
+.btn-dark { background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent); }
 .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
