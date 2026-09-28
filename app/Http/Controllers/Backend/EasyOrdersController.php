@@ -13,7 +13,6 @@ use App\Services\BonusService;
 use App\Services\ShopPricing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 class EasyOrdersController extends Controller
@@ -137,7 +136,7 @@ class EasyOrdersController extends Controller
                 'total' => round((float) $locked->subtotal - (float) $locked->discount + $delivery + (float) $locked->gift_wrap_fee, 2),
             ]);
             // Same order must not earn bonus twice if an operator retries.
-            if ($method->code === 'cash' && !$locked->bonusTransactions()->exists()) {
+            if ($method->code === 'cash' && !$customer->bonusTransactions()->where('order_id', $locked->id)->where('type', 'earn')->exists()) {
                 app(BonusService::class)->earnForOrder($customer, $locked, (float) $locked->total);
             }
             return $customer;
@@ -151,7 +150,7 @@ class EasyOrdersController extends Controller
             if ($message !== null) {
                 try {
                     app(SmsService::class)->send($data['mobile'], $message);
-                } catch (\\Throwable $e) {
+                } catch (\Throwable $e) {
                     Log::error('Asan sifariş qeydiyyat SMS-i göndərilmədi', [
                         'customer_id' => $customer->id, 'order_id' => $order->id,
                         'error' => $e->getMessage(),
