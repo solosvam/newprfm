@@ -47,6 +47,28 @@
                                 </div>
                             </div>
 
+                            <div class="row g-3 mt-1">
+                                <div class="col-sm-6">
+                                    <label for="registration_bonus_enabled" class="form-label">Qeydiyyat bonusu</label>
+                                    <select id="registration_bonus_enabled" name="registration_bonus_enabled" class="form-select">
+                                        <option value="1" @selected((string) old('registration_bonus_enabled', (int) $registrationBonusEnabled) === '1')>Aktiv</option>
+                                        <option value="0" @selected((string) old('registration_bonus_enabled', (int) $registrationBonusEnabled) === '0')>Deaktiv</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6" id="registrationBonusAmountField">
+                                    <label for="registration_bonus_amount" class="form-label">Qeydiyyat bonusunun məbləği</label>
+                                    <div class="input-group has-validation">
+                                        <input id="registration_bonus_amount" type="number" name="registration_bonus_amount"
+                                               min="0" max="10000" step="0.01"
+                                               value="{{ old('registration_bonus_amount', $registrationBonusAmount) }}"
+                                               @class(['form-control', 'is-invalid' => $errors->has('registration_bonus_amount')]) required>
+                                        <span class="input-group-text">₼</span>
+                                        @error('registration_bonus_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+                                <div class="col-12"><div class="form-text">Yalnız yeni müştəri yaradıldıqda verilir. Sifariş bonusu ayrıca hesablanır.</div></div>
+                            </div>
+
                             <div id="deliveryFields"
                                 @class(['row g-3 mt-0', 'd-none' => old('delivery_mode', $deliveryMode) === 'free'])>
                                 <div class="col-sm-6">
