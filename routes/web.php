@@ -21,6 +21,7 @@ use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\OrdersController;
 use App\Http\Controllers\Frontend\BirbankPaymentController;
 use App\Http\Controllers\Frontend\PromoCodeController;
+use App\Http\Controllers\Frontend\ProductImageController;
 
 
 /*
@@ -87,6 +88,18 @@ Route::controller(BrandsController::class)->group(function () {
     Route::get('/brands', 'index')->name('brands');
     Route::get('/brand/{slug}', 'products')->name('brand.products');
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| Optimized Product Images
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/image/product/{size}/{image}', [ProductImageController::class, 'show'])
+    ->whereNumber('size')
+    ->where('image', '[A-Za-z0-9._-]+')
+    ->name('product.image');
 
 
 /*
