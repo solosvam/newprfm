@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2.min.css')}}"/>
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2-bootstrap4.min.css')}}"/>
         <style>
-            .crm-avatar { width: 80px; height: 80px; font-size: 1.5rem; }
-            .credit-profile-card { border: 1px solid var(--separator); overflow: hidden; }
-            .credit-profile-card .accordion-button { min-height: 52px; background: transparent; box-shadow: none; }
-            .credit-profile-card .accordion-button:not(.collapsed) { background: rgba(var(--primary-rgb), .04); }
-            .credit-profile-card .credit-profile-title { font-size: 14px; font-weight: 600; }
+            .crm-avatar { width: 110px; height: 110px; font-size: 2rem; }
+            .crm-profile-card .card-body { padding: 2rem; }
+            .crm-credit-card .card-body { padding: 0; }
+            .crm-credit-card .credit-trigger { min-height: 68px; cursor: pointer; }
+            .crm-credit-card .credit-trigger.disabled { cursor: default; }
+            .crm-credit-card .list-item-heading { font-size: 14px; text-decoration: none; }
         </style>
 @endsection
 
@@ -81,85 +82,95 @@
             {{-- Sol Panel --}}
             <div class="col-12 col-xl-3">
 
-                {{-- Avatar + Balans --}}
-                <div class="card mb-3">
-                    <div class="card-body text-center pb-2">
-                        <div class="position-relative d-inline-block mb-2">
-                            <div class="crm-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-3">
-                                Rİ
+                {{-- Müştəri kartı --}}
+                <div class="card crm-profile-card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center flex-column">
+                            <div class="d-flex align-items-center flex-column mb-4">
+                                <div class="crm-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-3">
+                                    {{ mb_strtoupper(mb_substr($customer->name, 0, 1) . mb_substr($customer->surname, 0, 1)) }}
+                                </div>
+                                <div class="h5 mb-1">{{ $customer->fullname }}</div>
+                                <div class="text-muted">
+                                    <i data-acorn-icon="mobile" data-acorn-size="16" class="me-1"></i>
+                                    <span class="align-middle">{{ $customer->mobile }}</span>
+                                </div>
                             </div>
-                        </div>
-                        <h6 class="fw-bold mb-0">{{ $customer->fullname }}</h6>
-                        <small class="text-muted d-block">
-                            <i data-acorn-icon="mobile" data-acorn-size="13" class="me-1"></i>{{ $customer->mobile }}
-                        </small>
 
-                        <div class="mt-2">
-                            <button class="btn btn-outline-success w-100 balance-tab-btn">
-                                <div class="small text-muted">BONUS</div>
-                                <div class="fw-bold">{{ $customer->bonus_balance }} ₼</div>
-                            </button>
+                            <div class="d-flex flex-row justify-content-between w-100">
+                                <button type="button" class="btn btn-outline-success w-100 me-2 balance-tab-btn">
+                                    <i data-acorn-icon="dollar" data-acorn-size="16" class="me-1"></i>
+                                    Bonus: {{ number_format((float) $customer->bonus_balance, 2) }} ₼
+                                </button>
+
+                                <button type="button" class="btn btn-outline-primary w-100">
+                                    <i data-acorn-icon="cart" data-acorn-size="16" class="me-1"></i>
+                                    Sifariş götür
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Ətraflı məlumatlar --}}
+                {{-- Hissəli ödəniş məlumatları --}}
                 @php
                     $creditProfile = $customer->creditProfile;
                     $creditProfileComplete = $creditProfile?->isComplete() ?? false;
                 @endphp
-                <div class="card credit-profile-card">
-                    <div class="card-body p-0">
-                        <div class="accordion accordion-flush" id="customerDetails">
-                            <div class="accordion-item border-0">
-                                <h2 class="accordion-header">
-                                    @if($creditProfileComplete)
-                                        <button class="accordion-button collapsed px-3 py-3" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#detailsCollapse"
-                                                aria-expanded="false" aria-controls="detailsCollapse">
-                                            <i data-acorn-icon="user" data-acorn-size="16" class="me-2"></i>
-                                            <span class="credit-profile-title flex-grow-1">Hissəli ödəniş məlumatları</span>
-                                            <span class="badge bg-success me-2">Tamamlanıb</span>
-                                        </button>
-                                    @else
-                                        <div class="d-flex align-items-center px-3 py-3">
-                                            <i data-acorn-icon="user" data-acorn-size="16" class="me-2"></i>
-                                            <span class="credit-profile-title flex-grow-1">Hissəli ödəniş məlumatları</span>
-                                            <span class="badge bg-danger">Tamamlanmayıb</span>
-                                        </div>
-                                    @endif
-                                </h2>
 
-                                @if($creditProfileComplete)
-                                    <div id="detailsCollapse" class="accordion-collapse collapse">
-                                        <div class="accordion-body border-top pt-3 px-3 pb-3">
-                                            <div class="row g-2">
-                                                @foreach([
-                                                        ['ATA ADI', $creditProfile?->father_name],
-                                                        ['CİNSİYYƏT', $customer->gender],
-                                                        ['FİN', $creditProfile?->fin],
-                                                        ['1-Cİ QOHUMUN ADI', $creditProfile?->relative_1_name],
-                                                        ['1-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_1_phone],
-                                                        ['2-Cİ QOHUMUN ADI', $creditProfile?->relative_2_name],
-                                                        ['2-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_2_phone],
-                                                        ['ŞƏXSİYYƏT VƏSİQƏSİ (ÖN)', $creditProfile?->id_card_front],
-                                                        ['ŞƏXSİYYƏT VƏSİQƏSİ (ARXA)', $creditProfile?->id_card_back],
-                                                        ['İŞ YERİNİN ADI', $creditProfile?->workplace_name],
-                                                        ['ƏMƏK HAQQI', $creditProfile?->salary],
-                                                        ['VƏZİFƏ', $creditProfile?->position],
-                                                ] as [$label, $value])
-                                                    <div class="col-12">
-                                                        <div style="font-size:11px;" class="text-muted">{{ $label }}</div>
-                                                        <div style="font-size:13px;" class="fw-medium">{{ $value ?: '-' }}</div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
+                <div class="card d-flex mb-2 crm-credit-card">
+                    @if($creditProfileComplete)
+                        <div class="d-flex flex-grow-1 credit-trigger"
+                             role="button"
+                             data-bs-toggle="collapse"
+                             data-bs-target="#creditProfileCollapse"
+                             aria-expanded="false"
+                             aria-controls="creditProfileCollapse">
+                            <div class="card-body py-4 d-flex align-items-center w-100">
+                                <i data-acorn-icon="user" data-acorn-size="16" class="me-2"></i>
+                                <div class="btn btn-link list-item-heading p-0 text-start flex-grow-1">
+                                    Hissəli ödəniş məlumatları
+                                </div>
+                                <span class="badge bg-success ms-2">Tamamlanıb</span>
                             </div>
                         </div>
-                    </div>
+
+                        <div id="creditProfileCollapse" class="collapse">
+                            <div class="card-body accordion-content pt-0">
+                                <div class="row g-3">
+                                    @foreach([
+                                            ['ATA ADI', $creditProfile?->father_name],
+                                            ['CİNSİYYƏT', $customer->gender],
+                                            ['FİN', $creditProfile?->fin],
+                                            ['1-Cİ QOHUMUN ADI', $creditProfile?->relative_1_name],
+                                            ['1-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_1_phone],
+                                            ['2-Cİ QOHUMUN ADI', $creditProfile?->relative_2_name],
+                                            ['2-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_2_phone],
+                                            ['ŞƏXSİYYƏT VƏSİQƏSİ (ÖN)', $creditProfile?->id_card_front],
+                                            ['ŞƏXSİYYƏT VƏSİQƏSİ (ARXA)', $creditProfile?->id_card_back],
+                                            ['İŞ YERİNİN ADI', $creditProfile?->workplace_name],
+                                            ['ƏMƏK HAQQI', $creditProfile?->salary],
+                                            ['VƏZİFƏ', $creditProfile?->position],
+                                    ] as [$label, $value])
+                                        <div class="col-12">
+                                            <div class="text-muted" style="font-size:11px;">{{ $label }}</div>
+                                            <div class="fw-medium" style="font-size:13px;">{{ $value ?: '-' }}</div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="d-flex flex-grow-1 credit-trigger disabled">
+                            <div class="card-body py-4 d-flex align-items-center w-100">
+                                <i data-acorn-icon="user" data-acorn-size="16" class="me-2"></i>
+                                <div class="btn btn-link list-item-heading p-0 text-start flex-grow-1">
+                                    Hissəli ödəniş məlumatları
+                                </div>
+                                <span class="badge bg-danger ms-2">Tamamlanmayıb</span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
             </div>
