@@ -23,6 +23,8 @@ class SettingsController extends Controller
 
         return view('backend.settings.index', [
             'bonusPercent' => Setting::valueOf('order_bonus_percent', 5),
+            'registrationBonusEnabled' => (bool) Setting::valueOf('registration_bonus_enabled', 1),
+            'registrationBonusAmount' => Setting::valueOf('registration_bonus_amount', 10),
             'bannerSizes' => $bannerSizes,
             'deliveryMode' => Setting::valueOf('delivery_mode','free'),
             'deliveryFee' => Setting::valueOf('delivery_fee',0),
@@ -38,6 +40,8 @@ class SettingsController extends Controller
     {
         $rules = [
             'order_bonus_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'registration_bonus_enabled' => ['required', 'boolean'],
+            'registration_bonus_amount' => ['required', 'numeric', 'min:0', 'max:10000'],
             'order_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             'credit_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             'delivery_mode' => ['required', 'in:free,paid,threshold'],
