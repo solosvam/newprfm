@@ -50,6 +50,11 @@
 
 <link rel="stylesheet" href="{{ asset('frontend/css/theme-light.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/css/theme-dark.css') }}">
+<link rel="stylesheet" href="{{ asset('frontend/css/core.css') }}">
+@if(request()->routeIs('home'))
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/home.css') }}">
+@endif
+<link rel="stylesheet" href="{{ asset('frontend/css/catalog.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/css/main.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/css/responsive.css') }}">
 <link rel="preload" as="style" href="{{ asset('frontend/css/vendor/select2.min.css') }}" onload="this.onload=null;this.rel='stylesheet'">
