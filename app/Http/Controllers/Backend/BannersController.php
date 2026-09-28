@@ -145,7 +145,7 @@ class BannersController extends Controller
 
         $random = Str::lower(Str::random(8));
 
-        $imageName = $location . '-' . $device . '-' . $locale . '-' . $random . '.webp';
+        $imageName = $bannerId . '-' . $location . '-' . $device . '-' . $locale . '-' . $random . '.webp';
 
         $directory = public_path('frontend/uploads/banners');
 
