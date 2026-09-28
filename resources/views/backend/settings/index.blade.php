@@ -2,6 +2,12 @@
 @extends('backend.layout', ['title' => $title])
 
 @section('content')
+    @php
+        $deliveryModeValue = old('delivery_mode', $deliveryMode);
+        $giftWrapModeValue = old('gift_wrap_mode', $giftWrapMode);
+        $registrationOn    = (string) old('registration_bonus_enabled', (int) $registrationBonusEnabled) === '1';
+    @endphp
+
     <div class="container">
         <div class="page-title-container d-flex align-items-center justify-content-between mb-4">
             <h1 class="mb-0 pb-0 display-4">Ayarlar</h1>
@@ -11,12 +17,16 @@
         <form id="settingsForm" method="POST" action="{{ route('admin.settings.update') }}">
             @csrf
 
-            <div class="row g-4 align-items-start">
-                {{-- Sifariş və çatdırılma --}}
-                <div class="col-xl-5">
-                    <div class="card h-100">
+            <div class="row g-4">
+                {{-- ================= SOL ================= --}}
+                <div class="col-xl-6 d-flex flex-column gap-4">
+
+                    {{-- Bonuslar --}}
+                    <div class="card">
                         <div class="card-body">
-                            <h5 class="mb-3">Sifariş və çatdırılma</h5>
+                            <div class="settings-card-head">
+                                <h5 class="mb-0">Bonuslar</h5>
+                            </div>
 
                             <div class="row g-3">
                                 <div class="col-sm-6">
@@ -27,63 +37,68 @@
                                                value="{{ old('order_bonus_percent', $bonusPercent) }}"
                                                @class(['form-control', 'is-invalid' => $errors->has('order_bonus_percent')]) required>
                                         <span class="input-group-text">%</span>
-                                        @error('order_bonus_percent')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        @error('order_bonus_percent')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
+                                    <div class="form-text">Sifariş məbləğindən (çatdırılmasız) hesablanır.</div>
                                 </div>
 
                                 <div class="col-sm-6">
-                                    <label for="delivery_mode" class="form-label">Çatdırılma qaydası</label>
-                                    <select id="delivery_mode" name="delivery_mode"
-                                        @class(['form-select', 'is-invalid' => $errors->has('delivery_mode')])>
-                                        <option value="free" @selected(old('delivery_mode', $deliveryMode) === 'free')>Tam pulsuz</option>
-                                        <option value="paid" @selected(old('delivery_mode', $deliveryMode) === 'paid')>Pullu çatdırılma</option>
-                                        <option value="threshold" @selected(old('delivery_mode', $deliveryMode) === 'threshold')>Məbləğdən yuxarı pulsuz</option>
-                                    </select>
-                                    @error('delivery_mode')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="row g-3 mt-1">
-                                <div class="col-sm-6">
-                                    <label for="registration_bonus_enabled" class="form-label">Qeydiyyat bonusu</label>
-                                    <select id="registration_bonus_enabled" name="registration_bonus_enabled" class="form-select">
-                                        <option value="1" @selected((string) old('registration_bonus_enabled', (int) $registrationBonusEnabled) === '1')>Aktiv</option>
-                                        <option value="0" @selected((string) old('registration_bonus_enabled', (int) $registrationBonusEnabled) === '0')>Deaktiv</option>
-                                    </select>
-                                </div>
-                                <div class="col-sm-6" id="registrationBonusAmountField">
-                                    <label for="registration_bonus_amount" class="form-label">Qeydiyyat bonusunun məbləği</label>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <label for="registration_bonus_amount" class="form-label mb-0">Qeydiyyat bonusu</label>
+                                        <div class="form-check form-switch mb-0">
+                                            <input type="hidden" name="registration_bonus_enabled" value="0">
+                                            <input id="registration_bonus_enabled" name="registration_bonus_enabled" value="1"
+                                                   type="checkbox" role="switch" class="form-check-input"
+                                                   aria-label="Qeydiyyat bonusu aktivdir"
+                                                @checked($registrationOn)>
+                                        </div>
+                                    </div>
                                     <div class="input-group has-validation">
                                         <input id="registration_bonus_amount" type="number" name="registration_bonus_amount"
                                                min="0" max="10000" step="0.01"
                                                value="{{ old('registration_bonus_amount', $registrationBonusAmount) }}"
-                                               @class(['form-control', 'is-invalid' => $errors->has('registration_bonus_amount')]) required>
+                                            @class(['form-control', 'is-invalid' => $errors->has('registration_bonus_amount')])>
                                         <span class="input-group-text">₼</span>
                                         @error('registration_bonus_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
+                                    <div class="form-text">Yalnız yeni müştəri qeydiyyatdan keçəndə verilir.</div>
                                 </div>
-                                <div class="col-12"><div class="form-text">Yalnız yeni müştəri yaradıldıqda verilir. Sifariş bonusu ayrıca hesablanır.</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Çatdırılma və bükülmə --}}
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="settings-card-head">
+                                <h5 class="mb-0">Çatdırılma və bükülmə</h5>
                             </div>
 
-                            <div id="deliveryFields"
-                                @class(['row g-3 mt-0', 'd-none' => old('delivery_mode', $deliveryMode) === 'free'])>
-                                <div class="col-sm-6">
+                            {{-- Çatdırılma --}}
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="delivery_mode" class="form-label">Çatdırılma qaydası</label>
+                                    <select id="delivery_mode" name="delivery_mode"
+                                        @class(['form-select', 'is-invalid' => $errors->has('delivery_mode')])>
+                                        <option value="free" @selected($deliveryModeValue === 'free')>Tam pulsuz</option>
+                                        <option value="paid" @selected($deliveryModeValue === 'paid')>Pullu çatdırılma</option>
+                                        <option value="threshold" @selected($deliveryModeValue === 'threshold')>Məbləğdən yuxarı pulsuz</option>
+                                    </select>
+                                    @error('delivery_mode')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div id="deliveryFeeField" @class(['col-sm-6', 'd-none' => $deliveryModeValue === 'free'])>
                                     <label for="delivery_fee" class="form-label">Çatdırılma haqqı</label>
                                     <div class="input-group has-validation">
                                         <input id="delivery_fee" name="delivery_fee" type="number" min="0" step="0.01"
                                                value="{{ old('delivery_fee', $deliveryFee) }}"
                                             @class(['form-control', 'is-invalid' => $errors->has('delivery_fee')])>
                                         <span class="input-group-text">₼</span>
-                                        @error('delivery_fee')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        @error('delivery_fee')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
-                                <div id="deliveryThreshold" class="col-sm-6 {{ old('delivery_mode', $deliveryMode) === 'threshold' ? '' : 'd-none' }}">
+
+                                <div id="deliveryThreshold" @class(['col-sm-6', 'd-none' => $deliveryModeValue !== 'threshold'])>
                                     <label for="free_delivery_from" class="form-label">Pulsuz olduğu məbləğ</label>
                                     <div class="input-group has-validation">
                                         <span class="input-group-text">≥</span>
@@ -91,69 +106,44 @@
                                                value="{{ old('free_delivery_from', $freeDeliveryFrom) }}"
                                             @class(['form-control', 'is-invalid' => $errors->has('free_delivery_from')])>
                                         <span class="input-group-text">₼</span>
-                                        @error('free_delivery_from')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        @error('free_delivery_from')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="row g-3 mt-1">
+                            <hr class="settings-divider">
+
+                            {{-- Hədiyyəlik bükülmə --}}
+                            <div class="row g-3">
                                 <div class="col-sm-6">
                                     <label for="gift_wrap_mode" class="form-label">Hədiyyəlik bükülmə</label>
                                     <select id="gift_wrap_mode" name="gift_wrap_mode" class="form-select">
-                                        <option value="free" @selected(old('gift_wrap_mode', $giftWrapMode) === 'free')>Pulsuz</option>
-                                        <option value="paid" @selected(old('gift_wrap_mode', $giftWrapMode) === 'paid')>Pullu</option>
+                                        <option value="free" @selected($giftWrapModeValue === 'free')>Pulsuz</option>
+                                        <option value="paid" @selected($giftWrapModeValue === 'paid')>Pullu</option>
                                     </select>
                                 </div>
-                                <div id="giftWrapFeeField" class="col-sm-6 {{ old('gift_wrap_mode', $giftWrapMode) === 'paid' ? '' : 'd-none' }}">
+                                <div id="giftWrapFeeField" @class(['col-sm-6', 'd-none' => $giftWrapModeValue !== 'paid'])>
                                     <label for="gift_wrap_fee" class="form-label">Bükülmə haqqı</label>
                                     <div class="input-group has-validation">
                                         <input id="gift_wrap_fee" name="gift_wrap_fee" type="number" min="0" step="0.01"
                                                value="{{ old('gift_wrap_fee', $giftWrapFee) }}"
-                                               @class(['form-control', 'is-invalid' => $errors->has('gift_wrap_fee')])>
+                                            @class(['form-control', 'is-invalid' => $errors->has('gift_wrap_fee')])>
                                         <span class="input-group-text">₼</span>
                                         @error('gift_wrap_fee')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="mt-3">
-                                <label for="order_terms_url" class="form-label">Sifariş şərtlərinin URL-i</label>
-                                <input id="order_terms_url" name="order_terms_url" type="url" maxlength="2048"
-                                       placeholder="https://parfumshop.az/..."
-                                       value="{{ old('order_terms_url', $orderTermsUrl) }}"
-                                       @class(['form-control', 'is-invalid' => $errors->has('order_terms_url')])>
-                                @error('order_terms_url')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div class="form-text">Checkout səhifəsində “şərtlər” keçidi üçün istifadə olunur.</div>
-                            </div>
-
-                            <div class="mt-3">
-                                <label for="credit_terms_url" class="form-label">Kredit şərtlərinin URL-i</label>
-                                <input id="credit_terms_url" name="credit_terms_url" type="url" maxlength="2048"
-                                       placeholder="https://parfumshop.az/..."
-                                       value="{{ old('credit_terms_url', $creditTermsUrl) }}"
-                                       @class(['form-control', 'is-invalid' => $errors->has('credit_terms_url')])>
-                                @error('credit_terms_url')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div class="form-text">Checkout-da “Hissə-hissə ödəniş” seçiləndə kredit şərtlərinin keçidi kimi göstərilir.</div>
-                            </div>
-
-                            <div class="form-text mt-3">
-                                Bonus sifariş məbləğinin faizi kimi hesablanır (çatdırılma daxil deyil).
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Banner ölçüləri --}}
-                <div class="col-xl-7">
-                    <div class="card h-100">
+                {{-- ================= SAĞ ================= --}}
+                <div class="col-xl-6 d-flex flex-column gap-4">
+
+                    {{-- Banner ölçüləri --}}
+                    <div class="card">
                         <div class="card-body">
-                            <div class="d-flex align-items-baseline justify-content-between gap-3 mb-3">
+                            <div class="settings-card-head">
                                 <h5 class="mb-0">Banner ölçüləri</h5>
                                 <span class="text-muted small">Yeni bannerlər bu ölçülərə kəsiləcək</span>
                             </div>
@@ -186,9 +176,7 @@
                                                                value="{{ old($field, $bannerSizes[$key][$dimension]) }}"
                                                                @class(['form-control', 'is-invalid' => $errors->has($field)]) required>
                                                         <span class="input-group-text">px</span>
-                                                        @error($field)
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                        @enderror
+                                                        @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                     </div>
                                                 </td>
                                             @endforeach
@@ -199,50 +187,97 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Şərt keçidləri --}}
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="settings-card-head">
+                                <h5 class="mb-0">Şərt keçidləri</h5>
+                                <span class="text-muted small">Checkout səhifəsində göstərilir</span>
+                            </div>
+
+                            @foreach ([
+                                'order_terms_url'  => ['Sifariş şərtləri', $orderTermsUrl, 'Checkout-dakı “şərtlər” keçidi.'],
+                                'credit_terms_url' => ['Kredit şərtləri', $creditTermsUrl, '“Hissə-hissə ödəniş” seçiləndə göstərilir.'],
+                            ] as $field => [$label, $value, $hint])
+                                <div @class(['mb-3' => ! $loop->last])>
+                                    <label for="{{ $field }}" class="form-label">{{ $label }}</label>
+                                    <div class="input-group has-validation">
+                                        <input id="{{ $field }}" name="{{ $field }}" type="url" maxlength="2048"
+                                               placeholder="https://parfumshop.az/..."
+                                               value="{{ old($field, $value) }}"
+                                            @class(['form-control', 'is-invalid' => $errors->has($field)])>
+                                        <button type="button" class="btn btn-outline-secondary" data-open-url="{{ $field }}">Aç</button>
+                                        @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="form-text">{{ $hint }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
     </div>
 
     <style>
-        .settings-banner-table td { min-width: 140px; }
+        .settings-card-head {
+            display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+            margin-bottom: 1.25rem;
+        }
+        .settings-divider { margin: 1.5rem 0; opacity: .08; }
+        .settings-banner-table td { min-width: 130px; }
         .settings-banner-table tr:last-child > * { border-bottom: 0; }
+        #settingsForm .form-switch .form-check-input { width: 2.25em; height: 1.2em; cursor: pointer; }
     </style>
 
     <script>
         (() => {
-            const mode = document.getElementById('delivery_mode');
-            const fields = document.getElementById('deliveryFields');
-            const threshold = document.getElementById('deliveryThreshold');
-            const feeInput = document.getElementById('delivery_fee');
-            const thresholdInput = document.getElementById('free_delivery_from');
+            const $ = id => document.getElementById(id);
 
-            function syncDeliveryFields() {
-                const isFree = mode.value === 'free';
-                const isThreshold = mode.value === 'threshold';
-
-                fields.classList.toggle('d-none', isFree);
-                threshold.classList.toggle('d-none', !isThreshold);
-                feeInput.disabled = isFree;
-                feeInput.required = !isFree;
-                thresholdInput.disabled = !isThreshold;
-                thresholdInput.required = isThreshold;
+            function toggleField(wrapper, input, visible) {
+                wrapper?.classList.toggle('d-none', !visible);
+                if (input) {
+                    input.disabled = !visible;
+                    input.required = visible;
+                }
             }
 
-            const giftMode = document.getElementById('gift_wrap_mode');
-            const giftFeeField = document.getElementById('giftWrapFeeField');
-            const giftFeeInput = document.getElementById('gift_wrap_fee');
-            function syncGiftWrapFields() {
-                const paid = giftMode.value === 'paid';
-                giftFeeField.classList.toggle('d-none', !paid);
-                giftFeeInput.disabled = !paid;
-                giftFeeInput.required = paid;
+            // Çatdırılma
+            const deliveryMode = $('delivery_mode');
+            function syncDelivery() {
+                const mode = deliveryMode.value;
+                toggleField($('deliveryFeeField'), $('delivery_fee'), mode !== 'free');
+                toggleField($('deliveryThreshold'), $('free_delivery_from'), mode === 'threshold');
             }
-            giftMode.addEventListener('change', syncGiftWrapFields);
-            syncGiftWrapFields();
+            deliveryMode.addEventListener('change', syncDelivery);
+            syncDelivery();
 
-            mode.addEventListener('change', syncDeliveryFields);
-            syncDeliveryFields();
+            // Hədiyyəlik bükülmə
+            const giftMode = $('gift_wrap_mode');
+            function syncGiftWrap() {
+                toggleField($('giftWrapFeeField'), $('gift_wrap_fee'), giftMode.value === 'paid');
+            }
+            giftMode.addEventListener('change', syncGiftWrap);
+            syncGiftWrap();
+
+            // Qeydiyyat bonusu
+            const registrationSwitch = $('registration_bonus_enabled');
+            const registrationAmount = $('registration_bonus_amount');
+            function syncRegistration() {
+                registrationAmount.disabled = !registrationSwitch.checked;
+                registrationAmount.required = registrationSwitch.checked;
+            }
+            registrationSwitch.addEventListener('change', syncRegistration);
+            syncRegistration();
+
+            // URL-i yeni tabda aç
+            document.querySelectorAll('[data-open-url]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const url = $(button.dataset.openUrl)?.value.trim();
+                    if (url && /^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+                });
+            });
         })();
     </script>
 @endsection

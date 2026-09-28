@@ -39,16 +39,16 @@ class SettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $rules = [
+            'registration_bonus_amount' => ['required_if:registration_bonus_enabled,1', 'nullable', 'numeric', 'min:0', 'max:10000'],
+            'delivery_fee'              => ['required_unless:delivery_mode,free', 'nullable', 'numeric', 'min:0'],
+            'free_delivery_from'        => ['required_if:delivery_mode,threshold', 'nullable', 'numeric', 'min:0.01'],
+            'gift_wrap_fee'             => ['required_if:gift_wrap_mode,paid', 'nullable', 'numeric', 'min:0'],
             'order_bonus_percent' => ['required', 'numeric', 'min:0', 'max:100'],
             'registration_bonus_enabled' => ['required', 'boolean'],
-            'registration_bonus_amount' => ['required', 'numeric', 'min:0', 'max:10000'],
             'order_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             'credit_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             'delivery_mode' => ['required', 'in:free,paid,threshold'],
             'gift_wrap_mode' => ['required', 'in:free,paid'],
-            'gift_wrap_fee' => ['required_if:gift_wrap_mode,paid', 'nullable', 'numeric', 'min:0'],
-            'delivery_fee' => ['required_if:delivery_mode,paid,threshold', 'nullable','numeric','min:0'],
-            'free_delivery_from' => ['required_if:delivery_mode,threshold','nullable','numeric','gt:0'],
         ];
 
         foreach (array_keys(Setting::BANNER_DIMENSIONS) as $key) {
