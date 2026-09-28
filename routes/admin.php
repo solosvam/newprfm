@@ -216,6 +216,7 @@ Route::prefix('admin')
                     Route::post('/customer/{customer}/credit-profile', 'updateCreditProfile')->name('credit-profile.update');
                     Route::post('/customer/{customer}/reset-password', 'resetPassword')->name('reset-password');
                     Route::get('/customer/{customer}/sms', 'sms')->name('sms');
+                    Route::post('{id}/reset-password', 'resetPassword')->name('reset.password');
                 });
 
 

@@ -18,10 +18,7 @@
 @endsection
 
 @section('js_page')
-    <script src="{{asset('backend/js/vendor/select2.full.min.js')}}"></script>
-    <script src="{{asset('backend/js/forms/controls.select2.js')}}"></script>
     <script src="{{asset('backend/js/crm.js')}}"></script>
-    <script src="{{asset('backend/js/international/crm.int.js')}}"></script>
 @endsection
 @section('content')
     <div class="container">
@@ -62,7 +59,7 @@
                             <div class="d-flex flex-wrap gap-2">
 
                                 <button class="btn btn-sm btn-outline-warning" id="resetPasswordBtn"
-                                        data-url="">
+                                        data-url="{{ route('admin.crm.reset.password', $customer->id) }}">
                                     <i data-acorn-icon="lock-off" data-acorn-size="15" class="me-1"></i> Şifrə yenilə
                                 </button>
 
@@ -244,7 +241,7 @@
 
         {{-- SMS Modal --}}
         <div class="modal fade modal-close-out" id="smsModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header p-3">
                         <h5 class="modal-title">SMS tarixçəsi</h5>
@@ -259,6 +256,7 @@
             </div>
         </div>
 
+        {{-- Sifaris Modal --}}
         <div class="modal fade modal-close-out" id="addOrderModal" data-bs-backdrop="static" data-bs-keyboard="false"
              tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog modal-xl">

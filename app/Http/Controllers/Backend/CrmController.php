@@ -140,27 +140,24 @@ class CrmController extends Controller
         return redirect()->route('admin.crm.show', $customer)->with('success', 'Kredit profili yeniləndi.');
     }
 
-    public function resetPassword(Customer $customer, SmsService $sms): RedirectResponse
+    public function resetPassword($id)
     {
-        if (!$customer->mobile) {
-            return redirect()
-                ->route('admin.crm.show', $customer)
-                ->with('error', 'Müştərinin telefon nömrəsi olmadığı üçün şifrə yenilənmədi.');
-        }
+        $customer = Customer::findOrFail($id);
 
-        try {
-            $newPassword = Str::upper(Str::random(4)) . random_int(100000, 999999);
-            $sms->send($customer->mobile, "ParfumShop: yeni şifrəniz {$newPassword}");
-            $customer->forceFill(['password' => Hash::make($newPassword)])->save();
-        } catch (\RuntimeException $exception) {
-            return redirect()
-                ->route('admin.crm.show', $customer)
-                ->with('error', $exception->getMessage());
-        }
+        $newPassword = rand(100000, 999999);
 
-        return redirect()
-            ->route('admin.crm.show', $customer)
-            ->with('success', 'Yeni şifrə SMS ilə müştərinin nömrəsinə göndərildi.');
+        $customer->update([
+            'password' => bcrypt($newPassword),
+        ]);
+
+        $sms = new SmsService();
+
+        $sms->send(
+            $customer->mobile,
+            "Hörmətli {$customer->fullname}, yeni şifrəniz: {$newPassword}"
+        );
+
+        return response()->json(['success' => true]);
     }
 
     public function sms(Customer $customer, SmsService $sms): View

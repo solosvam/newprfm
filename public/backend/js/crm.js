@@ -112,5 +112,23 @@ $(document).ready(function () {
         });
     });
 
+    $('#resetPasswordBtn').on('click', function () {
+        if (!confirm('Müştərinin şifrəsi yeniləniləcək və SMS göndəriləcək. Əminsiniz?')) return;
+
+        const btn = $(this);
+
+        btn.prop('disabled', true);
+
+        $.post(ajax_url.crm.resetPassword.replace(':id', customerId))
+            .done(function () {
+                btn.prop('disabled', false);
+                alert('Şifrə yeniləndi və SMS göndərildi');
+            })
+            .fail(function () {
+                btn.prop('disabled', false);
+                alert('Xəta baş verdi');
+            });
+    });
+
 
 });

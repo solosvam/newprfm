@@ -91,6 +91,7 @@ class SmsService
                 'message' => $message['message'] ?? '—',
                 'status' => $statuses[$message['status']],
             ])
+            ->reverse()
             ->values()
             ->all();
     }

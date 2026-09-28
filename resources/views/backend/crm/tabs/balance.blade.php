@@ -5,36 +5,40 @@
     </div>
 
     @if($transactions->isEmpty())
-        <div class="text-center text-muted py-4">Bonus əməliyyatı yoxdur.</div>
+        <div class="text-center text-muted py-4">Heç bir qeyd yoxdur</div>
     @else
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
+        <table class="table table-sm table-hover">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Tarix</th>
+                <th>Tip</th>
+                <th>Məbləğ</th>
+                <th>Sifariş</th>
+                <th>Qeyd</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach($transactions as $transaction)
                 <tr>
-                    <th>Tarix</th>
-                    <th>Növ</th>
-                    <th>Sifariş</th>
-                    <th>Qeyd</th>
-                    <th class="text-end">Məbləğ</th>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $transaction->created_at?->format('d.m.Y H:i') }}</td>
+                    <td>{{ ['earn' => 'Qazanıldı', 'spend' => 'Xərcləndi', 'register' => 'Qeydiyyat', 'adjustment' => 'Düzəliş'][$transaction->type] ?? $transaction->type }}</td>
+
+                    <td class="{{ $transaction->amount >= 0 ? 'text-success' : 'text-danger' }} fw-bold">
+                        {{ $transaction->amount >= 0 ? '+' : '' }}{{ $transaction->amount }}
+                    </td>
+                    <td>{{ $transaction->order?->order_no ?? '—' }}</td>
+                    <td>{{ $transaction->note ?: '—' }}</td>
                 </tr>
-                </thead>
-                <tbody>
-                @foreach($transactions as $transaction)
-                    <tr>
-                        <td>{{ $transaction->created_at?->format('d.m.Y H:i') }}</td>
-                        <td>{{ ['earn' => 'Qazanıldı', 'spend' => 'Xərcləndi', 'register' => 'Qeydiyyat', 'adjustment' => 'Düzəliş'][$transaction->type] ?? $transaction->type }}</td>
-                        <td>{{ $transaction->order?->order_no ?? '—' }}</td>
-                        <td>{{ $transaction->note ?: '—' }}</td>
-                        <td class="text-end fw-semibold text-{{ $transaction->amount >= 0 ? 'success' : 'danger' }}">
-                            {{ $transaction->amount >= 0 ? '+' : '' }}{{ number_format((float) $transaction->amount, 2) }} ₼
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
+            @endforeach
+            </tbody>
+        </table>
+
+        {{-- Pagination --}}
         <div class="d-flex justify-content-center mt-3">
             {{ $transactions->links('backend.pagination') }}
         </div>
     @endif
+
 </div>
