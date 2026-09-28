@@ -11,6 +11,7 @@ use App\Models\Product\Size;
 use App\Models\Product\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CatalogService
 {
@@ -118,7 +119,26 @@ class CatalogService
             ];
         }
 
+        $bannerDimensionKeys = [
+            'topweb' => ['banner_web_top_width', 'banner_web_top_height'],
+            'topmobile' => ['banner_mobile_top_width', 'banner_mobile_top_height'],
+            'bottomweb' => ['banner_web_bottom_width', 'banner_web_bottom_height'],
+            'bottommobile' => ['banner_mobile_bottom_width', 'banner_mobile_bottom_height'],
+        ];
+        $dimensionSettings = DB::table('settings')
+            ->whereIn('key', array_merge(...array_values($bannerDimensionKeys)))
+            ->pluck('value', 'key');
+        $bannerDimensions = [];
+
+        foreach ($bannerDimensionKeys as $location => [$widthKey, $heightKey]) {
+            $bannerDimensions[$location] = [
+                'width' => max(1, (int) ($dimensionSettings[$widthKey] ?? 1)),
+                'height' => max(1, (int) ($dimensionSettings[$heightKey] ?? 1)),
+            ];
+        }
+
         return [
+            'bannerDimensions' => $bannerDimensions,
             'banners' => $banners,
             'priceMin' => $priceMin,
             'priceMax' => $priceMax,

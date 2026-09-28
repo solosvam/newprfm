@@ -33,6 +33,9 @@
                                 <img
                                     src="{{ asset('frontend/uploads/products/' . $image->image) }}"
                                     alt="{{ $product->name }}"
+                                    width="400"
+                                    height="400"
+                                    decoding="async"
                                     loading="lazy"
                                 >
                             @else
