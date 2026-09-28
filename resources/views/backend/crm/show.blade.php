@@ -87,8 +87,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center flex-column">
                             <div class="d-flex align-items-center flex-column mb-4">
-                                <div class="crm-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mb-3">
-                                    {{ mb_strtoupper(mb_substr($customer->name, 0, 1) . mb_substr($customer->surname, 0, 1)) }}
+                                <div class="sw-13 position-relative mb-3">
+                                    <img src="{{ asset('backend/img/profile/' . ($customer->gender == 0 ? 'female.png' : 'male.png')) }}" class="img-fluid rounded-xl" alt="thumb"/>
                                 </div>
                                 <div class="h5 mb-1">{{ $customer->fullname }}</div>
                                 <div class="text-muted">
@@ -97,13 +97,13 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex flex-row justify-content-between w-100">
-                                <button type="button" class="btn btn-outline-success w-100 me-2 balance-tab-btn">
+                            <div class="d-flex flex-row justify-content-between w-100 w-sm-50 w-xl-100">
+                                <button type="button" class="btn btn-outline-primary w-100 me-2">
                                     Bonus: {{ number_format((float) $customer->bonus_balance, 2) }} ₼
                                 </button>
 
-                                <button type="button" class="btn btn-outline-primary w-100">
-                                    <span class="me-1 fs-5">+</span>
+                                <button type="button" class="btn btn-outline-danger w-100 me-2" data-bs-toggle="modal" data-bs-target="#addOrderModal">
+                                    <i data-acorn-icon="plus" data-acorn-size="16" class="me-1"></i>
                                     Sifariş
                                 </button>
                             </div>
@@ -126,7 +126,6 @@
                              aria-expanded="false"
                              aria-controls="creditProfileCollapse">
                             <div class="card-body py-4 d-flex align-items-center w-100">
-                                <i data-acorn-icon="user" data-acorn-size="16" class="me-2"></i>
                                 <div class="btn btn-link list-item-heading p-0 text-start flex-grow-1">
                                     Hissəli ödəniş məlumatları
                                 </div>
@@ -254,6 +253,21 @@
                         <div class="text-center py-4">
                             <div class="spinner-border text-primary"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade modal-close-out" id="addOrderModal" data-bs-backdrop="static" data-bs-keyboard="false"
+             tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header p-3">
+                        <h5 class="modal-title">Yeni sifariş</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+
                     </div>
                 </div>
             </div>
