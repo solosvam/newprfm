@@ -130,5 +130,42 @@ $(document).ready(function () {
             });
     });
 
+    $(document).on('click', '#refundSubmit', function () {
+        const paymentId  = $('#refund_payment_id').val();
+        const amount     = $('#refund_amount').val();
+        const refundable = parseFloat($('#refund_refundable_amount').val());
+
+        if (!amount) {
+            alert('Məbləğ daxil edin');
+            return;
+        }
+
+        if (parseFloat(amount) > refundable) {
+            alert('Məbləğ qaytarıla bilən məbləğdən çox ola bilməz');
+            return;
+        }
+
+        ajaxPost(ajax_url.crm.refund, {
+            payment_id: paymentId,
+            amount:     amount,
+        }, function () {
+            bootstrap.Modal.getInstance(document.getElementById('refundModal')).hide();
+            setTimeout(() => location.reload(), 500);
+        }, false);
+    });
+
+    $(document).on('click', '.btn-view-refunds', function () {
+        const id = $(this).data('id');
+
+        $('#refundViewBody').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
+
+        const modal = new bootstrap.Modal(document.getElementById('refundViewModal'));
+        modal.show();
+
+        $.get(ajax_url.crm.refund_payment.replace(':id', id), function (html) {
+            $('#refundViewBody').html(html);
+        });
+    });
+
 
 });

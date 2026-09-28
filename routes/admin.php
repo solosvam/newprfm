@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Backend\RefundController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Backend\UserController;
@@ -410,5 +411,9 @@ Route::prefix('admin')
                     Route::delete('/term/{term}', 'destroy')->name('destroy');
                 });
 
+            Route::controller(RefundController::class)->middleware('can:refund')->prefix('refund')->name('refund.')->group(function () {
+                Route::post('store', 'store')->name('store');
+                Route::get('{id}/by-payment', 'byPayment')->name('byPayment');
+            });
         });
     });
