@@ -17,6 +17,7 @@ use App\Http\Controllers\Backend\SmsTemplateController;
 use App\Http\Controllers\Backend\CrmController;
 use App\Http\Controllers\Backend\EasyOrdersController;
 use App\Http\Controllers\Backend\PromoCodesController;
+use App\Http\Controllers\Backend\RefundController;
 
 use App\Http\Controllers\Backend\Product\BrandsController;
 use App\Http\Controllers\Backend\Product\SizesController;
@@ -202,6 +203,15 @@ Route::prefix('admin')
                 Route::get('/{order}/customer-lookup', 'lookup')->name('lookup');
                 Route::post('/{order}/confirm', 'confirm')->name('confirm');
             });
+
+            Route::controller(RefundController::class)
+                ->middleware('can:crm')
+                ->prefix('refund')
+                ->name('refund.')
+                ->group(function () {
+                    Route::post('/', 'store')->name('store');
+                    Route::get('/payment/{payment}', 'byPayment')->name('by-payment');
+                });
 
             Route::controller(CrmController::class)
                 ->middleware('can:crm')
