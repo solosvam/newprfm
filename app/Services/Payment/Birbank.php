@@ -483,6 +483,10 @@ class Birbank
             $data
         );
 
+        $errorCode = $response->json('errorCode');
+        $errorDescription = $response->json('errorDescription');
+        $pmoDescription = $response->json('errorDetails.pmoDeclineDesc');
+
         if (
             !$response->successful() ||
             $response->json('errorCode') ||

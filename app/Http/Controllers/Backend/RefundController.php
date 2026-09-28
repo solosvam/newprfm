@@ -53,7 +53,6 @@ class RefundController extends Controller
                 $payment,
                 number_format($amount, 2, '.', '')
             );
-            dd($operation);
             return response()->json([
                 'success' => true,
                 'message' => 'Geri ödəmə uğurla həyata keçirildi.',
