@@ -171,7 +171,7 @@
     <!-- Menu Start -->
     <div class="menu-container flex-grow-1">
         <ul id="menu" class="menu">
-            @include('backend._layout.menu_items', ['items' => app(\\App\\Services\\AdminMenuService::class)->items()])
+            @include('backend._layout.menu_items', ['items' => app(\App\Services\AdminMenuService::class)->items()])
         </ul>
     </div>
     <!-- Menu End -->
