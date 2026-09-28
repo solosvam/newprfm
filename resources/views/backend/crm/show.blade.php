@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2-bootstrap4.min.css')}}"/>
         <style>
             .crm-avatar { width: 80px; height: 80px; font-size: 1.5rem; }
+            .credit-profile-card { border: 1px solid var(--separator); overflow: hidden; }
+            .credit-profile-card .accordion-button { min-height: 52px; background: transparent; box-shadow: none; }
+            .credit-profile-card .accordion-button:not(.collapsed) { background: rgba(var(--primary-rgb), .04); }
+            .credit-profile-card .credit-profile-title { font-size: 14px; font-weight: 600; }
         </style>
 @endsection
 
@@ -90,61 +94,69 @@
                             <i data-acorn-icon="mobile" data-acorn-size="13" class="me-1"></i>{{ $customer->mobile }}
                         </small>
 
-                        <div class="d-flex gap-2 mt-2">
-                            <button class="btn btn-outline-success flex-fill balance-tab-btn">
+                        <div class="mt-2">
+                            <button class="btn btn-outline-success w-100 balance-tab-btn">
                                 <div class="small text-muted">BONUS</div>
                                 <div class="fw-bold">{{ $customer->bonus_balance }} ₼</div>
-                            </button>
-                            <button class="btn btn-outline-primary flex-fill balance-tab-btn">
-                                <div class="small text-muted">SİFARİŞ</div>
-                                <div class="fw-bold"> 0 </div>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 {{-- Ətraflı məlumatlar --}}
-                <div class="card">
+                @php
+                    $creditProfile = $customer->creditProfile;
+                    $creditProfileComplete = $creditProfile?->isComplete() ?? false;
+                @endphp
+                <div class="card credit-profile-card">
                     <div class="card-body p-0">
                         <div class="accordion accordion-flush" id="customerDetails">
                             <div class="accordion-item border-0">
                                 <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed px-3 py-2" type="button" style="font-size:13px;" data-bs-toggle="collapse" data-bs-target="#detailsCollapse">
-                                        <i data-acorn-icon="user" data-acorn-size="14" class="me-2"></i> Hissəli ödəniş məlumatları
-                                    </button>
+                                    @if($creditProfileComplete)
+                                        <button class="accordion-button collapsed px-3 py-3" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#detailsCollapse"
+                                                aria-expanded="false" aria-controls="detailsCollapse">
+                                            <i data-acorn-icon="user" data-acorn-size="16" class="me-2"></i>
+                                            <span class="credit-profile-title flex-grow-1">Hissəli ödəniş məlumatları</span>
+                                            <span class="badge bg-success me-2">Tamamlanıb</span>
+                                        </button>
+                                    @else
+                                        <div class="d-flex align-items-center px-3 py-3">
+                                            <i data-acorn-icon="user" data-acorn-size="16" class="me-2"></i>
+                                            <span class="credit-profile-title flex-grow-1">Hissəli ödəniş məlumatları</span>
+                                            <span class="badge bg-danger">Tamamlanmayıb</span>
+                                        </div>
+                                    @endif
                                 </h2>
-                                <div id="detailsCollapse" class="accordion-collapse collapse">
-                                    <div class="accordion-body pt-0 px-3 pb-3">
-                                        <div class="row g-2">
-                                            @php
-                                                $creditProfile = $customer->creditProfile;
-                                            @endphp
-                                            @foreach([
-                                                    ['ATA ADI', $creditProfile?->father_name],
-                                                    ['CİNSİYYƏT', $creditProfile?->gender],
-                                                    ['FİN', $creditProfile?->fin],
 
-                                                    ['1-Cİ QOHUMUN ADI', $creditProfile?->relative_1_name],
-                                                    ['1-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_1_phone],
-
-                                                    ['2-Cİ QOHUMUN ADI', $creditProfile?->relative_2_name],
-                                                    ['2-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_2_phone],
-
-                                                    ['ŞƏXSİYYƏT VƏSİQƏSİ (ÖN)', $creditProfile?->id_card_front],
-                                                    ['ŞƏXSİYYƏT VƏSİQƏSİ (ARXA)', $creditProfile?->id_card_back],
-
-                                                    ['İŞ YERİNİN ADI', $creditProfile?->workplace_name],
-                                                    ['ƏMƏK HAQQI', $creditProfile?->salary],
-                                                    ['VƏZİFƏ', $creditProfile?->position],
+                                @if($creditProfileComplete)
+                                    <div id="detailsCollapse" class="accordion-collapse collapse">
+                                        <div class="accordion-body border-top pt-3 px-3 pb-3">
+                                            <div class="row g-2">
+                                                @foreach([
+                                                        ['ATA ADI', $creditProfile?->father_name],
+                                                        ['CİNSİYYƏT', $customer->gender],
+                                                        ['FİN', $creditProfile?->fin],
+                                                        ['1-Cİ QOHUMUN ADI', $creditProfile?->relative_1_name],
+                                                        ['1-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_1_phone],
+                                                        ['2-Cİ QOHUMUN ADI', $creditProfile?->relative_2_name],
+                                                        ['2-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_2_phone],
+                                                        ['ŞƏXSİYYƏT VƏSİQƏSİ (ÖN)', $creditProfile?->id_card_front],
+                                                        ['ŞƏXSİYYƏT VƏSİQƏSİ (ARXA)', $creditProfile?->id_card_back],
+                                                        ['İŞ YERİNİN ADI', $creditProfile?->workplace_name],
+                                                        ['ƏMƏK HAQQI', $creditProfile?->salary],
+                                                        ['VƏZİFƏ', $creditProfile?->position],
                                                 ] as [$label, $value])
-                                                <div class="col-12">
-                                                    <div style="font-size:11px;" class="text-muted">{{ $label }}</div>
-                                                    <div style="font-size:13px;" class="fw-medium">{{ $value ?: '-' }}</div>
-                                                </div>
-                                            @endforeach
+                                                    <div class="col-12">
+                                                        <div style="font-size:11px;" class="text-muted">{{ $label }}</div>
+                                                        <div style="font-size:13px;" class="fw-medium">{{ $value ?: '-' }}</div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
