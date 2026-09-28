@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/auth.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/auth.css') }}">
 @endsection
 
 @section('content')
@@ -105,6 +105,6 @@
             }
         };
     </script>
-    <script src="{{ asset('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
-    <script src="{{ asset('frontend/js/login.js') }}"></script>
+    <script src="{{ asset_v('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/login.js') }}"></script>
 @endsection

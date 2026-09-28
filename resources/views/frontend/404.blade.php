@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/error.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/error.css') }}">
 @endsection
 
 @section('title', '404 — Səhifə tapılmadı | parfumshop')

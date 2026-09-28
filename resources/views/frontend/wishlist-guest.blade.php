@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/wishlist.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/wishlist.css') }}">
 @endsection
 
 @section('content')

@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/auth.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/auth.css') }}">
 @endsection
 
 @section('title', __('auth_register') . ' | parfumshop')
@@ -84,7 +84,7 @@
 @endsection
 
 @section('page-scripts')
-    <script src="{{ asset('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var mobileInput = document.getElementById('registerMobile');

@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-    <link rel="stylesheet" href="{{ asset('frontend/css/pages/product.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/product.css') }}">
 @endsection
 
 @php
@@ -286,9 +286,9 @@
 @endsection
 
 @section('page-scripts')
-    <script src="{{ asset('frontend/js/credit-application.js') }}" defer></script>
-    <script src="{{ asset('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
-    <script src="{{ asset('frontend/js/one-click.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/credit-application.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/one-click.js') }}" defer></script>
 
     <script>
         (() => {

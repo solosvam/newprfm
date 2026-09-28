@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/checkout.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/checkout.css') }}">
 @endsection
 
 @section('content')
@@ -275,6 +275,6 @@
             },
         };
     </script>
-    <script src="{{ asset('frontend/js/promo.js') }}" defer></script>
-    <script src="{{ asset('frontend/js/checkout.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/promo.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/checkout.js') }}" defer></script>
 @endsection

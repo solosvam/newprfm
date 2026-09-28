@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/auth.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/auth.css') }}">
 @endsection
 
 @section('title', __('auth_verify_account') . ' | parfumshop')

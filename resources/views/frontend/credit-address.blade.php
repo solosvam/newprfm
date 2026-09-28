@@ -1,8 +1,8 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/cart.css') }}">
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/checkout.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/cart.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/checkout.css') }}">
 @endsection
 @section('content')
 <main class="checkout-page">
@@ -42,5 +42,5 @@
 @endsection
 @section('page-scripts')
 <script>window.creditAddressConfig={url:@json(route('credit.application.confirm')),csrf:@json(csrf_token()),error:@json(__('credit_modal_error'))};</script>
-<script src="{{ asset('frontend/js/credit-address.js') }}" defer></script>
+<script src="{{ asset_v('frontend/js/credit-address.js') }}" defer></script>
 @endsection

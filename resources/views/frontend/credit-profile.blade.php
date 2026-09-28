@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/account.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/account.css') }}">
 @endsection
 
 @section('content')
@@ -122,5 +122,5 @@
 @endsection
 
 @section('page-scripts')
-    <script src="{{ asset('frontend/js/credit-profile.js') }}"></script>
+    <script src="{{ asset_v('frontend/js/credit-profile.js') }}"></script>
 @endsection
