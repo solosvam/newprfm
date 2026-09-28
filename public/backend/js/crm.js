@@ -130,80 +130,52 @@ $(document).ready(function () {
             });
     });
 
-    $(document).on('click', '#refundSubmit', function () {
-        const paymentId  = $('#refund_payment_id').val();
-        const amount     = $('#refund_amount').val();
-        const refundable = parseFloat($('#refund_refundable_amount').val());
-
-        if (!amount) {
-            alert('Məbləğ daxil edin');
-            return;
-        }
-
-        if (parseFloat(amount) > refundable) {
-            alert('Məbləğ qaytarıla bilən məbləğdən çox ola bilməz');
-            return;
-        }
-
-        ajaxPost(ajax_url.crm.refund, {
-            payment_id: paymentId,
-            amount:     amount,
-        }, function () {
-            bootstrap.Modal.getInstance(document.getElementById('refundModal')).hide();
-            setTimeout(() => location.reload(), 500);
-        }, false);
-    });
-
-    $(document).on('click', '.btn-view-refunds', function () {
-        const id = $(this).data('id');
-
-        $('#refundViewBody').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
-
-        const modal = new bootstrap.Modal(document.getElementById('refundViewModal'));
-        modal.show();
-
-        $.get(ajax_url.crm.refund_payment.replace(':id', id), function (html) {
-            $('#refundViewBody').html(html);
-        });
-    });
-
-
     $(document).on('click', '.btn-refund', function () {
         $('#refund_payment_id').val($(this).data('id'));
         $('#refund_payment_amount').val($(this).data('amount') + ' ' + $(this).data('currency'));
         $('#refund_refundable_amount').val($(this).data('refundable') + ' ' + $(this).data('currency'));
         $('#refund_amount').val('').attr('max', $(this).data('refundable'));
 
-        const modal = new bootstrap.Modal(document.getElementById('refundModal'));
-        modal.show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('refundModal')).show();
     });
 
     $(document).on('click', '#refundSubmit', function () {
         const btn = $(this);
         const paymentId = $('#refund_payment_id').val();
-        const amount = $('#refund_amount').val();
+        const amount = parseFloat($('#refund_amount').val());
+        const refundable = parseFloat($('#refund_amount').attr('max'));
 
-        if (!amount || parseFloat(amount) <= 0) {
-            alert('Qaytarılacaq məbləği daxil edin.');
+        if (!amount || amount <= 0) {
+            jQuery.notify(
+                {title: 'Bildiriş!', message: 'Qaytarılacaq məbləği daxil edin.'},
+                {type: 'danger', delay: 3000, allow_dismiss: false, z_index: 99999}
+            );
             return;
         }
 
-        if (!confirm(amount + ' ₼ geri qaytarılsın?')) return;
+        if (amount > refundable) {
+            jQuery.notify(
+                {title: 'Bildiriş!', message: 'Məbləğ qaytarıla bilən məbləğdən çox ola bilməz.'},
+                {type: 'danger', delay: 3000, allow_dismiss: false, z_index: 99999}
+            );
+            return;
+        }
+
+        if (!confirm(amount.toFixed(2) + ' ₼ geri qaytarılsın?')) return;
 
         btn.prop('disabled', true);
 
-        $.post('/admin/refund', {
+        ajaxPost(ajax_url.crm.refund, {
             payment_id: paymentId,
-            amount: amount
-        }).done(function (response) {
+            amount: amount.toFixed(2),
+        }, function () {
             bootstrap.Modal.getOrCreateInstance(document.getElementById('refundModal')).hide();
-            alert(response.message);
             $('#customerTabs .nav-link[data-tab="payments"]').trigger('click');
-        }).fail(function (xhr) {
-            alert(xhr.responseJSON?.message || 'Geri ödəmə zamanı xəta baş verdi.');
-        }).always(function () {
+        }, false);
+
+        setTimeout(function () {
             btn.prop('disabled', false);
-        });
+        }, 1000);
     });
 
     $(document).on('click', '.btn-view-refunds', function () {
@@ -213,7 +185,7 @@ $(document).ready(function () {
         $('#refundViewBody').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
         modal.show();
 
-        $.get('/admin/refund/payment/' + paymentId, function (html) {
+        $.get(ajax_url.crm.refund_payment.replace(':id', paymentId), function (html) {
             $('#refundViewBody').html(html);
         }).fail(function () {
             $('#refundViewBody').html('<div class="alert alert-danger mb-0">Geri ödəmələr yüklənmədi.</div>');
