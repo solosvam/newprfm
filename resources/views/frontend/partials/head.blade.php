@@ -56,6 +56,7 @@
 @endif
 <link rel="stylesheet" href="{{ asset('frontend/css/catalog.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/css/main.css') }}">
+@yield('page-css')
 <link rel="stylesheet" href="{{ asset('frontend/css/responsive.css') }}">
 <link rel="preload" as="style" href="{{ asset('frontend/css/vendor/select2.min.css') }}" onload="this.onload=null;this.rel='stylesheet'">
 <link rel="preload" as="style" href="{{ asset('frontend/css/vendor/select2-bootstrap4.min.css') }}" onload="this.onload=null;this.rel='stylesheet'">

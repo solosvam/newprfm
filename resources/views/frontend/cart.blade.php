@@ -1,5 +1,9 @@
 @extends('frontend.layouts.app')
 
+@section('page-css')
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/cart.css') }}">
+@endsection
+
 @section('content')
     @php
         $checkoutUrl = auth()->check()

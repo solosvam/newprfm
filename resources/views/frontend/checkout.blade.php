@@ -1,5 +1,9 @@
 @extends('frontend.layouts.app')
 
+@section('page-css')
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/checkout.css') }}">
+@endsection
+
 @section('content')
     @php
         $checkoutI18n = [

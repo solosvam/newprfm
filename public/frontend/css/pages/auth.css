@@ -1,0 +1,34 @@
+/* =========================================================
+   AUTH PAGES (login / register)
+   ========================================================= */
+.auth-page { padding: 40px 0 60px; display: flex; justify-content: center; }
+.auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; max-width: 420px; width: 100%; }
+.auth-title { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 24px; color: var(--text); }
+.auth-subtext { display: block; text-align: center; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+.auth-form,
+.otpSection-wrapper .headers { display: flex; flex-direction: column; gap: 14px; }
+.auth-form .form-field { margin-bottom: 4px; }
+.auth-form .form-field label { display: block; margin-bottom: 6px; }
+.auth-card .invalid-feedback:empty { display: none; }
+
+.auth-input { height: 46px; width: 100%; border: 1px solid var(--border); border-radius: var(--radius, 8px); background: var(--bg); color: var(--text); padding: 0 16px; font-size: 14px; }
+.auth-input:focus { outline: none; border-color: var(--accent); }
+.auth-input::placeholder { color: var(--text-muted); }
+.auth-otp-input { text-align: center; letter-spacing: 6px; font-size: 20px; font-weight: 600; }
+.auth-error { color: #c0392b; font-size: 13px; margin: 0; }
+.auth-submit { width: 100%; margin: 4px 0 0; }
+
+.auth-register { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.auth-register-hint { font-size: 13px; color: var(--text-secondary); }
+.auth-register-btn { background: none; border: none; color: var(--accent); font-weight: 600; font-size: 14px; cursor: pointer; padding: 0; }
+.auth-register-btn:hover { text-decoration: underline; }
+
+.auth-otp-meta { display: flex; justify-content: space-between; align-items: center; margin: 14px 0 20px; font-size: 13px; }
+.auth-otp-meta .seconds { color: var(--text-muted); }
+.auth-link { background: none; border: none; color: var(--accent); font-size: 13px; cursor: pointer; padding: 0; }
+.auth-link:disabled { color: var(--text-muted); cursor: not-allowed; }
+.auth-link:not(:disabled):hover { text-decoration: underline; }
+.auth-actions-row { display: flex; gap: 12px; }
+.auth-actions-row .btn { flex: 1; margin: 0; }
+.hide-form { display: none !important; }
+

@@ -1,5 +1,9 @@
 @extends('frontend.layouts.app')
 
+@section('page-css')
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/product.css') }}">
+@endsection
+
 @php
 $seoTitle = trim(($product->brand?->name ? $product->brand->name . ' ' : '') . $product->name);
 $seoDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/u', ' ', strip_tags($product->{'content_' . app()->getLocale()} ?: ($product->content_az ?: $seoTitle)))), 160, '');

@@ -1,4 +1,9 @@
 @extends('frontend.layouts.app')
+
+@section('page-css')
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/cart.css') }}">
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/checkout.css') }}">
+@endsection
 @section('content')
 <main class="checkout-page">
 <h1 class="cart-title">{{ __('credit_address_title') }}</h1>

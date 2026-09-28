@@ -1,5 +1,9 @@
 @extends('frontend.layouts.app')
 
+@section('page-css')
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/auth.css') }}">
+@endsection
+
 @section('title', __('auth_register') . ' | parfumshop')
 
 @section('content')
