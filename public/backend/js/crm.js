@@ -168,4 +168,55 @@ $(document).ready(function () {
     });
 
 
+    $(document).on('click', '.btn-refund', function () {
+        $('#refund_payment_id').val($(this).data('id'));
+        $('#refund_payment_amount').val($(this).data('amount') + ' ' + $(this).data('currency'));
+        $('#refund_refundable_amount').val($(this).data('refundable') + ' ' + $(this).data('currency'));
+        $('#refund_amount').val('').attr('max', $(this).data('refundable'));
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('refundModal')).show();
+    });
+
+    $(document).on('click', '#refundSubmit', function () {
+        const btn = $(this);
+        const paymentId = $('#refund_payment_id').val();
+        const amount = $('#refund_amount').val();
+
+        if (!amount || parseFloat(amount) <= 0) {
+            alert('Qaytarılacaq məbləği daxil edin.');
+            return;
+        }
+
+        if (!confirm(amount + ' ₼ geri qaytarılsın?')) return;
+
+        btn.prop('disabled', true);
+
+        $.post('/admin/refund', {
+            payment_id: paymentId,
+            amount: amount
+        }).done(function (response) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('refundModal')).hide();
+            alert(response.message);
+            $('#customerTabs .nav-link[data-tab="payments"]').trigger('click');
+        }).fail(function (xhr) {
+            alert(xhr.responseJSON?.message || 'Geri ödəmə zamanı xəta baş verdi.');
+        }).always(function () {
+            btn.prop('disabled', false);
+        });
+    });
+
+    $(document).on('click', '.btn-view-refunds', function () {
+        const paymentId = $(this).data('id');
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('refundViewModal'));
+
+        $('#refundViewBody').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
+        modal.show();
+
+        $.get('/admin/refund/payment/' + paymentId, function (html) {
+            $('#refundViewBody').html(html);
+        }).fail(function () {
+            $('#refundViewBody').html('<div class="alert alert-danger mb-0">Geri ödəmələr yüklənmədi.</div>');
+        });
+    });
+
 });
