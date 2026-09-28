@@ -1,59 +1,60 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/account.css') }}">
-<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/bonus.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/account.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/bonus.css') }}">
 @endsection
 
 @section('content')
+    @php
+        $balance = (float) (auth()->user()->bonus_balance ?? 0);
+    @endphp
+
     <main>
         <div class="account-layout">
             @include('frontend.partials.cabinet-sidebar', ['pageTitle' => __('bonus_bonus_history')])
 
-            <div class="account-panel">
-                <div class="bonus-head">
-                    <h1 class="account-panel-title" style="margin:0;">{{ __('bonus_bonus_history') }}</h1>
-                    <div class="bonus-balance">
-                        {{ __('bonus_bonus_balance') }}
-                        <strong>{{ number_format(auth()->user()->bonus_balance ?? 0, 2) }} ₼</strong>
-                    </div>
+            <div class="account-panel account-panel--flush">
+                <h1 class="account-panel-title">{{ __('bonus_bonus_history') }}</h1>
+
+                <div class="bonus-balance-card">
+                    <span class="bonus-balance-card__label">{{ __('bonus_bonus_balance') }}</span>
+                    <strong class="bonus-balance-card__amount">{{ number_format($balance, 2) }} ₼</strong>
                 </div>
 
                 @if($transactions->isEmpty())
                     <p class="account-card-empty">{{ __('bonus_no_bonus_transactions_yet') }}</p>
                 @else
-                    <div class="bonus-table-wrap">
-                        <table class="bonus-table">
-                            <thead>
-                            <tr>
-                                <th>{{ __('orders_order_no') }}</th>
-                                <th>{{ __('bonus_date') }}</th>
-                                <th>{{ __('bonus_transaction') }}</th>
-                                <th>{{ __('bonus_bonus_amount') }}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach($transactions as $transaction)
-                                <tr>
-                                    <td>
+                    <ul class="bonus-list">
+                        @foreach($transactions as $transaction)
+                            @php
+                                $amount = (float) $transaction->amount;
+                                $isEarn = $amount >= 0;
+                                $title = match ($transaction->type) {
+                                    'earn'  => __('orders_bonus_earned'),
+                                    'spend' => __('bonus_bonus_spent'),
+                                    default => $transaction->note ?: __('bonus_bonus_transaction'),
+                                };
+                            @endphp
+                            <li @class(['bonus-row', 'bonus-row--earn' => $isEarn, 'bonus-row--spend' => ! $isEarn])>
+                                <span class="bonus-row__icon" aria-hidden="true">{{ $isEarn ? '+' : '−' }}</span>
+
+                                <div class="bonus-row__info">
+                                    <div class="bonus-row__title">{{ $title }}</div>
+                                    <div class="bonus-row__meta">
                                         @if($transaction->order)
-                                            <a href="{{ route('order.details', $transaction->order) }}">{{ $transaction->order->order_no }}</a>
-                                        @else
-                                            —
+                                            <a href="{{ route('order.details', $transaction->order) }}">№ {{ $transaction->order->order_no }}</a>
                                         @endif
-                                    </td>
-                                    <td>{{ $transaction->created_at->format('d.m.Y, H:i') }}</td>
-                                    <td>
-                                        {{ $transaction->type === 'earn' ? __('orders_bonus_earned') : ($transaction->type === 'spend' ? __('bonus_bonus_spent') : ($transaction->note ?: __('bonus_bonus_transaction'))) }}
-                                    </td>
-                                    <td class="bonus-amount {{ $transaction->amount >= 0 ? 'earn' : 'spend' }}">
-                                        {{ $transaction->amount >= 0 ? '+' : '' }}{{ number_format($transaction->amount, 2) }} ₼
-                                    </td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                        <time datetime="{{ $transaction->created_at->toIso8601String() }}">{{ $transaction->created_at->format('d.m.Y, H:i') }}</time>
+                                    </div>
+                                </div>
+
+                                <div class="bonus-row__amount">
+                                    {{ $isEarn ? '+' : '−' }}{{ number_format(abs($amount), 2) }} ₼
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
 
                     @if($transactions->hasPages())
                         <div class="main-products__pagination">{{ $transactions->links() }}</div>

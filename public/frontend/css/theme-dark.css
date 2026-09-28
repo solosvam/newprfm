@@ -11,3 +11,7 @@
     --text-muted: #7d7290;
     --border: #2f2a3c;
 }
+[data-theme="dark"] .bonus-balance-card {
+    background: var(--accent);
+    color: var(--on-accent);
+}

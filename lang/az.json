@@ -475,5 +475,6 @@
     "orders_payment_paid": "Ödənilib",
     "orders_payment_failed_short": "Uğursuz",
     "orders_payment_cancelled": "Ləğv edilib",
-    "orders_payment_pending": "Gözləmədə"
+    "orders_payment_pending": "Gözləmədə",
+    "reviews_pending_note": "Yoxlanıldıqdan sonra dərc olunacaq"
 }

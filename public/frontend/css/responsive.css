@@ -135,8 +135,6 @@ html, body { overflow-x: hidden; }
     .account-cards { grid-template-columns: 1fr; }
     .account-card-birkart,
     .account-card-invite { grid-column: span 1; flex-direction: column; text-align: center; }
-    .review-entry__head { flex-direction: column; align-items: flex-start; gap: 8px; }
-    .review-entry__product { flex-direction: column; }
 }
 
 @media (max-width: 720px) {

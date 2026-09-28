@@ -539,5 +539,6 @@
     "orders_payment_paid": "Оплачено",
     "orders_payment_failed_short": "Не удалось",
     "orders_payment_cancelled": "Отменено",
-    "orders_payment_pending": "Ожидается"
+    "orders_payment_pending": "Ожидается",
+    "reviews_pending_note": "Будет опубликован после проверки"
 }
