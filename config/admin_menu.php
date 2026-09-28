@@ -1,4 +1,3 @@
-
 <?php
 
 // Admin menyusu və axtarış eyni mənbədən qidalanır.
