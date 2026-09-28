@@ -200,9 +200,8 @@ footer .logo--svg { color: var(--on-accent-bg); }
 
 .hero-banner { margin: 10px 0; overflow: hidden; border-radius: 16px; aspect-ratio: var(--banner-desktop-ratio); position: relative; }
 .hero-banner img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.hero-banner__link { display: block; width: 100%; height: 100%; }
-.hero-banner__mobile,
-.hero-banner__link--mobile { display: none !important; }
+.hero-banner__link, .hero-banner__picture { display: block; width: 100%; height: 100%; }
+.hero-banner__mobile-overlay { display: none; }
 
 .brands { display: flex; gap: 12px; overflow-x: auto; padding: 4px 0 24px; scrollbar-width: none; }
 .brands::-webkit-scrollbar { display: none; }
