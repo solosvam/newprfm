@@ -10,39 +10,95 @@
                     <th>Sifariş No</th>
                     <th>Tarix</th>
                     <th>Ödəniş üsulu</th>
-                    <th>Status</th>
+                    <th>Ödəniş statusu</th>
+                    <th>Sifariş statusu</th>
                     <th>Source</th>
-                    <th class="text-end">Qazanılan bonus</th>
+                    <th class="text-end">Məbləğ</th>
                     <th class="text-end" style="width: 80px;">Edit</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach($orders as $order)
+                    @php
+                        $paymentCode = $order->paymentMethod?->code;
+
+                        $paymentBadge = match ($paymentCode) {
+                            'cash' => 'bg-success',
+                            'birbank_installment' => 'bg-primary',
+                            'card_online' => 'bg-info',
+                            'installment' => 'bg-warning text-dark',
+                            'bonus_balance' => 'bg-secondary',
+                            default => 'bg-light text-dark',
+                        };
+
+                        $paymentStatus = null;
+                        $paymentStatusBadge = 'bg-light text-dark';
+
+                        if (in_array($paymentCode, ['birbank_installment', 'card_online'], true)) {
+                            $paymentStatus = match ($order->payment_status) {
+                                'paid' => 'Ödənilib',
+                                'pending' => 'Gözləyir',
+                                'failed' => 'Uğursuz',
+                                'cancelled' => 'Ləğv edilib',
+                                'cod' => 'Qapıda ödəniş',
+                                default => $order->payment_status ?: '—',
+                            };
+
+                            $paymentStatusBadge = match ($order->payment_status) {
+                                'paid' => 'bg-success',
+                                'pending' => 'bg-warning text-dark',
+                                'failed', 'cancelled' => 'bg-danger',
+                                default => 'bg-light text-dark',
+                            };
+                        } elseif ($paymentCode === 'installment') {
+                            $paymentStatus = $order->creditApplication?->status?->name_az ?? '—';
+                            $paymentStatusBadge = $order->creditApplication ? 'bg-warning text-dark' : 'bg-light text-dark';
+                        }
+
+                        $orderStatusBadge = match ($order->status?->code) {
+                            'new' => 'bg-info',
+                            'confirmed' => 'bg-primary',
+                            'preparing' => 'bg-warning text-dark',
+                            'sent', 'courier' => 'bg-secondary',
+                            'delivered' => 'bg-success',
+                            'cancelled' => 'bg-danger',
+                            default => 'bg-light text-dark',
+                        };
+
+                        $source = match ($order->source) {
+                            'website', 'customer' => 'Müştəri',
+                            'operator', 'admin' => 'Operator',
+                            default => $order->source ?: '—',
+                        };
+                    @endphp
+
                     <tr>
-                        <td class="text-muted">
-                            {{ $orders->firstItem() + $loop->index }}
-                        </td>
-                        <td class="fw-semibold">
-                            {{ $order->order_no }}
-                        </td>
-                        <td class="text-nowrap">
-                            {{ $order->created_at?->format('d.m.Y H:i') }}
+                        <td class="text-muted">{{ $orders->firstItem() + $loop->index }}</td>
+                        <td class="fw-semibold">{{ $order->order_no }}</td>
+                        <td class="text-nowrap">{{ $order->created_at?->format('d.m.Y H:i') }}</td>
+                        <td>
+                            <span class="badge {{ $paymentBadge }}">
+                                {{ $order->paymentMethod?->name_az ?? '—' }}
+                            </span>
                         </td>
                         <td>
-                            {{ $order->paymentMethod?->name_az ?? '—' }}
+                            @if($paymentStatus)
+                                <span class="badge {{ $paymentStatusBadge }}">{{ $paymentStatus }}</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
                         </td>
                         <td>
-                            <span class="badge bg-light text-dark">
+                            <span class="badge {{ $orderStatusBadge }}">
                                 {{ $order->status?->name_az ?? '—' }}
                             </span>
                         </td>
-                        <td>
-                            <span class="badge bg-light text-dark">
-                                {{ $order->source ?: '—' }}
-                            </span>
-                        </td>
-                        <td class="text-end fw-semibold text-nowrap">
-                            {{ number_format((float) $order->bonus_earned, 2) }} ₼
+                        <td>{{ $source }}</td>
+                        <td class="text-end text-nowrap">
+                            <div class="fw-semibold">{{ number_format((float) $order->total, 2) }} ₼</div>
+                            @if((float) $order->bonus_earned > 0)
+                                <small class="text-success">+{{ number_format((float) $order->bonus_earned, 2) }} ₼ bonus</small>
+                            @endif
                         </td>
                         <td class="text-end">
                             <button
