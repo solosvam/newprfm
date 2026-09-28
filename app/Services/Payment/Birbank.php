@@ -211,6 +211,7 @@ class Birbank
     public function details(Payment $payment): array
     {
         $this->assertBirbankPayment($payment);
+
         $response = $this->http()->get(
             $this->endpoint().'/order/'.rawurlencode($payment->provider_order_id),
             ['tranDetailLevel' => 2, 'tokenDetailLevel' => 2, 'orderDetailLevel' => 2]
@@ -218,10 +219,12 @@ class Birbank
         if (!$response->successful() || !is_array($response->json('order'))) {
             throw new RuntimeException('Birbank order details unavailable (HTTP '.$response->status().').');
         }
+
         $bankOrder = $response->json('order');
         if ((string) ($bankOrder['id'] ?? '') !== (string) $payment->provider_order_id) {
             throw new RuntimeException('Birbank order mismatch.');
         }
+
         return $bankOrder;
     }
 
@@ -237,10 +240,15 @@ class Birbank
         if ($order->payments()->where('status', Payment::PAID)->exists()) {
             throw ValidationException::withMessages(['payment' => 'Order is already paid.']);
         }
+
         $amount = $this->money($order->total);
+
         $payment = Payment::create([
-            'customer_id' => $order->customer_id, 'order_id' => $order->id,
-            'provider' => 'birbank', 'amount' => $amount, 'status' => Payment::PENDING,
+            'customer_id' => $order->customer_id,
+            'order_id' => $order->id,
+            'provider' => 'birbank',
+            'amount' => $amount,
+            'status' => Payment::PENDING,
         ]);
         try {
             $bankOrder = $this->createBankOrder([
@@ -276,11 +284,14 @@ class Birbank
             throw new RuntimeException('Bank did not return a stored card token.');
         }
         $maskedPan = data_get($bankOrder, 'srcToken.displayName');
+
         return PaymentSavedCard::updateOrCreate(
             ['provider' => 'birbank', 'provider_token_id' => (string) $tokenId],
-            ['customer_id' => $payment->customer_id,
+            [
+                'customer_id' => $payment->customer_id,
                 'masked_pan' => is_string($maskedPan) && str_contains($maskedPan, '*') ? $maskedPan : null,
-                'active' => true]
+                'active' => true,
+            ]
         );
     }
 
@@ -478,32 +489,29 @@ class Birbank
 
     private function bankPost(string $path, array $data): array
     {
-        $response = $this->http()->post(
-            $this->endpoint() . $path,
-            $data
-        );
+        $response = $this->http()->post($this->endpoint().$path, $data);
+        $result = $response->json() ?? [];
 
-        $errorCode = $response->json('errorCode');
-        $errorDescription = $response->json('errorDescription');
-        $pmoDescription = $response->json('errorDetails.pmoDeclineDesc');
+        $errorCode = data_get($result, 'errorCode');
+        $pmoResultCode = data_get($result, 'tran.pmoResultCode');
 
-        if (
-            !$response->successful() ||
-            $response->json('errorCode') ||
-            (
-                $response->json('tran.pmoResultCode') !== null &&
-                (string) $response->json('tran.pmoResultCode') !== '1'
-            )
-        ) {
-            throw new RuntimeException(
-                'Birbank operation failed (HTTP ' .
-                $response->status() .
-                '): ' .
-                $response->body()
-            );
+        if (!$response->successful() || $errorCode || ($pmoResultCode !== null && (string) $pmoResultCode !== '1')) {
+            throw new RuntimeException($this->bankErrorMessage($result, $response->status()));
         }
 
-        return $response->json() ?? [];
+        return $result;
+    }
+
+    private function bankErrorMessage(array $result, int $status): string
+    {
+        $message = data_get($result, 'errorDetails.pmoDeclineDesc')
+            ?: data_get($result, 'errorDescription');
+
+        if (is_string($message) && trim($message) !== '') {
+            return trim($message);
+        }
+
+        return 'Birbank əməliyyatı uğursuz oldu (HTTP '.$status.').';
     }
 
     /**
