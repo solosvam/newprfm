@@ -7,17 +7,14 @@
     const error = document.getElementById('oneClickError');
     if (!button || !dialog || !form || !input) return;
 
-    // Prefix 994 is fixed; the user supplies the remaining nine digits.
-    const format = value => {
-        let digits = String(value || '').replace(/\D/g, '');
-        if (digits.startsWith('994')) digits = digits.slice(3);
-        if (digits.startsWith('0')) digits = digits.slice(1);
-        digits = digits.slice(0, 9);
-        const groups = [digits.slice(0, 2), digits.slice(2, 5), digits.slice(5, 7), digits.slice(7, 9)].filter(Boolean);
-        return '994 ' + groups.join(' ');
-    };
-    input.value = '994 ';
-    input.addEventListener('input', () => { input.value = format(input.value); });
+    // Reuse the exact 994 mask used on the login page.
+    if (typeof Inputmask !== 'undefined') {
+        Inputmask({
+            mask: '\\9\\9\\4 99 999 99 99',
+            showMaskOnHover: false,
+            clearIncomplete: false
+        }).mask(input);
+    }
 
     function selectedVariant() {
         return Number(document.querySelector('[data-buybox] .size-pill.active-size-amount')?.dataset.variantId || 0);
