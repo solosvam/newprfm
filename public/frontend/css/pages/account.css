@@ -1,0 +1,225 @@
+/* =========================================================
+   ACCOUNT / PROFILE LAYOUT
+   ========================================================= */
+.account-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 28px; padding: 24px 0 48px; align-items: start; }
+
+.account-sidebar { position: sticky; top: 90px; display: flex; flex-direction: column; gap: 16px; }
+.account-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.account-back:hover { color: var(--text); }
+.account-crumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin: 0; }
+.account-crumb a { color: var(--text-secondary); display: inline-flex; align-items: center; }
+.account-greeting { font-size: 20px; font-weight: 700; margin: 4px 0 0; color: var(--text); }
+
+.account-nav { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.account-nav a { padding: 12px 4px; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+.account-nav a:hover { color: var(--text); }
+.account-nav a.active { color: var(--accent); font-weight: 600; }
+.account-nav-note { color: var(--text-muted); font-weight: 400; }
+.account-nav-count { display: inline-block; margin-left: 4px; color: var(--text-muted); font-size: 12px; }
+
+.account-logout { display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 4px; font-size: 14px; color: var(--text-secondary); cursor: pointer; width: fit-content; }
+.account-logout:hover { color: var(--text); }
+
+.account-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.account-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.account-card h2 { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin: 0 0 12px; }
+.account-card-empty { font-size: 14px; color: var(--text); margin: 0; }
+
+.account-card-bonus { background: var(--accent-bg); border: none; }
+.account-card-bonus h2 { color: var(--on-accent-bg); opacity: 0.75; }
+.account-card-amount { font-size: 30px; font-weight: 700; color: var(--on-accent-bg); margin: 0 0 16px; }
+.account-card-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--on-accent-bg); opacity: 0.9; }
+.account-card-link:hover { opacity: 1; }
+
+.account-card-birkart { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.account-card-birkart-info h3 { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: var(--text); margin: 0 0 6px; }
+.account-card-birkart-info span { font-size: 13px; color: var(--text-secondary); }
+.account-card-birkart img { width: 72px; flex-shrink: 0; border-radius: 8px; }
+
+.account-card-invite { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.account-card-invite-text h3 { font-size: 18px; font-weight: 700; color: var(--text); margin: 0 0 14px; max-width: 320px; }
+.account-card-invite-btn { width: auto; padding: 12px 28px; margin: 0; }
+.account-card-invite img { width: 100px; flex-shrink: 0; }
+
+.account-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+.account-panel-title { font-size: 20px; font-weight: 700; color: var(--text); margin: 0 0 20px; }
+.account-panel-desc { font-size: 14px; color: var(--text-secondary); margin: -8px 0 24px; }
+
+.form-alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; }
+.form-alert-success {
+    background: #4caf50; color: #ffffff; border: none; border-left: 3px solid #388e3c;
+    display: flex; align-items: center; gap: 10px; font-weight: 600;
+}
+.form-alert-error { background: var(--surface-2); color: #c0392b; border: 1px solid var(--border); }
+
+.account-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field--full { grid-column: 1 / -1; }
+.form-field label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+.form-field input { height: 42px; border: 1px solid var(--border); border-radius: var(--radius, 8px); background: var(--bg); color: var(--text); padding: 0 14px; font-size: 14px; }
+.form-field input:focus { outline: none; border-color: var(--accent); }
+.form-field input:disabled { color: var(--text-muted); background: var(--surface-2); cursor: not-allowed; }
+.form-field input.is-invalid { border-color: #dc3545; }
+
+.account-form-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.account-form-divider::before,
+.account-form-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+.account-form-submit { width: auto; padding: 13px 32px; margin-top: 24px; }
+
+/* Gender selector (personal / register forms) */
+.gender-pills { display: flex; gap: 10px; }
+.gender-pill { position: relative; flex: 1; }
+.gender-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.gender-pill span {
+    display: flex; align-items: center; justify-content: center; height: 42px;
+    border: 1px solid var(--border); border-radius: var(--radius, 8px);
+    font-size: 14px; color: var(--text-secondary); cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.gender-pill input:checked + span,
+.gender-pill:has(input:checked) span {
+    border-color: var(--accent); color: var(--accent); font-weight: 600; background: var(--surface-2);
+}
+.gender-pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Credit profile form */
+.credit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.credit-field { display: flex; flex-direction: column; gap: 6px; }
+.credit-field label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+.credit-field input[type="text"],
+.credit-field input[type="tel"],
+.credit-field input[type="number"] {
+    height: 42px; border: 1px solid var(--border); border-radius: var(--radius, 8px);
+    background: var(--bg); color: var(--text); padding: 0 14px; font-size: 14px;
+}
+.credit-field input:focus { outline: none; border-color: var(--accent); }
+.credit-field input.is-invalid:not([type="file"]) { border-color: #dc3545; }
+
+.credit-work-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.credit-photos-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+.credit-photo {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; height: 160px; border: 1px dashed var(--border); border-radius: var(--radius, 8px);
+    background: var(--surface-2); overflow: hidden; padding: 12px;
+}
+.credit-photo:has(input.is-invalid) { border-color: #dc3545; outline: 1px solid #dc3545; }
+.credit-preview { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
+.credit-empty { font-size: 13px; color: var(--text-muted); }
+.credit-change {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    font-size: 12px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+}
+.credit-change:hover { border-color: var(--accent); color: var(--accent); }
+.credit-file { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* Shared invalid-feedback for credit & personal forms */
+.invalid-feedback { font-size: 12px; color: #c0392b; min-height: 14px; }
+.invalid-feedback:empty { display: none; }
+.credit-field .invalid-feedback:not(:empty),
+.form-field .invalid-feedback:not(:empty) { display: block; color: #dc3545; font-size: 12px; line-height: 1.4; }
+.credit-field .invalid-feedback:empty,
+.form-field .invalid-feedback:empty { display: none; }
+
+/* ---------- Order history list ---------- */
+.order-history { display: flex; flex-direction: column; gap: 10px; }
+
+.order-history__header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.order-history__header .account-panel-title { margin: 0; }
+.order-history__count {
+    min-width: 26px; height: 22px; padding: 0 8px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+}
+
+.order-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg);
+    transition: border-color .15s, box-shadow .15s;
+}
+.order-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    box-shadow: 0 4px 16px -8px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.order-card:focus-within { border-color: var(--accent); }
+
+/* Main */
+.order-card__top { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 6px; }
+.order-card__no { font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.order-card__meta {
+    display: flex; flex-wrap: wrap; align-items: center;
+    font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums;
+}
+.order-card__meta > * + *::before { content: "·"; margin: 0 8px; opacity: .6; }
+
+/* Status badge */
+.order-status {
+    --status: var(--text-secondary);
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 24px; padding: 0 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    color: var(--status);
+    background: color-mix(in srgb, var(--status) 12%, transparent);
+}
+.order-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.order-status--received,
+.order-status--pending    { --status: #b7791f; }
+.order-status--processing { --status: #2b6cb0; }
+.order-status--shipped    { --status: #6b46c1; }
+.order-status--delivered  { --status: #16883c; }
+.order-status--cancelled  { --status: #c53030; }
+
+[data-theme="dark"] .order-status--received,
+[data-theme="dark"] .order-status--pending    { --status: #f0b44c; }
+[data-theme="dark"] .order-status--processing { --status: #63a4ff; }
+[data-theme="dark"] .order-status--shipped    { --status: #a88bfa; }
+[data-theme="dark"] .order-status--delivered  { --status: #4ccf7a; }
+[data-theme="dark"] .order-status--cancelled  { --status: #f07171; }
+
+/* Products */
+.order-card__products { display: flex; align-items: center; gap: 6px; }
+.order-card__product {
+    position: relative;
+    width: 48px; height: 56px; padding: 4px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface); color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+}
+.order-card__product img { width: 100%; height: 100%; object-fit: contain; }
+.order-card__product--more { font-size: 13px; font-weight: 600; }
+.order-card__qty {
+    position: absolute; top: -6px; right: -6px;
+    min-width: 20px; height: 18px; padding: 0 5px; border-radius: 999px;
+    background: var(--accent); color: var(--on-accent);
+    font-size: 10.5px; font-weight: 700; line-height: 18px; text-align: center;
+}
+
+/* Side */
+.order-card__side {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    min-width: 120px; padding-left: 20px; border-left: 1px solid var(--border);
+}
+.order-card__total { font-size: 17px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.order-card__details {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 600; color: var(--accent);
+}
+.order-card__details svg { transition: transform .15s; }
+.order-card:hover .order-card__details svg { transform: translateX(3px); }
+
+/* Whole card clickable */
+.order-card__details::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.order-card__details:focus-visible { outline: none; }
+.order-card__payment { display: inline-flex; align-items: center; gap: 5px; }
+.order-card__payment svg { flex-shrink: 0; opacity: .75; }
+

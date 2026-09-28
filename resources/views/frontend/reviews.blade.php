@@ -1,5 +1,10 @@
 @extends('frontend.layouts.app')
 
+@section('page-css')
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/account.css') }}">
+<link rel="stylesheet" href="{{ asset('frontend/css/pages/reviews.css') }}">
+@endsection
+
 @section('content')
     <main>
         <div class="account-layout">
