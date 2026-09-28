@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\Customer\Customer;
 use App\Models\Order\Order;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Common\PaymentRefund;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -42,7 +41,9 @@ class Payment extends Model
 
     public function refunds(): HasMany
     {
-        return $this->hasMany(PaymentRefund::class, 'payment_id');
+        return $this->hasMany(PaymentOperation::class)
+            ->where('type', 'refund')
+            ->where('status', 'succeeded');
     }
 
     public function refundedAmount(): float
