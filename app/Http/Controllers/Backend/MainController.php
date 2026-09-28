@@ -11,4 +11,9 @@ class MainController extends Controller
     {
         return view('backend.pages.index');
     }
+
+    public function shortcuts()
+    {
+        return view('backend.shortcuts');
+    }
 }

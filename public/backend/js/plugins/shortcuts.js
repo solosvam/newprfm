@@ -46,24 +46,9 @@ class Shortcuts {
             }
         });
 
-        Mousetrap.bind('p', function () {
-            window.location.href = '/admin/profile';
-        });
-
-        Mousetrap.bind('k', function () {
-            window.location.href = '/admin/cashier/index';
-        });
 
         Mousetrap.bind('c', function () {
-            window.location.href = '/admin/crm/index';
-        });
-
-        Mousetrap.bind('m', function () {
-            const path = window.location.pathname;
-
-            window.location.href = path.startsWith('/admin/int')
-                ? '/admin/dom/main'
-                : '/admin/int/main';
+            window.location.href = '/admin/crm';
         });
 
     }

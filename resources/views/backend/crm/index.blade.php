@@ -55,7 +55,7 @@
                                        <li><b>Ad Soyad:</b> boşluqla ayır (Ruf Ibr)</li>
                                        <li><b>FİN:</b> nöqtə ilə başlayan 8 simvol (.A1B2C34)</li>
                                    </ul>
-                                   ">
+                                   " autofocus>
                             <div id="search-results"
                                  class="position-absolute w-100 bg-white border rounded shadow-sm z-3"
                                  style="display:none; top: 100%; left:0; max-height: 300px; overflow-y: auto;z-index:1"></div>
