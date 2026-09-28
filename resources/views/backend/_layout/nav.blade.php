@@ -321,6 +321,15 @@
             </li>
 
             @can('crm')
+                <li>
+                    <a href="{{ route('admin.easy-orders.index') }}">
+                        <i data-acorn-icon="cart"></i>
+                        <span class="label">Asan sifariş</span>
+                    </a>
+                </li>
+            @endcan
+
+            @can('crm')
             <li>
                 <a href="{{ route('admin.crm.index') }}">
                     <i data-acorn-icon="user" class="icon" data-acorn-size="18"></i>
