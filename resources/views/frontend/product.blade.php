@@ -1,18 +1,18 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset('frontend/css/pages/product.css') }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/pages/product.css') }}">
 @endsection
 
 @php
-$seoTitle = trim(($product->brand?->name ? $product->brand->name . ' ' : '') . $product->name);
-$seoDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/u', ' ', strip_tags($product->{'content_' . app()->getLocale()} ?: ($product->content_az ?: $seoTitle)))), 160, '');
-$seoImage = $product->images->first() ? asset('frontend/uploads/products/' . $product->images->first()->image) : null;
-$seoUrl = route('product', $product->slug);
-$seoVariants = $product->variants->where('active', 1);
-$seoSchema = ['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $seoTitle, 'description' => $seoDescription, 'url' => $seoUrl, 'image' => $seoImage ? [$seoImage] : []];
-if ($product->brand) $seoSchema['brand'] = ['@type' => 'Brand', 'name' => $product->brand->name];
-if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOffer', 'lowPrice' => number_format((float) $seoVariants->min('price'), 2, '.', ''), 'highPrice' => number_format((float) $seoVariants->max('price'), 2, '.', ''), 'priceCurrency' => 'AZN', 'offerCount' => $seoVariants->count(), 'url' => $seoUrl];
+    $seoTitle = trim(($product->brand?->name ? $product->brand->name . ' ' : '') . $product->name);
+    $seoDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/u', ' ', strip_tags($product->{'content_' . app()->getLocale()} ?: ($product->content_az ?: $seoTitle)))), 160, '');
+    $seoImage = $product->images->first() ? asset('frontend/uploads/products/' . $product->images->first()->image) : null;
+    $seoUrl = route('product', $product->slug);
+    $seoVariants = $product->variants->where('active', 1);
+    $seoSchema = ['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $seoTitle, 'description' => $seoDescription, 'url' => $seoUrl, 'image' => $seoImage ? [$seoImage] : []];
+    if ($product->brand) $seoSchema['brand'] = ['@type' => 'Brand', 'name' => $product->brand->name];
+    if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOffer', 'lowPrice' => number_format((float) $seoVariants->min('price'), 2, '.', ''), 'highPrice' => number_format((float) $seoVariants->max('price'), 2, '.', ''), 'priceCurrency' => 'AZN', 'offerCount' => $seoVariants->count(), 'url' => $seoUrl];
 @endphp
 @section('title', $seoTitle . ' | Parfumshop.az')
 @section('meta_description', $seoDescription)
@@ -20,10 +20,10 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
 @section('og_type', 'product')
 @section('og_title', $seoTitle)
 @if($seoImage)
-@section('og_image', $seoImage)
+    @section('og_image', $seoImage)
 @endif
 @section('structured_data')
-<script type="application/ld+json">{!! json_encode($seoSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    <script type="application/ld+json">{!! json_encode($seoSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endsection
 
 @section('subnav')
@@ -39,19 +39,31 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
         $firstVariant = $variants->first();
         $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
         $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
+        $subtitle = collect([$genderName, $typeName])->filter()->implode(' · ');
         $initialPrice = (float) ($firstVariant?->price ?? 0);
-
-        // İlk (ən qısa) taksit müddətini defolt aktiv qəbul edirik
         $firstPeriod = $creditPeriods->first();
     @endphp
 
-    <p class="crumb"><a href="{{ route('home') }}">{{ __('product_home') }}</a> / <a href="#">{{ $product->brand?->name }}</a> / {{ $product->name }}</p>
+    <p class="crumb">
+        <a href="{{ route('home') }}">{{ __('product_home') }}</a> /
+        @if($product->brand)
+            <a href="{{ route('brand.products', $product->brand->slug) }}">{{ $product->brand->name }}</a> /
+        @endif
+        {{ $product->name }}
+    </p>
 
     <div class="product-top">
         <div class="product-header">
-            <p class="subtitle" style="margin-bottom:0;color:var(--text-muted);font-size:13px;">{{ $product->brand?->name }}</p>
-            <h1 class="title">{{ $product->name }}</h1>
-            <p class="subtitle">{{ $genderName }} · {{ $typeName }}</p>
+            <h1 class="title">
+                @if($product->brand)
+                    <a href="{{ route('brand.products', $product->brand->slug) }}" class="title__brand">{{ $product->brand->name }}</a>
+                    <span class="title__sep" aria-hidden="true">/</span>
+                @endif
+                <span class="title__name">{{ $product->name }}</span>
+            </h1>
+            @if($subtitle)
+                <p class="subtitle">{{ $subtitle }}</p>
+            @endif
         </div>
 
         <div class="thumbs">
@@ -202,10 +214,11 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             <div class="card" data-href="{{ route('product', $item->slug) }}">
                 <div class="thumb">
                     <div class="thumb-actions">
+                        {{-- DÜZƏLİŞ: $product əvəzinə $item --}}
                         <button
                             type="button"
                             class="icon-btn fav-btn"
-                            data-product-id="{{ $product->id }}"
+                            data-product-id="{{ $item->id }}"
                             aria-label="{{ __('common_favorite') }}"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
@@ -214,8 +227,8 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
                         <button
                             type="button"
                             class="icon-btn share-btn"
-                            data-url="{{ route('product', $product->slug) }}"
-                            data-title="{{ $product->name }}"
+                            data-url="{{ route('product', $item->slug) }}"
+                            data-title="{{ $item->name }}"
                             aria-label="{{ __('common_share') }}"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
@@ -234,6 +247,18 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             </div>
         @endforeach
     </div>
+
+    {{-- Mobil: yapışan "Səbətə əlavə edin" paneli --}}
+    @if($firstVariant)
+        <div id="productSticky" class="product-sticky" inert>
+            <div class="product-sticky__info">
+                <span class="product-sticky__size" data-sticky-size></span>
+                <strong class="product-sticky__price" data-sticky-price>{{ number_format($initialPrice, 2) }} ₼</strong>
+            </div>
+            <button type="button" class="btn btn-dark product-sticky__btn" data-sticky-add>{{ __('product_add_to_cart') }}</button>
+        </div>
+    @endif
+
     <dialog id="oneClickDialog" class="credit-profile-dialog" aria-labelledby="oneClickTitle">
         <form id="oneClickForm" class="credit-profile-dialog__body">
             <button type="button" class="credit-profile-dialog__close" data-one-click-close aria-label="{{ __('common_close') }}">×</button>
@@ -259,8 +284,48 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
         @include('frontend.partials.credit-application-modal')
     @endif
 @endsection
+
 @section('page-scripts')
     <script src="{{ asset('frontend/js/credit-application.js') }}" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js" defer></script>
-    <script src="{{ asset('frontend/js/one-click.js') }}?v=20260928-2" defer></script>
+    <script src="{{ asset('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
+    <script src="{{ asset('frontend/js/one-click.js') }}" defer></script>
+
+    <script>
+        (() => {
+            const bar = document.getElementById('productSticky');
+            const mainBtn = document.querySelector('.buy-core [data-add-to-cart]');
+            const buyCore = document.querySelector('.buy-core');
+            if (!bar || !mainBtn || !buyCore) return;
+
+            const stickyBtn = bar.querySelector('[data-sticky-add]');
+            const sizeEl = bar.querySelector('[data-sticky-size]');
+            const priceEl = bar.querySelector('[data-sticky-price]');
+
+            // Ölçü, qiymət, düymə mətni və vəziyyəti əsas blokla eyni qalsın
+            function sync() {
+                sizeEl.textContent = buyCore.querySelector('.size-pill.active-size-amount')?.textContent.trim() || '';
+                priceEl.textContent = buyCore.querySelector('[data-price-display]')?.textContent.trim() || '';
+                stickyBtn.textContent = mainBtn.textContent.trim();
+                stickyBtn.disabled = mainBtn.disabled;
+            }
+
+            new MutationObserver(sync).observe(buyCore, {
+                subtree: true, childList: true, characterData: true,
+                attributes: true, attributeFilter: ['class', 'disabled'],
+            });
+            sync();
+
+            // Əsas düyməni işə salırıq — main.js-in səbət məntiqi eyni qalır
+            stickyBtn.addEventListener('click', () => mainBtn.click());
+
+            // Panel yalnız əsas düymə yuxarıda, ekrandan çıxanda görünür
+            if ('IntersectionObserver' in window) {
+                new IntersectionObserver(([entry]) => {
+                    const show = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+                    bar.classList.toggle('is-visible', show);
+                    bar.inert = !show;
+                }).observe(mainBtn);
+            }
+        })();
+    </script>
 @endsection

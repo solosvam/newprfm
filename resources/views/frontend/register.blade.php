@@ -84,7 +84,7 @@
 @endsection
 
 @section('page-scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js"></script>
+    <script src="{{ asset('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var mobileInput = document.getElementById('registerMobile');

@@ -115,4 +115,112 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 .installment-table tr.active { background: var(--surface-2); }
 .installment-table tr.active td { color: var(--accent); font-weight: 700; }
 .installment-table input[type=radio] { accent-color: var(--accent); }
+.product-header .title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 8px;
+}
+.title__brand {
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color .15s;
+}
+.title__brand:hover { color: var(--accent); }
+.title__sep { color: var(--text-muted); font-weight: 400; }
 
+@media (max-width: 760px) {
+    /* Breadcrumb və başlıq — daha yığcam */
+    .crumb { display: none; }
+    .product-top { gap: 12px; }
+
+    .product-header .subtitle:first-child {          /* Brend */
+        margin: 0 0 2px;
+        font-size: 12px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+    .product-header .title {                          /* Ətir adı */
+        margin: 0 0 2px;
+        font-size: 22px;
+        line-height: 1.2;
+    }
+    .product-header .subtitle:last-child {            /* Qadın üçün · EDT */
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .product-header .title {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.25;
+    }
+    .product-header .subtitle {
+        margin: 4px 0 0;
+        font-size: 13px;
+    }
+    .product-header{
+        margin-top: 10px;
+    }
+
+    /* Şəkil — əvvəlkindən kiçik */
+    .main-image {
+        aspect-ratio: auto;
+        height: clamp(220px, 34svh, 300px);
+        padding: 10px;
+        background: #fff;
+        border-color: transparent;
+    }
+
+    .main-image img,
+    .main-image > img {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;           /* kiçik şəkillər də konteyneri doldurur */
+    }
+
+    /* Thumbnail-lar */
+    .thumbs { margin-top: 0; }
+    .thumbs .t { background: #fff; }
+    .thumbs .t img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+}
+.product-sticky { display: none; }
+
+@media (max-width: 760px) {
+    .product-sticky {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -8px 24px -12px rgba(0, 0, 0, .15);
+        transform: translateY(100%);
+        transition: transform .2s ease;
+    }
+    .product-sticky.is-visible { transform: translateY(0); }
+
+    .product-sticky__info { min-width: 0; }
+    .product-sticky__size {
+        display: block; font-size: 12px; color: var(--text-secondary); white-space: nowrap;
+    }
+    .product-sticky__price {
+        font-size: 18px; font-weight: 800; color: var(--text);
+        font-variant-numeric: tabular-nums; white-space: nowrap;
+    }
+    .product-sticky__btn {
+        flex: 1; max-width: 260px; height: 48px; margin: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 12px; font-weight: 700; white-space: nowrap;
+    }
+    .product-sticky__btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Panel footer-in son hissəsini örtməsin */
+    body:has(.product-sticky) footer { padding-bottom: 80px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .product-sticky { transition: none; }
+}
