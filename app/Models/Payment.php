@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Models\Customer\Customer;
 use App\Models\Order\Order;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Common\PaymentRefund;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
@@ -36,6 +38,21 @@ class Payment extends Model
     public function operations()
     {
         return $this->hasMany(PaymentOperation::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(PaymentRefund::class, 'payment_id');
+    }
+
+    public function refundedAmount(): float
+    {
+        return (float) $this->refunds()->sum('amount');
+    }
+
+    public function refundableAmount(): float
+    {
+        return max(0, (float) $this->amount - $this->refundedAmount());
     }
 
     public function customer(): BelongsTo
