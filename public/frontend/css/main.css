@@ -35,8 +35,8 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
    NOTIFY (jQuery notify toasts)
    ========================================================= */
 .notifyjs-corner { z-index: 99999 !important; top: 18px !important; right: 18px !important; }
-/* Legacy $.notify(message, 'error') calls use the Bootstrap preset.
-   Give them the same solid toast treatment as parfumshopNotify(). */
+/* parfumshopNotify(): neytral fon + tipə görə rəngli zolaq və ikon.
+   Rənglər --success / --danger / --warning / --info dəyişənlərindən gəlir. */
 
 .notifyjs-parfumshop-success-base { --toast: var(--success); }
 .notifyjs-parfumshop-error-base   { --toast: var(--danger); }
@@ -69,7 +69,8 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
     flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%;
     background: color-mix(in srgb, var(--toast) 14%, transparent);
     color: var(--toast);
-    font-size: 13px; font-weight: 800;
+    font-size: 13px; font-weight: 800; line-height: 1;
+    font-variant-emoji: text; /* ✓ emoji kimi göstərilməsin */
 }
 
 /* =========================================================
