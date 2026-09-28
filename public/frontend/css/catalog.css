@@ -184,7 +184,36 @@ a.mini-card:hover .mini-info .n { color: var(--accent); }
 .icon-btn:hover { color: var(--text); }
 .fav-btn.active { color: var(--accent); }
 .fav-btn.active svg { fill: currentColor; }
+.sidebar-stack .filter-card,
+#sidebarExtras .side-panel {
+    padding: 0 18px;
+}
 
+.filter-card__head,
+.side-panel__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: calc(var(--side-row-h) - 2px); /* 2px = üst+alt border */
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+}
+.filter-card__head h3,
+.side-panel__toggle h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* açılanda məzmunun altında boşluq */
+.filter-card__body:not([hidden]),
+.side-panel__body { padding-bottom: 18px; }
 /* Hover overlay: bütün ölçülər/qiymətlər */
 .price-wrap { position: relative; }
 .price-all {

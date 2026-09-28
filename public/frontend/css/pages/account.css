@@ -176,6 +176,17 @@
 }
 .order-card:focus-within { border-color: var(--accent); }
 
+.account-panel--flush {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+}
+.account-panel--flush > .account-panel__head,
+.account-panel--flush > h2 {
+    margin-bottom: 20px;
+}
+
 /* Main */
 .order-card__top { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 6px; }
 .order-card__no { font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
