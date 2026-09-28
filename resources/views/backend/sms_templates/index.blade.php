@@ -28,6 +28,7 @@
                         Dəyişənlər:
                         @if(in_array($template->code,['crm_order_accepted','website_order_accepted'])) <code>{fullname}</code> <code>{bonus}</code>
                         @elseif($template->code==='order_sent') <code>{fullname}</code> <code>{total}</code> <code>{total_bonus}</code>
+                        @elseif($template->code==='easy_order_registration_bonus') <code>{bonus}</code>
                         @else <code>{fullname}</code> @endif
                     </div>
                     <button class="btn btn-primary mt-3" type="submit">Yadda saxla</button>
