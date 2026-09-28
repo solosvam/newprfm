@@ -239,7 +239,7 @@
     color: var(--text);
 }
 
-@media (max-width: 560px) {
+@media (max-width: 600px) {
     .checkout-page { padding-top: 12px; }
     .checkout-page .cart-title {
         margin: 4px 0 12px;
@@ -255,7 +255,7 @@
     .checkout-grid { grid-template-columns: 1fr; }
     .checkout-summary { position: static; }
 }
-@media (max-width: 560px) {
+@media (max-width: 600px) {
     .checkout-card { padding: 18px 16px; }
     .checkout-payment { grid-template-columns: 1fr; }
     .checkout-fields { grid-template-columns: 1fr; }

@@ -1,6 +1,15 @@
 /* =========================================================
    RESPONSIVE.CSS — mobile & tablet adjustments
    ========================================================= */
+/*
+   Breakpoint-lər (bütün frontend CSS faylları üçün):
+     1024px — planşet: sidebar yuxarı keçir, sütunlar daralır
+      900px — cart / checkout / sifariş: xülasə alta keçir
+      760px — mobil: header, footer, kabinet, məhsul səhifəsi
+      600px — kiçik mobil: formalar tək sütun
+      480px — ən kiçik ekranlar
+   Yeni media query yazarkən yalnız bu dəyərlərdən istifadə edin.
+*/
 
 html, body { overflow-x: hidden; }
 
@@ -41,7 +50,7 @@ html, body { overflow-x: hidden; }
     }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
     .language-select        { height: 34px; padding: 0 24px 0 10px; gap: 0; }
     .language-select__globe { display: none; }
     .language-select::after { right: 10px; }
@@ -81,12 +90,12 @@ html, body { overflow-x: hidden; }
     }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
     .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
 }
 
@@ -127,7 +136,7 @@ html, body { overflow-x: hidden; }
     .account-sidebar { position: static; }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
     .credit-grid,
     .credit-photos-row { grid-template-columns: 1fr; }
     .account-form-grid { grid-template-columns: 1fr; }
@@ -145,7 +154,7 @@ html, body { overflow-x: hidden; }
     .account-card-invite { grid-column: span 1; flex-direction: column; text-align: center; }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
     .wishlist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -210,17 +219,6 @@ html, body { overflow-x: hidden; }
 }
 
 /* =========================================================
-   CHECKOUT PAGE
-   ========================================================= */
-@media (max-width: 900px) {
-    .checkout-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 600px) {
-    .checkout-fields { grid-template-columns: 1fr; }
-}
-
-/* =========================================================
    ERROR PAGE (404)
    ========================================================= */
 @media (max-width: 600px) {
@@ -240,7 +238,7 @@ html, body { overflow-x: hidden; }
     }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
     .credit-application-dialog {
         position: fixed; inset: 12px; margin: auto; width: calc(100vw - 24px); max-width: 480px;
         max-height: calc(100dvh - 24px); height: calc(100dvh - 24px); display: none; flex-direction: column; overflow: hidden;
@@ -262,11 +260,11 @@ html, body { overflow-x: hidden; }
 /* Product page: installment heading + mobile-only credit button */
 .installment-heading { font-size: 20px; font-weight: 700; margin: 0 0 18px; color: var(--text); }
 .product-mobile-credit { display: none; }
-@media (max-width: 720px) {
+@media (max-width: 760px) {
     .product-mobile-credit { display: block; width: 100%; text-align: center; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 600px) {
     .order-card {
         grid-template-columns: 1fr auto;
         grid-template-areas: "main main" "products side";
@@ -279,10 +277,10 @@ html, body { overflow-x: hidden; }
 }
 
 /* Responsive */
-@media (max-width: 1100px) {
+@media (max-width: 1024px) {
     .od-grid { grid-template-columns: minmax(0, 1fr) 300px; }
 }
-@media (max-width: 860px) {
+@media (max-width: 900px) {
     .od-grid { display: flex; flex-direction: column; align-items: stretch; }
     .od-main, .od-aside { display: contents; }
     .od-timeline-card { order: 1; }
