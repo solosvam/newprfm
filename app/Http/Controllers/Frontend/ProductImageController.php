@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 
@@ -11,7 +11,7 @@ class ProductImageController extends Controller
 {
     private const ALLOWED_SIZES = [200, 400, 800];
 
-    public function show(int $size, string $image): Response
+    public function show(int $size, string $image): BinaryFileResponse
     {
         abort_unless(in_array($size, self::ALLOWED_SIZES, true), 404);
 
@@ -35,9 +35,8 @@ class ProductImageController extends Controller
                 ->save($cachePath, quality: 80);
         }
 
-        return response(file_get_contents($cachePath), 200, [
+        return response()->file($cachePath, [
             'Content-Type' => 'image/webp',
-            'Content-Length' => (string) filesize($cachePath),
             'Cache-Control' => 'public, max-age=31536000, immutable',
             'X-Content-Type-Options' => 'nosniff',
         ]);
