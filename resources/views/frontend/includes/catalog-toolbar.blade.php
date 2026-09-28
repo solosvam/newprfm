@@ -13,7 +13,7 @@
                     @foreach(request()->except('sort', 'page') as $key => $value)
                         @if(is_scalar($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif
                     @endforeach
-                    <select name="sort" class="sort-select" aria-label="{{ __('home_sort') }}" onchange="this.form.submit()">
+                    <select name="sort" class="sort-select" aria-label="{{ __('home_sort') }}" data-submit-on-change>
                         <option value="newest" @selected(request('sort', 'newest') === 'newest')>{{ __('home_newest') }}</option>
                         <option value="oldest" @selected(request('sort') === 'oldest')>{{ __('home_oldest') }}</option>
                         <option value="price_asc" @selected(request('sort') === 'price_asc')>{{ __('home_price_asc') }}</option>

@@ -40,13 +40,7 @@
     @endif
 @endif
 
-<script>
-    (function () {
-        var saved = localStorage.getItem('theme');
-        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-    })();
-</script>
+<script src="{{ asset_v('frontend/js/theme-init.js') }}"></script>
 
 <link rel="stylesheet" href="{{ asset_v('frontend/css/theme-light.css') }}">
 <link rel="stylesheet" href="{{ asset_v('frontend/css/theme-dark.css') }}">
@@ -55,10 +49,6 @@
 <link rel="stylesheet" href="{{ asset_v('frontend/css/main.css') }}">
 @yield('page-css')
 <link rel="stylesheet" href="{{ asset_v('frontend/css/responsive.css') }}">
-<link rel="preload" as="style" href="{{ asset_v('frontend/css/vendor/select2.min.css') }}" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" as="style" href="{{ asset_v('frontend/css/vendor/select2-bootstrap4.min.css') }}" onload="this.onload=null;this.rel='stylesheet'">
-<noscript>
-    <link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/select2-bootstrap4.min.css') }}">
-</noscript>
+<link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/select2.min.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/select2-bootstrap4.min.css') }}">
 @yield('css')

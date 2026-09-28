@@ -110,14 +110,3 @@
         </div>
     </div>
 </form>
-
-<script>
-document.addEventListener('input', function (event) {
-    if (!event.target.matches('[data-filter-size-search]')) return;
-    const query = event.target.value.trim().toLocaleLowerCase();
-    const list = event.target.closest('.filter-section').querySelector('[data-filter-size-list]');
-    list.querySelectorAll('[data-filter-size-option]').forEach(function (option) {
-        option.hidden = !option.textContent.trim().toLocaleLowerCase().includes(query);
-    });
-});
-</script>

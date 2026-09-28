@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const config = window.creditAddressConfig;
+    // Serverdən gələn məlumat: credit-address.blade.php → #credit-address-config
+    const config = JSON.parse(document.getElementById('credit-address-config')?.textContent || '{}');
     const select = document.getElementById('addressSelect');
     const box = document.getElementById('newAddress');
     const button = document.getElementById('confirmCreditOrder');

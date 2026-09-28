@@ -4,6 +4,10 @@
     const loggedIn = document.body.dataset.auth === '1';
     const favoritesKey = 'parfumshop_favorites';
 
+    // Serverdən gələn məlumat: layouts/app.blade.php → <script type="application/json" id="app-data">
+    let appData = {};
+    try { appData = JSON.parse(document.getElementById('app-data')?.textContent || '{}'); } catch (e) {}
+
     function notify(message, type = 'success') {
         if (!window.jQuery || typeof window.jQuery.notify !== 'function') return;
         const $ = window.jQuery;
@@ -182,7 +186,7 @@
     }
 
     // Laravel redirect-lərindən sonra bütün yeni Blade səhifələrində flash bildirişləri göstər.
-    const flash = window.parfumshopFlash || {};
+    const flash = appData.flash || {};
     for (const type of ['success', 'error', 'warning', 'info']) {
         if (typeof flash[type] === 'string' && flash[type].trim()) {
             notify(flash[type], type);
@@ -364,7 +368,7 @@
                 fav.closest('.wishlist-card')?.remove();
             }
 
-            notify(active ? (window.parfumshopMessages?.favoriteRemoved || 'Seçilmişlərdən silindi') : (window.parfumshopMessages?.favoriteAdded || 'Seçilmişlərə əlavə edildi'));
+            notify(active ? (appData.messages?.favoriteRemoved || 'Seçilmişlərdən silindi') : (appData.messages?.favoriteAdded || 'Seçilmişlərə əlavə edildi'));
             return;
         }
 
@@ -419,7 +423,7 @@
             localStorage.setItem('parfumshop_cart', JSON.stringify(cart));
             window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', {detail:cart}));
             updateCounts();
-            notify(window.parfumshopMessages?.cartAdded || 'Məhsul səbətə əlavə edildi');
+            notify(appData.messages?.cartAdded || 'Məhsul səbətə əlavə edildi');
             const label = add.textContent;
             add.textContent = 'Səbətə əlavə edildi ✓';
             setTimeout(() => { add.textContent = label; }, 1600);
@@ -582,4 +586,69 @@
         place(mq.matches);
         mq.addEventListener('change', e => place(e.matches));
     })();
+
+    // Tema düyməsi (header)
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch (e) {}
+    });
+
+    // Select2 — placeholder data-placeholder atributundan, yoxdursa "Brend seç"
+    if (window.jQuery?.fn?.select2) {
+        window.jQuery(() => {
+            window.jQuery('.select2').each(function () {
+                window.jQuery(this).select2({
+                    placeholder: this.dataset.placeholder || appData.messages?.selectBrand || '',
+                    width: '100%'
+                });
+            });
+        });
+    }
+
+    // Blade-dəki inline onchange/onclick/onsubmit əvəzinə data-atributlar.
+    // jQuery ilə dinləyirik ki, select2-nin göndərdiyi change hadisəsi də tutulsun.
+    if (window.jQuery) {
+        const $doc = window.jQuery(document);
+        // <select data-navigate-on-change>: seçilən dəyər URL-dir
+        $doc.on('change', 'select[data-navigate-on-change]', function () {
+            if (this.value) window.location.href = this.value;
+        });
+        // <select data-submit-on-change>: formu dərhal göndər
+        $doc.on('change', 'select[data-submit-on-change]', function () {
+            this.form?.submit();
+        });
+    }
+    // <a data-history-back>: əvvəlki səhifəyə qayıt
+    document.addEventListener('click', event => {
+        const link = event.target.closest('[data-history-back]');
+        if (!link) return;
+        event.preventDefault();
+        window.history.back();
+    });
+    // <form data-confirm="Mətn">: göndərməzdən əvvəl təsdiq soruş
+    document.addEventListener('submit', event => {
+        const form = event.target.closest('form[data-confirm]');
+        if (form && !window.confirm(form.dataset.confirm)) event.preventDefault();
+    });
+
+    // Kabinet menyusu (mobil): aktiv bəndi görünən yerə sürüşdür
+    (function centerActiveAccountNav() {
+        const nav = document.querySelector('.account-nav');
+        const active = nav?.querySelector('a.active');
+        if (nav && active && nav.scrollWidth > nav.clientWidth) {
+            nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+        }
+    })();
+
+    // Filtr: ölçü siyahısında axtarış
+    document.addEventListener('input', event => {
+        if (!event.target.matches('[data-filter-size-search]')) return;
+        const query = event.target.value.trim().toLocaleLowerCase();
+        const list = event.target.closest('.filter-section')?.querySelector('[data-filter-size-list]');
+        list?.querySelectorAll('[data-filter-size-option]').forEach(option => {
+            option.hidden = !option.textContent.trim().toLocaleLowerCase().includes(query);
+        });
+    });
 })();

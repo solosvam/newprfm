@@ -85,26 +85,27 @@
 @endsection
 
 @section('page-scripts')
-    <script>
-        window.customerAuth = {
-            checkUrl: @json(route('front.login.check')),
-            passwordUrl: @json(route('front.login.password')),
-            inactiveVerifyUrl: @json(route('front.login.inactive.verify')),
-            inactiveResendUrl: @json(route('front.login.inactive.resend')),
-            otpUrl: @json(route('front.login.otp')),
-            resendUrl: @json(route('front.login.otp.resend')),
-            setPasswordUrl: @json(route('front.login.set-password')),
-            registerUrl: '#',
-            messages: {
-                resend: @json(__('auth_resend_code')),
-                inactiveHint: @json(__('auth_an_otp_was_sent_to_mobile')),
-                notFound: @json(__('auth_no_account_found_for_this_number_please_register')),
-                otpSent: @json(__('auth_an_otp_was_sent_to_mobile')),
-                error: @json(__('auth_something_went_wrong')),
-                registration: @json(__('auth_registration_will_be_available_soon'))
-            }
-        };
-    </script>
+    @php
+        $loginConfig = [
+            'checkUrl' => route('front.login.check'),
+            'passwordUrl' => route('front.login.password'),
+            'inactiveVerifyUrl' => route('front.login.inactive.verify'),
+            'inactiveResendUrl' => route('front.login.inactive.resend'),
+            'otpUrl' => route('front.login.otp'),
+            'resendUrl' => route('front.login.otp.resend'),
+            'setPasswordUrl' => route('front.login.set-password'),
+            'registerUrl' => '#',
+            'messages' => [
+                'resend' => __('auth_resend_code'),
+                'inactiveHint' => __('auth_an_otp_was_sent_to_mobile'),
+                'notFound' => __('auth_no_account_found_for_this_number_please_register'),
+                'otpSent' => __('auth_an_otp_was_sent_to_mobile'),
+                'error' => __('auth_something_went_wrong'),
+                'registration' => __('auth_registration_will_be_available_soon'),
+            ],
+        ];
+    @endphp
+    <script type="application/json" id="login-config">@json($loginConfig)</script>
     <script src="{{ asset_v('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
     <script src="{{ asset_v('frontend/js/login.js') }}"></script>
 @endsection

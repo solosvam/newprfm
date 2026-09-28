@@ -1,5 +1,5 @@
 <div class="account-sidebar brand-sidebar">
-    <a href="#" onclick="window.history.back()" class="account-back">
+    <a href="#" class="account-back" data-history-back>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         <span>{{ __('cart_go_back') }}</span>
     </a>

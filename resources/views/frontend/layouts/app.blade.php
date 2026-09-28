@@ -11,19 +11,23 @@
 </div>
 
 @include('frontend.partials.footer')
-<script>
-    window.parfumshopFlash = {
-        success: @json(session('success') ?? session('review_success')),
-        error: @json(session('error') ?? ($errors->any() ? $errors->first() : null)),
-        warning: @json(session('warning')),
-        info: @json(session('info'))
-    };
-    window.parfumshopMessages = {
-        cartAdded: @json(__('notification_product_added_to_cart')),
-        favoriteAdded: @json(__('notification_added_to_favorites')),
-        favoriteRemoved: @json(__('notification_removed_from_favorites'))
-    };
-</script>
+@php
+    $appData = [
+        'flash' => [
+            'success' => session('success') ?? session('review_success'),
+            'error' => session('error') ?? ($errors->any() ? $errors->first() : null),
+            'warning' => session('warning'),
+            'info' => session('info'),
+        ],
+        'messages' => [
+            'cartAdded' => __('notification_product_added_to_cart'),
+            'favoriteAdded' => __('notification_added_to_favorites'),
+            'favoriteRemoved' => __('notification_removed_from_favorites'),
+            'selectBrand' => __('home_select_brand'),
+        ],
+    ];
+@endphp
+<script type="application/json" id="app-data">@json($appData)</script>
 @include('frontend.partials.theme-script')
 @yield('page-scripts')
 </body>

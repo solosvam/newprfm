@@ -85,18 +85,5 @@
 
 @section('page-scripts')
     <script src="{{ asset_v('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var mobileInput = document.getElementById('registerMobile');
-            if (mobileInput && window.Inputmask) {
-                Inputmask({
-                    mask: '\\9\\9\\4 99 999 99 99',
-                    placeholder: '_',
-                    showMaskOnHover: false,
-                    showMaskOnFocus: true,
-                    clearIncomplete: false
-                }).mask(mobileInput);
-            }
-        });
-    </script>
+    <script src="{{ asset_v('frontend/js/pages/register.js') }}" defer></script>
 @endsection

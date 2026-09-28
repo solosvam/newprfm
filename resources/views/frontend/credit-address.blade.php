@@ -42,6 +42,13 @@
 </main>
 @endsection
 @section('page-scripts')
-<script>window.creditAddressConfig={url:@json(route('credit.application.confirm')),csrf:@json(csrf_token()),error:@json(__('credit_modal_error'))};</script>
+@php
+    $creditAddressConfig = [
+        'url' => route('credit.application.confirm'),
+        'csrf' => csrf_token(),
+        'error' => __('credit_modal_error'),
+    ];
+@endphp
+<script type="application/json" id="credit-address-config">@json($creditAddressConfig)</script>
 <script src="{{ asset_v('frontend/js/credit-address.js') }}" defer></script>
 @endsection

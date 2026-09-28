@@ -3,6 +3,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('customerLoginForm');
     if (!form) return;
 
+    // Serverdən gələn məlumat: login.blade.php → #login-config
+    let auth = { messages: {} };
+    try { auth = JSON.parse(document.getElementById('login-config')?.textContent || '{}'); } catch (e) {}
+
     const mobile = document.getElementById('loginMobile');
     const passwordArea = document.getElementById('passwordArea');
     const password = document.getElementById('loginPassword');
@@ -76,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
             inactiveArea.classList.add('hide-form');
             clearInterval(inactiveResendTimer);
             inactiveResend.disabled = false;
-            inactiveResend.textContent = window.customerAuth.messages.resend;
+            inactiveResend.textContent = auth.messages.resend;
             document.getElementById('inactiveResendMessage').textContent = '';
             lastCheckedMobile = '';
         }
@@ -114,17 +118,17 @@ document.addEventListener('DOMContentLoaded', function () {
         error(loginError, '');
 
         try {
-            const data = await post(window.customerAuth.checkUrl, {mobile: currentMobile});
+            const data = await post(auth.checkUrl, {mobile: currentMobile});
 
             if (data.status === 'not_found') {
-                error(loginError, window.customerAuth.messages.notFound);
+                error(loginError, auth.messages.notFound);
             } else if (data.status === 'inactive') {
                 mode = 'inactive';
                 inactiveArea.classList.remove('hide-form');
-                document.getElementById('inactiveOtpMessage').textContent = window.customerAuth.messages.inactiveHint.replace(':mobile', data.mobile);
+                document.getElementById('inactiveOtpMessage').textContent = auth.messages.inactiveHint.replace(':mobile', data.mobile);
                 document.getElementById('inactiveResendMessage').textContent = '';
                 inactiveResend.disabled = false;
-                inactiveResend.textContent = window.customerAuth.messages.resend;
+                inactiveResend.textContent = auth.messages.resend;
                 document.getElementById('inactiveOtpMessage').dataset.maskedMobile = data.mobile;
                 inactiveOtp.focus();
             } else if (data.status === 'password') {
@@ -137,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 loginBox.style.display = 'none';
                 otpSection.classList.remove('hide-form');
                 otpSection.style.display = 'block';
-                otpMessage.textContent = window.customerAuth.messages.otpSent.replace(':mobile', data.mobile);
+                otpMessage.textContent = auth.messages.otpSent.replace(':mobile', data.mobile);
                 startTimer();
                 requestAnimationFrame(() => otpInput.focus());
             }
@@ -158,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const json = await response.json().catch(() => ({}));
         if (!response.ok) {
             const errors = json.errors || {};
-            throw new Error(Object.values(errors)[0]?.[0] || json.message || window.customerAuth.messages.error);
+            throw new Error(Object.values(errors)[0]?.[0] || json.message || auth.messages.error);
         }
         return json;
     }
@@ -177,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
         submit.disabled = true;
 
         try {
-            const data = await post(window.customerAuth.passwordUrl, {
+            const data = await post(auth.passwordUrl, {
                 mobile: currentMobile,
                 password: password.value
             });
@@ -193,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
         error(inactiveError, '');
         this.disabled = true;
         try {
-            const data = await post(window.customerAuth.inactiveVerifyUrl, {
+            const data = await post(auth.inactiveVerifyUrl, {
                 mobile: currentMobile,
                 otp: inactiveOtp.value
             });
@@ -215,9 +219,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (remaining === 0) {
                 clearInterval(inactiveResendTimer);
                 inactiveResend.disabled = false;
-                inactiveResend.textContent = window.customerAuth.messages.resend;
+                inactiveResend.textContent = auth.messages.resend;
             } else {
-                inactiveResend.textContent = window.customerAuth.messages.resend + ' (' + remaining + 's)';
+                inactiveResend.textContent = auth.messages.resend + ' (' + remaining + 's)';
             }
         }
 
@@ -231,8 +235,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const notice = document.getElementById('inactiveResendMessage');
         notice.textContent = '';
         try {
-            await post(window.customerAuth.inactiveResendUrl, {mobile: currentMobile});
-            notice.textContent = window.customerAuth.messages.otpSent.replace(':mobile', document.getElementById('inactiveOtpMessage').dataset.maskedMobile || currentMobile);
+            await post(auth.inactiveResendUrl, {mobile: currentMobile});
+            notice.textContent = auth.messages.otpSent.replace(':mobile', document.getElementById('inactiveOtpMessage').dataset.maskedMobile || currentMobile);
             notice.style.color = '#25834b';
             startInactiveResendTimer();
         } catch (e) {
@@ -244,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('otpSubmitBtn').addEventListener('click', async function () {
         error(otpError, '');
         try {
-            const data = await post(window.customerAuth.otpUrl, {mobile: currentMobile, otp: otpInput.value});
+            const data = await post(auth.otpUrl, {mobile: currentMobile, otp: otpInput.value});
             if (data.status === 'verified') {
                 otpSection.classList.add('hide-form');
                 setPasswordSection.classList.remove('hide-form');
@@ -259,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const passwordError = document.getElementById('passwordError');
         error(passwordError, '');
         try {
-            const data = await post(window.customerAuth.setPasswordUrl, {
+            const data = await post(auth.setPasswordUrl, {
                 mobile: currentMobile,
                 password: document.getElementById('newPassword').value,
                 password_confirmation: document.getElementById('newPasswordConfirmation').value
@@ -289,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
         this.disabled = true;
         error(otpError, '');
         try {
-            await post(window.customerAuth.resendUrl, {mobile: currentMobile});
+            await post(auth.resendUrl, {mobile: currentMobile});
             startTimer();
         } catch (e) {
             error(otpError, e.message);

@@ -44,12 +44,3 @@
         </button>
     </form>
 </div>
-<script>
-    (() => {
-        const nav = document.querySelector('.account-nav');
-        const active = nav?.querySelector('a.active');
-        if (nav && active && nav.scrollWidth > nav.clientWidth) {
-            nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
-        }
-    })();
-</script>

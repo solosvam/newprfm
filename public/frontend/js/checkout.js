@@ -9,7 +9,9 @@
     const INSTALLMENT = 'installment';
     const BIRBANK_INSTALLMENT = 'birbank_installment';
 
-    const config = window.checkoutConfig || {};
+    // Serverdən gələn məlumat: checkout.blade.php → #checkout-config
+    let config = {};
+    try { config = JSON.parse(document.getElementById('checkout-config')?.textContent || '{}'); } catch (e) {}
     const { storeUrl, cartProductsUrl, cartUrl, csrf, messages = {} } = config;
     const t = JSON.parse(page.dataset.i18n || '{}');
     const bonusBalance = Number(config.bonusBalance) || 0;

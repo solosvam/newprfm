@@ -1,5 +1,5 @@
         <div class="sidebar-stack">
-            <select class="brand-select select2" aria-label="{{ __('home_select_brand') }}" onchange="if(this.value) window.location.href=this.value">
+            <select class="brand-select select2" aria-label="{{ __('home_select_brand') }}" data-navigate-on-change data-placeholder="{{ __('home_select_brand') }}">
                 <option value="">{{ __('home_select_brand') }}</option>
                 @foreach($allBrands as $brand)
                     <option value="{{ route('brand.products', ['slug' => $brand->slug]) }}"

@@ -84,7 +84,7 @@
                                     <div class="review-card__footer">
                                         <span>{{ __('reviews_pending_note') }}</span>
                                         <form method="POST" action="{{ route('profile.reviews.destroy', $review) }}"
-                                              onsubmit="return confirm(@js(__('reviews_confirm_delete')))">
+                                              data-confirm="{{ __('reviews_confirm_delete') }}">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="review-card__delete">{{ __('reviews_delete') }}</button>

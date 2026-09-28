@@ -260,22 +260,23 @@
 @endsection
 
 @section('page-scripts')
-    <script>
-        window.checkoutConfig = {
-            storeUrl: @json(route('checkout.store')),
-            cartProductsUrl: @json(route('cart.products')),
-            cartUrl: @json(route('cart')),
-            csrf: @json(csrf_token()),
-            bonusBalance: @json($bonusBalance),
-            bonusRate: @json(app(\App\Services\ShopPricing::class)->bonusRate()),
-            delivery: @json(app(\App\Services\ShopPricing::class)->delivery()),
-            giftWrap: @json(app(\App\Services\ShopPricing::class)->giftWrap()),
-            creditProfileComplete: @json($creditProfileComplete),
-            messages: {
-                error: @json(__('auth_something_went_wrong')),
-            },
-        };
-    </script>
+    @php
+        $checkoutConfig = [
+            'storeUrl' => route('checkout.store'),
+            'cartProductsUrl' => route('cart.products'),
+            'cartUrl' => route('cart'),
+            'csrf' => csrf_token(),
+            'bonusBalance' => $bonusBalance,
+            'bonusRate' => app(\App\Services\ShopPricing::class)->bonusRate(),
+            'delivery' => app(\App\Services\ShopPricing::class)->delivery(),
+            'giftWrap' => app(\App\Services\ShopPricing::class)->giftWrap(),
+            'creditProfileComplete' => $creditProfileComplete,
+            'messages' => [
+                'error' => __('auth_something_went_wrong'),
+            ],
+        ];
+    @endphp
+    <script type="application/json" id="checkout-config">@json($checkoutConfig)</script>
     <script src="{{ asset_v('frontend/js/promo.js') }}" defer></script>
     <script src="{{ asset_v('frontend/js/checkout.js') }}" defer></script>
 @endsection
