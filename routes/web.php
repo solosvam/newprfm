@@ -1,6 +1,7 @@
 
 <?php
 
+use App\Models\Product\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
@@ -248,6 +249,28 @@ require __DIR__ . '/admin.php';
 | Product Details - Must Be Last
 |--------------------------------------------------------------------------
 */
+
+Route::get('/index.php', function (Request $request)
+{
+    if ($request->query('route') !== 'product/product')
+    {
+        abort(404);
+    }
+
+    $oldId = $request->query('product_id');
+
+    if (!ctype_digit((string) $oldId) || (int) $oldId < 1)
+    {
+        abort(404);
+    }
+
+    $product = Product::where('old_id', (int) $oldId)
+        ->firstOrFail();
+
+    return redirect()->route('product', [
+        'slug' => $product->slug,
+    ], 301);
+});
 
 Route::controller(ProductController::class)->group(function () {
     Route::get('/{slug}', 'product')->name('product');
