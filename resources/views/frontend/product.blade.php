@@ -236,7 +236,7 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
             <h2 id="oneClickTitle" class="credit-profile-dialog__title">{{ __('product_one_click_buy') }}</h2>
             <p class="credit-profile-dialog__text">{{ __('product_one_click_phone_hint') }}</p>
             <label for="oneClickMobile">{{ __('product_one_click_mobile') }}</label>
-            <input id="oneClickMobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="994 __ ___ __ __" maxlength="16" required class="form-control" style="width:100%;margin:12px 0;">
+            <input id="oneClickMobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="994 __ ___ __ __" maxlength="16" required class="auth-input one-click-mobile">
             <p id="oneClickError" role="alert" style="color:#dc2626;display:none;"></p>
             <button type="submit" class="btn btn-dark" style="width:100%;">{{ __('product_one_click_submit') }}</button>
         </form>
@@ -257,5 +257,6 @@ if ($seoVariants->isNotEmpty()) $seoSchema['offers'] = ['@type' => 'AggregateOff
 @endsection
 @section('page-scripts')
     <script src="{{ asset('frontend/js/credit-application.js') }}" defer></script>
-    <script src="{{ asset('frontend/js/one-click.js') }}" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.9/jquery.inputmask.min.js" defer></script>
+    <script src="{{ asset('frontend/js/one-click.js') }}?v=20260928-2" defer></script>
 @endsection
