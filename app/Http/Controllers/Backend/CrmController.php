@@ -61,7 +61,7 @@ class CrmController extends Controller
             ]),
             'payments' => view('backend.crm.tabs.payments', [
                 'payments' => $customer->payments()
-                    ->with('order')
+                    ->with(['order', 'refunds'])
                     ->latest()
                     ->paginate(10),
             ]),
