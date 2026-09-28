@@ -19,16 +19,16 @@
                             <input type="password" id="loginPassword" class="auth-input" placeholder="{{ __('auth_password') }}" autocomplete="current-password" />
                         </div>
 
-                        <div id="inactiveOtpArea" class="hide-form" style="margin-top:18px;">
-                            <p class="auth-subtext" id="inactiveOtpMessage" style="margin-bottom:16px;"></p>
-                            <label for="inactiveOtpInput" style="display:block;margin-bottom:10px;">{{ __('auth_otp_code') }}</label>
+                        <div id="inactiveOtpArea" class="auth-inactive-otp hide-form">
+                            <p class="auth-subtext auth-inactive-otp__message" id="inactiveOtpMessage"></p>
+                            <label for="inactiveOtpInput" class="auth-inactive-otp__label">{{ __('auth_otp_code') }}</label>
                             <input type="text" id="inactiveOtpInput" class="auth-input auth-otp-input"
                                    inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6"
                                    autocomplete="one-time-code" placeholder="000000" />
                             <p class="error-message auth-error hide-form" id="inactiveOtpError"></p>
-                            <button type="button" id="inactiveVerifyBtn" class="btn btn-dark auth-submit" style="width:100%;margin-top:18px;">{{ __('auth_confirm') }}</button>
-                            <button type="button" id="inactiveResendBtn" class="btn btn-outline auth-submit" style="width:100%;margin-top:12px;">{{ __('auth_resend_code') }}</button>
-                            <p id="inactiveResendMessage" class="auth-subtext" style="margin-top:10px;"></p>
+                            <button type="button" id="inactiveVerifyBtn" class="btn btn-dark auth-submit auth-inactive-otp__verify">{{ __('auth_confirm') }}</button>
+                            <button type="button" id="inactiveResendBtn" class="btn btn-outline auth-submit auth-inactive-otp__resend">{{ __('auth_resend_code') }}</button>
+                            <p id="inactiveResendMessage" class="auth-subtext auth-inactive-otp__resend-message"></p>
                         </div>
 
                         <p class="error-message auth-error hide-form" id="loginError"></p>

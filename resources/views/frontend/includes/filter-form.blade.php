@@ -111,28 +111,6 @@
     </div>
 </form>
 
-<style>
-    .filter-size-search {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 11px 13px;
-        border: 1px solid #e3dfeb;
-        border-radius: 8px;
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        margin: 10px 0 12px;
-    }
-    .filter-size-search:focus { outline: 2px solid #c4a7e5; outline-offset: 1px; }
-    .filter-size-scroll {
-        max-height: 245px;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        scrollbar-width: thin;
-        padding-right: 7px;
-    }
-    .filter-size-scroll .filter-checkbox-row { display: flex; align-items: center; margin-bottom: 9px; }
-</style>
 <script>
 document.addEventListener('input', function (event) {
     if (!event.target.matches('[data-filter-size-search]')) return;

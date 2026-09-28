@@ -32,3 +32,13 @@
 .auth-actions-row .btn { flex: 1; margin: 0; }
 .hide-form { display: none !important; }
 
+/* Aktiv olmayan hesab — OTP bloku (login) */
+.auth-inactive-otp { margin-top: 18px; }
+.auth-inactive-otp__message { margin-bottom: 16px; }
+.auth-inactive-otp__label { display: block; margin-bottom: 10px; }
+.auth-inactive-otp__verify { margin-top: 18px; }
+.auth-inactive-otp__resend { margin-top: 12px; }
+.auth-inactive-otp__resend-message { margin-top: 10px; }
+
+/* Kodu yenidən göndər (register-verify) */
+.auth-resend-form { margin-top: 14px; }

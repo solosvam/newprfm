@@ -94,7 +94,7 @@
                 @for($star = 1; $star <= 5; $star++)
                     <span>{{ $star <= round($ratingAverage) ? '★' : '☆' }}</span>
                 @endfor
-                <span style="color:var(--text-muted);font-size:12px;">({{ $product->reviews->count() }} {{ __('review_count') }})</span>
+                <span class="rating-count">({{ $product->reviews->count() }} {{ __('review_count') }})</span>
             </div>
 
             <div class="price-qty-row">
@@ -206,7 +206,7 @@
         </div>
     </div>
 
-    <div class="section-head" style="margin-top:40px;">
+    <div class="section-head section-head--spaced">
         <h2>{{ __('product_similar') }}</h2>
     </div>
     <div class="grid similar-products">
@@ -266,8 +266,8 @@
             <p class="credit-profile-dialog__text">{{ __('product_one_click_phone_hint') }}</p>
             <label for="oneClickMobile">{{ __('product_one_click_mobile') }}</label>
             <input id="oneClickMobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="994 __ ___ __ __" maxlength="16" required class="auth-input one-click-mobile">
-            <p id="oneClickError" role="alert" style="color:#dc2626;display:none;"></p>
-            <button type="submit" class="btn btn-dark" style="width:100%;">{{ __('product_one_click_submit') }}</button>
+            <p id="oneClickError" class="one-click-error" role="alert"></p>
+            <button type="submit" class="btn btn-dark">{{ __('product_one_click_submit') }}</button>
         </form>
     </dialog>
     @if(auth()->check() && !$creditProfileComplete)
@@ -276,7 +276,7 @@
                 <button type="button" class="credit-profile-dialog__close" data-credit-profile-close aria-label="{{ __('common_close') }}">×</button>
                 <h2 id="creditProfileRequiredTitle" class="credit-profile-dialog__title">{{ __('credit_profile_required_title') }}</h2>
                 <p class="credit-profile-dialog__text">{{ __('credit_profile_required_message') }}</p>
-                <a class="btn btn-dark" style="display:block;" href="{{ route('profile.credit', ['return' => route('product', $product->slug)]) }}">{{ __('credit_profile_required_action') }}</a>
+                <a class="btn btn-dark" href="{{ route('profile.credit', ['return' => route('product', $product->slug)]) }}">{{ __('credit_profile_required_action') }}</a>
             </div>
         </dialog>
     @endif
