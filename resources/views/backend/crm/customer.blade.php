@@ -201,12 +201,12 @@
                                 data-customer-id="{{ $customer->id }}">
                                 @php
                                     $tabs = [
-                                        'orders'        => ['icon' => 'cart',            'label' => 'Sifarişlər',   'count' => $counts['orders']],
-                                        'installment'        => ['icon' => 'cart',            'label' => 'Kredit sifarişlər',   'count' => $counts['installment']],
-                                        'balance'      => ['icon' => 'dollar',          'label' => 'Bonus balansı',    'count' => null],
-                                        'payments'      => ['icon' => 'dollar',          'label' => 'Onlayn ödəmələr',    'count' => $counts['payments']],
-                                        'settings'      => ['icon' => 'settings-1',      'label' => 'Tənzimləmələr','count' => null],
-                                        'credit-profile' => ['icon' => 'credit-card', 'label' => 'Kredit profili', 'count' => null],
+                                        'orders'            => ['icon' => 'cart',            'label' => 'Sifarişlər',           'count' => $counts['orders']],
+                                        'installment'       => ['icon' => 'cart',            'label' => 'Kredit sifarişlər',    'count' => $counts['installment']],
+                                        'balance'           => ['icon' => 'dollar',          'label' => 'Bonus balansı',        'count' => null],
+                                        'payments'          => ['icon' => 'dollar',          'label' => 'Onlayn ödəmələr',      'count' => $counts['payments']],
+                                        'settings'          => ['icon' => 'settings-1',      'label' => 'Tənzimləmələr',        'count' => null],
+                                        'credit-profile'    => ['icon' => 'credit-card',     'label' => 'Kredit profili',       'count' => null],
                                     ];
                                 @endphp
                                 @foreach($tabs as $key => $tab)
