@@ -18,10 +18,19 @@
                 <label class="form-label" for="customer-email">E-poçt</label>
                 <input id="customer-email" class="form-control" name="email" value="{{ old('email', $customer->email) }}" type="email">
             </div>
-            <div class="col-12">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" name="active" value="1" type="checkbox" id="customer-active" @checked(old('active', $customer->active))>
-                    <label class="form-check-label" for="customer-active">Müştəri aktivdir</label>
+            <div class="col-md-6">
+                <label class="form-label" for="customer-gender">Cinsiyyət</label>
+                <select id="customer-gender" class="form-select" name="gender" required>
+                    <option value="1" @selected((string) old('gender', $customer->gender) === '1')>Kişi</option>
+                    <option value="0" @selected((string) old('gender', $customer->gender) === '0')>Qadın</option>
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="border rounded w-100 px-3 d-flex align-items-center" style="height: 48px;">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" name="active" value="1" type="checkbox" id="customer-active" @checked(old('active', $customer->active))>
+                        <label class="form-check-label" for="customer-active">Müştəri aktivdir</label>
+                    </div>
                 </div>
             </div>
             <div class="col-12">
