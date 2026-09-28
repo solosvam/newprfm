@@ -53,7 +53,12 @@ class ProductController extends Controller
         $ids = collect(explode(',', (string) $request->query('ids')))
             ->filter()->map(fn ($id) => (int) $id)->unique()->values();
 
-        return Product::with(['brand', 'images'])
+        return Product::with([
+            'images',
+            'brand',
+            'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'),
+            'variants.size',
+        ])
             ->whereIn('id', $ids)
             ->where('active', 1)
             ->get()

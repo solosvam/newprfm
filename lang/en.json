@@ -519,5 +519,9 @@
     "credit_complete_profile_link": "Complete profile",
     "checkout_select_payment_error": "Please choose a payment method",
     "checkout_credit_select_period_error": "Please choose an installment term",
-    "checkout_credit_accept_terms_error": "Please accept the credit terms to continue"
+    "checkout_credit_accept_terms_error": "Please accept the credit terms to continue",
+    "wishlist_choose_size": "Choose size",
+    "wishlist_added": "Added ✓",
+    "wishlist_added_message": "Product added to cart",
+    "wishlist_out_of_stock": "Currently unavailable"
 }

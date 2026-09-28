@@ -223,3 +223,54 @@
 .order-card__payment { display: inline-flex; align-items: center; gap: 5px; }
 .order-card__payment svg { flex-shrink: 0; opacity: .75; }
 
+/* =========================================================
+   ACCOUNT — MOBILE
+   ========================================================= */
+@media (max-width: 760px) {
+    .account-layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 12px 0 40px;
+    }
+    .account-sidebar { position: static; gap: 10px; }
+    .account-crumb { display: none; }
+    .account-greeting { font-size: 18px; }
+
+    /* Menyu — üfüqi sürüşən tab-lar */
+    .account-nav {
+        flex-direction: row;
+        gap: 8px;
+        margin: 0 -14px;
+        padding: 2px 14px 4px;
+        border-top: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+        scroll-snap-type: x proximity;
+    }
+    .account-nav::-webkit-scrollbar { display: none; }
+    .account-nav a {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 13px;
+        white-space: nowrap;
+        scroll-snap-align: start;
+    }
+    .account-nav a.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--on-accent);
+    }
+    .account-nav a.active .account-nav-count,
+    .account-nav a.active .account-nav-note { color: inherit; opacity: .8; }
+
+    .account-logout { font-size: 13px; }
+
+    /* Panel — mobildə çərçivəsiz */
+    .account-panel--flush {
+        padding: 0;
+        border: 0;
+        background: none;
+    }
+}

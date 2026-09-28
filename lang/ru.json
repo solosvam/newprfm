@@ -519,5 +519,9 @@
     "credit_complete_profile_link": "Заполнить профиль",
     "checkout_select_payment_error": "Выберите способ оплаты",
     "checkout_credit_select_period_error": "Выберите срок рассрочки",
-    "checkout_credit_accept_terms_error": "Примите условия кредита, чтобы продолжить"
+    "checkout_credit_accept_terms_error": "Примите условия кредита, чтобы продолжить",
+    "wishlist_choose_size": "Выберите объём",
+    "wishlist_added": "Добавлено ✓",
+    "wishlist_added_message": "Товар добавлен в корзину",
+    "wishlist_out_of_stock": "Нет в наличии"
 }

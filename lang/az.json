@@ -455,5 +455,9 @@
     "credit_complete_profile_link": "Profili tamamla",
     "checkout_select_payment_error": "Ödəniş üsulunu seçin",
     "checkout_credit_select_period_error": "Kredit müddətini seçin",
-    "checkout_credit_accept_terms_error": "Davam etmək üçün kredit şərtlərini qəbul edin"
+    "checkout_credit_accept_terms_error": "Davam etmək üçün kredit şərtlərini qəbul edin",
+    "wishlist_choose_size": "Ölçü seçin",
+    "wishlist_added": "Əlavə edildi ✓",
+    "wishlist_added_message": "Məhsul səbətə əlavə edildi",
+    "wishlist_out_of_stock": "Hazırda mövcud deyil"
 }
