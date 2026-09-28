@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Illuminate\Support\Str;
 
 class BannersController extends Controller
 {
@@ -142,9 +143,12 @@ class BannersController extends Controller
     {
         [$width, $height] = Setting::bannerDimensions($device, $location);
 
-        $imageName = $bannerId . '-' . $location . '-' . $device . '-' . $locale . '.webp';
+        $random = Str::lower(Str::random(8));
+
+        $imageName = $location . '-' . $device . '-' . $locale . '-' . $random . '.webp';
 
         $directory = public_path('frontend/uploads/banners');
+
         File::ensureDirectoryExists($directory);
 
         $manager = ImageManager::usingDriver(Driver::class);
