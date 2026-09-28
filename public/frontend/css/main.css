@@ -203,8 +203,8 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 .credit-modal-submit { width: 100%; margin-top: 20px; }
 .credit-modal-mobile-submit { display: none; }
 .credit-modal-message { font-size: 14px; margin: 14px 0 0; }
-.credit-modal-message--success { color: #16883c; }
-.credit-modal-message--error { color: #c0392b; }
+.credit-modal-message--success { color: var(--success); }
+.credit-modal-message--error { color: var(--danger); }
 
 .credit-modal-rules {
     background: var(--surface-2); border-radius: 12px; padding: 20px; align-self: start;

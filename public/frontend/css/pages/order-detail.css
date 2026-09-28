@@ -86,17 +86,14 @@
     font-size: 13.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums;
 }
 .od-row span:last-child { color: var(--text); }
-.od-row--discount span:last-child { color: #16883c; }
+.od-row--discount span:last-child { color: var(--success); }
 .od-row--total { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 17px; font-weight: 700; color: var(--text); }
 
 .od-bonus {
     display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 9px 12px; border-radius: 10px;
-    font-size: 13px; font-weight: 600; color: #16883c; background: color-mix(in srgb, #16883c 10%, transparent);
+    font-size: 13px; font-weight: 600; color: var(--success); background: color-mix(in srgb, var(--success) 10%, transparent);
 }
 
-[data-theme="dark"] .od-row--discount span:last-child,
-[data-theme="dark"] .od-bonus { color: #4ccf7a; }
-[data-theme="dark"] .od-bonus { background: color-mix(in srgb, #4ccf7a 12%, transparent); }
 
 .order-success {
     max-width: 480px; margin: 60px auto; padding: 48px 32px; text-align: center;
@@ -104,7 +101,7 @@
 }
 .order-success__icon {
     width: 64px; height: 64px; margin: 0 auto 24px; border-radius: 50%;
-    background: #16883c; color: #fff; display: flex; align-items: center; justify-content: center;
+    background: var(--success-solid); color: var(--on-solid); display: flex; align-items: center; justify-content: center;
 }
 .order-success__title { font-size: 22px; font-weight: 700; color: var(--text); margin: 0 0 12px; }
 .order-success__subtitle { font-size: 14px; color: var(--text-secondary); margin: 0 0 28px; }
@@ -115,14 +112,13 @@
 .od-alert {
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
     margin-bottom: 16px; padding: 14px 16px; border-radius: 12px;
-    background: color-mix(in srgb, #c53030 8%, var(--bg));
-    border: 1px solid color-mix(in srgb, #c53030 30%, var(--border));
+    background: color-mix(in srgb, var(--danger) 8%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--border));
 }
 .od-alert__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.od-alert__text strong { font-size: 14px; color: #c53030; }
+.od-alert__text strong { font-size: 14px; color: var(--danger); }
 .od-alert__text span { font-size: 13px; color: var(--text-secondary); }
 .od-alert__btn { flex-shrink: 0; height: 40px; padding: 0 18px; margin: 0; border-radius: 10px; white-space: nowrap; }
-[data-theme="dark"] .od-alert__text strong { color: #f07171; }
 
 /* Ödəniş cəhdləri */
 .od-attempts { margin-top: 14px; }
@@ -135,14 +131,10 @@
     font-size: 13.5px; color: var(--text); font-variant-numeric: tabular-nums;
 }
 .od-attempt__status { font-weight: 600; }
-.od-attempt--paid .od-attempt__status { color: #16883c; }
+.od-attempt--paid .od-attempt__status { color: var(--success); }
 .od-attempt--failed .od-attempt__status,
-.od-attempt--cancelled .od-attempt__status { color: #c53030; }
-.od-attempt--pending .od-attempt__status { color: #b7791f; }
-[data-theme="dark"] .od-attempt--paid .od-attempt__status { color: #4ccf7a; }
-[data-theme="dark"] .od-attempt--failed .od-attempt__status,
-[data-theme="dark"] .od-attempt--cancelled .od-attempt__status { color: #f07171; }
-[data-theme="dark"] .od-attempt--pending .od-attempt__status { color: #f0b44c; }
+.od-attempt--cancelled .od-attempt__status { color: var(--danger); }
+.od-attempt--pending .od-attempt__status { color: var(--warning); }
 .od-attempt__meta {
     display: flex; flex-wrap: wrap; margin-top: 2px;
     font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums;

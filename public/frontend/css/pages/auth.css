@@ -15,7 +15,7 @@
 .auth-input:focus { outline: none; border-color: var(--accent); }
 .auth-input::placeholder { color: var(--text-muted); }
 .auth-otp-input { text-align: center; letter-spacing: 6px; font-size: 20px; font-weight: 600; }
-.auth-error { color: #c0392b; font-size: 13px; margin: 0; }
+.auth-error { color: var(--danger); font-size: 13px; margin: 0; }
 .auth-submit { width: 100%; margin: 4px 0 0; }
 
 .auth-register { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 6px; }

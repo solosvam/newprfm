@@ -12,8 +12,8 @@
     height: 64px;
     margin: 0 auto 24px;
     border-radius: 50%;
-    background: #16883c;
-    color: #fff;
+    background: var(--success-solid);
+    color: var(--on-solid);
     display: flex;
     align-items: center;
     justify-content: center;

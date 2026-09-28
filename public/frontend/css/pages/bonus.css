@@ -1,14 +1,6 @@
 /* =========================================================
    BONUS HISTORY
    ========================================================= */
-.account-panel {
-    --bonus-earn: #16883c;
-    --bonus-spend: #c53030;
-}
-[data-theme="dark"] .account-panel {
-    --bonus-earn: #4ccf7a;
-    --bonus-spend: #f07171;
-}
 
 /* Balans */
 .bonus-balance-card {
@@ -49,12 +41,12 @@
     font-size: 18px; font-weight: 700;
 }
 .bonus-row--earn .bonus-row__icon {
-    color: var(--bonus-earn);
-    background: color-mix(in srgb, var(--bonus-earn) 12%, transparent);
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
 }
 .bonus-row--spend .bonus-row__icon {
-    color: var(--bonus-spend);
-    background: color-mix(in srgb, var(--bonus-spend) 12%, transparent);
+    color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
 }
 
 .bonus-row__info { min-width: 0; }
@@ -72,8 +64,8 @@
     font-size: 15px; font-weight: 700; white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
-.bonus-row--earn .bonus-row__amount { color: var(--bonus-earn); }
-.bonus-row--spend .bonus-row__amount { color: var(--bonus-spend); }
+.bonus-row--earn .bonus-row__amount { color: var(--success); }
+.bonus-row--spend .bonus-row__amount { color: var(--danger); }
 
 @media (max-width: 760px) {
     .bonus-balance-card { padding: 16px; }

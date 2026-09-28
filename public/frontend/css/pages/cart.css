@@ -1,17 +1,6 @@
 /* =========================================================
    CART
    ========================================================= */
-.cart-page,
-.promo {
-    --cart-success: #16883c;
-    --cart-danger: #c53030;
-}
-[data-theme="dark"] .cart-page,
-[data-theme="dark"] .promo {
-    --cart-success: #4ccf7a;
-    --cart-danger: #f07171;
-}
-
 .cart-page [hidden],
 .promo [hidden] { display: none !important; }
 
@@ -62,7 +51,7 @@
     display: block; width: 0; height: 100%; border-radius: inherit;
     background: var(--accent); transition: width .3s ease;
 }
-.cart-freeship.is-done .cart-freeship__text { margin: 0; color: var(--cart-success); font-weight: 600; }
+.cart-freeship.is-done .cart-freeship__text { margin: 0; color: var(--success); font-weight: 600; }
 .cart-freeship.is-done .cart-freeship__bar { display: none; }
 
 /* Items */
@@ -80,7 +69,7 @@
 .cart-row__image {
     width: 96px; height: 112px; padding: 8px; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--border); border-radius: 12px; background: #fff;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--image-bg);
 }
 .cart-row__image img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
 
@@ -124,7 +113,7 @@
     font-size: 13px; color: var(--text-secondary); cursor: pointer;
     transition: color .15s, background .15s;
 }
-.cart-remove:hover { color: var(--cart-danger); background: color-mix(in srgb, var(--cart-danger) 8%, transparent); }
+.cart-remove:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 8%, transparent); }
 
 /* Installment hint — cart-da altda boşluq */
 .cart-page .cart-installment { margin-bottom: 15px; }

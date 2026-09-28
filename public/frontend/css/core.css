@@ -134,7 +134,7 @@ nav.cats a.active { color: var(--text); font-weight: 600; border-color: var(--ac
 }
 .search-results .search-result-thumb,
 [data-theme="dark"] .search-results .search-result-thumb {
-    background: #fff;
+    background: var(--image-bg);
 }
 .search-results .search-result-thumb img {
     mix-blend-mode: multiply;
@@ -146,7 +146,7 @@ nav.cats a.active { color: var(--text); font-weight: 600; border-color: var(--ac
 .search-result-item.is-active { background: var(--surface-2); }
 
 /* şəkillər kartlardakı kimi ağ fonda */
-.search-result-thumb { background: #fff; }
+.search-result-thumb { background: var(--image-bg); }
 .search-result-thumb img { mix-blend-mode: multiply; }
 
 /* iOS/Chrome-un mavi "x" düyməsi əvəzinə öz rəngimiz */

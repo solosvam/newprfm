@@ -10,4 +10,10 @@
     --text-secondary: #b3a9c4;
     --text-muted: #7d7290;
     --border: #2f2a3c;
+
+    /* Status */
+    --success: #4ccf7a;
+    --danger: #f07171;
+    --warning: #f0b44c;
+    --info: #63a4ff;
 }

@@ -19,12 +19,12 @@
     font-size: 14px; color: var(--text-secondary); font-variant-numeric: tabular-nums;
 }
 .cart-summary__row strong { font-weight: 600; color: var(--text); white-space: nowrap; }
-.cart-summary__row--discount strong { color: #dc2626; }
-.cart-summary__row strong.is-free { color: var(--cart-success); }
+.cart-summary__row--discount strong { color: var(--danger); }
+.cart-summary__row strong.is-free { color: var(--success); }
 .cart-summary__code {
     margin-left: 6px; padding: 1px 6px; border-radius: 5px;
     font-size: 11.5px; font-style: normal; font-weight: 700; letter-spacing: .3px;
-    color: var(--cart-success); background: color-mix(in srgb, var(--cart-success) 12%, transparent);
+    color: var(--success); background: color-mix(in srgb, var(--success) 12%, transparent);
 }
 .cart-summary__code:empty { display: none; }
 
@@ -49,7 +49,7 @@
 /* Bonus */
 .cart-bonus {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin: 12px 0 0; font-size: 13px; font-weight: 600; color: var(--cart-success);
+    margin: 12px 0 0; font-size: 13px; font-weight: 600; color: var(--success);
 }
 .cart-bonus strong { font-weight: 800; }
 .cart-installment__how { display: inline-block; margin-top: 5px; font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
@@ -103,9 +103,9 @@
 
 .promo__applied {
     display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
-    color: var(--cart-success);
-    border: 1px dashed color-mix(in srgb, var(--cart-success) 50%, transparent);
-    background: color-mix(in srgb, var(--cart-success) 8%, transparent);
+    color: var(--success);
+    border: 1px dashed color-mix(in srgb, var(--success) 50%, transparent);
+    background: color-mix(in srgb, var(--success) 8%, transparent);
 }
 .promo__code { font-size: 13.5px; font-weight: 700; letter-spacing: .5px; color: var(--text); }
 .promo__amount { margin-left: auto; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -115,4 +115,4 @@
 }
 .promo__remove:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
 
-.promo__error { margin: 8px 0 0; font-size: 12.5px; color: var(--cart-danger); }
+.promo__error { margin: 8px 0 0; font-size: 12.5px; color: var(--danger); }

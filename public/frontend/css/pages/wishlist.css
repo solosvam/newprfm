@@ -55,7 +55,7 @@
     transition: opacity .15s, background .15s;
 }
 .wishlist-add:hover { opacity: .9; }
-.wishlist-add.is-added { background: #16883c; }
+.wishlist-add.is-added { background: var(--success-solid); }
 .wishlist-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .wishlist-out { margin: auto 0 0; padding-top: 10px; font-size: 13px; color: var(--text-muted); }

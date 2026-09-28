@@ -11,4 +11,15 @@
     --text-secondary: #6b6575;
     --text-muted: #a39dae;
     --border: #ece9f2;
+
+    /* Status */
+    --success: #16883c;
+    --danger: #c53030;
+    --warning: #b7791f;
+    --info: #2b6cb0;
+
+    /* Hər iki temada eyni */
+    --success-solid: #16883c;   /* ağ mətnli dolu fon */
+    --on-solid: #ffffff;
+    --image-bg: #ffffff;        /* məhsul şəkilləri ağ fonda */
 }
