@@ -1,20 +1,34 @@
 @php
     $desktopSize = $bannerDimensions['topweb'];
     $mobileSize = $bannerDimensions['topmobile'];
+    $desktopBanner = $banners['topweb'] ?? [];
+    $mobileBanner = $banners['topmobile'] ?? [];
+    $desktopImage = !empty($desktopBanner['image']) ? asset('frontend/uploads/banners/' . $desktopBanner['image']) : null;
+    $mobileImage = !empty($mobileBanner['image']) ? asset('frontend/uploads/banners/' . $mobileBanner['image']) : null;
 @endphp
-<div class="hero-banner" style="--banner-desktop-ratio: {{ $desktopSize['width'] }} / {{ $desktopSize['height'] }}; --banner-mobile-ratio: {{ $mobileSize['width'] }} / {{ $mobileSize['height'] }};">
-    @if(!empty($banners['topweb']['image']))
-        @if(!empty($banners['topweb']['url']))
-            <a class="hero-banner__link hero-banner__link--desktop" href="{{ $banners['topweb']['url'] }}" aria-label="Banner linki"><img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']['image']) }}" alt="Parfumshop banner" width="{{ $desktopSize['width'] }}" height="{{ $desktopSize['height'] }}" loading="eager" fetchpriority="high"></a>
-        @else
-            <img class="hero-banner__desktop" src="{{ asset('frontend/uploads/banners/' . $banners['topweb']['image']) }}" alt="Parfumshop banner" width="{{ $desktopSize['width'] }}" height="{{ $desktopSize['height'] }}" loading="eager" fetchpriority="high">
+@if($desktopImage || $mobileImage)
+    <div class="hero-banner" style="--banner-desktop-ratio: {{ $desktopSize['width'] }} / {{ $desktopSize['height'] }}; --banner-mobile-ratio: {{ $mobileSize['width'] }} / {{ $mobileSize['height'] }};">
+        @if(!empty($desktopBanner['url']))
+            <a class="hero-banner__link" href="{{ $desktopBanner['url'] }}" aria-label="Banner linki">
         @endif
-    @endif
-    @if(!empty($banners['topmobile']['image']))
-        @if(!empty($banners['topmobile']['url']))
-            <a class="hero-banner__link hero-banner__link--mobile" href="{{ $banners['topmobile']['url'] }}" aria-label="Banner linki"><img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']['image']) }}" alt="Parfumshop mobil banner" width="{{ $mobileSize['width'] }}" height="{{ $mobileSize['height'] }}" loading="eager" fetchpriority="high"></a>
-        @else
-            <img class="hero-banner__mobile" src="{{ asset('frontend/uploads/banners/' . $banners['topmobile']['image']) }}" alt="Parfumshop mobil banner" width="{{ $mobileSize['width'] }}" height="{{ $mobileSize['height'] }}" loading="eager" fetchpriority="high">
+        <picture class="hero-banner__picture">
+            @if($mobileImage)
+                <source media="(max-width: 760px)" srcset="{{ $mobileImage }}" width="{{ $mobileSize['width'] }}" height="{{ $mobileSize['height'] }}">
+            @endif
+            <img
+                src="{{ $desktopImage ?: $mobileImage }}"
+                alt="{{ $mobileImage ? 'Parfumshop banner' : 'Parfumshop banner' }}"
+                width="{{ $desktopImage ? $desktopSize['width'] : $mobileSize['width'] }}"
+                height="{{ $desktopImage ? $desktopSize['height'] : $mobileSize['height'] }}"
+                loading="eager"
+                fetchpriority="high"
+            >
+        </picture>
+        @if(!empty($desktopBanner['url']))
+            </a>
         @endif
-    @endif
-</div>
+        @if(!empty($mobileBanner['url']))
+            <a class="hero-banner__mobile-overlay" href="{{ $mobileBanner['url'] }}" aria-label="Mobil banner linki"></a>
+        @endif
+    </div>
+@endif
