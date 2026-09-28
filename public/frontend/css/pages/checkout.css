@@ -359,6 +359,22 @@
     background: var(--bg);
     font-size: 12.5px; line-height: 1.45; color: var(--text-secondary);
 }
+/* Başlıq — cart.css burada yüklənmədiyi üçün ayrıca */
+.checkout-page .cart-title {
+    margin: 8px 0 24px;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: var(--text);
+}
+
+@media (max-width: 560px) {
+    .checkout-page { padding-top: 12px; }
+    .checkout-page .cart-title {
+        margin: 4px 0 12px;
+        font-size: 22px;
+    }
+}
 
 /* Responsive */
 @media (max-width: 1024px) {

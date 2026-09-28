@@ -29,10 +29,10 @@
 
                     {{-- 1. Ünvan --}}
                     <section class="checkout-card">
-                        <header class="checkout-step">
+                        <div class="checkout-step">
                             <span class="checkout-step__num">1</span>
                             <h2 class="checkout-step__title">{{ __('checkout_delivery_address') }}</h2>
-                        </header>
+                        </div>
 
                         @if($addresses->isNotEmpty())
                             <select id="addressSelect" class="brand-select checkout-address-select select2">
@@ -62,10 +62,10 @@
 
                     {{-- 2. Ödəniş --}}
                     <section class="checkout-card">
-                        <header class="checkout-step">
+                        <div class="checkout-step">
                             <span class="checkout-step__num">2</span>
                             <h2 class="checkout-step__title">{{ __('checkout_payment_method') }}</h2>
-                        </header>
+                        </div>
 
                         <div class="checkout-payment" role="radiogroup">
                             @foreach($paymentMethods as $m)
@@ -174,10 +174,10 @@
 
                     {{-- 3. Əlavə --}}
                     <section class="checkout-card">
-                        <header class="checkout-step">
+                        <div class="checkout-step">
                             <span class="checkout-step__num">3</span>
                             <h2 class="checkout-step__title">{{ __('checkout_additional_options') }}</h2>
-                        </header>
+                        </div>
 
                         <label class="checkout-check">
                             <input type="checkbox" id="giftWrap" value="1">
