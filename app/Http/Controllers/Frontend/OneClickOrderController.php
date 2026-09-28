@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
 use App\Models\Order\OrderStatus;
-use App\Models\PaymentMethod;
+use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

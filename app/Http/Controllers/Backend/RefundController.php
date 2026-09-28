@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
+use App\Models\Payment\Payment;
 use App\Services\Payment\Birbank;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,7 +53,7 @@ class RefundController extends Controller
                 $payment,
                 number_format($amount, 2, '.', '')
             );
-
+            dd($operation);
             return response()->json([
                 'success' => true,
                 'message' => 'Geri ödəmə uğurla həyata keçirildi.',

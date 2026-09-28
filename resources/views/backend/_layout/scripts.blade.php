@@ -50,7 +50,7 @@
             sms: "{{ route('admin.crm.sms', ':id') }}",
             resetPassword: "{{ route('admin.crm.reset.password', ':id') }}",
             refund: "{{ route('admin.refund.store') }}",
-            refund_payment: "{{ route('admin.refund.byPayment', ':id') }}",
+            refund_payment: "{{ route('admin.refund.by-payment', ':id') }}",
         },
         rolePermission: "{{ route('admin.ajax.set-role-permission') }}",
         customerTab: "{{ route('admin.crm.tab', [':id', ':tab']) }}",

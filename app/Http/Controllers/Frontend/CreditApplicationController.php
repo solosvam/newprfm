@@ -7,7 +7,7 @@ use App\Models\Credit\CreditPeriod;
 use App\Models\Credit\CreditStatus;
 use App\Models\Order\Order;
 use App\Models\Order\OrderStatus;
-use App\Models\PaymentMethod;
+use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

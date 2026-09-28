@@ -174,7 +174,8 @@ $(document).ready(function () {
         $('#refund_refundable_amount').val($(this).data('refundable') + ' ' + $(this).data('currency'));
         $('#refund_amount').val('').attr('max', $(this).data('refundable'));
 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('refundModal')).show();
+        const modal = new bootstrap.Modal(document.getElementById('refundModal'));
+        modal.show();
     });
 
     $(document).on('click', '#refundSubmit', function () {

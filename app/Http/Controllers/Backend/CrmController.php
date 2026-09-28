@@ -5,15 +5,12 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
 use App\Models\Order\Order;
-use App\Models\PaymentMethod;
+use App\Models\Payment\PaymentMethod;
 use App\Services\ShopPricing;
-use Illuminate\Support\Facades\DB;
 use App\Services\SmsService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CrmController extends Controller

@@ -35,22 +35,26 @@
                         <td class="text-muted">{{ $payments->firstItem() + $loop->index }}</td>
                         <td class="text-nowrap">{{ $payment->created_at?->format('d.m.Y H:i') }}</td>
                         <td class="fw-semibold">{{ $payment->order?->order_no ?? '—' }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ strtoupper($payment->provider ?? '—') }}</span></td>
+                        <td><span
+                                class="badge bg-light text-dark border">{{ strtoupper($payment->provider ?? '—') }}</span>
+                        </td>
                         <td>{{ $payment->provider_order_id ?: '—' }}</td>
                         <td>{{ $payment->card_pan ?: '—' }}</td>
-                        <td class="text-end fw-semibold text-nowrap">{{ number_format((float)$payment->amount, 2) }} ₼</td>
+                        <td class="text-end fw-semibold text-nowrap">{{ number_format((float)$payment->amount, 2) }}₼
+                        </td>
                         <td><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
                         <td class="text-nowrap">
                             @if($payment->refunds->isNotEmpty())
-                                <button class="btn btn-sm btn-icon btn-icon-only btn-outline-secondary me-1 btn-view-refunds"
-                                        data-id="{{ $payment->id }}"
-                                        data-bs-toggle="tooltip"
-                                        title="Geri ödəmələrə bax ({{ $payment->refunds->count() }})">
+                                <button
+                                    class="btn btn-sm btn-icon btn-icon-only btn-outline-secondary me-1 btn-view-refunds"
+                                    data-id="{{ $payment->id }}"
+                                    data-bs-toggle="tooltip"
+                                    title="Geri ödəmələrə bax ({{ $payment->refunds->count() }})">
                                     <i data-acorn-icon="eye" class="icon" data-acorn-size="18"></i>
                                 </button>
                             @endif
 
-                            @if($payment->status === \App\Models\Payment::PAID && $payment->provider === 'birbank' && $refundableAmount > 0)
+                            @if($payment->status === \App\Models\Payment\Payment::PAID && $payment->provider === 'birbank' && $refundableAmount > 0)
                                 <button class="btn btn-sm btn-icon btn-icon-only btn-outline-danger btn-refund"
                                         data-id="{{ $payment->id }}"
                                         data-amount="{{ $payment->amount }}"
@@ -90,7 +94,8 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Qaytarılacaq məbləğ</label>
-                    <input type="number" step="0.01" min="0.01" class="form-control" id="refund_amount" placeholder="Məbləğ daxil edin">
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="refund_amount"
+                           placeholder="Məbləğ daxil edin">
                 </div>
             </div>
             <div class="modal-footer">
@@ -109,7 +114,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="refundViewBody">
-                <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                </div>
             </div>
         </div>
     </div>

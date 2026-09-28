@@ -3,13 +3,13 @@
 namespace App\Services\Payment;
 
 use App\Models\Order\Order;
-use App\Models\Payment;
-use App\Models\PaymentOperation;
-use App\Models\PaymentSavedCard;
-use Illuminate\Support\Str;
+use App\Models\Payment\Payment;
+use App\Models\Payment\PaymentOperation;
+use App\Models\Payment\PaymentSavedCard;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -478,12 +478,27 @@ class Birbank
 
     private function bankPost(string $path, array $data): array
     {
-        $response = $this->http()->post($this->endpoint().$path, $data);
-        if (!$response->successful() || $response->json('errorCode')
-            || ($response->json('tran.pmoResultCode') !== null
-                && (string) $response->json('tran.pmoResultCode') !== '1')) {
-            throw new RuntimeException('Birbank operation failed (HTTP '.$response->status().').');
+        $response = $this->http()->post(
+            $this->endpoint() . $path,
+            $data
+        );
+
+        if (
+            !$response->successful() ||
+            $response->json('errorCode') ||
+            (
+                $response->json('tran.pmoResultCode') !== null &&
+                (string) $response->json('tran.pmoResultCode') !== '1'
+            )
+        ) {
+            throw new RuntimeException(
+                'Birbank operation failed (HTTP ' .
+                $response->status() .
+                '): ' .
+                $response->body()
+            );
         }
+
         return $response->json() ?? [];
     }
 

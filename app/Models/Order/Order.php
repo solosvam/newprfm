@@ -3,8 +3,8 @@ namespace App\Models\Order;
 use App\Models\Credit\CreditApplication;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerAddress;
-use App\Models\PaymentMethod;
-use App\Models\Payment;
+use App\Models\Payment\Payment;
+use App\Models\Payment\PaymentMethod;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model {

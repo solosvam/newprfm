@@ -1,26 +1,26 @@
 <?php
 namespace App\Http\Controllers\Frontend;
 
+use App\Exceptions\PromoCodeException;
 use App\Http\Controllers\Controller;
-use App\Models\Order\Order;
+use App\Mail\OrderCreatedMail;
 use App\Models\Credit\CreditApplication;
 use App\Models\Credit\CreditPeriod;
 use App\Models\Credit\CreditStatus;
-use App\Models\Payment;
-use App\Services\Payment\Birbank;
-use Illuminate\Support\Str;
-use App\Mail\OrderCreatedMail;
+use App\Models\Order\Order;
 use App\Models\Order\OrderStatus;
-use App\Models\PaymentMethod;
+use App\Models\Payment\Payment;
+use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use App\Services\BonusService;
+use App\Services\Payment\Birbank;
 use App\Services\PromoCodeService;
 use App\Services\ShopPricing;
-use App\Exceptions\PromoCodeException;
 use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller

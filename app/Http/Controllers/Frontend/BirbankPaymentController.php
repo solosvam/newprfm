@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order\Order;
-use App\Models\Payment;
-use App\Services\Payment\Birbank;
-use App\Services\BonusService;
-use App\Models\PromoCode;
 use App\Mail\OrderCreatedMail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
+use App\Models\Order\Order;
+use App\Models\Payment\Payment;
+use App\Models\PromoCode;
+use App\Services\BonusService;
+use App\Services\Payment\Birbank;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class BirbankPaymentController extends Controller
 {
