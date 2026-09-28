@@ -38,6 +38,14 @@
                             <label class="form-label">Soyad</label>
                             <input class="form-control" name="surname" required maxlength="30" value="{{ old('surname', $existing?->surname) }}">
                         </div>
+                        <div class="col-md-6" id="easyOrderGenderField" @if($existing) hidden @endif>
+                            <label for="easyOrderGender" class="form-label">Cinsiyyət (yeni müştəri üçün)</label>
+                            <select class="form-select" id="easyOrderGender" name="gender" @if(!$existing) required @endif>
+                                <option value="">Seçin</option>
+                                <option value="1" @selected(old('gender') === '1')>Kişi</option>
+                                <option value="0" @selected(old('gender') === '0')>Qadın</option>
+                            </select>
+                        </div>
                         <div class="col-12">
                             <label for="easyOrderAddressChoice" class="form-label">Çatdırılma ünvanı</label>
                             <select class="form-select" name="address_choice" id="easyOrderAddressChoice" required>
@@ -118,6 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const notFound = document.getElementById('customerNotFound');
     const name = form.querySelector('[name="name"]');
     const surname = form.querySelector('[name="surname"]');
+    const genderField = document.getElementById('easyOrderGenderField');
+    const gender = document.getElementById('easyOrderGender');
     const toggle = () => {
         const isNew = select.value === 'new';
         newAddress.hidden = !isNew;
@@ -135,6 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
             select.value = 'new'; toggle();
             if (found) found.hidden = true;
             if (notFound) notFound.hidden = true;
+            genderField.hidden = false;
+            gender.required = true;
             return;
         }
         try {
@@ -155,6 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 name.value = '';
                 surname.value = '';
             }
+            genderField.hidden = !!result.found;
+            gender.required = !result.found;
             if (found) {
                 found.hidden = !result.found;
                 found.textContent = result.found
