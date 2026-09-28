@@ -30,7 +30,7 @@ class ProductImageController extends Controller
 
             $manager = ImageManager::usingDriver(Driver::class);
             $manager
-                ->read($sourcePath)
+                ->decode(file_get_contents($sourcePath))
                 ->scaleDown(width: $size, height: $size)
                 ->toWebp(quality: 80)
                 ->save($cachePath);
