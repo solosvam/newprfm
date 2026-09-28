@@ -19,6 +19,33 @@ class ProductSearchService
             return ['results' => [], 'suggestion' => null];
         }
 
+        // Köhnə saytdakı kimi: ilk söz brend, qalan hissə məhsul adı.
+        // Nəticə yoxdursa mövcud fonetik/ağıllı axtarışa keç.
+        $parts = explode(' ', $normalizedQuery, 2);
+        if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
+            $brandPart = $parts[0];
+            $namePart = $parts[1];
+            $brandAndName = Product::query()
+                ->where('active', 1)
+                ->whereHas('brand', fn ($brand) => $brand->where('name', 'LIKE', '%'.$brandPart.'%'))
+                ->where('name', 'LIKE', '%'.$namePart.'%')
+                ->with([
+                    'brand', 'type', 'genders', 'images',
+                    'variants' => fn ($variantQuery) => $variantQuery->where('active', 1)->orderBy('price'),
+                    'variants.size',
+                ])
+                ->orderByDesc('id')
+                ->limit($limit)
+                ->get();
+
+            if ($brandAndName->isNotEmpty()) {
+                return [
+                    'results' => $brandAndName->map(fn (Product $product) => $this->formatProduct($product))->all(),
+                    'suggestion' => null,
+                ];
+            }
+        }
+
         $phoneticQuery = ProductSearchNormalizer::phonetic($query);
         $signature = ProductSearchNormalizer::tokenSignature($query);
         $scores = [];
