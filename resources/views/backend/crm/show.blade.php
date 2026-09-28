@@ -99,13 +99,12 @@
 
                             <div class="d-flex flex-row justify-content-between w-100">
                                 <button type="button" class="btn btn-outline-success w-100 me-2 balance-tab-btn">
-                                    <i data-acorn-icon="dollar" data-acorn-size="16" class="me-1"></i>
                                     Bonus: {{ number_format((float) $customer->bonus_balance, 2) }} ₼
                                 </button>
 
                                 <button type="button" class="btn btn-outline-primary w-100">
-                                    <i data-acorn-icon="cart" data-acorn-size="16" class="me-1"></i>
-                                    Sifariş götür
+                                    <span class="me-1 fs-5">+</span>
+                                    Sifariş
                                 </button>
                             </div>
                         </div>
@@ -137,24 +136,44 @@
 
                         <div id="creditProfileCollapse" class="collapse">
                             <div class="card-body accordion-content pt-0">
-                                <div class="row g-3">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless align-middle mb-3">
+                                        <tbody>
+                                        @foreach([
+                                                ['Ata adı', $creditProfile?->father_name],
+                                                ['Cinsiyyət', (string) $customer->gender === '1' ? 'Kişi' : ((string) $customer->gender === '0' ? 'Qadın' : '-')],
+                                                ['FİN', $creditProfile?->fin],
+                                                ['1-ci qohumun adı', $creditProfile?->relative_1_name],
+                                                ['1-ci qohumun nömrəsi', $creditProfile?->relative_1_phone],
+                                                ['2-ci qohumun adı', $creditProfile?->relative_2_name],
+                                                ['2-ci qohumun nömrəsi', $creditProfile?->relative_2_phone],
+                                                ['İş yerinin adı', $creditProfile?->workplace_name],
+                                                ['Əmək haqqı', $creditProfile?->salary],
+                                                ['Vəzifə', $creditProfile?->position],
+                                        ] as [$label, $value])
+                                            <tr>
+                                                <td class="text-muted ps-0" style="width:45%;">{{ $label }}</td>
+                                                <td class="fw-medium pe-0">{{ $value ?: '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="row g-2">
                                     @foreach([
-                                            ['ATA ADI', $creditProfile?->father_name],
-                                            ['CİNSİYYƏT', $customer->gender],
-                                            ['FİN', $creditProfile?->fin],
-                                            ['1-Cİ QOHUMUN ADI', $creditProfile?->relative_1_name],
-                                            ['1-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_1_phone],
-                                            ['2-Cİ QOHUMUN ADI', $creditProfile?->relative_2_name],
-                                            ['2-Cİ QOHUMUN NÖMRƏSİ', $creditProfile?->relative_2_phone],
-                                            ['ŞƏXSİYYƏT VƏSİQƏSİ (ÖN)', $creditProfile?->id_card_front],
-                                            ['ŞƏXSİYYƏT VƏSİQƏSİ (ARXA)', $creditProfile?->id_card_back],
-                                            ['İŞ YERİNİN ADI', $creditProfile?->workplace_name],
-                                            ['ƏMƏK HAQQI', $creditProfile?->salary],
-                                            ['VƏZİFƏ', $creditProfile?->position],
-                                    ] as [$label, $value])
+                                            ['Şəxsiyyət vəsiqəsi — ön', $creditProfile?->id_card_front],
+                                            ['Şəxsiyyət vəsiqəsi — arxa', $creditProfile?->id_card_back],
+                                    ] as [$label, $image])
                                         <div class="col-12">
-                                            <div class="text-muted" style="font-size:11px;">{{ $label }}</div>
-                                            <div class="fw-medium" style="font-size:13px;">{{ $value ?: '-' }}</div>
+                                            <div class="text-muted mb-1" style="font-size:11px;">{{ $label }}</div>
+                                            @if($image)
+                                                <a href="{{ asset($image) }}" target="_blank">
+                                                    <img src="{{ asset($image) }}" alt="{{ $label }}" class="img-fluid rounded border w-100">
+                                                </a>
+                                            @else
+                                                <div class="text-muted">-</div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
