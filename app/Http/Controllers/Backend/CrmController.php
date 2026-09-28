@@ -47,11 +47,24 @@ class CrmController extends Controller
         return match ($tab) {
             'orders' => view('backend.crm.tabs.orders', [
                 'orders' => $customer->orders()
-                    ->with(['status', 'paymentMethod', 'creditApplication.status'])
+                    ->where('payment_method_id', '!=', 4)
+                    ->with(['status', 'paymentMethod'])
                     ->latest()
                     ->paginate(10),
             ]),
-            'payments' => view('backend.crm.tabs.payments'),
+            'installment' => view('backend.crm.tabs.installment', [
+                'orders' => $customer->orders()
+                    ->where('payment_method_id', 4)
+                    ->with(['status', 'creditApplication.status', 'creditApplication.period'])
+                    ->latest()
+                    ->paginate(10),
+            ]),
+            'payments' => view('backend.crm.tabs.payments', [
+                'payments' => $customer->payments()
+                    ->with('order')
+                    ->latest()
+                    ->paginate(10),
+            ]),
             'balance' => view('backend.crm.tabs.balance', [
                 'customer' => $customer,
                 'transactions' => $customer->bonusTransactions()
