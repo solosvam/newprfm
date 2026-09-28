@@ -14,7 +14,7 @@
                 <a href="{{ route('product', $item->slug) }}" class="mini-card">
                     <div class="mini-thumb">
                         @if($itemImage)
-                            <img src="{{ asset('frontend/uploads/products/' . $itemImage->image) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:contain;">
+                            <img src="{{ route('product.image', ['size' => 200, 'image' => $itemImage->image]) }}" alt="{{ $item->name }}" width="200" height="200" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:contain;">
                         @else
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
                         @endif
