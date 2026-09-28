@@ -164,7 +164,7 @@
 /* Installment hint */
 .cart-installment {
     display: flex; align-items: center; gap: 10px;
-    margin: 14px 0 0; padding: 10px 12px; border-radius: 10px;
+    margin: 14px 0 15px; padding: 10px 12px; border-radius: 10px;
     font-size: 13px; line-height: 1.4; color: var(--text);
     background: color-mix(in srgb, var(--accent) 7%, var(--bg));
     border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
