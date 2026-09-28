@@ -70,6 +70,10 @@ class CrmController extends Controller
             'settings' => view('backend.crm.tabs.settings', [
                 'customer' => $customer->load('addresses'),
             ]),
+            'credit-profile' => view('backend.crm.tabs.credit-profile', [
+                'customer' => $customer->load('creditProfile'),
+                'profile' => $customer->creditProfile,
+            ]),
             default => abort(404),
         };
     }
@@ -81,6 +85,7 @@ class CrmController extends Controller
             'surname' => ['required', 'string', 'max:30'],
             'mobile' => ['required', 'digits:12', 'unique:customers,mobile,' . $customer->id],
             'email' => ['nullable', 'email', 'max:50', 'unique:customers,email,' . $customer->id],
+            'gender' => ['required', 'in:0,1'],
             'active' => ['nullable', 'boolean'],
         ]);
 
@@ -89,12 +94,50 @@ class CrmController extends Controller
             'surname' => $data['surname'],
             'mobile' => $data['mobile'],
             'email' => $data['email'] ?? null,
+            'gender' => (int) $data['gender'],
             'active' => $request->boolean('active'),
         ]);
 
         return redirect()
             ->route('admin.crm.show', $customer)
             ->with('success', 'Müştəri məlumatları yeniləndi.');
+    }
+
+    public function updateCreditProfile(Customer $customer, Request $request): RedirectResponse
+    {
+        $profile = $customer->creditProfile;
+        $request->merge(['fin' => strtoupper(trim((string) $request->input('fin')))]);
+
+        $data = $request->validate([
+            'father_name' => ['required', 'string', 'max:100'],
+            'fin' => ['required', 'regex:/^[A-Z0-9]{7}$/', \Illuminate\Validation\Rule::unique('customer_credit_profiles', 'fin')->ignore($profile?->id)],
+            'relative_1_name' => ['required', 'string', 'max:100'],
+            'relative_1_phone' => ['required', 'regex:/^\\+?[0-9 ]{9,16}$/'],
+            'relative_2_name' => ['required', 'string', 'max:100'],
+            'relative_2_phone' => ['required', 'regex:/^\\+?[0-9 ]{9,16}$/'],
+            'workplace_name' => ['required', 'string', 'max:255'],
+            'salary' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
+            'position' => ['required', 'string', 'max:150'],
+            'id_card_front' => [$profile?->id_card_front ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'id_card_back' => [$profile?->id_card_back ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        foreach (['id_card_front', 'id_card_back'] as $field) {
+            unset($data[$field]);
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('frontend/uploads/customers'), $filename);
+                $data[$field] = $filename;
+                if ($profile?->{$field}) {
+                    @unlink(public_path('frontend/uploads/customers/' . basename($profile->{$field})));
+                }
+            }
+        }
+
+        $customer->creditProfile()->updateOrCreate([], $data);
+
+        return redirect()->route('admin.crm.show', $customer)->with('success', 'Kredit profili yeniləndi.');
     }
 
     public function resetPassword(Customer $customer, SmsService $sms): RedirectResponse
