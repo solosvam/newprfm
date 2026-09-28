@@ -515,7 +515,7 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 /* =========================================================
    FOOTER
    ========================================================= */
-footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 50px; }
+footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 40px; padding-top: 15px; }
 .footer-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 30px; padding: 44px 0 30px; }
 .footer-top .brand-col .logo2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
 .footer-top .brand-col p { font-size: 13px; opacity: 0.8; line-height: 1.6; max-width: 260px; }
