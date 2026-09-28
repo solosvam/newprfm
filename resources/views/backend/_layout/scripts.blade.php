@@ -15,7 +15,7 @@
 <script src="{{asset('backend/js/base/helpers.js')}}"></script>
 <script src="{{asset('backend/js/base/globals.js')}}"></script>
 <script src="{{asset('backend/js/base/nav.js')}}"></script>
-<script src="{{asset('backend/js/base/search.js')}}"></script>
+<script src="{{asset('backend/js/base/search.js')}}?v=2"></script>
 <script src="{{asset('backend/js/base/settings.js')}}"></script>
 <!-- Template Base Scripts End -->
 <!-- Page Specific Scripts Start -->
