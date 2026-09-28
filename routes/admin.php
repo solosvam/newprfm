@@ -213,6 +213,7 @@ Route::prefix('admin')
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}/order/{order}/confirm', 'confirmOneClick')->name('one-click.confirm');
                     Route::post('/customer/{customer}', 'update')->name('update');
+                    Route::post('/customer/{customer}/credit-profile', 'updateCreditProfile')->name('credit-profile.update');
                     Route::post('/customer/{customer}/reset-password', 'resetPassword')->name('reset-password');
                     Route::get('/customer/{customer}/sms', 'sms')->name('sms');
                 });
