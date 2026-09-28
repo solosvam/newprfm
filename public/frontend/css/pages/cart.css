@@ -43,35 +43,7 @@
     align-items: start;
 }
 .cart-main { min-width: 0; }
-.sk {
-    border-radius: 6px;
-    background: linear-gradient(90deg,
-    var(--surface) 0%,
-    color-mix(in srgb, var(--border) 70%, var(--surface)) 50%,
-    var(--surface) 100%);
-    background-size: 200% 100%;
-    animation: cart-sk 1.2s ease-in-out infinite;
-}
-.cart-row__image.sk { border-color: transparent; }
-.sk--line { height: 16px; margin-bottom: 8px; }
-.sk--sm { height: 12px; }
-.sk--pill { width: 112px; height: 38px; border-radius: 999px; }
-@keyframes cart-sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-/* Yüklənərkən xülasədəki rəqəmlər də skelet kimi */
-.cart-page.is-loading .cart-summary__row strong,
-.cart-page.is-loading .cart-summary__total strong,
-.cart-page.is-loading #cartItemsLabel {
-    display: inline-block; min-width: 64px;
-    color: transparent; border-radius: 6px;
-    background: var(--border); opacity: .6;
-}
-.cart-page.is-loading .cart-installment,
-.cart-page.is-loading .cart-bonus { display: none; }
-
-@media (prefers-reduced-motion: reduce) {
-    .sk { animation: none; }
-}
 .cart-page.is-empty .cart-layout,
 .cart-page.is-empty .cart-mobilebar { display: none; }
 
@@ -250,12 +222,13 @@
 
 /* Mobile bar */
 .cart-mobilebar { display: none; }
-.cart-mobilebar__total span { display: block; font-size: 12px; color: var(--text-secondary); }
+.cart-mobilebar__total span { display: block; font-size: 12px; color: var(--text-secondary); white-space: nowrap;}
 .cart-mobilebar__total strong { font-size: 18px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
 .cart-mobilebar .btn {
     display: inline-flex; align-items: center; height: 48px; padding: 0 24px;
     border-radius: 12px; font-weight: 700; white-space: nowrap;
 }
+.cart-mobilebar .btn { flex: 1; max-width: 260px; justify-content: center; }
 
 @media (max-width: 960px) {
     .cart-layout { grid-template-columns: 1fr; gap: 24px; }
@@ -339,4 +312,45 @@
 
 .promo__error { margin: 8px 0 0; font-size: 12.5px; color: var(--cart-danger); }
 
+/* =========================================================
+   CART SKELETON
+   ========================================================= */
+.cart-page .sk,
+.cart-row--skeleton .cart-row__image {
+    border-radius: 6px;
+    background: linear-gradient(90deg,
+    var(--surface) 0%,
+    color-mix(in srgb, var(--border) 70%, var(--surface)) 50%,
+    var(--surface) 100%);
+    background-size: 200% 100%;
+    animation: cart-sk 1.2s ease-in-out infinite;
+}
+@keyframes cart-sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
+/* Skelet sətir: real sətirlə eyni ölçü */
+.cart-row--skeleton .cart-row__image { border-color: transparent; border-radius: 12px; }
+.cart-row--skeleton .cart-row__info { flex: 1; min-width: 0; }
+.cart-row--skeleton .sk--line { height: 16px; margin-bottom: 8px; }
+.cart-row--skeleton .sk--sm { height: 12px; }
+.cart-row--skeleton .sk--pill { width: 112px; height: 38px; border-radius: 999px; }
+
+/* Xülasədə yer tutan bloklar — yalnız yüklənərkən */
+.cart-summary__sk { display: none; }
+.cart-page.is-loading .cart-summary__sk { display: block; }
+.cart-summary__sk--installment { height: 76px; margin-top: 14px; border-radius: 10px; }
+.cart-summary__sk--bonus { width: 70%; height: 18px; margin: 14px auto 0; }
+
+/* Xülasədəki rəqəmlər */
+.cart-page.is-loading .cart-summary__row strong,
+.cart-page.is-loading .cart-summary__total strong,
+.cart-page.is-loading #cartItemsLabel {
+    display: inline-block; min-width: 64px;
+    color: transparent; border-radius: 6px;
+    background: var(--border); opacity: .6;
+}
+.cart-page.is-loading .cart-summary__total strong { min-width: 110px; height: 30px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .cart-page .sk,
+    .cart-row--skeleton .cart-row__image { animation: none; }
+}

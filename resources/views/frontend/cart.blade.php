@@ -89,7 +89,7 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
                         <span id="cartInstallmentText"></span>
                     </p>
-
+                    <div class="cart-summary__sk cart-summary__sk--installment sk" aria-hidden="true"></div>
                     <a id="cartCheckout" class="btn btn-dark" href="{{ $checkoutUrl }}">
                         {{ __('cart_checkout') }}
                     </a>
@@ -98,7 +98,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
                         <span id="cartBonusText"></span>
                     </p>
-
+                    <div class="cart-summary__sk cart-summary__sk--bonus sk" aria-hidden="true"></div>
                     <ul class="cart-trust">
                         <li>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>

@@ -243,6 +243,17 @@
                     </ul>
                 </aside>
             </div>
+
+            <div id="checkoutMobilebar" class="checkout-mobilebar">
+                <div class="checkout-mobilebar__total">
+                    <span>{{ __('checkout_total') }}</span>
+                    <strong id="checkoutMobileTotal">0.00 ₼</strong>
+                </div>
+                <button type="button" id="checkoutMobileSubmit" class="btn btn-dark">
+                    {{ __('checkout_confirm_order') }}
+                </button>
+            </div>
+
         </div>
     </main>
 @endsection

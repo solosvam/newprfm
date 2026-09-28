@@ -33,6 +33,9 @@
         creditTerms: $('creditTerms'),
         bonusHint: page.querySelector('[data-bonus-hint]'),
         creditSummary: page.querySelector('.installment__summary'),
+        mobilebar: $('checkoutMobilebar'),
+        mobileTotal: $('checkoutMobileTotal'),
+        mobileSubmit: $('checkoutMobileSubmit'),
     };
 
     const paymentRadios = [...page.querySelectorAll('input[name="payment_method"]')];
@@ -241,6 +244,7 @@
         els.delivery.style.color = fee === 0 ? '#16803c' : '';
         els.total.textContent = money(state.total);
 
+        if (els.mobileTotal) els.mobileTotal.textContent = money(state.total);
         // Bonus is earned on paid/cash orders, not when paying with existing bonus
         // or submitting an internal credit application.
         if (els.earnedBonus && els.earnedBonusText) {
@@ -424,6 +428,26 @@
             button.disabled = false;
         }
     });
+
+    /* =========================================================
+   Mobile bar
+   ========================================================= */
+    if (els.mobilebar && els.mobileSubmit) {
+        // Əsas düyməni işə salır — validasiya və göndərmə eyni yerdən keçir
+        els.mobileSubmit.addEventListener('click', () => els.placeOrder.click());
+
+        // Əsas düymə deaktivdirsə, mobil düymə də deaktiv olsun
+        const syncDisabled = () => { els.mobileSubmit.disabled = els.placeOrder.disabled; };
+        new MutationObserver(syncDisabled).observe(els.placeOrder, { attributes: true, attributeFilter: ['disabled'] });
+        syncDisabled();
+
+        // Əsas düymə ekranda görünəndə panel gizlənir
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(([entry]) => {
+                els.mobilebar.classList.toggle('is-hidden', entry.isIntersecting);
+            }).observe(els.placeOrder);
+        }
+    }
 
     /* =========================================================
        Init
