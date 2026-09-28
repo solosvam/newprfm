@@ -1789,7 +1789,7 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
     display: block;
     width: 100%;
     box-sizing: border-box;
-    margin: 18px 0 16px;
+    margin: 4px 0 16px;
     text-align: left;
     font: inherit;
 }
@@ -1798,4 +1798,9 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 5
     text-align: left;
     font-size: 14px;
     margin-bottom: 8px;
+}
+
+#oneClickDialog #oneClickForm > button[type="submit"] {
+    display: block;
+    margin-top: 16px;
 }
