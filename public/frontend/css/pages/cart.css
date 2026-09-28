@@ -43,8 +43,35 @@
     align-items: start;
 }
 .cart-main { min-width: 0; }
+.sk {
+    border-radius: 6px;
+    background: linear-gradient(90deg,
+    var(--surface) 0%,
+    color-mix(in srgb, var(--border) 70%, var(--surface)) 50%,
+    var(--surface) 100%);
+    background-size: 200% 100%;
+    animation: cart-sk 1.2s ease-in-out infinite;
+}
+.cart-row__image.sk { border-color: transparent; }
+.sk--line { height: 16px; margin-bottom: 8px; }
+.sk--sm { height: 12px; }
+.sk--pill { width: 112px; height: 38px; border-radius: 999px; }
+@keyframes cart-sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-.cart-page.is-loading .cart-layout { visibility: hidden; }
+/* Yüklənərkən xülasədəki rəqəmlər də skelet kimi */
+.cart-page.is-loading .cart-summary__row strong,
+.cart-page.is-loading .cart-summary__total strong,
+.cart-page.is-loading #cartItemsLabel {
+    display: inline-block; min-width: 64px;
+    color: transparent; border-radius: 6px;
+    background: var(--border); opacity: .6;
+}
+.cart-page.is-loading .cart-installment,
+.cart-page.is-loading .cart-bonus { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .sk { animation: none; }
+}
 .cart-page.is-empty .cart-layout,
 .cart-page.is-empty .cart-mobilebar { display: none; }
 

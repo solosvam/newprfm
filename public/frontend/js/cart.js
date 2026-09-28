@@ -5,6 +5,7 @@
     if (!root) return;
 
     const CART_KEY = 'parfumshop_cart';
+    const PRODUCT_CACHE_KEY = 'parfumshop_cart_products';
     const $ = id => document.getElementById(id);
     const els = {
         items: $('cartItems'),
@@ -47,6 +48,7 @@
 
     const state = { subtotal: 0, count: 0 };
     let renderVersion = 0;
+    let lastSignature = '';
     let undoEntry = null;
     let toastTimer = null;
 
@@ -101,6 +103,38 @@
         button.dataset.id = id;
         button.setAttribute('aria-label', ariaLabel);
         return button;
+    }
+
+    /* ---------- product cache (sessionStorage) ---------- */
+    function readProductCache() {
+        try {
+            const cache = JSON.parse(sessionStorage.getItem(PRODUCT_CACHE_KEY) || '{}');
+            return cache && typeof cache === 'object' ? cache : {};
+        } catch {
+            return {};
+        }
+    }
+
+    function writeProductCache(products) {
+        try {
+            const cache = readProductCache();
+            products.forEach(p => { cache[Number(p.variant_id)] = p; });
+            sessionStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify(cache));
+        } catch { /* storage dolu və ya bloklanıb — keşsiz davam edirik */ }
+    }
+
+    async function fetchProducts(cart) {
+        const url = new URL(config.productsUrl, window.location.origin);
+        url.searchParams.set('variants', cart.map(item => item.variant_id).join(','));
+
+        // Inline skriptin erkən başlatdığı sorğu eyni səbət üçündürsə, onu istifadə edirik (bir dəfə)
+        const prefetch = window.__cartPrefetch;
+        window.__cartPrefetch = null;
+        if (prefetch && prefetch.key === url.search) return prefetch.promise;
+
+        const response = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Cart products request failed');
+        return response.json();
     }
 
     /* ---------- row ---------- */
@@ -229,6 +263,35 @@
     }
 
     /* ---------- render ---------- */
+    function paint(cart, productMap) {
+        // Məlumat dəyişməyibsə DOM-a toxunmuruq — şəkillər yanıb-sönməsin
+        const signature = JSON.stringify(cart.map(item => [
+            Number(item.variant_id),
+            Number(item.quantity) || 1,
+            productMap.get(Number(item.variant_id)) || null,
+        ]));
+        if (signature === lastSignature) return;
+        lastSignature = signature;
+
+        const fragment = document.createDocumentFragment();
+        let subtotal = 0;
+        let count = 0;
+
+        for (const item of cart) {
+            const product = productMap.get(Number(item.variant_id));
+            if (!product) continue;
+            const { row, lineTotal, quantity } = buildRow(item, product);
+            fragment.appendChild(row);
+            subtotal += lineTotal;
+            count += quantity;
+        }
+
+        els.items.replaceChildren(fragment);
+        state.subtotal = round2(subtotal);
+        state.count = count;
+        updateTotals();
+    }
+
     async function renderCart() {
         const version = ++renderVersion;
         const cart = getCart();
@@ -237,6 +300,7 @@
             root.classList.add('is-empty');
             root.classList.remove('is-loading');
             els.items.replaceChildren();
+            lastSignature = '';
             state.subtotal = 0;
             state.count = 0;
             updateTotals();
@@ -245,34 +309,24 @@
 
         root.classList.remove('is-empty');
 
+        // 1) Keşdə bütün məhsullar varsa — şəbəkəni gözləmədən dərhal göstəririk
+        const cache = readProductCache();
+        if (cart.every(item => cache[Number(item.variant_id)])) {
+            paint(cart, new Map(Object.values(cache).map(p => [Number(p.variant_id), p])));
+            root.classList.remove('is-loading');
+        }
+
+        // 2) Serverdən təzə məlumat — qiymət və ya məhsul dəyişibsə yenidən çəkilir
         try {
-            const url = new URL(config.productsUrl, window.location.origin);
-            url.searchParams.set('variants', cart.map(item => item.variant_id).join(','));
-            const response = await fetch(url, { headers: { Accept: 'application/json' } });
-            if (!response.ok) throw new Error('Cart products request failed');
-            const products = await response.json();
+            const products = await fetchProducts(cart);
             if (version !== renderVersion) return;
-
-            const productMap = new Map(products.map(p => [Number(p.variant_id), p]));
-            const fragment = document.createDocumentFragment();
-            let subtotal = 0;
-            let count = 0;
-
-            for (const item of cart) {
-                const product = productMap.get(Number(item.variant_id));
-                if (!product) continue;
-                const { row, lineTotal, quantity } = buildRow(item, product);
-                fragment.appendChild(row);
-                subtotal += lineTotal;
-                count += quantity;
-            }
-
-            els.items.replaceChildren(fragment);
-            state.subtotal = round2(subtotal);
-            state.count = count;
-            updateTotals();
+            writeProductCache(products);
+            paint(cart, new Map(products.map(p => [Number(p.variant_id), p])));
         } catch (error) {
-            if (version === renderVersion) console.error('Səbət məlumatları yüklənmədi:', error);
+            if (version !== renderVersion) return;
+            console.error('Səbət məlumatları yüklənmədi:', error);
+            // Heç nə göstərilməyibsə, skelet sətirlər sonsuz qalmasın
+            if (!lastSignature) els.items.replaceChildren();
         } finally {
             if (version === renderVersion) root.classList.remove('is-loading');
         }
