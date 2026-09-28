@@ -523,5 +523,6 @@
     "wishlist_choose_size": "Choose size",
     "wishlist_added": "Added ✓",
     "wishlist_added_message": "Product added to cart",
-    "wishlist_out_of_stock": "Currently unavailable"
+    "wishlist_out_of_stock": "Currently unavailable",
+    "profile_change_password": "Change password"
 }

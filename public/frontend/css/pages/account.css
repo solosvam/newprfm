@@ -56,6 +56,8 @@
 .form-field { display: flex; flex-direction: column; gap: 6px; }
 .form-field--full { grid-column: 1 / -1; }
 .form-field label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+.form-field label,
+.form-field__label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
 .form-field input { height: 42px; border: 1px solid var(--border); border-radius: var(--radius, 8px); background: var(--bg); color: var(--text); padding: 0 14px; font-size: 14px; }
 .form-field input:focus { outline: none; border-color: var(--accent); }
 .form-field input:disabled { color: var(--text-muted); background: var(--surface-2); cursor: not-allowed; }
@@ -66,6 +68,28 @@
 .account-form-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
 .account-form-submit { width: auto; padding: 13px 32px; margin-top: 24px; }
+
+/* Şifrəni dəyiş — yığılan blok */
+.account-password {
+    margin-top: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+}
+.account-password__toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    list-style: none; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: var(--text);
+}
+.account-password__toggle::-webkit-details-marker { display: none; }
+.account-password__toggle::after {
+    content: ""; width: 7px; height: 7px; margin-right: 4px;
+    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    transform: rotate(45deg); transition: transform .2s;
+}
+.account-password[open] .account-password__toggle::after { transform: rotate(-135deg); }
+.account-password__body { padding: 0 16px 16px; }
 
 /* Gender selector (personal / register forms) */
 .gender-pills { display: flex; gap: 10px; }
@@ -284,4 +308,84 @@
     .account-panel { min-width: 0; }
 
     /* ... qalan qaydalar olduğu kimi ... */
+}
+@media (max-width: 760px) {
+    /* iOS zoom-un qarşısı */
+    .form-field input,
+    .credit-field input[type="text"],
+    .credit-field input[type="tel"],
+    .credit-field input[type="number"] {
+        height: 46px;
+        font-size: 16px;
+    }
+    .form-field label { font-size: 13px; }
+
+    .account-form-submit { width: 100%; }
+}
+/* =========================================================
+   ACCOUNT — MOBILE
+   ========================================================= */
+@media (max-width: 760px) {
+    .account-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+        padding: 12px 0 40px;
+    }
+    .account-sidebar { position: static; gap: 10px; min-width: 0; }
+    .account-panel { min-width: 0; }
+    .account-crumb { display: none; }
+    .account-greeting { font-size: 18px; }
+
+    /* Menyu — üfüqi sürüşən tab-lar */
+    .account-nav {
+        flex-direction: row;
+        gap: 8px;
+        margin: 0 -14px;
+        padding: 2px 14px 4px;
+        border-top: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+        scroll-snap-type: x proximity;
+    }
+    .account-nav::-webkit-scrollbar { display: none; }
+    .account-nav a {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 13px;
+        white-space: nowrap;
+        scroll-snap-align: start;
+    }
+    .account-nav a.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--on-accent);
+    }
+    .account-nav a.active .account-nav-count,
+    .account-nav a.active .account-nav-note { color: inherit; opacity: .8; }
+
+    .account-logout { font-size: 13px; }
+
+    /* Panel — mobildə çərçivəsiz */
+    .account-panel--flush { padding: 0; border: 0; background: none; }
+
+    /* Formalar — tək sütun, iOS zoom-suz */
+    .account-form-grid,
+    .credit-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .credit-work-row,
+    .credit-photos-row { grid-template-columns: minmax(0, 1fr); }
+
+    .form-field input,
+    .credit-field input[type="text"],
+    .credit-field input[type="tel"],
+    .credit-field input[type="number"] {
+        height: 46px;
+        font-size: 16px;
+    }
+    .form-field label,
+    .form-field__label { font-size: 13px; }
+    .gender-pill span { height: 46px; }
+
+    .account-form-submit { width: 100%; }
 }

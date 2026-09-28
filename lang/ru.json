@@ -523,5 +523,6 @@
     "wishlist_choose_size": "Выберите объём",
     "wishlist_added": "Добавлено ✓",
     "wishlist_added_message": "Товар добавлен в корзину",
-    "wishlist_out_of_stock": "Нет в наличии"
+    "wishlist_out_of_stock": "Нет в наличии",
+    "profile_change_password": "Изменить пароль"
 }
