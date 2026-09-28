@@ -52,6 +52,7 @@ class Customer extends Authenticatable
     public function orders(){
         return $this->hasMany(Order::class);
     }
+
     public function bonusTransactions(){
         return $this->hasMany(CustomerBonusTransaction::class);
     }

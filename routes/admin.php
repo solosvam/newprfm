@@ -208,7 +208,7 @@ Route::prefix('admin')
                 ->name('crm.')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
-                    Route::get('/customer/{customer}', 'show')->name('show');
+                    Route::get('/customer/{id}', 'customer')->name('customer');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}/order/{order}/confirm', 'confirmOneClick')->name('one-click.confirm');

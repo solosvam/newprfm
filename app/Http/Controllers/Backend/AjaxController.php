@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
+use App\Models\Customer\CustomerCreditProfile;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -43,7 +44,10 @@ class AjaxController extends Controller
         // Nöqtə ilə başlayır — FIN kod
         elseif (str_starts_with($q, '.')) {
             $fin = ltrim($q, '.');
-            $customers = Customer::where('fin', 'like', "%{$fin}%")
+
+            $customers = Customer::whereHas('creditProfile', function ($query) use ($fin) {
+                $query->where('fin', 'like', "%{$fin}%");
+            })
                 ->limit(5)
                 ->get();
         }

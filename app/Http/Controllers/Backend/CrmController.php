@@ -23,31 +23,23 @@ class CrmController extends Controller
         return view('backend.crm.index');
     }
 
-    public function search(Request $request): JsonResponse
+    public function customer($id)
     {
-        $number = preg_replace('/\D+/', '', (string) $request->query('number'));
+        $customer = Customer::findOrFail($id);
 
-        if (strlen($number) !== 9) {
-            return response()->json(['message' => 'Telefon nömrəsi 9 rəqəm olmalıdır.'], 422);
-        }
+        $counts = [
+            'orders' => $customer->orders()
+                ->where('payment_method_id', '!=', 4)
+                ->count(),
 
-        $customer = Customer::where('mobile', '994' . $number)->first();
+            'installment' => $customer->orders()
+                ->where('payment_method_id', 4)
+                ->count(),
 
-        if (!$customer) {
-            return response()->json(['found' => false]);
-        }
+            'payments' => $customer->payments()->count(),
+        ];
 
-        return response()->json([
-            'found' => true,
-            'url' => route('admin.crm.show', $customer),
-        ]);
-    }
-
-    public function show(Customer $customer): View
-    {
-        $customer->loadCount(['orders', 'bonusTransactions']);
-
-        return view('backend.crm.show', compact('customer'));
+        return view('backend.crm.customer', compact('customer', 'counts'));
     }
 
     public function tab(Customer $customer, string $tab): View
@@ -206,7 +198,7 @@ class CrmController extends Controller
             ->with('success', 'Sifarişin ünvanı və ödəniş üsulu təsdiqləndi.');
     }
 
-    public function order(Customer $customer, \App\Models\Order\Order $order): View
+    public function order(Customer $customer, Order $order): View
     {
         abort_unless($order->customer_id === $customer->id, 404);
 
