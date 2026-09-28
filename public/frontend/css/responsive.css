@@ -266,9 +266,7 @@ html, body { overflow-x: hidden; }
    ========================================================= */
 @media (max-width: 760px) {
     .hero-banner { aspect-ratio: var(--banner-mobile-ratio, var(--banner-desktop-ratio)); }
-    .hero-banner__desktop { display: none !important; }
-    .hero-banner__mobile,
-    .hero-banner__link--mobile { display: block !important; }
+    .hero-banner__mobile-overlay { display: block; position: absolute; inset: 0; z-index: 1; }
 }
 
 @media (max-width: 720px) {
