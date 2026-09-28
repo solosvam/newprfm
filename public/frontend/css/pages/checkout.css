@@ -73,7 +73,7 @@
     position: relative;
     display: flex; align-items: center; gap: 12px;
     min-height: 68px; padding: 14px 16px;
-    border: 1.5px solid var(--border); border-radius: 12px;
+    border: 1.5px solid var(--border-strong); border-radius: 12px;
     background: var(--bg); cursor: pointer;
     transition: border-color .15s, background .15s, box-shadow .15s, opacity .15s;
 }
@@ -93,9 +93,23 @@
 
 .pay-option:has(input:checked) {
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg));
     box-shadow: 0 0 0 1px var(--accent);
 }
+[data-theme="dark"] .pay-option:has(input:checked) {
+    background: color-mix(in srgb, var(--accent) 16%, var(--bg));
+}
+.pay-option:has(input:checked) .pay-option__title { font-weight: 700; }
+
+/* Sağda radio işarəsi: seçiləndə dolu dairə */
+.pay-option::after {
+    content: ""; flex-shrink: 0; margin-left: auto;
+    width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%;
+    border: 2px solid var(--border-strong); background: var(--bg);
+    transition: border-color .15s, border-width .15s;
+}
+.pay-option:has(input:checked)::after { border: 6px solid var(--accent); background: var(--on-accent); }
+.pay-option:has(input:disabled)::after { opacity: .5; }
 
 .pay-option:has(input:checked) .pay-option__icon {
     background: color-mix(in srgb, var(--accent) 12%, var(--bg));
@@ -126,7 +140,7 @@
     position: relative;
     display: flex; flex-direction: column; gap: 2px;
     padding: 12px;
-    border: 1.5px solid var(--border); border-radius: 10px;
+    border: 1.5px solid var(--border-strong); border-radius: 10px;
     background: var(--bg); cursor: pointer;
     transition: border-color .15s, background .15s;
 }

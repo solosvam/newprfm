@@ -204,7 +204,20 @@
         updateTotals();
     }
 
-    paymentRadios.forEach(radio => radio.addEventListener('change', syncPayment));
+    paymentRadios.forEach(radio => radio.addEventListener('change', () => {
+        syncPayment();
+        scrollToPeriods();
+    }));
+
+    // Taksit / hissə-hissə seçiləndə müddət seçiminə sürüşdür
+    function scrollToPeriods() {
+        const code = selectedCode();
+        const target = code === BIRBANK_INSTALLMENT ? els.birbankInstallment
+            : code === INSTALLMENT ? els.installment : null;
+        if (!target || target.hidden) return;
+        const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        target.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' });
+    }
 
     periodRadios.forEach(radio => {
         radio.addEventListener('change', () => {

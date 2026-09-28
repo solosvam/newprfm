@@ -245,6 +245,8 @@ html, body { overflow-x: hidden; }
     }
     .credit-application-dialog[open] { display: flex; }
     .credit-modal-head { flex-shrink: 0; padding: 18px 20px; }
+    .credit-modal-head h2 { font-size: 19px; margin-bottom: 4px; }
+    .credit-modal-head p { font-size: 14px; }
     .credit-modal-layout {
         display: flex; flex-direction: column; gap: 16px; padding: 20px; flex: 1; min-height: 0;
         overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;

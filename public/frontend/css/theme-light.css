@@ -11,6 +11,7 @@
     --text-secondary: #6b6575;
     --text-muted: #a39dae;
     --border: #ece9f2;
+    --border-strong: #d4cee0;   /* seçilə bilən elementlərin (pill, radio kart) çərçivəsi */
 
     /* Status */
     --success: #16883c;

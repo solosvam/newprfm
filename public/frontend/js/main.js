@@ -587,6 +587,15 @@
         mq.addEventListener('change', e => place(e.matches));
     })();
 
+    // Header-in real hündürlüyü → --site-header-h (toastlar header-in altında çıxsın)
+    (function trackHeaderHeight() {
+        const header = document.querySelector('body > header');
+        if (!header) return;
+        const set = () => document.documentElement.style.setProperty('--site-header-h', header.offsetHeight + 'px');
+        set();
+        if ('ResizeObserver' in window) new ResizeObserver(set).observe(header);
+    })();
+
     // Tema düyməsi (header)
     document.getElementById('theme-toggle')?.addEventListener('click', () => {
         const html = document.documentElement;

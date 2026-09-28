@@ -34,7 +34,21 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 /* =========================================================
    NOTIFY (jQuery notify toasts)
    ========================================================= */
-.notifyjs-corner { z-index: 99999 !important; top: 18px !important; right: 18px !important; }
+.notifyjs-corner {
+    z-index: 99999 !important;
+    /* header-in altında: səbət / bəyəndiklərim düymələrini örtməsin.
+       --site-header-h main.js-də header-in real hündürlüyündən yazılır. */
+    top: calc(var(--site-header-h, 72px) + 12px) !important;
+    right: 18px !important;
+}
+@media (max-width: 760px) {
+    .notifyjs-corner { left: 12px !important; right: 12px !important; }
+    .notifyjs-corner .notifyjs-wrapper { display: flex; justify-content: center; }
+    .notifyjs-parfumshop-success-base,
+    .notifyjs-parfumshop-error-base,
+    .notifyjs-parfumshop-warning-base,
+    .notifyjs-parfumshop-info-base { min-width: 0; max-width: 100%; }
+}
 /* parfumshopNotify(): dolu rəngli fon, ağ mətn (hər iki temada eyni).
    Rənglər --*-solid dəyişənlərindən gəlir, ağ mətnlə kontrast ≥ 4.5:1. */
 .notifyjs-parfumshop-success-base { --toast: var(--success-solid); }
@@ -171,7 +185,7 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
     display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
     padding: 26px 30px; border-bottom: 1px solid var(--border);
 }
-.credit-modal-head h2 { font-size: 24px; margin: 0 0 7px; color: var(--text); }
+.credit-modal-head h2 { font-size: 22px; line-height: 1.25; margin: 0 0 6px; color: var(--text); }
 .credit-modal-head p { margin: 0; color: var(--text-secondary); }
 .credit-modal-close { background: transparent; border: 0; font-size: 32px; line-height: 1; cursor: pointer; color: var(--text); }
 
@@ -184,11 +198,13 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 .credit-modal-pill { position: relative; cursor: pointer; margin: 0 !important; }
 .credit-modal-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .credit-modal-pill span {
-    display: block; border: 1px solid var(--border); border-radius: 10px; padding: 12px 17px;
-    background: var(--bg); color: var(--text); transition: background .15s, border-color .15s;
+    display: block; border: 1.5px solid var(--border-strong); border-radius: 10px; padding: 12px 17px;
+    background: var(--surface-2); color: var(--text); font-weight: 600;
+    transition: background .15s, border-color .15s, color .15s;
 }
+.credit-modal-pill:hover span { border-color: var(--accent); }
 .credit-modal-pill input:checked + span {
-    border-color: var(--accent); background: var(--surface-2); color: var(--accent); font-weight: 700;
+    border-color: var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 700;
 }
 .credit-modal-pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
 
