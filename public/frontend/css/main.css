@@ -3,7 +3,7 @@
    ========================================================= */
 footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 40px; padding-top: 15px; }
 .footer-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 30px; padding: 44px 0 30px; }
-.footer-top .brand-col .logo2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+
 .footer-top .brand-col p { font-size: 13px; opacity: 0.8; line-height: 1.6; max-width: 260px; }
 .footer-top .fsocial { display: flex; gap: 10px; margin-top: 16px; }
 .footer-top .fsocial span { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
@@ -30,10 +30,6 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 .main-products__pagination a.page-link:hover { background: var(--surface); border-color: var(--border); color: var(--text); }
 .main-products__pagination .active-page .page-link { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .main-products__pagination .page-item.disabled .page-link { color: var(--text-muted); cursor: default; }
-
-.catalog-pagination { margin: 24px 0; }
-.catalog-pagination nav { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-.catalog-pagination svg { width: 18px; height: 18px; }
 
 /* =========================================================
    NOTIFY (jQuery notify toasts)
@@ -67,8 +63,6 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
    SELECT2
    ========================================================= */
 .select2-container { width: 100% !important; }
-/* ===== Select2 ===== */
-:root { --side-row-h: 52px; }
 
 /* seçim sahəsi */
 .select2-container--default .select2-selection--single {

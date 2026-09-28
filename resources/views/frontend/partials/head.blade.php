@@ -51,9 +51,6 @@
 <link rel="stylesheet" href="{{ asset_v('frontend/css/theme-light.css') }}">
 <link rel="stylesheet" href="{{ asset_v('frontend/css/theme-dark.css') }}">
 <link rel="stylesheet" href="{{ asset_v('frontend/css/core.css') }}">
-@if(request()->routeIs('home'))
-<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/home.css') }}">
-@endif
 <link rel="stylesheet" href="{{ asset_v('frontend/css/catalog.css') }}">
 <link rel="stylesheet" href="{{ asset_v('frontend/css/main.css') }}">
 @yield('page-css')

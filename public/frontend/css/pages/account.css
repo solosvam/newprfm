@@ -63,10 +63,6 @@
 .form-field input:disabled { color: var(--text-muted); background: var(--surface-2); cursor: not-allowed; }
 .form-field input.is-invalid { border-color: #dc3545; }
 
-.account-form-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.account-form-divider::before,
-.account-form-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-
 .account-form-submit { width: auto; padding: 13px 32px; margin-top: 24px; }
 
 /* Şifrəni dəyiş — yığılan blok */
@@ -120,7 +116,6 @@
 .credit-field input:focus { outline: none; border-color: var(--accent); }
 .credit-field input.is-invalid:not([type="file"]) { border-color: #dc3545; }
 
-.credit-work-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .credit-photos-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 
 .credit-photo {
@@ -182,7 +177,6 @@
     box-shadow: none;
     padding: 0;
 }
-.account-panel--flush > .account-panel__head,
 .account-panel--flush > h2 {
     margin-bottom: 20px;
 }
@@ -385,7 +379,6 @@
     .account-form-grid,
     .credit-grid,
     .credit-grid--3 { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-    .credit-work-row,
     .credit-photos-row { grid-template-columns: minmax(0, 1fr); }
 
     .form-field input,

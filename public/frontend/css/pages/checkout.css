@@ -61,7 +61,6 @@
 .cart-trust li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); }
 .cart-trust svg { flex-shrink: 0; color: var(--accent); }
 
-
 /* =========================================================
    PROMO CODE (cart + checkout)
    ========================================================= */
@@ -114,7 +113,6 @@
 .promo__remove:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
 
 .promo__error { margin: 8px 0 0; font-size: 12.5px; color: var(--cart-danger); }
-
 
 /* =========================================================
    CHECKOUT
@@ -204,11 +202,6 @@
 .pay-option input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .pay-option:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
 
-.pay-option__radio {
-    width: 18px; height: 18px; flex-shrink: 0; box-sizing: border-box;
-    border: 2px solid var(--border); border-radius: 50%;
-    transition: border-color .15s, border-width .15s;
-}
 .pay-option__icon {
     width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
@@ -225,7 +218,7 @@
     background: color-mix(in srgb, var(--accent) 5%, var(--bg));
     box-shadow: 0 0 0 1px var(--accent);
 }
-.pay-option:has(input:checked) .pay-option__radio { border-color: var(--accent); border-width: 5px; }
+
 .pay-option:has(input:checked) .pay-option__icon {
     background: color-mix(in srgb, var(--accent) 12%, var(--bg));
     color: var(--accent);
@@ -238,8 +231,7 @@
     border-color: var(--border);
 }
 .pay-option:has(input:disabled) .pay-option__title,
-.pay-option:has(input:disabled) .pay-option__icon,
-.pay-option:has(input:disabled) .pay-option__radio { opacity: .5; }
+.pay-option:has(input:disabled) .pay-option__icon { opacity: .5; }
 
 #bonusWarning { margin: 12px 0 0; }
 

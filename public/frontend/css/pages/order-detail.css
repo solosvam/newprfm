@@ -70,16 +70,6 @@
 .od-pay-method { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--text); }
 .od-pay-method svg { color: var(--text-secondary); flex-shrink: 0; }
 
-.od-paycard {
-    display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px;
-    border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
-}
-.od-paycard__brand {
-    padding: 3px 7px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg);
-    font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: var(--text);
-}
-.od-paycard__no { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; letter-spacing: .5px; color: var(--text); }
-
 .od-credit {
     margin-top: 12px; padding: 12px; border-radius: 10px;
     background: color-mix(in srgb, var(--accent) 6%, var(--bg));
@@ -107,8 +97,6 @@
 [data-theme="dark"] .od-row--discount span:last-child,
 [data-theme="dark"] .od-bonus { color: #4ccf7a; }
 [data-theme="dark"] .od-bonus { background: color-mix(in srgb, #4ccf7a 12%, transparent); }
-
-
 
 .order-success {
     max-width: 480px; margin: 60px auto; padding: 48px 32px; text-align: center;

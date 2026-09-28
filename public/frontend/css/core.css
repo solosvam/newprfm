@@ -3,6 +3,7 @@
    ========================================================= */
 * { box-sizing: border-box; }
 :root {
+    --side-row-h: 52px;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -199,7 +200,7 @@ nav.cats a.active { color: var(--text); font-weight: 600; border-color: var(--ac
     gap: 6px;
     flex-wrap: wrap;
 }
-.search-result-meta .dot { opacity: 0.5; }
+
 .search-result-price {
     font-size: 13px;
     font-weight: 700;
@@ -208,16 +209,6 @@ nav.cats a.active { color: var(--text); font-weight: 600; border-color: var(--ac
     white-space: nowrap;
 }
 .search-results-empty { padding: 20px 16px; text-align: center; font-size: 13px; color: var(--text-secondary); }
-.search-results-more {
-    display: block;
-    text-align: center;
-    padding: 12px;
-    font-size: 13px;
-    color: var(--accent);
-    font-weight: 600;
-    border-top: 1px solid var(--border);
-}
-.search-results-more:hover { background: var(--surface); }
 
 /* Logo (SVG) */
 .logo--svg { display: inline-flex; align-items: center; color: var(--accent); }

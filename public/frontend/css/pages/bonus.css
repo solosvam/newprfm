@@ -1,7 +1,6 @@
 /* =========================================================
    BONUS HISTORY
    ========================================================= */
-.bonus-page,
 .account-panel {
     --bonus-earn: #16883c;
     --bonus-spend: #c53030;
@@ -18,6 +17,10 @@
     border-radius: 14px;
     background: var(--accent-bg, var(--accent));
     color: var(--on-accent-bg, var(--on-accent));
+}
+[data-theme="dark"] .bonus-balance-card {
+    background: var(--accent);
+    color: var(--on-accent);
 }
 .bonus-balance-card__label { font-size: 13px; opacity: .8; }
 .bonus-balance-card__amount {
