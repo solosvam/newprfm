@@ -209,6 +209,7 @@
                                         'balance'      => ['icon' => 'dollar',          'label' => 'Bonus balansı',    'count' => null],
                                         'payments'      => ['icon' => 'dollar',          'label' => 'Onlayn ödəmələr',    'count' => null],
                                         'settings'      => ['icon' => 'settings-1',      'label' => 'Tənzimləmələr','count' => null],
+                                        'credit-profile' => ['icon' => 'credit-card', 'label' => 'Kredit profili', 'count' => null],
                                     ];
                                 @endphp
                                 @foreach($tabs as $key => $tab)
