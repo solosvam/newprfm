@@ -81,8 +81,9 @@
                                                  role="img"
                                                  aria-label="{{ $rating }} / 5">
                                                 @for($star = 1; $star <= 5; $star++)
-                                                    <img src="{{ asset('frontend/images/' . ($star <= $rating ? 'star-filled.svg' : 'star-outlined.svg')) }}"
-                                                         alt="">
+                                                    <svg class="review-entry__star {{ $star <= $rating ? 'is-filled' : '' }}" viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path d="M12 2.75l2.85 5.77 6.37.93-4.61 4.49 1.09 6.34L12 17.28l-5.7 3 1.09-6.34-4.61-4.49 6.37-.93L12 2.75z"/>
+                                                    </svg>
                                                 @endfor
                                             </div>
                                         </div>
