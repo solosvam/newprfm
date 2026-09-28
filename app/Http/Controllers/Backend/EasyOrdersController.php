@@ -10,7 +10,6 @@ use App\Services\ShopPricing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class EasyOrdersController extends Controller
 {
@@ -30,7 +29,24 @@ class EasyOrdersController extends Controller
         return view('backend.easy-orders.show', [
             'order' => $order,
             'existing' => $existing,
+            'addresses' => $existing?->addresses()->orderByDesc('is_default')->orderBy('id')->get() ?? collect(),
             'paymentMethods' => PaymentMethod::where('active', 1)->whereIn('code', ['cash', 'card_online'])->get(),
+        ]);
+    }
+
+    public function lookup(Request $request, Order $order)
+    {
+        abort_unless($order->one_click && $order->customer_id === null, 404);
+        $data = $request->validate(['mobile' => ['required', 'regex:/^994[0-9]{9}$/']]);
+        $customer = Customer::with('addresses')->where('mobile', $data['mobile'])->first();
+        return response()->json([
+            'found' => (bool) $customer,
+            'name' => $customer?->name,
+            'surname' => $customer?->surname,
+            'customer_id' => $customer?->id,
+            'addresses' => $customer?->addresses->sortByDesc('is_default')->values()->map(fn ($a) => [
+                'id' => $a->id, 'label' => $a->label,
+            ])->all() ?? [],
         ]);
     }
 
@@ -41,8 +57,15 @@ class EasyOrdersController extends Controller
             'mobile' => ['required', 'regex:/^994[0-9]{9}$/'],
             'name' => ['required', 'string', 'max:30'],
             'surname' => ['required', 'string', 'max:30'],
-            'city' => ['required', 'string', 'max:100'],
-            'address' => ['required', 'string', 'max:500'],
+            'address_choice' => ['required', 'string'],
+            'city' => ['required_if:address_choice,new', 'nullable', 'string', 'max:100'],
+            'address' => ['required_if:address_choice,new', 'nullable', 'string', 'max:500'],
+            'title' => ['required_if:address_choice,new', 'nullable', 'string', 'max:100'],
+            'building' => ['nullable', 'string', 'max:50'],
+            'entrance' => ['nullable', 'string', 'max:30'],
+            'floor' => ['nullable', 'string', 'max:30'],
+            'apartment' => ['nullable', 'string', 'max:30'],
+            'note' => ['nullable', 'string', 'max:1000'],
             'district' => ['nullable', 'string', 'max:100'],
             'payment_method_id' => ['required', 'integer', 'exists:payment_methods,id'],
         ]);
@@ -63,11 +86,23 @@ class EasyOrdersController extends Controller
                     'bonus_balance' => 0,
                 ]);
             }
-            $address = $customer->addresses()->firstOrCreate(
-                ['city' => $data['city'], 'address' => $data['address']],
-                ['title' => 'Asan sifariş', 'district' => $data['district'] ?? null,
-                 'is_default' => !$customer->addresses()->exists()]
-            );
+            if ($data['address_choice'] === 'new') {
+                $address = $customer->addresses()->create([
+                    'title' => $data['title'],
+                    'city' => $data['city'],
+                    'district' => $data['district'] ?? null,
+                    'address' => $data['address'],
+                    'building' => $data['building'] ?? null,
+                    'entrance' => $data['entrance'] ?? null,
+                    'floor' => $data['floor'] ?? null,
+                    'apartment' => $data['apartment'] ?? null,
+                    'note' => $data['note'] ?? null,
+                    'is_default' => !$customer->addresses()->exists(),
+                ]);
+            } else {
+                abort_unless(ctype_digit($data['address_choice']), 422, 'Ünvan seçimi yanlışdır.');
+                $address = $customer->addresses()->findOrFail((int) $data['address_choice']);
+            }
             $delivery = $pricing->deliveryFee((float) $locked->subtotal - (float) $locked->discount);
             $locked->update([
                 'customer_id' => $customer->id,
