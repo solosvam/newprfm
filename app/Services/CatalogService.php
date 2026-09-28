@@ -107,7 +107,7 @@ class CatalogService
             ])
             ->where('active', 1)
             ->whereHas('variants', fn ($query) => $query->where('active', 1))
-            ->inRandomOrder()
+            ->orderByDesc('products.id')
             ->limit(6)
             ->get();
 
@@ -161,7 +161,7 @@ class CatalogService
                 ->get()
                 ->sortBy(fn ($size) => (float) ($size->name_az ?: $size->name_en))
                 ->values(),
-            // Bestseller satış statistikası hələ qoşulmayıb; mövcud təsadüfi seçim saxlanılır.
+            // Müvəqqəti olaraq sabit seçim saxlanılır ki, thumbnail cache hər request-də dəyişməsin.
             'recommendedProducts' => $sidebarQuery(),
             'bestSellers' => $sidebarQuery(),
         ];
