@@ -9,7 +9,7 @@ use Intervention\Image\ImageManager;
 
 class ProductImageController extends Controller
 {
-    private const ALLOWED_SIZES = [200, 400, 800];
+    private const ALLOWED_SIZES = [200, 400];
 
     public function show(int $size, string $image): BinaryFileResponse
     {

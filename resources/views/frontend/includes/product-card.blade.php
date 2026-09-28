@@ -32,8 +32,6 @@
                             @if ($image)
                                 <img
                                     src="{{ route('product.image', ['size' => 400, 'image' => $image->image]) }}"
-                                    srcset="{{ route('product.image', ['size' => 400, 'image' => $image->image]) }} 400w, {{ route('product.image', ['size' => 800, 'image' => $image->image]) }} 800w"
-                                    sizes="(max-width: 600px) 50vw, 282px"
                                     alt="{{ $product->name }}"
                                     width="400"
                                     height="400"
