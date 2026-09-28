@@ -15,22 +15,36 @@ html, body { overflow-x: hidden; }
    HEADER — mobile wrap (icons/search stacking)
    ========================================================= */
 @media (max-width: 760px) {
-    .header-row { flex-wrap: wrap; gap: 12px; margin-top: 15px; }
-    .header-row .search { order: 3; flex-basis: 100%; }
-    .header-profile span { display: none; }
-    .icons { margin-left: auto; }
+    .header-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+      "lang   logo   icons"
+      "search search search";
+        column-gap: 10px;
+        row-gap: 12px;
+        margin-top: 15px;
+    }
+    .header-row .lang   { grid-area: lang; }
+    .header-row .logo   { grid-area: logo; justify-self: center; min-width: 0; max-width: 100%; }
+    .header-row .logo-svg { width: clamp(96px, 32vw, 132px); max-width: 100%; }
+    .header-row .icons  { grid-area: icons; gap: clamp(10px, 3.4vw, 16px); }
+    .header-row .search { grid-area: search; position: relative; }
 
-    /* Axtarış dropdown-u indi header-in axtarış qutusuna nisbətən mövqelənir
-       (fixed deyil), beləcə həmişə input-un tam altına düşür, ekran
-       yuxarısına "atlamır". */
-    .search { position: relative; }
+    .header-profile span { display: none; }
+
     .search-results {
         position: absolute;
         top: calc(100% + 8px);
-        left: 0;
-        right: 0;
+        left: 0; right: 0;
         max-height: 60vh;
     }
+}
+
+@media (max-width: 420px) {
+    .language-select        { height: 34px; padding: 0 24px 0 10px; gap: 0; }
+    .language-select__globe { display: none; }
+    .language-select::after { right: 10px; }
 }
 
 /* =========================================================

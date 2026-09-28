@@ -15,3 +15,4 @@
     background: var(--accent);
     color: var(--on-accent);
 }
+[data-theme="dark"] .thumb-actions .icon-btn { background: var(--accent); color: var(--on-accent); }
