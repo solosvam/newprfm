@@ -20,7 +20,7 @@
         <div class="col-lg-7">
             <div class="card"><div class="card-body">
                 <h5>Müştəri ilə əlaqə və sifarişin tamamlanması</h5>
-                <div id="customerFound" @if(!$existing) hidden @endif class="alert alert-info">Bu nömrə ilə müştəri tapıldı: {{ $existing->name }} {{ $existing->surname }} (ID: {{ $existing->id }}).</div>
+                <div id="customerFound" @if(!$existing) hidden @endif class="alert alert-info">Bu nömrə ilə müştəri tapıldı: {{ $existing?->name }} {{ $existing?->surname }} (ID: {{ $existing?->id }}).</div>
                 <div id="customerNotFound" @if($existing) hidden @endif class="alert alert-warning">Bu nömrə ilə müştəri tapılmadı. Təsdiqlədikdə yeni müştəri yaradılacaq.</div>
                 <form method="POST" action="{{ route('admin.easy-orders.confirm', $order) }}" data-lookup-url="{{ route('admin.easy-orders.lookup', $order) }}">
                     @csrf
