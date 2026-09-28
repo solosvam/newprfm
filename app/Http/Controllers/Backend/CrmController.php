@@ -55,7 +55,7 @@ class CrmController extends Controller
         return match ($tab) {
             'orders' => view('backend.crm.tabs.orders', [
                 'orders' => $customer->orders()
-                    ->with(['status', 'paymentMethod', 'items.product'])
+                    ->with(['status', 'paymentMethod', 'creditApplication.status'])
                     ->latest()
                     ->paginate(10),
             ]),
