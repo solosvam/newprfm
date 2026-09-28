@@ -274,3 +274,14 @@
         background: none;
     }
 }
+@media (max-width: 760px) {
+    .account-layout {
+        grid-template-columns: minmax(0, 1fr);   /* əvvəl: 1fr */
+        gap: 16px;
+        padding: 12px 0 40px;
+    }
+    .account-sidebar,
+    .account-panel { min-width: 0; }
+
+    /* ... qalan qaydalar olduğu kimi ... */
+}
