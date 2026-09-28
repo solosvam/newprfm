@@ -18,9 +18,9 @@ class Search {
       searchModalId: 'searchPagesModal',
       searchInputId: 'searchPagesInput',
       searchResultsId: 'searchPagesResults',
-      placeholder: 'Search',
-      loading: 'Loading',
-      jsonPath: Helpers.UrlFix('backend/json/search.json'),
+      placeholder: 'Axtar',
+      loading: 'Yüklənir...',
+      jsonPath: '/admin/search-pages',
     };
   }
 
@@ -40,13 +40,14 @@ class Search {
       data: {
         src: async () => {
           searchInput.setAttribute('placeholder', this.settings.loading);
-          const source = await fetch(this.settings.jsonPath);
+          const source = await fetch(this.settings.jsonPath, {credentials: 'same-origin', cache: 'no-store', headers: {'Accept': 'application/json'}});
+          if (!source.ok) throw new Error('Axtarış siyahısı yüklənmədi');
           const data = await source.json();
           searchInput.setAttribute('placeholder', this.settings.placeholder);
           return data;
         },
         key: ['label'],
-        cache: true,
+        cache: false,
       },
       sort: (a, b) => {
         if (a.match < b.match) return -1;
@@ -72,7 +73,7 @@ class Search {
       },
       resultItem: {
         content: (data, source) => {
-          source.innerHTML = '<p class="mb-0">' + data.match + '</p>' + '<p class="text-small text-muted mb-0">' + Helpers.UrlFix(data.value.url) + '</p>';
+          source.innerHTML = '<p class="mb-0">' + data.match + '</p>' + '<p class="text-small text-muted mb-0">' + data.value.url + '</p>';
           source.setAttribute('class', 'auto-complete-result-item');
         },
         element: 'li',
@@ -81,13 +82,13 @@ class Search {
         const result = document.createElement('li');
         result.setAttribute('class', 'no_resulst');
         result.setAttribute('tabindex', '1');
-        result.innerHTML = 'No Results';
+        result.textContent = 'Nəticə tapılmadı';
         document.getElementById(this.settings.searchResultsId).appendChild(result);
       },
       onSelection: (feedback) => {
-        window.location.href = Helpers.UrlFix(feedback.selection.value['url']);
+        window.location.href = feedback.selection.value['url'];
         searchInput.value = '';
-        searchInput.setAttribute('placeholder', 'Search');
+        searchInput.setAttribute('placeholder', this.settings.placeholder);
       },
     });
   }
