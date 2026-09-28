@@ -31,6 +31,15 @@
 <meta name="twitter:description" content="@yield('meta_description', 'Parfumshop.az — ətirlər və parfümeriya')">
 @yield('structured_data')
 
+@if(request()->routeIs('home') && isset($banners))
+    @if(!empty($banners['topmobile']['image']))
+        <link rel="preload" as="image" media="(max-width: 760px)" href="{{ asset('frontend/uploads/banners/' . $banners['topmobile']['image']) }}" fetchpriority="high">
+    @endif
+    @if(!empty($banners['topweb']['image']))
+        <link rel="preload" as="image" media="(min-width: 761px)" href="{{ asset('frontend/uploads/banners/' . $banners['topweb']['image']) }}" fetchpriority="high">
+    @endif
+@endif
+
 <script>
     (function () {
         var saved = localStorage.getItem('theme');
@@ -43,6 +52,10 @@
 <link rel="stylesheet" href="{{ asset('frontend/css/theme-dark.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/css/main.css') }}">
 <link rel="stylesheet" href="{{ asset('frontend/css/responsive.css') }}">
-<link rel="stylesheet" href="{{ asset('frontend/css/vendor/select2.min.css') }}"/>
-<link rel="stylesheet" href="{{ asset('frontend/css/vendor/select2-bootstrap4.min.css') }}"/>
+<link rel="preload" as="style" href="{{ asset('frontend/css/vendor/select2.min.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="{{ asset('frontend/css/vendor/select2-bootstrap4.min.css') }}" onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+    <link rel="stylesheet" href="{{ asset('frontend/css/vendor/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('frontend/css/vendor/select2-bootstrap4.min.css') }}">
+</noscript>
 @yield('css')
