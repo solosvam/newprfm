@@ -729,6 +729,54 @@
         syncHint();
     })();
 
+    // Brend zolağı: kənar solğunlaşması, desktopda oxlar və siçanla sürükləmə
+    // (Windows-da touchpad olmadan üfüqi sürüşdürmək çətindir)
+    document.querySelectorAll('[data-brands-strip]').forEach(strip => {
+        const track = strip.querySelector('.brands');
+        const prev = strip.querySelector('[data-brands-nav="-1"]');
+        const next = strip.querySelector('[data-brands-nav="1"]');
+        if (!track) return;
+
+        const update = () => {
+            const max = track.scrollWidth - track.clientWidth;
+            const atStart = track.scrollLeft <= 4;
+            const atEnd = max - track.scrollLeft <= 4;
+            track.classList.toggle('has-more-start', !atStart);
+            track.classList.toggle('has-more-end', !atEnd);
+            if (prev) prev.hidden = atStart;
+            if (next) next.hidden = atEnd;
+        };
+        update();
+        track.addEventListener('scroll', update, { passive: true });
+        if ('ResizeObserver' in window) new ResizeObserver(update).observe(track);
+        track.querySelectorAll('img').forEach(img => img.complete || img.addEventListener('load', update, { once: true }));
+
+        [prev, next].forEach(btn => btn?.addEventListener('click', () => {
+            track.scrollBy({ left: Number(btn.dataset.brandsNav) * track.clientWidth * 0.8, behavior: 'smooth' });
+        }));
+
+        // Siçanla sürükləmə (yalnız siçan; toxunuşda brauzerin öz sürüşməsi işləyir)
+        let startX = 0, startLeft = 0, dragging = false, moved = false;
+        track.addEventListener('pointerdown', event => {
+            if (event.pointerType !== 'mouse' || event.button !== 0) return;
+            dragging = true; moved = false;
+            startX = event.clientX; startLeft = track.scrollLeft;
+        });
+        window.addEventListener('pointermove', event => {
+            if (!dragging) return;
+            const dx = event.clientX - startX;
+            if (!moved && Math.abs(dx) > 5) { moved = true; track.classList.add('is-dragging'); }
+            if (moved) track.scrollLeft = startLeft - dx;
+        });
+        window.addEventListener('pointerup', () => {
+            if (!dragging) return;
+            dragging = false;
+            // Sürükləmədən sonra linkə klik getməsin
+            if (moved) setTimeout(() => track.classList.remove('is-dragging'), 0);
+        });
+        track.addEventListener('click', event => { if (moved) { event.preventDefault(); moved = false; } }, true);
+    });
+
     // Kabinet menyusu (mobil): aktiv bəndi görünən yerə sürüşdür
     (function centerActiveAccountNav() {
         const nav = document.querySelector('.account-nav');

@@ -43,11 +43,11 @@
                         <td><span class="badge bg-warning text-dark">{{ $credit?->status?->name_az ?? '—' }}</span></td>
                         <td><span class="badge {{ $orderStatusBadge }}">{{ $order->status?->name_az ?? '—' }}</span></td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-primary crm-order-detail"
-                                    data-url="{{ route('admin.crm.order', ['customer' => $order->customer_id, 'order' => $order->id]) }}"
-                                    data-bs-toggle="modal" data-bs-target="#orderModal" title="Sifarişi redaktə et">
+                            <a class="btn btn-sm btn-outline-primary"
+                                    href="{{ route('admin.crm.order', ['customer' => $order->customer_id, 'order' => $order->id]) }}"
+                                    title="Sifariş detalları" aria-label="Sifariş detalları">
                                 <i data-acorn-icon="edit" data-acorn-size="15"></i>
-                            </button>
+                            </a>
                         </td>
                     </tr>
                 @endforeach

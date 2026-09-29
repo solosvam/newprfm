@@ -131,6 +131,13 @@ return [
     ],
 
     [
+        'title'      => 'Anbarlar',
+        'icon'       => 'boxes',
+        'route'      => 'admin.procurement.warehouses',
+        'permission' => 'crm',
+    ],
+
+    [
         'title'      => 'Sayt',
         'icon'       => 'boxes',
         'id'         => 'site-parameters',

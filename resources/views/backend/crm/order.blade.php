@@ -1,8 +1,24 @@
 <div class="row g-3">
     <div class="col-md-6"><div class="text-muted small">Sifariş nömrəsi</div><div class="fw-semibold">{{ $order->order_no }}</div></div>
     <div class="col-md-6"><div class="text-muted small">Tarix</div><div>{{ $order->created_at?->format('d.m.Y H:i') ?? '—' }}</div></div>
-    <div class="col-md-6"><div class="text-muted small">Status</div><div>{{ $order->status?->name ?? '—' }}</div></div>
-    <div class="col-md-6"><div class="text-muted small">Ödəniş üsulu</div><div>{{ $order->paymentMethod?->name ?? '—' }}</div></div>
+    <div class="col-md-6"><div class="text-muted small">Status</div><div>{{ $order->status?->name_az ?? '—' }}</div></div>
+    <div class="col-md-6"><div class="text-muted small">Ödəniş üsulu</div><div>{{ $order->paymentMethod?->name_az ?? '—' }}</div></div>
+    @can('crm')
+        <div class="col-12"><a class="btn btn-outline-primary" href="{{ route('admin.procurement.show', $order) }}">Anbar sorğuları və təminat</a></div>
+    @endcan
+    @if($payLinkUrl)
+        {{-- SMS ödəniş linki: müştəri login olmadan ödəyir (OrderPayLinkService) --}}
+        <div class="col-12">
+            <div class="text-muted small mb-1">Ödəniş linki</div>
+            <div class="input-group">
+                <input type="text" class="form-control" value="{{ $payLinkUrl }}" readonly data-pay-link-url>
+                <button type="button" class="btn btn-outline-primary" data-pay-link-copy>Kopyala</button>
+                <button type="button" class="btn btn-primary" data-pay-link-sms
+                        data-url="{{ route('admin.crm.order.pay-link', [$customer, $order]) }}">SMS ilə göndər</button>
+            </div>
+            <div class="form-text">Link ödəniş edilənə qədər aktivdir. SMS {{ $order->customer?->mobile ?? $customer->mobile }} nömrəsinə gedir.</div>
+        </div>
+    @endif
     @if($order->address)
         <div class="col-12"><div class="text-muted small">Çatdırılma ünvanı</div><div>{{ $order->address->label }}</div></div>
     @endif

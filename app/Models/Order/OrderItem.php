@@ -12,4 +12,9 @@ class OrderItem extends Model
     public function order(){ return $this->belongsTo(Order::class); }
     public function product(){ return $this->belongsTo(Product::class); }
     public function variant(){ return $this->belongsTo(ProductVariant::class, 'product_variant_id'); }
+
+    public function allocations()
+    {
+        return $this->hasMany(\App\Models\Procurement\OrderItemAllocation::class);
+    }
 }

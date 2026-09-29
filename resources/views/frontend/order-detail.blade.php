@@ -92,7 +92,9 @@
                                         <div class="od-item__price">
                                             <div class="od-item__total">{{ number_format($item->total, 2) }} ₼</div>
                                             <div class="od-item__unit">
-                                                {{ $item->quantity }} × {{ number_format($item->unit_price, 2) }} ₼
+                                                {{ $item->quantity }} ×
+                                                @if($item->list_price > $item->unit_price)<s>{{ number_format($item->list_price, 2) }}</s>@endif
+                                                {{ number_format($item->unit_price, 2) }} ₼
                                             </div>
                                         </div>
                                     </li>

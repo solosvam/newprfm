@@ -62,4 +62,9 @@ return [
         'api_key' => env('SERPER_API_KEY'),
     ],
 
+    // Brend loqoları (SVG → PNG): https://worldvectorlogo.com/docs/
+    'worldvectorlogo' => [
+        'api_key' => env('WORLDVECTORLOGO_API_KEY'),
+    ],
+
 ];

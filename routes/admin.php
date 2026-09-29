@@ -67,6 +67,19 @@ Route::prefix('admin')
 
         Route::middleware('auth:admin')->group(function () {
 
+            Route::middleware('can:crm')->controller(\App\Http\Controllers\Backend\ProcurementController::class)
+                ->prefix('procurement')->name('procurement.')->group(function () {
+                    Route::get('/warehouses', 'warehouses')->name('warehouses');
+                    Route::post('/warehouses', 'storeWarehouse')->name('warehouses.store');
+                    Route::get('/warehouses/{warehouse}/edit', 'editWarehouse')->name('warehouses.edit');
+                    Route::put('/warehouses/{warehouse}', 'updateWarehouse')->name('warehouses.update');
+                    Route::get('/orders/{order}', 'show')->name('show');
+                    Route::post('/orders/{order}/requests', 'createRequests')->name('requests.store');
+                    Route::post('/orders/{order}/responses/{requestItem}', 'recordOffer')->name('offers.store');
+                    Route::post('/orders/{order}/allocations', 'allocate')->name('allocations.store');
+                    Route::post('/orders/{order}/allocations/{allocation}/cancel', 'cancelAllocation')->name('allocations.cancel');
+                });
+
             /*
             |--------------------------------------------------------------------------
             | Main
@@ -224,6 +237,7 @@ Route::prefix('admin')
                     Route::post('/customer/{customer}/order', 'storeOrder')->name('order.store');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}/order/{order}/confirm', 'confirmOneClick')->name('one-click.confirm');
+                    Route::post('/customer/{customer}/order/{order}/pay-link', 'sendPayLink')->middleware('throttle:10,1')->name('order.pay-link');
                     Route::post('/customer/{customer}', 'update')->name('update');
                     Route::post('/customer/{customer}/credit-profile', 'updateCreditProfile')->name('credit-profile.update');
                     Route::post('/customer/{customer}/reset-password', 'resetPassword')->name('reset-password');
@@ -317,6 +331,8 @@ Route::prefix('admin')
                     Route::get('/edit/{id}', 'edit')->name('edit');
                     Route::post('/add', 'create')->name('add');
                     Route::post('/update/{id}', 'update')->name('update');
+                    Route::get('/{brand}/logo-search', 'searchLogo')->name('logo.search');
+                    Route::post('/{brand}/logo', 'applyLogo')->name('logo.apply');
                 });
 
 

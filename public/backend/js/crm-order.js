@@ -25,6 +25,8 @@
         cart: $('crmOrderCart'),
         count: $('crmOrderCount'),
         subtotal: $('crmOrderSubtotal'),
+        discountRow: $('crmOrderDiscountRow'),
+        discount: $('crmOrderDiscount'),
         delivery: $('crmOrderDelivery'),
         total: $('crmOrderTotal'),
         footerTotal: $('crmOrderFooterTotal'),
@@ -44,7 +46,8 @@
     };
 
     let results = [];
-    /** @type {{variantId:number, name:string, variant:string, price:number, qty:number}[]} */
+    // basePrice: saytdakı qiymət · price: operatorun satdığı vahid qiymət (≤ basePrice)
+    /** @type {{variantId:number, name:string, brand:string, variant:string, basePrice:number, price:number, qty:number}[]} */
     let cart = [];
 
     // ---------- Axtarış ----------
@@ -114,7 +117,7 @@
 
         const existing = cart.find(i => i.variantId === variantId);
         if (existing) existing.qty = Math.min(99, existing.qty + qty);
-        else cart.push({ variantId, name: product.name, brand: product.brand || '', variant: variant.label, price: Number(variant.price), qty });
+        else cart.push({ variantId, name: product.name, brand: product.brand || '', variant: variant.label, basePrice: Number(variant.price), price: Number(variant.price), qty });
 
         row.querySelector('[data-qty]').value = 1;
         renderCart();
@@ -126,25 +129,52 @@
         if (!cart.length) {
             els.cart.innerHTML = '<div class="crm-order__empty">Səbət boşdur. Soldan məhsul əlavə edin.</div>';
         } else {
+            // Sətir: sol — ad · orta — say × qiymət · sağ — cəm, Sil
             els.cart.innerHTML = cart.map((i, idx) => `
                 <div class="crm-cart-item" data-index="${idx}">
                     <div class="crm-cart-item__info">
                         <div class="crm-cart-item__name">${esc(i.name)}</div>
-                        <div class="crm-cart-item__meta">${esc([i.brand, i.variant, money(i.price)].filter(Boolean).join(' · '))}</div>
+                        <div class="crm-cart-item__meta">${esc([i.brand, i.variant].filter(Boolean).join(' · '))}</div>
+                    </div>
+                    <div class="crm-cart-item__ctrl">
                         <div class="crm-cart-item__qty">
                             <button type="button" class="btn btn-outline-primary" data-step="-1" ${i.qty <= 1 ? 'disabled' : ''} aria-label="Azalt">−</button>
-                            <span>${i.qty}</span>
+                            <span class="crm-cart-item__count">${i.qty}</span>
                             <button type="button" class="btn btn-outline-primary" data-step="1" ${i.qty >= 99 ? 'disabled' : ''} aria-label="Artır">+</button>
+                            <span class="crm-cart-item__x">×</span>
+                            <input type="number" class="form-control crm-cart-item__unit" data-price value="${i.price.toFixed(2)}"
+                                min="0" max="${i.basePrice}" step="0.01" inputmode="decimal" aria-label="1 ədədin qiyməti" title="1 ədədin qiyməti">
+                            <span class="crm-cart-item__cur">₼</span>
                         </div>
+                        <div class="crm-cart-item__base" data-base>Saytda: ${money(i.basePrice)} · <button type="button" data-reset>Qaytar</button></div>
                     </div>
-                    <div>
-                        <div class="crm-cart-item__price">${money(i.price * i.qty)}</div>
+                    <div class="crm-cart-item__side">
+                        <s class="crm-cart-item__old" data-old></s>
+                        <div class="crm-cart-item__price" data-line></div>
                         <button type="button" class="crm-cart-item__remove" data-remove>Sil</button>
                     </div>
                 </div>`).join('');
+            els.cart.querySelectorAll('.crm-cart-item').forEach(paintRow);
         }
         updateTotals();
     }
+
+    // Sətrin cəmi: endirim varsa köhnə məbləğ üstüxətli, "Saytda: … · Qaytar" görünür
+    function paintRow(row) {
+        const i = cart[Number(row.dataset.index)];
+        const changed = i.price < i.basePrice;
+        row.classList.toggle('is-discounted', changed);
+        row.querySelector('[data-line]').textContent = money(i.price * i.qty);
+        row.querySelector('[data-old]').textContent = changed ? money(i.basePrice * i.qty) : '';
+        row.querySelector('[data-base]').hidden = !changed;
+    }
+
+    const round2 = n => Math.round(n * 100) / 100;
+    // Qiymət 0 ilə sayt qiyməti arasında olmalıdır (boş/səhv → sayt qiyməti)
+    const clampPrice = (value, item) => {
+        const n = parseFloat(String(value).replace(',', '.'));
+        return Number.isFinite(n) ? round2(Math.min(item.basePrice, Math.max(0, n))) : item.basePrice;
+    };
 
     els.cart.addEventListener('click', event => {
         const item = event.target.closest('.crm-cart-item');
@@ -152,11 +182,43 @@
         const idx = Number(item.dataset.index);
         const step = event.target.closest('[data-step]');
         if (step) cart[idx].qty = Math.min(99, Math.max(1, cart[idx].qty + Number(step.dataset.step)));
-        if (event.target.closest('[data-remove]')) cart.splice(idx, 1);
+        else if (event.target.closest('[data-reset]')) cart[idx].price = cart[idx].basePrice;
+        else if (event.target.closest('[data-remove]')) cart.splice(idx, 1);
+        else return;
         renderCart();
     });
 
-    const subtotal = () => cart.reduce((s, i) => s + i.price * i.qty, 0);
+    // Yazdıqca: yalnız bu sətir və yekunlar yenilənir (fokus itmir)
+    els.cart.addEventListener('input', event => {
+        if (!event.target.matches('[data-price]')) return;
+        const row = event.target.closest('.crm-cart-item');
+        const item = cart[Number(row.dataset.index)];
+        item.price = event.target.value === '' ? item.basePrice : clampPrice(event.target.value, item);
+        paintRow(row);
+        updateTotals();
+    });
+    // Sahədən çıxanda dəyər düzəldilir (məs. 150 → 129, boş → 129)
+    els.cart.addEventListener('change', event => {
+        if (!event.target.matches('[data-price]')) return;
+        const row = event.target.closest('.crm-cart-item');
+        const item = cart[Number(row.dataset.index)];
+        item.price = clampPrice(event.target.value, item);
+        event.target.value = item.price.toFixed(2);
+        paintRow(row);
+        updateTotals();
+    });
+    // Enter formu göndərməsin, sadəcə təsdiqləsin
+    els.cart.addEventListener('keydown', event => {
+        if (event.key === 'Enter' && event.target.matches('[data-price]')) {
+            event.preventDefault();
+            event.target.blur();
+        }
+    });
+
+    // Toplam — sayt qiymətləri ilə · Endirim — operatorun etdiyi · goods = ödənilən məhsul məbləği
+    const listTotal = () => round2(cart.reduce((s, i) => s + i.basePrice * i.qty, 0));
+    const subtotal = () => round2(cart.reduce((s, i) => s + i.price * i.qty, 0));
+    const discount = () => round2(listTotal() - subtotal());
     function deliveryFee(goods) {
         if (!goods || delivery.mode === 'free') return 0;
         if (delivery.free_from > 0 && goods >= delivery.free_from) return 0;
@@ -176,7 +238,10 @@
     function updateTotals() {
         const goods = subtotal();
         const fee = deliveryFee(goods);
-        els.subtotal.textContent = money(goods);
+        const off = discount();
+        els.subtotal.textContent = money(listTotal());
+        els.discountRow.hidden = !(off > 0);
+        els.discount.textContent = '−' + money(off);
         els.delivery.textContent = !goods ? '—' : fee ? money(fee) : 'Pulsuz';
 
         els.giftRow.hidden = !els.giftWrap.checked;
@@ -312,7 +377,7 @@
         const isNew = els.address.value === 'new';
         const code = selectedCode();
         const payload = {
-            cart: cart.map(i => ({ variant_id: i.variantId, quantity: i.qty })),
+            cart: cart.map(i => ({ variant_id: i.variantId, quantity: i.qty, price: i.price })),
             address_mode: isNew ? 'new' : 'existing',
             address_id: isNew ? null : Number(els.address.value),
             ...(isNew ? Object.fromEntries([...els.newAddress.querySelectorAll('[name]')].map(i => [i.name, i.value.trim() || null])) : {}),

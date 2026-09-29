@@ -4,18 +4,22 @@ namespace App\Http\Controllers\Backend\Product;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product\Brand;
-use App\Services\SeoUrl;
+use App\Services\BrandLogoService;
+use App\Services\SerperImageSearchService;
+use App\Services\WorldVectorLogoService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
-use Illuminate\Support\Facades\File;
+use Throwable;
 
 class BrandsController extends Controller
 {
     public function index()
     {
-        $brands = Brand::orderBy('name','asc')->paginate(25);
+        $brands = Brand::withCount(['products as products_count' => fn ($q) => $q->where('active', 1)])
+            ->when(request('logo') === 'missing', fn ($q) => $q->where(fn ($w) => $w->whereNull('image')->orWhere('image', '')))
+            ->orderBy('name','asc')->get(); // DataTables: səhifələmə və axtarış brauzerdə
 
         return view('backend.product_menu.brands.list',[
             'brands'    => $brands
@@ -40,11 +44,7 @@ class BrandsController extends Controller
             'slug' => $request->filled('slug') ? $request->slug : null,
         ]);
 
-        $brand->image = $this->saveBrandImage(
-            $request->file('image'),
-            $brand
-        );
-
+        $brand->image = app(BrandLogoService::class)->store($request->file('image')->get(), $brand);
         $brand->save();
 
         return redirect()->back()
@@ -84,44 +84,84 @@ class BrandsController extends Controller
         $brand->active = $request->active;
 
         if ($request->hasFile('image')) {
-
-            $oldImage = public_path(
-                'frontend/uploads/brands/' . $brand->image
-            );
-
-            if ($brand->image && File::exists($oldImage)) {
-                File::delete($oldImage);
-            }
-
-            $brand->image = $this->saveBrandImage(
-                $request->file('image'),
-                $brand
-            );
+            // köhnə fayllar (orijinal və logo/) servisdə silinir
+            $brand->image = app(BrandLogoService::class)->store($request->file('image')->get(), $brand);
         }
 
         $brand->save();
 
-        return redirect(route('brand.list'))
+        return redirect(route('admin.brand.list'))
             ->with('success', 'Brend məlumatları yeniləndi!');
     }
 
-    private function saveBrandImage($file, $brand)
+    /**
+     * Brend loqosu axtarışı. Mənbə: vector (worldvectorlogo, default) və ya google (Serper).
+     * Namizədlər sessiyada saxlanılır — tətbiq zamanı yalnız onlardan biri seçilə bilər.
+     */
+    public function searchLogo(Request $request, Brand $brand, SerperImageSearchService $serper, WorldVectorLogoService $vectors): JsonResponse
     {
-        $imageName = SeoUrl::generateImageName([
-                'id'    => $brand->id,
-                'title' => $brand->name
-            ]) . '.webp';
+        $source = $request->query('source') === 'google' ? 'google' : 'vector';
+        $query = trim((string) $request->query('q')) ?: ($source === 'google' ? $brand->name . ' logo png' : $brand->name);
 
-        $path = public_path('frontend/uploads/brands/' . $imageName);
+        try {
+            if ($source === 'vector') {
+                $candidates = $vectors->search($query);
+                $images = collect($candidates)->map(fn ($logo, $i) => [
+                    'id' => $i, 'thumbnail' => $logo['preview_url'], 'title' => $logo['name'], 'source' => $logo['name'],
+                ]);
+            } else {
+                $candidates = $serper->search($query);
+                $images = collect($candidates)->map(fn ($img, $i) => [
+                    'id' => $i, 'thumbnail' => $img['thumbnail_url'], 'title' => $img['title'], 'source' => $img['source'],
+                ]);
+            }
+        } catch (Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
 
-        $manager = ImageManager::usingDriver(Driver::class);
+        $request->session()->put('brand_logo_candidates.' . $brand->id, ['source' => $source, 'items' => $candidates]);
 
-        $manager
-            ->decode($file)
-            ->cover(600, 600)
-            ->save($path, quality: 82);
-
-        return $imageName;
+        return response()->json(['success' => true, 'source' => $source, 'query' => $query, 'images' => $images->values()]);
     }
 
+    /** Seçilmiş namizədi yükləyir, emal edir və brendə bağlayır */
+    public function applyLogo(Request $request, Brand $brand, BrandLogoService $logos, WorldVectorLogoService $vectors): JsonResponse
+    {
+        $data = $request->validate(['candidate' => ['required', 'integer', 'min:0']]);
+        $stored = $request->session()->get('brand_logo_candidates.' . $brand->id, []);
+        $candidate = $stored['items'][$data['candidate']] ?? null;
+        if (!$candidate) {
+            return response()->json(['success' => false, 'message' => 'Axtarışı yenidən edin.'], 422);
+        }
+
+        try {
+            $svg = null;
+            if (($stored['source'] ?? null) === 'vector') {
+                $binary = $vectors->png($candidate['slug']);   // raster: og:image və ehtiyat
+                $svg = $vectors->svg($candidate['preview_url']); // vektor: saytda rənglə göstərmək üçün
+            } else {
+                $response = Http::timeout(20)
+                    ->connectTimeout(5)
+                    ->withoutRedirecting()
+                    ->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; ParfumShopImageImporter/1.0)'])
+                    ->get($candidate['original_url']);
+
+                if (!$response->successful() || strlen($response->body()) > 10 * 1024 * 1024) {
+                    throw new \RuntimeException('Şəkil yüklənmədi (sayt icazə vermir və ya fayl çox böyükdür). Başqa variant seçin.');
+                }
+                $binary = $response->body();
+            }
+
+            $brand->image = $logos->store($binary, $brand, $svg);
+            $brand->save();
+        } catch (Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $brand->name . ' loqosu yeniləndi' . ($svg ? ' (vektor)' : '') . '.',
+            'logo' => BrandLogoService::svgUrl($brand->image) ?? BrandLogoService::url($brand->image),
+        ]);
+    }
 }

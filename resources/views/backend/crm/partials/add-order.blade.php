@@ -40,7 +40,8 @@
                     <div class="crm-order__empty">Səbət boşdur. Soldan məhsul əlavə edin.</div>
                 </div>
                 <dl class="crm-order__totals">
-                    <div><dt>Məhsullar</dt><dd id="crmOrderSubtotal">0.00 ₼</dd></div>
+                    <div><dt>Toplam</dt><dd id="crmOrderSubtotal">0.00 ₼</dd></div>
+                    <div id="crmOrderDiscountRow" class="crm-order__discount" hidden><dt>Endirim</dt><dd id="crmOrderDiscount">—</dd></div>
                     <div><dt>Çatdırılma</dt><dd id="crmOrderDelivery">—</dd></div>
                     <div id="crmOrderGiftRow" hidden><dt>Hədiyyəlik bükmə</dt><dd id="crmOrderGift">—</dd></div>
                     <div id="crmOrderCreditRow" hidden><dt>Kredit faizi</dt><dd id="crmOrderCreditFee">—</dd></div>

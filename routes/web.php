@@ -244,6 +244,15 @@ Route::middleware('auth')->group(function () {
 });
 
 
+// SMS ödəniş linki (login lazım deyil) — PayLinkController
+Route::controller(\App\Http\Controllers\Frontend\PayLinkController::class)
+    ->prefix('p')
+    ->where(['token' => '[A-Za-z0-9]{10}'])
+    ->group(function () {
+        Route::get('/{token}', 'show')->middleware('throttle:30,1')->name('pay.link');
+        Route::post('/{token}', 'start')->middleware('throttle:5,1')->name('pay.link.start');
+    });
+
 Route::get('/payment/birbank/return/{payment}', [BirbankPaymentController::class, 'callback'])
     ->middleware('throttle:20,1')->name('payment.birbank.return');
 

@@ -14,6 +14,7 @@ use App\Models\Order\OrderStatus;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use App\Services\BonusService;
+use App\Services\OrderPayLinkService;
 use App\Services\ShopPricing;
 use App\Services\SmsService;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+
 
 class CrmController extends Controller
 {
@@ -238,10 +240,22 @@ class CrmController extends Controller
     {
         abort_unless($order->customer_id === $customer->id, 404);
 
-        $order->load(['items.product', 'paymentMethod', 'status', 'address']);
+        $order->load([
+            'items.product', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs',
+            'paymentMethod', 'status', 'address', 'statusLogs.status',
+            'payments' => fn ($query) => $query->latest('id'),
+            'payments.operations',
+        ]);
+
+        // Ödəniş linki yalnız ödənişə başlamaq mümkün olanda (onlayn üsul, ödənilməyib, ləğv deyil)
+        $payLinkUrl = $order->canStartOnlinePayment() ? app(OrderPayLinkService::class)->url($order) : null;
 
         return view('backend.crm.order', [
+            'requests' => \App\Models\Procurement\WarehouseRequest::where('order_id', $order->id)
+                ->with(['warehouse', 'items.offers', 'items.orderItem.product', 'items.orderItem.variant.size'])->latest('id')->get(),
+            'warehouses' => \App\Models\Procurement\Warehouse::where('active', true)->orderBy('name_az')->get(),
             'order' => $order,
+            'payLinkUrl' => $payLinkUrl,
             'customer' => $customer,
             'addresses' => $customer->addresses()->get(),
             'oneClickPaymentMethods' => PaymentMethod::where('active', 1)->whereIn('code', ['cash', 'card_online'])->get(),
@@ -266,6 +280,8 @@ class CrmController extends Controller
             'cart' => ['required', 'array', 'min:1', 'max:50'],
             'cart.*.variant_id' => ['required', 'integer', 'distinct'],
             'cart.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
+            // Operatorun satdığı vahid qiymət (boşdursa sayt qiyməti)
+            'cart.*.price' => ['nullable', 'numeric', 'min:0', 'max:999999'],
 
             'address_mode' => ['required', Rule::in(['existing', 'new'])],
             'address_id' => ['nullable', 'required_if:address_mode,existing', 'integer'],
@@ -324,7 +340,7 @@ class CrmController extends Controller
                 );
             }
 
-            // Məhsullar — qiymət həmişə bazadan
+            // Məhsullar — sayt qiyməti bazadan; operator yalnız endirim edə bilər (qiymət ≤ sayt qiyməti)
             $cart = collect($data['cart'])->keyBy('variant_id');
             $variants = ProductVariant::whereIn('id', $cart->keys())
                 ->where('active', 1)
@@ -332,27 +348,36 @@ class CrmController extends Controller
                 ->get();
             abort_if($variants->count() !== $cart->count(), 422, 'Səbətdə satışda olmayan məhsul var.');
 
-            $subtotal = 0;
+            $subtotal = 0; // sayt qiymətləri ilə
+            $discount = 0; // operatorun endirimi
             $items = [];
             foreach ($variants as $variant) {
                 $quantity = (int) $cart[$variant->id]['quantity'];
-                $lineTotal = round((float) $variant->price * $quantity, 2);
-                $subtotal += $lineTotal;
+                $listPrice = round((float) $variant->price, 2);
+                $price = $cart[$variant->id]['price'] ?? null;
+                $unitPrice = $price === null ? $listPrice : round((float) $price, 2);
+                abort_if($unitPrice > $listPrice, 422, 'Qiymət saytdakı qiymətdən yüksək ola bilməz.');
+
+                $subtotal += $listPrice * $quantity;
+                $discount += ($listPrice - $unitPrice) * $quantity;
                 $items[] = [
                     'product_id' => $variant->product_id,
                     'product_variant_id' => $variant->id,
-                    'unit_price' => $variant->price,
+                    'unit_price' => $unitPrice,
+                    'list_price' => $unitPrice < $listPrice ? $listPrice : null,
                     'quantity' => $quantity,
-                    'total' => $lineTotal,
+                    'total' => round($unitPrice * $quantity, 2),
                 ];
             }
             $subtotal = round($subtotal, 2);
+            $discount = round($discount, 2);
+            $goods = round($subtotal - $discount, 2);
 
             $pricing = app(ShopPricing::class);
             $giftWrap = (bool) ($data['gift_wrap'] ?? false);
-            $delivery = $pricing->deliveryFee($subtotal);
+            $delivery = $pricing->deliveryFee($goods); // checkout-dakı kimi: endirimdən sonrakı məbləğə görə
             $giftWrapFee = $pricing->giftWrapFee($giftWrap);
-            $payable = round($subtotal + $delivery + $giftWrapFee, 2);
+            $payable = round($goods + $delivery + $giftWrapFee, 2);
             $total = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
 
             $order = Order::create([
@@ -367,7 +392,7 @@ class CrmController extends Controller
                 'order_status_id' => $initialStatus->id,
                 'gift_wrap' => $giftWrap,
                 'subtotal' => $subtotal,
-                'discount' => 0,
+                'discount' => $discount,
                 'delivery_fee' => $delivery,
                 'gift_wrap_fee' => $giftWrapFee,
                 'total' => $total,
@@ -411,12 +436,39 @@ class CrmController extends Controller
             Mail::to($customer->email)->queue(new OrderCreatedMail($order, 'az'));
         }
 
+        // Kart / Birbank: müştəriyə SMS ilə ödəniş linki (login olmadan ödəyir)
+        $message = "Sifariş {$order->order_no} yaradıldı.";
+        if (in_array($code, Order::ONLINE_PAYMENT_CODES, true)) {
+            try {
+                app(OrderPayLinkService::class)->sendSms($order);
+                $message .= ' Ödəniş linki müştəriyə SMS ilə göndərildi.';
+            } catch (\Throwable $e) {
+                report($e);
+                $message .= ' Ödəniş linkini SMS ilə göndərmək alınmadı — sifarişin detalından yenidən göndərin.';
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'message' => in_array($code, ['card_online', 'birbank_installment'], true)
-                ? "Sifariş {$order->order_no} yaradıldı. Müştəri ödənişi profilindən edə bilər."
-                : "Sifariş {$order->order_no} yaradıldı.",
+            'message' => $message,
             'order_no' => $order->order_no,
         ]);
+    }
+
+    /** Sifariş detalı → "SMS ilə göndər": ödəniş linkini müştəriyə yenidən göndərir */
+    public function sendPayLink(Customer $customer, Order $order, OrderPayLinkService $payLink): JsonResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+
+        try {
+            $payLink->sendSms($order);
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['success' => false, 'message' => 'SMS göndərilmədi. Bir az sonra yenidən cəhd edin.'], 500);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Ödəniş linki müştəriyə SMS ilə göndərildi.']);
     }
 }

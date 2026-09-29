@@ -1,0 +1,48 @@
+/* SMS ödəniş linki — /p/{token} (frontend/pay-link.blade.php). Kartlar order-detail.css-dəndir. */
+.paylink { display: flex; flex-direction: column; gap: 16px; max-width: 600px; margin: 0 auto; padding: 28px 16px 48px; }
+
+.paylink__head { text-align: center; }
+.paylink__hello { margin: 0 0 4px; font-size: 14px; color: var(--text-secondary); }
+.paylink__title { margin: 0; font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.paylink__meta { display: flex; justify-content: center; flex-wrap: wrap; margin: 6px 0 0; font-size: 13px; color: var(--text-secondary); }
+.paylink__meta > * + *::before { content: "·"; margin: 0 8px; opacity: .6; }
+
+/* Vəziyyət: gözlənilir / alınmadı / ödənildi / ləğv */
+.paylink__state {
+    --tone: var(--text-secondary);
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 12px;
+    background: color-mix(in srgb, var(--tone) 8%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--border));
+}
+.paylink__state--awaiting { --tone: var(--warning); }
+.paylink__state--danger { --tone: var(--danger); }
+.paylink__state--success { --tone: var(--success); }
+.paylink__state-icon { flex-shrink: 0; display: flex; color: var(--tone); }
+.paylink__state strong { display: block; font-size: 15px; color: var(--tone); }
+.paylink__state--muted strong { color: var(--text); }
+.paylink__state span { display: block; margin-top: 2px; font-size: 13px; color: var(--text-secondary); }
+
+/* Birbank taksit: aylıq ödəniş */
+.paylink__monthly {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2);
+    font-size: 13px; color: var(--text-secondary);
+}
+.paylink__monthly strong { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Ödə düyməsi */
+.paylink__bar { display: flex; flex-direction: column; gap: 10px; }
+.paylink__btn { width: 100%; margin: 0; }
+.paylink__secure { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; font-size: 12.5px; color: var(--text-secondary); }
+
+@media (max-width: 600px) {
+    .paylink { padding-top: 20px; padding-bottom: 0; }
+    .paylink__title { font-size: 20px; }
+    /* Düymə həmişə görünsün: ekranın altına yapışır */
+    .paylink__bar {
+        position: sticky; bottom: 0; z-index: 5;
+        margin: 0 -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        background: var(--bg); border-top: 1px solid var(--border);
+    }
+    .paylink > .paylink__btn { margin-bottom: 24px; }
+}

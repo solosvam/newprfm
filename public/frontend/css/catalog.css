@@ -1,8 +1,80 @@
-.brands { display: flex; gap: 12px; overflow-x: auto; padding: 4px 0 24px; scrollbar-width: none; }
+/* =========================================================
+   BREND ZOLAĞI (ana səhifə)
+   ========================================================= */
+.brands-strip { position: relative; }
+.brands {
+    display: flex; gap: 12px; overflow-x: auto; padding: 4px 0 24px;
+    scrollbar-width: none; scroll-behavior: smooth; overscroll-behavior-x: contain;
+}
 .brands::-webkit-scrollbar { display: none; }
-.brand-card { flex-shrink: 0; min-width: 108px; height: 52px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
-.brand-card.more { color: var(--accent); }
-.brand-card.active { border-color: var(--accent); color: var(--accent); }
+.brands.is-dragging { scroll-behavior: auto; cursor: grabbing; }
+.brands.is-dragging .brand-card { pointer-events: none; }
+
+.brand-card {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    min-width: 120px; height: 64px; padding: 0 16px;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--surface); color: var(--text-secondary);
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+    transition: border-color .15s, color .15s;
+}
+.brand-card:hover, .brand-card.active { border-color: var(--accent); color: var(--text); }
+
+/* Loqo: şəkillər ağ fonludur — light-da multiply ilə fon kartın rənginə qarışır;
+   dark-da boz + invert + lighten ilə loqo ağ görünür, fon itir */
+.brand-card--logo { padding: 0 14px; }
+.brand-card img {
+    display: block; max-width: 104px; max-height: 36px; width: auto; height: auto; object-fit: contain;
+    mix-blend-mode: multiply; filter: grayscale(1); opacity: .7;
+    transition: filter .2s, opacity .2s;
+}
+.brand-card:hover img, .brand-card.active img { filter: none; opacity: 1; }
+[data-theme="dark"] .brand-card img { mix-blend-mode: lighten; filter: grayscale(1) invert(1); opacity: .75; }
+[data-theme="dark"] .brand-card:hover img,
+[data-theme="dark"] .brand-card.active img { filter: grayscale(1) invert(1); opacity: 1; }
+
+/* Vektor loqo: SVG maska kimi, rəngi temadan (light: tünd boz, dark: açıq), hover-də bənövşəyi */
+.brand-logo {
+    display: block; width: 104px; height: 34px;
+    background-color: var(--text-secondary);
+    -webkit-mask: var(--logo) center / contain no-repeat;
+            mask: var(--logo) center / contain no-repeat;
+    transition: background-color .2s;
+}
+.brand-card:hover .brand-logo, .brand-card.active .brand-logo { background-color: var(--accent); }
+
+.brand-card.more { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); color: var(--accent); }
+.brand-card.more:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+/* Desktop (siçan): oxlar — Windows-da üfüqi sürüşdürmə üçün */
+.brands-strip__nav {
+    position: absolute; top: calc(50% - 12px); z-index: 2; transform: translateY(-50%);
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0;
+    border: 1px solid var(--border-strong); border-radius: 50%;
+    background: var(--bg); color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08); cursor: pointer;
+    transition: background-color .15s, color .15s, border-color .15s;
+}
+.brands-strip__nav:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.brands-strip__nav--prev { left: -14px; }
+.brands-strip__nav--next { right: -14px; }
+.brands-strip__nav[hidden] { display: none; }
+@media (hover: none), (pointer: coarse) { .brands-strip__nav { display: none !important; } }
+
+/* Kənarlarda davamı var — solğunlaşma */
+.brands.has-more-end { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+.brands.has-more-start { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px); mask-image: linear-gradient(to right, transparent, #000 40px); }
+.brands.has-more-start.has-more-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+
+/* Mobil: ekranın kənarından-kənarına */
+@media (max-width: 760px) {
+    .brands { margin: 0 -16px; padding: 4px 16px 20px; gap: 10px; }
+    .brand-card { min-width: 108px; height: 58px; }
+}
+@media (max-width: 480px) {
+    .brands { margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
+}
 
 /* =========================================================
    CATALOG LAYOUT & FILTER SIDEBAR

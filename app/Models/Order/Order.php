@@ -18,6 +18,42 @@ class Order extends Model {
             'total'=>'decimal:2'
         ];
     }
+    /** Bank səhifəsində ödənilən üsullar (SMS ödəniş linki də yalnız bunlarda işləyir) */
+    public const ONLINE_PAYMENT_CODES = ['card_online', 'birbank_installment'];
+
+    public function isOnlinePayment(): bool
+    {
+        return in_array($this->paymentMethod?->code, self::ONLINE_PAYMENT_CODES, true);
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status?->code === 'cancelled';
+    }
+
+    /** Bankda nəticəsi hələ bəlli olmayan ödəniş cəhdi var (uğurlu ola bilər — təkrar ödəniş olmaz) */
+    public function hasPendingPayment(): bool
+    {
+        return $this->payments()->where('status', Payment::PENDING)->exists();
+    }
+
+    /**
+     * Ödənişə başlamaq olarmı — "Sifarişlərim" və SMS linki üçün ortaq qayda:
+     *  - onlayn üsul, ödənilməyib, sifariş ləğv edilməyib, gözləyən bank cəhdi yoxdur;
+     *  - əvvəlki cəhd uğursuz/ləğv olub və ya operator yaradıb, heç cəhd olmayıb.
+     */
+    public function canStartOnlinePayment(): bool
+    {
+        if (!$this->isOnlinePayment() || $this->payment_status === 'paid' || $this->isCancelled()) {
+            return false;
+        }
+        if (!in_array($this->payment_status, ['failed', 'cancelled'], true) && !$this->isAwaitingPayment()) {
+            return false;
+        }
+
+        return !$this->hasPendingPayment();
+    }
+
     /**
      * Onlayn ödənişli (kart / Birbank taksit) sifariş hələ heç ödənilməyə cəhd olunmayıb:
      * operator (CRM, asan sifariş) yaradıb, müştəri "Sifarişlərim"-dən ödəməlidir.
