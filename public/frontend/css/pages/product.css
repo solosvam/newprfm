@@ -67,7 +67,7 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 .bar-fill { height: 100%; background: var(--accent); }
 .bar-count { width: 18px; text-align: right; }
 
-.review-write-btn { width: auto; padding: 10px 24px; }
+.review-write-btn { width: auto; padding: 0 24px; }
 
 .review-accordion { border-top: 1px solid var(--border); margin-top: 8px; }
 .accordion-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; padding: 16px 0; font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; }
@@ -205,12 +205,7 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
         font-size: 18px; font-weight: 800; color: var(--text);
         font-variant-numeric: tabular-nums; white-space: nowrap;
     }
-    .product-sticky__btn {
-        flex: 1; max-width: 260px; height: 48px; margin: 0;
-        display: inline-flex; align-items: center; justify-content: center;
-        border-radius: 12px; font-weight: 700; white-space: nowrap;
-    }
-    .product-sticky__btn:disabled { opacity: .5; cursor: not-allowed; }
+    .product-sticky__btn { flex: 1; max-width: 260px; margin: 0; }
 
     /* Panel footer-in son hissəsini örtməsin */
     body:has(.product-sticky) footer { padding-bottom: 80px; }

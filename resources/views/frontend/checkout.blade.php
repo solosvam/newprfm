@@ -47,17 +47,7 @@
                         @endif
 
                         <div id="newAddress" class="checkout-address-form {{ $addresses->isNotEmpty() ? 'checkout-hidden' : '' }}">
-                            <div class="checkout-fields">
-                                <div class="checkout-field checkout-field--full"><input type="text" id="addressTitle" placeholder="{{ __('checkout_address_name_home_work') }}"></div>
-                                <div class="checkout-field"><input type="text" id="city" placeholder="{{ __('checkout_city') }}"></div>
-                                <div class="checkout-field"><input type="text" id="district" placeholder="{{ __('checkout_district') }}"></div>
-                                <div class="checkout-field checkout-field--full"><input type="text" id="address" placeholder="{{ __('checkout_street_and_address') }}"></div>
-                                <div class="checkout-field"><input type="text" id="building" placeholder="{{ __('checkout_building') }}"></div>
-                                <div class="checkout-field"><input type="text" id="entrance" placeholder="{{ __('checkout_entrance') }}"></div>
-                                <div class="checkout-field"><input type="text" id="floor" placeholder="{{ __('checkout_floor') }}"></div>
-                                <div class="checkout-field"><input type="text" id="apartment" placeholder="{{ __('checkout_apartment') }}"></div>
-                                <div class="checkout-field checkout-field--full"><textarea id="addressNote" placeholder="{{ __('checkout_address_note') }}"></textarea></div>
-                            </div>
+                            @include('frontend.partials.address-form')
                         </div>
                     </section>
 

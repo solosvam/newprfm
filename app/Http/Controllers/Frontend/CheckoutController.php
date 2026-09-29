@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Exceptions\PromoCodeException;
 use App\Http\Controllers\Controller;
 use App\Mail\OrderCreatedMail;
+use App\Models\Customer\CustomerAddress;
 use App\Models\Credit\CreditApplication;
 use App\Models\Credit\CreditPeriod;
 use App\Models\Credit\CreditStatus;
@@ -40,10 +41,11 @@ class CheckoutController extends Controller
         $creditPeriods = CreditPeriod::where('active', 1)->orderBy('sort_order')->get();
         $bonusBalance = (float) auth()->user()->bonus_balance;
         $creditProfileComplete = (bool) auth()->user()->creditProfile?->isComplete();
+        $cities = \App\Models\City::forSelect()->get(['id', 'name']);
 
         return view('frontend.checkout', compact(
             'addresses',
-            'paymentMethods', 'creditPeriods', 'bonusBalance', 'creditProfileComplete'
+            'paymentMethods', 'creditPeriods', 'bonusBalance', 'creditProfileComplete', 'cities'
         ));
     }
 
@@ -62,8 +64,7 @@ class CheckoutController extends Controller
                 'address_id' => ['nullable', 'integer'],
 
                 'title' => ['nullable', 'string', 'max:50'],
-                'city' => ['nullable', 'string', 'max:100'],
-                'district' => ['nullable', 'string', 'max:100'],
+                'city_id' => ['nullable', 'integer'],
                 'address' => ['nullable', 'string', 'max:500'],
                 'building' => ['nullable', 'string', 'max:50'],
                 'entrance' => ['nullable', 'string', 'max:50'],
@@ -127,28 +128,22 @@ class CheckoutController extends Controller
                     $data,
                     [
                         'title' => ['required', 'string', 'max:50'],
-                        'city' => ['required'],
+                        'city_id' => CustomerAddress::formRules()['city_id'],
                         'address' => ['required'],
                     ],
                     [
                         'title.required' => __('validation_address_name_is_required'),
-                        'city.required' => __('validation_city_is_required'),
+                        'city_id.required' => __('validation_city_is_required'),
+                        'city_id.exists' => __('validation_city_is_required'),
                         'address.required' => __('validation_street_and_address_are_required'),
                     ]
                 ) -> validate();
 
-                $address = $customer -> addresses() -> create([
-                    'title' => $data['title'] ?? null,
-                    'city' => $data['city'],
-                    'district' => $data['district'] ?? null,
-                    'address' => $data['address'],
-                    'building' => $data['building'] ?? null,
-                    'entrance' => $data['entrance'] ?? null,
-                    'floor' => $data['floor'] ?? null,
-                    'apartment' => $data['apartment'] ?? null,
-                    'note' => $data['address_note'] ?? null,
-                    'is_default' => $customer -> addresses() -> count() === 0,
-                ]);
+                $address = $customer -> addresses() -> create(
+                    CustomerAddress::attributesFromForm($data) + [
+                        'is_default' => $customer -> addresses() -> count() === 0,
+                    ]
+                );
             }
 
             // Səbətdəki məhsullar
@@ -215,7 +210,7 @@ class CheckoutController extends Controller
                 'birbank_installment_months' => $paymentMethod->code === 'birbank_installment'
                     ? (int) $data['birbank_installment_months'] : null,
                 'payment_status' => in_array($paymentMethod->code, ['bonus_balance'], true) ? 'paid' : ($paymentMethod->code === 'cash' ? 'cod' : 'pending'),
-                'source' => 'website',
+                'source' => 'customer',
                 'order_status_id' => $initialStatus -> id,
                 'gift_wrap' => (bool)($data['gift_wrap'] ?? false),
                 'customer_note' => $data['customer_note'] ?? null,

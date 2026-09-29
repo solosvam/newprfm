@@ -38,7 +38,7 @@
 
 .account-card-invite { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .account-card-invite-text h3 { font-size: 18px; font-weight: 700; color: var(--text); margin: 0 0 14px; max-width: 320px; }
-.account-card-invite-btn { width: auto; padding: 12px 28px; margin: 0; }
+.account-card-invite-btn { width: auto; padding: 0 28px; margin: 0; }
 .account-card-invite img { width: 100px; flex-shrink: 0; }
 
 .account-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
@@ -63,7 +63,7 @@
 .form-field input:disabled { color: var(--text-muted); background: var(--surface-2); cursor: not-allowed; }
 .form-field input.is-invalid { border-color: var(--danger); }
 
-.account-form-submit { width: auto; padding: 13px 32px; margin-top: 24px; }
+.account-form-submit { width: auto; padding: 0 32px; margin-top: 24px; }
 
 /* Şifrəni dəyiş — yığılan blok */
 .account-password {
@@ -207,6 +207,7 @@
 .order-status--shipped    { --status: #6b46c1; }
 .order-status--delivered  { --status: var(--success); }
 .order-status--cancelled  { --status: var(--danger); }
+.order-status--awaiting-payment { --status: var(--warning); }
 
 [data-theme="dark"] .order-status--shipped    { --status: #a88bfa; }
 
@@ -408,3 +409,9 @@
     }
     .order-card__meta > .order-card__payment::before { content: none; }
 }
+
+/* Ödəniş gözləyən sifariş (operator yaradıb, müştəri ödəməlidir) */
+.order-card--awaiting { border-color: color-mix(in srgb, var(--warning) 45%, var(--border)); }
+.order-card__pay { position: relative; z-index: 1; margin: 0; }
+.order-card__pay .btn { width: auto; margin: 0; padding: 0 22px; }
+

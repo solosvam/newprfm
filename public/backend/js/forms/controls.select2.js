@@ -29,7 +29,8 @@ class Select2Controls {
 
   // Basic single select2
   _initSelect2Basic() {
-    jQuery('.select2').select2({placeholder: ''});
+    // yalnız <select>: select2 konteyneri də "select2" class-ı alır, onu ikinci dəfə init etməyək
+    jQuery('select.select2').select2({placeholder: ''});
   }
 
   // Basic multiple select2

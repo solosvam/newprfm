@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
             address_mode: isNew ? 'new' : 'existing',
             address_id: isNew ? null : Number(select.value),
-            title: val('addressTitle'), city: val('city'), district: val('district'),
+            title: val('addressTitle'), city_id: Number(val('city')) || null,
             address: val('address'), building: val('building'), entrance: val('entrance'),
             floor: val('floor'), apartment: val('apartment'), address_note: val('addressNote'),
         };

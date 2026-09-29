@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer\CustomerAddress;
 use App\Models\Credit\CreditApplication;
 use App\Models\Credit\CreditPeriod;
 use App\Models\Credit\CreditStatus;
@@ -76,7 +77,8 @@ class CreditApplicationController extends Controller
         $this->requireProfile($request);
         $selection = $this->selection($this->draft($request));
         $addresses = $request->user()->addresses()->orderByDesc('is_default')->latest()->get();
-        return view('frontend.credit-address', array_merge($selection, compact('addresses')));
+        $cities = \App\Models\City::forSelect()->get(['id', 'name']);
+        return view('frontend.credit-address', array_merge($selection, compact('addresses', 'cities')));
     }
 
     public function confirm(Request $request)
@@ -86,15 +88,12 @@ class CreditApplicationController extends Controller
         $data = $request->validate([
             'address_mode' => ['required', Rule::in(['existing', 'new'])],
             'address_id' => ['required_if:address_mode,existing', 'nullable', 'integer'],
-            'title' => ['required_if:address_mode,new', 'nullable', 'string', 'max:50'],
-            'city' => ['required_if:address_mode,new', 'nullable', 'string', 'max:100'],
-            'district' => ['nullable', 'string', 'max:100'],
-            'address' => ['required_if:address_mode,new', 'nullable', 'string', 'max:500'],
-            'building' => ['nullable', 'string', 'max:50'],
-            'entrance' => ['nullable', 'string', 'max:50'],
-            'floor' => ['nullable', 'string', 'max:30'],
-            'apartment' => ['nullable', 'string', 'max:30'],
-            'address_note' => ['nullable', 'string', 'max:1000'],
+            ...CustomerAddress::formRules('required_if:address_mode,new'),
+        ], [
+            'title.required_if' => __('validation_address_name_is_required'),
+            'city_id.required_if' => __('validation_city_is_required'),
+            'city_id.exists' => __('validation_city_is_required'),
+            'address.required_if' => __('validation_street_and_address_are_required'),
         ]);
 
         $customer = $request->user();
@@ -105,16 +104,7 @@ class CreditApplicationController extends Controller
             extract($selection);
             $address = $data['address_mode'] === 'existing'
                 ? $customer->addresses()->findOrFail($data['address_id'])
-                : $customer->addresses()->create([
-                    'title' => $data['title'],
-                    'city' => $data['city'],
-                    'district' => $data['district'] ?? null,
-                    'address' => $data['address'],
-                    'building' => $data['building'] ?? null,
-                    'entrance' => $data['entrance'] ?? null,
-                    'floor' => $data['floor'] ?? null,
-                    'apartment' => $data['apartment'] ?? null,
-                    'note' => $data['address_note'] ?? null,
+                : $customer->addresses()->create(CustomerAddress::attributesFromForm($data) + [
                     'is_default' => $customer->addresses()->count() === 0,
                 ]);
 

@@ -20,30 +20,23 @@
                 <tbody>
                 @foreach($orders as $order)
                     @php
-                        $paymentCode = $order->paymentMethod?->code;
-                        $paymentBadge = match ($paymentCode) {
-                            'cash' => 'bg-success',
-                            'birbank_installment' => 'bg-primary',
-                            'card_online' => 'bg-info',
-                            'bonus_balance' => 'bg-secondary',
-                            default => 'bg-light text-dark',
-                        };
+                        // Ödəniş statusu: dolu badge — cədvəldə yeganə "diqqət" rəngi
                         $paymentStatus = match ($order->payment_status) {
                             'paid' => ['Ödənilib', 'bg-success'],
-                            'pending' => ['Gözləyir', 'bg-warning text-dark'],
+                            'pending' => ['Gözləyir', 'bg-warning'],
                             'failed' => ['Uğursuz', 'bg-danger'],
                             'cancelled' => ['Ləğv edilib', 'bg-danger'],
-                            'cod' => ['Qapıda ödəniş', 'bg-secondary'],
-                            default => [$order->payment_status ?: '—', 'bg-light text-dark'],
+                            'cod' => ['Qapıda ödəniş', 'bg-outline-muted'],
+                            default => [$order->payment_status ?: '—', 'bg-outline-muted'],
                         };
+                        // Sifariş statusu: outline badge — mərhələni göstərir, göz yormur
                         $orderStatusBadge = match ($order->status?->code) {
-                            'new' => 'bg-info',
-                            'confirmed' => 'bg-primary',
-                            'preparing' => 'bg-warning text-dark',
-                            'sent', 'courier' => 'bg-secondary',
-                            'delivered' => 'bg-success',
-                            'cancelled' => 'bg-danger',
-                            default => 'bg-light text-dark',
+                            'new', 'confirmed' => 'bg-outline-primary',
+                            'preparing' => 'bg-outline-warning',
+                            'sent', 'courier' => 'bg-outline-quaternary',
+                            'delivered' => 'bg-outline-success',
+                            'cancelled' => 'bg-outline-danger',
+                            default => 'bg-outline-muted',
                         };
                         $source = match ($order->source) {
                             'website', 'customer' => 'Müştəri',
@@ -55,7 +48,7 @@
                         <td class="text-muted">{{ $orders->firstItem() + $loop->index }}</td>
                         <td class="fw-semibold">{{ $order->order_no }}</td>
                         <td class="text-nowrap">{{ $order->created_at?->format('d.m.Y H:i') }}</td>
-                        <td><span class="badge {{ $paymentBadge }}">{{ $order->paymentMethod?->name_az ?? '—' }}</span></td>
+                        <td class="text-nowrap">{{ $order->paymentMethod?->name_az ?? '—' }}</td>
                         <td><span class="badge {{ $paymentStatus[1] }}">{{ $paymentStatus[0] }}</span></td>
                         <td><span class="badge {{ $orderStatusBadge }}">{{ $order->status?->name_az ?? '—' }}</span></td>
                         <td>{{ $source }}</td>

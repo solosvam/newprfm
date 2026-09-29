@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCreditProfile;
+use App\Models\Product\Product;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -70,5 +71,65 @@ class AjaxController extends Controller
         }
 
         return response()->json($results);
+    }
+
+    /**
+     * CRM → "Yeni sifariş" modalında məhsul axtarışı (köhnə saytdakı məntiq).
+     *  - Boşluq varsa: ilk söz brend adında, qalanı məhsul adında axtarılır ("dol de" → Dolce... + Devotion...).
+     *  - Boşluq yoxdursa: söz həm brend, həm məhsul adında axtarılır.
+     * Yalnız aktiv məhsullar və aktiv variantlar, ən yenidən köhnəyə, 10 nəticə.
+     */
+    public function searchProductCrm(Request $request)
+    {
+        $q = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $request->query('q'))));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        // LIKE-da % və _ istifadəçinin yazdığı simvol kimi qalsın
+        $like = fn (string $value) => '%' . addcslashes($value, '%_\\') . '%';
+
+        $products = Product::query()
+            ->where('products.active', 1)
+            ->whereHas('variants', fn ($v) => $v->where('active', 1))
+            ->when(
+                str_contains($q, ' '),
+                function ($query) use ($q, $like) {
+                    [$brand, $name] = explode(' ', $q, 2);
+                    $query->whereHas('brand', fn ($b) => $b->where('name', 'like', $like($brand)))
+                        ->where('products.name', 'like', $like($name));
+                },
+                function ($query) use ($q, $like) {
+                    $query->where(function ($w) use ($q, $like) {
+                        $w->where('products.name', 'like', $like($q))
+                            ->orWhereHas('brand', fn ($b) => $b->where('name', 'like', $like($q)));
+                    });
+                }
+            )
+            ->with([
+                'brand:id,name',
+                'type:id,name_az',
+                'genders:id,name_az',
+                'images' => fn ($i) => $i->limit(1),
+                'variants' => fn ($v) => $v->where('active', 1)->with('size:id,name_az')->orderBy('price'),
+            ])
+            ->orderByDesc('products.id')
+            ->limit(10)
+            ->get();
+
+        return response()->json($products->map(fn (Product $p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'brand' => $p->brand?->name,
+            'type' => $p->type?->name_az,
+            'gender' => $p->genders->first()?->name_az,
+            'image' => ($img = $p->images->first()) ? asset('frontend/uploads/products/' . $img->image) : null,
+            'variants' => $p->variants->map(fn ($v) => [
+                'id' => $v->id,
+                'label' => $v->size?->name_az ?? '—',
+                'price' => (float) $v->price,
+            ])->values(),
+        ])->values());
     }
 }

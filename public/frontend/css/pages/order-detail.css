@@ -106,7 +106,7 @@
 .order-success__title { font-size: 22px; font-weight: 700; color: var(--text); margin: 0 0 12px; }
 .order-success__subtitle { font-size: 14px; color: var(--text-secondary); margin: 0 0 28px; }
 .order-success__subtitle strong { color: var(--text); font-weight: 700; }
-.order-success__link { width: auto; display: inline-block; padding: 13px 32px; margin: 0; }
+.order-success__link { width: auto; display: inline-flex; padding: 0 32px; margin: 0; }
 
 /* Ödəniş xəbərdarlığı */
 .od-alert {
@@ -118,7 +118,12 @@
 .od-alert__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .od-alert__text strong { font-size: 14px; color: var(--danger); }
 .od-alert__text span { font-size: 13px; color: var(--text-secondary); }
-.od-alert__btn { flex-shrink: 0; height: 40px; padding: 0 18px; margin: 0; border-radius: 10px; white-space: nowrap; }
+.od-alert__btn { flex-shrink: 0; width: auto; padding: 0 22px; margin: 0; }
+.od-alert--awaiting {
+    background: color-mix(in srgb, var(--warning) 8%, var(--bg));
+    border-color: color-mix(in srgb, var(--warning) 35%, var(--border));
+}
+.od-alert--awaiting .od-alert__text strong { color: var(--warning); }
 
 /* Ödəniş cəhdləri */
 .od-attempts { margin-top: 14px; }

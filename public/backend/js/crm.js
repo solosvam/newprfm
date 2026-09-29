@@ -7,7 +7,8 @@ window.initTabContent = function () {
         new bootstrap.Tooltip(el);
     });
 
-    $('.select2').select2();
+    // select2 konteynerinin özü də "select2" class-ı alır — yalnız <select>-ləri götürürük
+    $('select.select2').select2();
 };
 
 window.loadTab = function (url, params = {}) {

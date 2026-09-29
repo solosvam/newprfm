@@ -642,6 +642,90 @@
         if (form && !window.confirm(form.dataset.confirm)) event.preventDefault();
     });
 
+    // Ünvan forması: "Ətraflı" — bina, blok, mərtəbə, mənzil sahələrini aç/bağla
+    document.addEventListener('click', event => {
+        const toggle = event.target.closest('[data-address-details-toggle]');
+        if (!toggle) return;
+        const details = document.getElementById(toggle.getAttribute('aria-controls'));
+        if (!details) return;
+        details.hidden = !details.hidden;
+        toggle.setAttribute('aria-expanded', String(!details.hidden));
+        if (!details.hidden) details.querySelector('input')?.focus();
+    });
+
+    // Kateqoriya menyusu: sürüşdürülə bilirsə kənarları solğunlaşdır, aktiv kateqoriyanı görünən yerə gətir
+    (function initCategoryNav() {
+        const nav = document.querySelector('nav.cats');
+        if (!nav) return;
+        const update = () => {
+            const max = nav.scrollWidth - nav.clientWidth;
+            nav.classList.toggle('has-more-start', nav.scrollLeft > 4);
+            nav.classList.toggle('has-more-end', max - nav.scrollLeft > 4);
+        };
+        const active = nav.querySelector('a.active');
+        if (active && active.offsetLeft + active.offsetWidth > nav.clientWidth) {
+            nav.style.scrollBehavior = 'auto';
+            nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+            nav.style.scrollBehavior = '';
+        }
+        update();
+        nav.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+
+        // Sağda hərəkət edən ox + səhifə açılanda menyunun özü bir az sürüşüb qayıdır
+        const hint = document.querySelector('[data-cats-hint]');
+        if (!hint) return;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let interacted = false;
+        let nudged = false;
+
+        const hideHint = () => {
+            interacted = true;
+            hint.classList.add('is-hidden');
+        };
+        ['touchstart', 'mousedown', 'wheel'].forEach(type => nav.addEventListener(type, hideHint, { passive: true }));
+
+        const nudge = () => {
+            if (nudged || reduced || interacted || nav.scrollLeft > 0) return;
+            nudged = true;
+            setTimeout(() => {
+                if (interacted) return;
+                nav.scrollTo({ left: 56, behavior: 'smooth' });
+                setTimeout(() => { if (!interacted) nav.scrollTo({ left: 0, behavior: 'smooth' }); }, 650);
+            }, 700);
+        };
+
+        // Menyu sürüşdürülə bilirmi? Ekran ölçüsü dəyişəndə də yenidən yoxlanır
+        // (məs. telefon çevriləndə və ya brauzerin eni kiçildiləndə)
+        const syncHint = () => {
+            const scrollable = nav.scrollWidth > nav.clientWidth + 4;
+            hint.hidden = !scrollable;
+            if (!scrollable) return;
+            hint.classList.toggle('is-hidden', interacted || !nav.classList.contains('has-more-end'));
+            nudge();
+        };
+        nav.addEventListener('scroll', () => {
+            if (!interacted) hint.classList.toggle('is-hidden', !nav.classList.contains('has-more-end'));
+        }, { passive: true });
+        let resizeTimer;
+        const onResize = () => {
+            update();
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(syncHint, 150);
+        };
+        // Menyunun öz eni dəyişəndə (pəncərə, telefon çevrilməsi, devtools) — ResizeObserver daha etibarlıdır
+        if ('ResizeObserver' in window) new ResizeObserver(onResize).observe(nav);
+        else window.addEventListener('resize', onResize);
+
+        // Oxa basanda bir az sağa sürüşdür
+        hint.addEventListener('click', () => {
+            nav.scrollBy({ left: nav.clientWidth * 0.6, behavior: 'smooth' });
+            hideHint();
+        });
+
+        syncHint();
+    })();
+
     // Kabinet menyusu (mobil): aktiv bəndi görünən yerə sürüşdür
     (function centerActiveAccountNav() {
         const nav = document.querySelector('.account-nav');

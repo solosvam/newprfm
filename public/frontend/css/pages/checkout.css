@@ -306,15 +306,37 @@
     font-size: 18px; font-weight: 800; color: var(--text);
     font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.checkout-mobilebar .btn {
-    flex: 1; max-width: 260px; height: 48px; padding: 0 20px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 12px; font-weight: 700; white-space: nowrap;
-}
-.checkout-mobilebar .btn:disabled { opacity: .5; cursor: not-allowed; }
+.checkout-mobilebar .btn { flex: 1; max-width: 260px; margin: 0; }
 
 /* Kredit ünvanı — geri qayıt linki */
 .checkout-back-link {
     display: flex; align-items: center; justify-content: center;
     margin-top: 12px; text-decoration: none;
 }
+
+/* =========================================================
+   YENİ ÜNVAN FORMASI (partials/address-form)
+   ========================================================= */
+.address-form__city .select2-container--default .select2-selection--single {
+    height: 46px !important;
+    padding: 0 40px 0 14px !important;
+    border-radius: 10px !important;
+}
+.address-form__city .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 14px; font-weight: 400;
+}
+.checkout-field.is-invalid .select2-selection--single { border-color: var(--danger) !important; }
+
+.address-form__toggle {
+    margin: 10px 0 0; padding: 4px 0;
+    border: 0; background: none; cursor: pointer;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--accent);
+}
+.address-form__toggle:hover { text-decoration: underline; text-underline-offset: 3px; }
+.address-form__toggle[aria-expanded="true"] { color: var(--text-secondary); }
+.address-form__details { margin-top: 8px; }
+/* Bina/Blok, Mərtəbə/Mənzil — mobildə də iki sütun */
+.checkout-fields.address-form__details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.address-form__note { margin-top: 10px; }
+.address-form__note textarea { min-height: 80px; }
+

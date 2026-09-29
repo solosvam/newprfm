@@ -270,10 +270,27 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 #oneClickDialog .one-click-mobile {
     display: block;
     width: 100%;
+    height: 50px;
     box-sizing: border-box;
     margin: 4px 0 16px;
+    padding: 0 16px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text);
     text-align: left;
     font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    font-variant-numeric: tabular-nums;
+    transition: border-color .15s, box-shadow .15s;
+}
+#oneClickDialog .one-click-mobile::placeholder { color: var(--text-muted); font-weight: 400; }
+#oneClickDialog .one-click-mobile:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 #oneClickDialog label[for="oneClickMobile"] {
     display: block;

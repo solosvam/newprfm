@@ -18,6 +18,23 @@ class Order extends Model {
             'total'=>'decimal:2'
         ];
     }
+    /**
+     * Onlayn ödənişli (kart / Birbank taksit) sifariş hələ heç ödənilməyə cəhd olunmayıb:
+     * operator (CRM, asan sifariş) yaradıb, müştəri "Sifarişlərim"-dən ödəməlidir.
+     * Siyahıda N+1 olmasın deyə withCount('payments') istifadə edin.
+     */
+    public function isAwaitingPayment(): bool
+    {
+        if (!in_array($this->paymentMethod?->code, ['card_online', 'birbank_installment'], true)
+            || $this->payment_status !== 'pending') {
+            return false;
+        }
+        $attempts = $this->getAttribute('payments_count')
+            ?? ($this->relationLoaded('payments') ? $this->payments->count() : $this->payments()->count());
+
+        return (int) $attempts === 0;
+    }
+
     public function payments()
     {
         return $this->hasMany(Payment::class);

@@ -390,8 +390,7 @@
             address_mode: isNew ? 'new' : 'existing',
             address_id: isNew ? null : Number(addressSelect.value),
             title: val('addressTitle'),
-            city: val('city'),
-            district: val('district'),
+            city_id: Number(val('city')) || null,
             address: val('address'),
             building: val('building'),
             entrance: val('entrance'),
@@ -424,7 +423,7 @@
 
             if (!response.ok) {
                 if (data.errors) {
-                    const fieldMap = { title: 'addressTitle', address_note: 'addressNote' };
+                    const fieldMap = { title: 'addressTitle', city_id: 'city', address_note: 'addressNote' };
                     Object.keys(data.errors).forEach(key => {
                         $(fieldMap[key] || key)?.closest('.checkout-field')?.classList.add('is-invalid');
                     });

@@ -7,6 +7,7 @@
 @section('css')
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2.min.css')}}"/>
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2-bootstrap4.min.css')}}"/>
+    <link rel="stylesheet" href="{{ asset('backend/css/crm-order.css') }}?v={{ filemtime(public_path('backend/css/crm-order.css')) }}"/>
         <style>
             .crm-avatar { width: 110px; height: 110px; font-size: 2rem; }
             .crm-profile-card .card-body { padding: 2rem; }
@@ -18,7 +19,8 @@
 @endsection
 
 @section('js_page')
-    <script src="{{asset('backend/js/crm.js')}}"></script>
+    <script src="{{ asset('backend/js/crm.js') }}?v={{ filemtime(public_path('backend/js/crm.js')) }}"></script>
+    <script src="{{ asset('backend/js/crm-order.js') }}?v={{ filemtime(public_path('backend/js/crm-order.js')) }}"></script>
 @endsection
 @section('content')
     <div class="container">
@@ -257,16 +259,26 @@
         </div>
 
         {{-- Sifaris Modal --}}
-        <div class="modal fade modal-close-out" id="addOrderModal" data-bs-backdrop="static" data-bs-keyboard="false"
+        <div class="modal fade " id="addOrderModal" data-bs-backdrop="static" data-bs-keyboard="false"
              tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
+            <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
-                    <div class="modal-header p-3">
-                        <h5 class="modal-title">Yeni sifariş</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-header p-3 bg-danger">
+                        <h5 class="modal-title text-white">Yeni sifariş</h5>
+                        <button type="button" class="btn-close text-large" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-
+                        @include('backend.crm.partials.add-order')
+                    </div>
+                    <div class="modal-footer justify-content-between p-3">
+                        <div>
+                            <div class="text-muted small">Yekun məbləğ</div>
+                            <div class="fs-5 fw-bold" id="crmOrderFooterTotal">0.00 ₼</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="text-muted small" id="crmOrderHint">Səbətə məhsul əlavə edin</span>
+                            <button type="button" class="btn btn-primary" id="crmOrderSubmit" disabled>Sifarişi tamamla</button>
+                        </div>
                     </div>
                 </div>
             </div>

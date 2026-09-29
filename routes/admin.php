@@ -201,6 +201,7 @@ Route::prefix('admin')
                 Route::get('/{order}', 'show')->name('show');
                 Route::get('/{order}/customer-lookup', 'lookup')->name('lookup');
                 Route::post('/{order}/confirm', 'confirm')->name('confirm');
+                Route::delete('/{order}', 'destroy')->name('destroy');
             });
 
             Route::controller(RefundController::class)
@@ -220,6 +221,7 @@ Route::prefix('admin')
                     Route::get('/', 'index')->name('index');
                     Route::get('/customer/{id}', 'customer')->name('customer');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
+                    Route::post('/customer/{customer}/order', 'storeOrder')->name('order.store');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}/order/{order}/confirm', 'confirmOneClick')->name('one-click.confirm');
                     Route::post('/customer/{customer}', 'update')->name('update');
@@ -241,6 +243,7 @@ Route::prefix('admin')
                 ->name('ajax.')
                 ->group(function () {
                     Route::get('search-customer/crm',   'searchCustomerCrm')->name('search.customer.crm');
+                    Route::get('search-product/crm',    'searchProductCrm')->middleware('can:crm')->name('search.product.crm');
                     Route::post('/set-role-permission', 'setRolePermission')->name('set-role-permission');
                 });
 

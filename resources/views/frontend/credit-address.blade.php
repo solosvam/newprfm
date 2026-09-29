@@ -18,12 +18,7 @@
 </select>
 @else<input type="hidden" id="addressSelect" value="new">@endif
 <div id="newAddress" class="checkout-address-form {{ $addresses->isNotEmpty() ? 'checkout-hidden' : '' }}">
-<div class="checkout-fields">
-@foreach(['addressTitle'=>'checkout_address_name_home_work','city'=>'checkout_city','district'=>'checkout_district','address'=>'checkout_street_and_address','building'=>'checkout_building','entrance'=>'checkout_entrance','floor'=>'checkout_floor','apartment'=>'checkout_apartment'] as $field=>$translation)
-<div class="checkout-field"><input type="text" id="{{ $field }}" placeholder="{{ __($translation) }}"></div>
-@endforeach
-</div>
-<div class="checkout-field checkout-field--textarea"><textarea id="addressNote" placeholder="{{ __('checkout_address_note') }}"></textarea></div>
+@include('frontend.partials.address-form')
 </div>
 <div id="creditAddressError" class="form-alert form-alert-error checkout-error" role="alert" hidden></div>
 </section>

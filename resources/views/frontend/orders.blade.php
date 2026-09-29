@@ -28,13 +28,16 @@
                             $hiddenCount = $order->items->count() - $visibleItems->count();
                         @endphp
 
-                        <article class="order-card">
+                        <article class="order-card {{ $order->isAwaitingPayment() ? 'order-card--awaiting' : '' }}">
                             <div class="order-card__main">
                                 <div class="order-card__top">
                                     <span class="order-card__no">№ {{ $order->order_no }}</span>
                                     <span class="order-status order-status--{{ $statusKey }}">
                                         {{ $order->status?->localized_name ?? __('orders_order_received') }}
                                     </span>
+                                    @if($order->isAwaitingPayment())
+                                        <span class="order-status order-status--awaiting-payment">{{ __('orders_payment_awaiting') }}</span>
+                                    @endif
                                 </div>
                                 <div class="order-card__meta">
                                     <time datetime="{{ $order->created_at->toIso8601String() }}">
@@ -77,6 +80,13 @@
 
                             <div class="order-card__side">
                                 <span class="order-card__total">{{ number_format($order->total, 2) }} ₼</span>
+                                @if($order->isAwaitingPayment())
+                                    {{-- Kartın üstündəki link bütün kartı örtür; form ondan yuxarıda qalır --}}
+                                    <form method="POST" action="{{ route('payment.birbank.start', $order) }}" class="order-card__pay">
+                                        @csrf
+                                        <button type="submit" class="btn btn-dark">{{ __('orders_payment_pay') }}</button>
+                                    </form>
+                                @endif
                                 <a class="order-card__details" href="{{ route('order.details', $order) }}"
                                    aria-label="{{ __('orders_details') }} — № {{ $order->order_no }}">
                                     {{ __('orders_details') }}

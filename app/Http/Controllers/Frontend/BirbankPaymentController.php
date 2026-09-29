@@ -25,10 +25,13 @@ class BirbankPaymentController extends Controller
             return redirect()->route('checkout.success', $order);
         }
 
-        // A retry is allowed only after a confirmed failed/cancelled attempt.
-        // An unresolved pending payment may still succeed at the bank.
+        // Ödəniş yalnız bu hallarda başlana bilər:
+        //  - əvvəlki cəhd təsdiqlənmiş şəkildə uğursuz/ləğv olub (təkrar cəhd);
+        //  - sifarişi operator CRM-dən yaradıb və heç bir ödəniş cəhdi olmayıb (ilk ödəniş).
+        // Nəticəsi bəlli olmayan pending ödəniş bankda hələ uğurlu ola bilər.
+        $neverAttempted = $order->isAwaitingPayment();
         if (!in_array($order->paymentMethod?->code, ['card_online', 'birbank_installment'], true)
-            || !in_array($order->payment_status, ['failed', 'cancelled'], true)) {
+            || (!in_array($order->payment_status, ['failed', 'cancelled'], true) && !$neverAttempted)) {
             return redirect()->route('order.details', $order)
                 ->with('error', 'Bu sifariş üçün təkrar ödəniş hazırda mümkün deyil.');
         }

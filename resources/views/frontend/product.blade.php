@@ -118,7 +118,15 @@
             </div>
 
             <button type="button" class="btn btn-dark" data-add-to-cart data-variant-id="{{ $firstVariant?->id }}" data-product-id="{{ $product->id }}" @disabled(!$firstVariant)>{{ __('product_add_to_cart') }}</button>
-            <button type="button" class="btn btn-outline" data-one-click data-url="{{ route('one-click.store') }}" data-auth="{{ auth()->check() ? 1 : 0 }}" @disabled(!$firstVariant)>{{ __('product_one_click_buy') }}</button>
+            <button type="button" class="btn btn-outline btn--with-icon" data-one-click data-url="{{ route('one-click.store') }}" data-auth="{{ auth()->check() ? 1 : 0 }}" @disabled(!$firstVariant)>
+                <svg class="btn__icon" width="18" height="24" viewBox="0 0 16 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    {{-- toxunma dalğası --}}
+                    <path d="M1.9 7.6A4.25 4.25 0 1 1 9.1 7.6"/>
+                    {{-- barmaq və ovuc --}}
+                    <path d="M5.5 11.2V4.9a1.25 1.25 0 0 1 2.5 0v5.3l4.6.85c1.7.45 2.7 2.1 2.25 3.7-.2.7-.75 2.15-1.2 3.3a3 3 0 0 1-2.3 1.9l-4 .7a2.8 2.8 0 0 1-2.5-.8c-.6-.62-1.3-1.4-1.8-2.2-.55-.8-.9-1.6-.9-2.25 0-.9.95-2.45 1.9-3.8"/>
+                </svg>
+                <span>{{ __('product_one_click_buy') }}</span>
+            </button>
             @if($creditPeriods->isNotEmpty() && $variants->isNotEmpty())
                 @if(!auth()->check())
                     <a class="btn btn-dark product-mobile-credit" href="{{ route('front.login', ['redirect' => route('product', $product->slug)]) }}">{{ __('product_pay_in_installments') }}</a>

@@ -130,7 +130,7 @@
     background: var(--surface); color: var(--text-secondary);
 }
 .cart-empty p { margin: 0; font-size: 16px; color: var(--text-secondary); }
-.cart-empty__link { margin-top: 8px; padding: 12px 28px; border-radius: 12px; }
+.cart-empty__link { width: auto; margin-top: 8px; padding: 0 28px; }
 
 /* Toast */
 .cart-toast {
@@ -153,11 +153,7 @@
 .cart-mobilebar { display: none; }
 .cart-mobilebar__total span { display: block; font-size: 12px; color: var(--text-secondary); white-space: nowrap;}
 .cart-mobilebar__total strong { font-size: 18px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
-.cart-mobilebar .btn {
-    display: inline-flex; align-items: center; height: 48px; padding: 0 24px;
-    border-radius: 12px; font-weight: 700; white-space: nowrap;
-}
-.cart-mobilebar .btn { flex: 1; max-width: 260px; justify-content: center; }
+.cart-mobilebar .btn { flex: 1; max-width: 260px; margin: 0; padding: 0 24px; }
 
 @media (max-width: 900px) {
     .cart-layout { grid-template-columns: 1fr; gap: 24px; }

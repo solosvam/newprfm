@@ -16,6 +16,7 @@ class OrdersController extends Controller
             'paymentMethod',
             'status',
         ])
+            ->withCount('payments')
             ->where('customer_id', auth()->id())
             ->latest()
             ->paginate(10);

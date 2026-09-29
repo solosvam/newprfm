@@ -18,8 +18,10 @@
             $order->address?->apartment ? __('orders_apartment') . ' ' . $order->address->apartment : null,
         ])->filter()->implode(' · ');
         $locale = app()->getLocale();
-        $paymentFailed = $order->paymentMethod?->code === 'card_online'
-            && in_array($order->payment_status, ['failed', 'cancelled'], true);
+        $isOnlinePayment = in_array($order->paymentMethod?->code, ['card_online', 'birbank_installment'], true);
+        $paymentFailed = $isOnlinePayment && in_array($order->payment_status, ['failed', 'cancelled'], true);
+        // CRM-dən (operator) yaradılıb, müştəri hələ ödəməyə cəhd etməyib
+        $paymentAwaiting = $order->isAwaitingPayment();
         $paymentLabels = [
             'paid'      => __('orders_payment_paid'),
             'failed'    => __('orders_payment_failed_short'),
@@ -46,15 +48,17 @@
                         @if($order->paymentMethod)<span>{{ $order->paymentMethod->localized_name }}</span>@endif
                     </p>
                 </header>
-                @if($paymentFailed)
-                    <div class="od-alert" role="alert">
+                @if($paymentFailed || $paymentAwaiting)
+                    <div class="od-alert {{ $paymentAwaiting ? 'od-alert--awaiting' : '' }}" role="alert">
                         <div class="od-alert__text">
-                            <strong>{{ __('orders_payment_failed') }}</strong>
-                            <span>{{ __('orders_payment_failed_hint') }}</span>
+                            <strong>{{ $paymentAwaiting ? __('orders_payment_awaiting') : __('orders_payment_failed') }}</strong>
+                            <span>{{ $paymentAwaiting ? __('orders_payment_awaiting_hint') : __('orders_payment_failed_hint') }}</span>
                         </div>
                         <form method="POST" action="{{ route('payment.birbank.start', $order) }}">
                             @csrf
-                            <button type="submit" class="btn btn-dark od-alert__btn">{{ __('orders_payment_retry') }}</button>
+                            <button type="submit" class="btn btn-dark od-alert__btn">
+                                {{ $paymentAwaiting ? __('orders_payment_pay') . ' · ' . number_format((float) $order->total, 2) . ' ₼' : __('orders_payment_retry') }}
+                            </button>
                         </form>
                     </div>
                 @endif
