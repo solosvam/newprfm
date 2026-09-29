@@ -67,8 +67,25 @@ nav.cats.has-more-start { -webkit-mask-image: linear-gradient(to right, transpar
 .cats-hint.is-hidden { opacity: 0; pointer-events: none; }
 @keyframes cats-hint-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
 @media (prefers-reduced-motion: reduce) { .cats-hint { animation: none; } }
-@media (max-width: 760px) { .cats-hint { right: 16px; } }
-@media (max-width: 480px) { .cats-hint { right: 14px; } }
+/* Mobil: kateqoriyalar pill (kapsul) şəklində, ekranın kənarından-kənarına sürüşür */
+@media (max-width: 760px) {
+    .wrap.cats-wrap { margin: 0; padding: 0; }
+    nav.cats { gap: 8px; padding: 8px 16px 10px; }
+    nav.cats a {
+        display: flex; align-items: center;
+        height: 36px; padding: 0 14px;
+        border: 1px solid var(--border-strong); border-radius: 999px;
+        background: var(--surface-2); color: var(--text);
+        font-size: 13.5px; font-weight: 500;
+        transition: background-color .15s, border-color .15s, color .15s;
+    }
+    nav.cats a:hover { border-color: var(--accent); }
+    nav.cats a.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    .cats-hint { right: 8px; margin-top: -14px; }
+}
+@media (max-width: 480px) {
+    nav.cats { padding-left: 14px; padding-right: 14px; }
+}
 nav.cats.has-more-start.has-more-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
 
 /* Language selector */
