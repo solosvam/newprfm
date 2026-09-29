@@ -65,8 +65,14 @@ nav.cats.has-more-start { -webkit-mask-image: linear-gradient(to right, transpar
 }
 .cats-hint[hidden] { display: none; }
 .cats-hint.is-hidden { opacity: 0; pointer-events: none; }
+/* Açılışda kateqoriyalar bir az sola gedib qayıdır (main.js .is-peeking qoyur) */
+nav.cats.is-peeking > a { animation: cats-peek 1.3s ease-in-out; }
+@keyframes cats-peek {
+    0%, 100% { transform: translateX(0); }
+    40%, 55% { transform: translateX(-56px); }
+}
 @keyframes cats-hint-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
-@media (prefers-reduced-motion: reduce) { .cats-hint { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .cats-hint, nav.cats.is-peeking > a { animation: none; } }
 /* Mobil: kateqoriyalar pill (kapsul) şəklində, ekranın kənarından-kənarına sürüşür */
 @media (max-width: 760px) {
     .wrap.cats-wrap { margin: 0; padding: 0; }

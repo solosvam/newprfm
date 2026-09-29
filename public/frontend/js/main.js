@@ -682,16 +682,19 @@
         const hideHint = () => {
             interacted = true;
             hint.classList.add('is-hidden');
+            nav.classList.remove('is-peeking');
         };
         ['touchstart', 'mousedown', 'wheel'].forEach(type => nav.addEventListener(type, hideHint, { passive: true }));
 
+        // "Peek": kateqoriyalar bir az sola gedib qayıdır. scrollTo əvəzinə CSS transform —
+        // iOS Safari proqramla edilən smooth scroll-u səhifə yüklənərkən bəzən icra etmir.
         const nudge = () => {
             if (nudged || reduced || interacted || nav.scrollLeft > 0) return;
             nudged = true;
             setTimeout(() => {
                 if (interacted) return;
-                nav.scrollTo({ left: 56, behavior: 'smooth' });
-                setTimeout(() => { if (!interacted) nav.scrollTo({ left: 0, behavior: 'smooth' }); }, 650);
+                nav.classList.add('is-peeking');
+                nav.addEventListener('animationend', () => nav.classList.remove('is-peeking'), { once: true });
             }, 700);
         };
 
