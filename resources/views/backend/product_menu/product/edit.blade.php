@@ -505,7 +505,7 @@
                                                     <small class="text-muted">Slug dəyişərsə köhnə ID-siz link artıq işləməyəcək.</small>
                                                 </div>
                                                 <div class="mt-3">
-                                                    <label for="ingredients">İnqrediyentlər</label>
+                                                    <label for="ingredients">Notlar</label>
                                                     <select class="form-select select2-tags" multiple name="ingredients[]" id="ingredients">
                                                         @foreach($ingredients as $ingredient)
                                                             <option value="{{ $ingredient->id }}" @selected(in_array($ingredient->id, $selectedIngredients))>
