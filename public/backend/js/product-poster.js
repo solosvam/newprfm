@@ -79,11 +79,19 @@
     async function renderPoster(product) {
         const [image, logo] = await Promise.all([loadImage(product.image), loadLogo(product.logo), document.fonts.ready]);
         const canvas = document.createElement('canvas');
-        const rows = Math.ceil(product.variants.length / 3);
-        canvas.width = 1080;
-        canvas.height = Math.max(1350, 1030 + rows * 125);
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('Şəkil hazırlamaq mümkün olmadı.');
+        const rows = Math.ceil(product.variants.length / 3);
+        const lines = nameLines(ctx, product.name);
+        const imageSize = 560;
+        const imageY = 210;
+        const brandY = imageY + imageSize + 30;
+        const nameY = brandY + 40;
+        const subtitleY = nameY + lines.length * 51 + 10;
+        const pricesHeight = 112 + rows * 105 + (rows - 1) * 20;
+        const pricesY = subtitleY + 28 + 64;
+        canvas.width = 1080;
+        canvas.height = Math.max(1350, pricesY + pricesHeight + 112);
         const height = canvas.height;
         ctx.fillStyle = colors.bg;
         ctx.fillRect(0, 0, 1080, height);
@@ -97,19 +105,13 @@
         ctx.strokeStyle = colors.border;
         ctx.beginPath(); ctx.moveTo(60, 146); ctx.lineTo(1020, 146); ctx.stroke();
 
-        const lines = nameLines(ctx, product.name);
-        const infoHeight = 40 + lines.length * 51 + 36;
-        const pricesHeight = 112 + rows * 105 + (rows - 1) * 20;
-        const pricesY = height - 112 - pricesHeight;
-        const sectionHeight = 450 + infoHeight;
-        const imageY = 166 + Math.max(0, (pricesY - 196 - sectionHeight) / 2);
-        box(ctx, 330, imageY, 420, 420, 24, colors.surface, colors.strong, 40);
-        const scale = Math.min(380 / image.naturalWidth, 380 / image.naturalHeight);
+        box(ctx, 540 - imageSize / 2, imageY, imageSize, imageSize, 24, colors.surface, colors.strong, 40);
+        const scale = Math.min((imageSize - 40) / image.naturalWidth, (imageSize - 40) / image.naturalHeight);
         const w = image.naturalWidth * scale, h = image.naturalHeight * scale;
-        ctx.drawImage(image, 540 - w / 2, imageY + 210 - h / 2, w, h);
-        text(ctx, product.brand.toLocaleUpperCase('az'), imageY + 450, 28, 600, colors.accent, 900, 4);
-        lines.forEach((line, index) => text(ctx, line, imageY + 490 + index * 51, 42, 700, colors.text));
-        text(ctx, product.subtitle, imageY + 490 + lines.length * 51 + 10, 22, 400, colors.secondary, 900, 1);
+        ctx.drawImage(image, 540 - w / 2, imageY + imageSize / 2 - h / 2, w, h);
+        text(ctx, product.brand.toLocaleUpperCase('az'), brandY, 28, 600, colors.accent, 900, 4);
+        lines.forEach((line, index) => text(ctx, line, nameY + index * 51, 42, 700, colors.text));
+        text(ctx, product.subtitle, subtitleY, 28, 400, colors.secondary, 900, 1);
 
         box(ctx, 60, pricesY, 960, pricesHeight, 20, colors.surface, colors.border, 30);
         text(ctx, 'MÖVCUD ÖLÇÜLƏR VƏ QİYMƏTLƏR', pricesY + 30, 20, 400, colors.muted, 900, 2);
