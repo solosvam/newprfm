@@ -1,10 +1,16 @@
 (function () {
     'use strict';
-
-    // The supplied 1080 × 1350 poster template, drawn directly as a PNG.
-    // Canvas keeps the template independent of the admin theme and screen size.
-    const colors = { bg: '#19161F', surface: '#211c2b', card: '#2a2438', accent: '#BDA4E5',
-        text: '#F5F1F8', secondary: '#b3a9c4', muted: '#7d7290', border: '#2f2a3c', strong: '#4a4160' };
+    // Açıq lavanda fon; yuxarı/aşağı zolaq və loqo — tünd temanın rəngləri; ölçü kartları tünd bənövşəyi
+    const colors = {
+        bgTop: '#f4f0fa', bgBottom: '#e7dff3',            // fon (gradient)
+        band: '#1f1a28', logo: '#BDA4E5', bandText: '#b3a9c4', // tünd zolaqlar
+        image: '#ffffff', surface: '#ffffff',             // şəkil kartı, qiymət bloku
+        accent: '#6f52a8',                                // brend adı
+        text: '#1a1520', secondary: '#5f586b', muted: '#8a8198',
+        border: '#ddd5ea', strong: '#cfc4e2',
+        card: '#2b1f4a', cardSize: '#BDA4E5', cardPrice: '#ffffff', // ölçü kartları
+        shadow: 'rgba(43,31,74,.16)',
+    };
     const font = '"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
 
     function loadImage(url) {
@@ -19,7 +25,7 @@
     async function loadLogo(url) {
         const response = await fetch(url);
         if (!response.ok) throw new Error('Loqo yüklənmədi.');
-        const svg = (await response.text()).replace(/currentColor/g, colors.accent);
+        const svg = (await response.text()).replace(/currentColor/g, colors.logo);
         const objectUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
         try { return await loadImage(objectUrl); }
         finally { URL.revokeObjectURL(objectUrl); }
@@ -35,7 +41,7 @@
         ctx.arcTo(x, y, x + w, y, radius);
         ctx.closePath();
         ctx.fillStyle = fill;
-        if (shadow) { ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = shadow; ctx.shadowOffsetY = shadow / 2; }
+        if (shadow) { ctx.shadowColor = colors.shadow; ctx.shadowBlur = shadow; ctx.shadowOffsetY = shadow / 3; }
         ctx.fill();
         ctx.shadowColor = 'transparent';
         ctx.strokeStyle = border;
@@ -83,29 +89,34 @@
         if (!ctx) throw new Error('Şəkil hazırlamaq mümkün olmadı.');
         const rows = Math.ceil(product.variants.length / 3);
         const lines = nameLines(ctx, product.name);
-        const imageSize = 560;
-        const imageY = 210;
+        // Hündürlük məzmuna görə (əvvəl ən az 1350 idi): şəkil 440, boşluqlar kiçik
+        const imageSize = 440;
+        const imageY = 182;
         const brandY = imageY + imageSize + 30;
         const nameY = brandY + 40;
         const subtitleY = nameY + lines.length * 51 + 10;
         const pricesHeight = 112 + rows * 105 + (rows - 1) * 20;
-        const pricesY = subtitleY + 28 + 64;
+        const pricesY = subtitleY + 28 + 44;
         canvas.width = 1080;
-        canvas.height = Math.max(1350, pricesY + pricesHeight + 112);
+        const footer = 72;
+        canvas.height = pricesY + pricesHeight + 40 + footer;
         const height = canvas.height;
-        ctx.fillStyle = colors.bg;
+        const background = ctx.createLinearGradient(0, 0, 0, height);
+        background.addColorStop(0, colors.bgTop);
+        background.addColorStop(1, colors.bgBottom);
+        ctx.fillStyle = background;
         ctx.fillRect(0, 0, 1080, height);
-        for (const [y, radius, color] of [[height * .3, 650, 'rgba(189,164,229,.08)'], [height * .8, 540, 'rgba(48,36,66,.4)']]) {
-            const gradient = ctx.createRadialGradient(540, y, 0, 540, y, radius);
-            gradient.addColorStop(0, color); gradient.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1080, height);
-        }
-        const logoWidth = 65 * logo.naturalWidth / logo.naturalHeight;
-        ctx.drawImage(logo, 540 - logoWidth / 2, 60, logoWidth, 65);
-        ctx.strokeStyle = colors.border;
-        ctx.beginPath(); ctx.moveTo(60, 146); ctx.lineTo(1020, 146); ctx.stroke();
+        const glow = ctx.createRadialGradient(540, imageY + imageSize / 2, 0, 540, imageY + imageSize / 2, 520);
+        glow.addColorStop(0, 'rgba(189,164,229,.28)'); glow.addColorStop(1, 'rgba(189,164,229,0)');
+        ctx.fillStyle = glow; ctx.fillRect(0, 0, 1080, height);
 
-        box(ctx, 540 - imageSize / 2, imageY, imageSize, imageSize, 24, colors.surface, colors.strong, 40);
+        // Yuxarı zolaq — tünd, loqo lavanda
+        ctx.fillStyle = colors.band;
+        ctx.fillRect(0, 0, 1080, 142);
+        const logoWidth = 65 * logo.naturalWidth / logo.naturalHeight;
+        ctx.drawImage(logo, 540 - logoWidth / 2, 38, logoWidth, 65);
+
+        box(ctx, 540 - imageSize / 2, imageY, imageSize, imageSize, 24, colors.image, colors.strong, 30);
         const scale = Math.min((imageSize - 40) / image.naturalWidth, (imageSize - 40) / image.naturalHeight);
         const w = image.naturalWidth * scale, h = image.naturalHeight * scale;
         ctx.drawImage(image, 540 - w / 2, imageY + imageSize / 2 - h / 2, w, h);
@@ -113,18 +124,21 @@
         lines.forEach((line, index) => text(ctx, line, nameY + index * 51, 42, 700, colors.text));
         text(ctx, product.subtitle, subtitleY, 28, 400, colors.secondary, 900, 1);
 
-        box(ctx, 60, pricesY, 960, pricesHeight, 20, colors.surface, colors.border, 30);
+        box(ctx, 60, pricesY, 960, pricesHeight, 20, colors.surface, colors.border, 20);
         text(ctx, 'MÖVCUD ÖLÇÜLƏR VƏ QİYMƏTLƏR', pricesY + 30, 20, 400, colors.muted, 900, 2);
         const columns = Math.min(3, product.variants.length);
         const cardWidth = (900 - (columns - 1) * 20) / columns;
         product.variants.forEach((variant, index) => {
             const x = 90 + (index % columns) * (cardWidth + 20);
             const y = pricesY + 82 + Math.floor(index / columns) * 125;
-            box(ctx, x, y, cardWidth, 105, 16, colors.card, colors.border);
-            text(ctx, variant.size, y + 20, 22, 500, colors.secondary, cardWidth - 30, 0, x + cardWidth / 2);
-            text(ctx, `${variant.price} ₼`, y + 56, 32, 800, colors.text, cardWidth - 30, 0, x + cardWidth / 2);
+            box(ctx, x, y, cardWidth, 105, 16, colors.card, colors.card);
+            text(ctx, variant.size, y + 20, 22, 600, colors.cardSize, cardWidth - 30, 0, x + cardWidth / 2);
+            text(ctx, `${variant.price} ₼`, y + 56, 32, 800, colors.cardPrice, cardWidth - 30, 0, x + cardWidth / 2);
         });
-        text(ctx, 'www.parfumshop.az • Orijinal Ətirlər', height - 82, 18, 400, colors.muted, 960, 1.5);
+        // Aşağı zolaq
+        ctx.fillStyle = colors.band;
+        ctx.fillRect(0, height - footer, 1080, footer);
+        text(ctx, 'www.parfumshop.az • Orijinal Ətirlər', height - footer + 26, 19, 500, colors.bandText, 960, 1.5);
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
         if (!blob) throw new Error('PNG hazırlamaq mümkün olmadı.');
         return { blob, filename: product.filename };

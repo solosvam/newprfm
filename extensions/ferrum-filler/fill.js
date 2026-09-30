@@ -173,7 +173,8 @@ export async function fillPage(plan) {
     // DevExpress combo. Siyahı virtual scroll-dur (yalnız ~10 variant render olunur), ona görə:
     // dropdown düyməsi (✕ yox) ilə açırıq; variant görünmürsə mətni hərf-hərf yazıb süzürük.
     // index: eyni adlı variantlardan neçəncisi (məs. iki "Gözəllik və sağlamlıq")
-    async function setCombo(label, text, scope = document, { match = 'exact', index = 0 } = {}) {
+    // typeFirst: siyahını açmadan birbaşa yazıb süz (məs. Əlaqəlilik "Öz" — virtual siyahıda görünmür)
+    async function setCombo(label, text, scope = document, { match = 'exact', index = 0, typeFirst = false } = {}) {
         if (!text) return false;
         const node = inputByLabel(label, scope);
         if (!node) { bad(`${label}: xana tapılmadı`); return false; }
@@ -181,9 +182,12 @@ export async function fillPage(plan) {
         if (node.disabled || !wrap) return false;
         const toggle = wrap.querySelector('button.dxbs-edit-btn:not(.dxbs-clear-btn)');
 
-        if (toggle && !openLists().length) pointerClick(toggle);
-        await waitFor(() => openLists().length, 2000);
-        let item = await waitFor(() => findItem(text, match, index), 800);
+        let item = null;
+        if (!typeFirst) {
+            if (toggle && !openLists().length) pointerClick(toggle);
+            await waitFor(() => openLists().length, 2000);
+            item = await waitFor(() => findItem(text, match, index), 800);
+        }
         if (!item && !node.readOnly) {
             node.focus();
             await typeText(node, text);
@@ -251,6 +255,17 @@ export async function fillPage(plan) {
         return true;
     }
 
+    /* Cari limit — PinKod axtarışı ilə avtomatik gəlir. 0 da həqiqi dəyər ola bilər:
+       təkrar müştəridə 0 görünürsə, dəyərin gəlməsi üçün ən çox 2 saniyə gözlənilir. */
+    function limitValue() {
+        const raw = inputByLabel('Cari Limit məbləği')?.value || '';
+        return parseFloat(raw.replace(/\s/g, '').replace(',', '.')) || 0;
+    }
+    async function readLimit(isKnown) {
+        if (isKnown && limitValue() === 0) await waitFor(() => limitValue() > 0, 2000, 150);
+        return limitValue();
+    }
+
     /* ================= addımlar ================= */
     const c = plan.customer;
     if (!inputByLabel('PinKod')) {
@@ -300,7 +315,7 @@ export async function fillPage(plan) {
         }
         observer.disconnect();
         known = known_();
-        ok(known ? 'Müştəri Ferrum-da var — şəxsi məlumatlar keçildi' : 'Müştəri Ferrum-da yoxdur — şəxsi məlumatlar yazılır');
+        ok(known ? 'Təkrar müştəri (Ferrum-da var) — şəxsi məlumatlar keçildi' : 'Yeni müştəri — şəxsi məlumatlar yazılır');
         await sleep(400);
     } else if (want('pin')) {
         bad('FİN yoxdur — PinKod boş qaldı');
@@ -316,16 +331,27 @@ export async function fillPage(plan) {
         bad('Ş.V. Seriya və Ş.V. Nömrə bizdə yoxdur — vəsiqədən baxıb özünüz yazın');
     }
 
-    // 4. Faktoring
+    // 4. Faktoring — məhsul sifariş məbləği və Ferrum-dakı cari limitə görə
     if (want('factoring')) {
+        panel.step('Cari limit oxunur');
+        const limit = await readLimit(known);
+        const price = Number(plan.price) || 0;
+        const vip = !(limit >= price);                 // limit çatmırsa VİP (+1%) — Ferrum tez zəng edir
+        const rule = plan.products || {};
+        const template = price <= (rule.smallLimit ?? 200)
+            ? (vip ? rule.checkupVip : rule.checkup)
+            : (vip ? rule.standardVip : rule.standard);
+        const product = plan.months && template ? template.replace('{m}', plan.months) : null;
+        ok(`Cari limit: ${limit.toFixed(2)} AZN, sifariş: ${price.toFixed(2)} AZN → `
+            + (vip ? 'VİP (limit çatmır — Ferrum zəng edəcək)' : 'limit kifayətdir — zəng olunmur'));
         panel.step('Faktoring məhsulu');
-        if (!plan.product) {
-            bad(plan.productProblem || 'Məhsul seçilmədi — özünüz seçin');
-        } else if (await setCombo('Məhsul', plan.product)) {
+        if (!product) {
+            bad('Kredit müddəti yoxdur — Məhsulu özünüz seçin');
+        } else if (await setCombo('Məhsul', product)) {
             await sleep(500);
             await setText('İlkin ödəniş', '0');
             const months = inputByLabel('Müddət')?.value;
-            ok(`Məhsul: ${plan.product}${months ? ` (müddət ${months})` : ''}`);
+            ok(`Məhsul: ${product}${months ? ` (müddət ${months})` : ''}`);
         }
     }
 
@@ -344,14 +370,16 @@ export async function fillPage(plan) {
     }
 
     // 6. Telefonlar
-    for (const [i, phone] of (want('phones') ? plan.phones : []).entries()) {
-        panel.step(`Telefon ${i + 1}/${plan.phones.length}: ${phone.number}`);
+    // Təkrar müştəri — yalnız öz nömrəsi; yeni — öz + 2 qohum
+    const phones = known ? plan.phones.filter((p) => p.self) : plan.phones;
+    for (const [i, phone] of (want('phones') ? phones : []).entries()) {
+        panel.step(`Telefon ${i + 1}/${phones.length}: ${phone.number}`);
         const popup = await openModal('Telefonlar', 'Telefon');
         if (!popup) break;
         await setText('Nömrə', phone.number, popup);
         await setCombo('Tip', phone.type, popup);
         await setText('Sahibi', phone.owner, popup);
-        await setCombo('Əlaqəlilik', phone.relation, popup);
+        await setCombo('Əlaqəlilik', phone.relation, popup, { typeFirst: true });
         if (await saveModal(popup, `Telefon ${phone.number}`)) ok(`Telefon: ${phone.number} (${phone.relation})`);
     }
 
@@ -367,7 +395,7 @@ export async function fillPage(plan) {
     }
 
     // 8. Sənəd: SV (vəsiqənin ön üzü, PNG)
-    if (want('document')) {
+    if (want('document') && plan.document) { // hazırda heç nə yüklənmir (plan.document = null)
         panel.step('Vəsiqə yüklənir');
         if (!plan.document?.dataUrl) {
             bad('Vəsiqənin ön üzü yoxdur — sənəd əlavə olunmadı');

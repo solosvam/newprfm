@@ -245,7 +245,8 @@ async function buildPlan() {
     const months = d.credit?.months;
     const phones = [];
     const self = ferrumPhone(c.mobile);
-    if (self) phones.push({ number: self, type: FERRUM.phoneType, owner: [c.name, c.surname].filter(Boolean).join(' '), relation: FERRUM.relationSelf });
+    // Birinci həmişə müştərinin öz nömrəsi; təkrar müştəridə (Ferrum-da var) yalnız o yazılır — fill.js seçir
+    if (self) phones.push({ number: self, type: FERRUM.phoneType, owner: FERRUM.ownerSelf, relation: FERRUM.relationSelf, self: true });
     d.relatives.forEach((r) => {
         const number = ferrumPhone(r.phone);
         if (number) phones.push({ number, type: FERRUM.phoneType, owner: r.name, relation: FERRUM.relationRelative });
@@ -257,14 +258,15 @@ async function buildPlan() {
             gender: c.gender === null || c.gender === undefined ? null : FERRUM.gender[Number(c.gender)],
         },
         source: FERRUM.source,
-        product: months && FERRUM.productMonths.includes(Number(months)) ? FERRUM.product(months) : null,
-        productProblem: months ? `Ferrum-da ${months} aylıq məhsul yoxdur — Məhsulu özünüz seçin` : 'Kredit müddəti yoxdur — Məhsulu özünüz seçin',
+        months: months ? Number(months) : null,
+        price: Number(d.order.total) || 0,                 // parfumshop sifarişinin yekunu
+        products: FERRUM.products,
         category: FERRUM.category,
         subcategory: FERRUM.subcategory,
         items: d.items.map((it) => ({ name: itemName(it), price: String(Number(it.unit_price)), quantity: String(it.quantity) })),
         phones,
         work: d.work?.workplace ? { name: d.work.workplace, salary: d.work.salary === null ? null : String(Number(d.work.salary)) } : null,
-        document: d.id_card?.front ? { ...(await fileData('front')), kind: FERRUM.documentType } : null,
+        document: null, // Sənədlər bölməsinə heç nə yüklənmir
         pinTimeout: FERRUM.pinTimeout,
     };
 }
