@@ -239,11 +239,26 @@
 
     window.paintFavorites = paintFavorites;
 
+    // Qonaq: "Tövsiyə olunanlar" — brauzerdə bəyəndiklərinə tərkibcə oxşar ətirlər (server: /recommendations)
+    async function loadGuestRecommendations(ids) {
+        const list = document.querySelector('[data-guest-recommendations]');
+        if (!list || !ids.length) return;
+        try {
+            const response = await fetch('/recommendations?ids=' + ids.slice(-50).join(','), {headers: {'Accept': 'text/html'}});
+            if (response.status !== 200) return;
+            const html = (await response.text()).trim();
+            if (html) list.innerHTML = html;
+        } catch (error) {
+            console.warn('Tövsiyələr yüklənmədi', error);
+        }
+    }
+
     async function syncFavorites() {
         if (!loggedIn) {
             const ids = readArray(favoritesKey).map(Number);
             paintFavorites(ids);
             updateCounts();
+            loadGuestRecommendations(ids.filter(id => Number.isInteger(id) && id > 0));
             return;
         }
 

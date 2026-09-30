@@ -23,6 +23,9 @@ class AddProductRequest extends FormRequest
                 Rule::unique('products', 'slug')->ignore($this->route('id') ?? $this->route('product')),
             ],
 
+            // Ümumi aktiv/deaktiv (yalnız redaktədə göndərilir; deaktiv məhsul saytda görünmür)
+            'active' => ['nullable', 'boolean'],
+
             'brand_id' => [
                 'required',
                 'exists:brands,id',

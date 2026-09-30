@@ -1,0 +1,52 @@
+/* Anbar təminatı (backend/procurement/order-content.blade.php) — məhsul kartları */
+.proc-item { border: 1px solid var(--separator); border-radius: var(--border-radius-md); margin-bottom: 16px; }
+.proc-item__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 14px 18px; border-bottom: 1px solid var(--separator); }
+.proc-item__title { flex: 1 1 260px; min-width: 0; font-weight: 600; }
+.proc-item__title span { color: var(--muted); font-weight: 400; }
+.proc-item__need { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.proc-item__need b { color: var(--body); }
+.proc-item__need .progress { width: 110px; height: 6px; }
+.proc-item__body { padding: 4px 18px 14px; }
+
+.proc-table { margin-bottom: 0; }
+.proc-table th { color: var(--muted); font-size: 12px; font-weight: 400; text-transform: uppercase; white-space: nowrap; }
+.proc-table td { vertical-align: middle; }
+.proc-sub { display: block; font-size: 12.5px; color: var(--muted); }
+.proc-best { margin-left: 6px; font-size: 11px; }
+
+.proc-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.proc-pick { display: flex; gap: 6px; }
+.proc-pick input { width: 64px; }
+
+.proc-alloc { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 12px; margin-top: 10px; border-radius: var(--border-radius-sm); background: var(--background); font-size: 13px; }
+.proc-alloc strong { font-weight: 600; }
+.proc-alloc.is-cancelled { opacity: .65; }
+.proc-alloc.is-cancelled strong, .proc-alloc.is-cancelled > span:nth-of-type(2) { text-decoration: line-through; }
+
+/* Təminat hissəsi: mərhələlər və növbəti addım */
+.proc-alloc { display: block; }
+.proc-alloc__main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.proc-alloc__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
+.proc-alloc__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.proc-alloc__actions form { margin: 0; }
+.proc-alloc__problem { margin-top: 8px; padding: 6px 10px; border-radius: var(--border-radius-sm); background: rgba(var(--danger-rgb, 207, 45, 45), .08); color: var(--danger); font-size: 13px; }
+.proc-alloc--problem { box-shadow: inset 3px 0 0 var(--danger); }
+.proc-alloc--picked { box-shadow: inset 3px 0 0 var(--success); }
+.proc-alloc--cancelled { opacity: .6; }
+.proc-steps { display: flex; gap: 0; margin: 10px 0 0; padding: 0; list-style: none; counter-reset: step; }
+.proc-steps li { position: relative; flex: 1; padding-top: 16px; font-size: 11.5px; color: var(--muted); text-align: center; }
+.proc-steps li::before { content: ""; position: absolute; top: 4px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--separator); z-index: 1; }
+.proc-steps li + li::after { content: ""; position: absolute; top: 8px; right: 50%; width: 100%; height: 2px; background: var(--separator); }
+.proc-steps li.is-done { color: var(--body); font-weight: 600; }
+.proc-steps li.is-done::before, .proc-steps li.is-done::after { background: var(--primary); }
+
+/* Anbar SMS bildirişləri */
+.proc-sms { margin-bottom: 16px; padding: 10px 14px; border: 1px solid var(--separator); border-radius: var(--border-radius-md, 8px); background: var(--foreground); }
+.proc-sms > summary { cursor: pointer; font-weight: 600; }
+.proc-sms__row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 8px 0; border-top: 1px solid var(--separator); font-size: 13px; }
+.proc-sms > summary + .proc-sms__row { margin-top: 8px; }
+.proc-sms__row form { margin: 0 0 0 auto; }
+.proc-sms__state { color: var(--muted); }
+.proc-sms__state.is-ok, .proc-alloc__sms.is-ok { color: var(--success); }
+.proc-sms__state.is-bad, .proc-alloc__sms.is-bad { color: var(--danger); }
+.proc-alloc__sms { margin-top: 6px; font-size: 12.5px; }

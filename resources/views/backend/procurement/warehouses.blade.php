@@ -37,6 +37,7 @@
         </div>
 
         @include('backend.procurement.feedback')
+        @include('backend.procurement.access-link')
 
         <section class="scroll-section" id="hover">
             <div class="card mb-5">
@@ -139,7 +140,10 @@
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const modal = document.getElementById('newWarehouse');
-                if (modal && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modal).show();
+                if (modal && window.bootstrap) {
+                    const instance = new bootstrap.Modal(modal);
+                    instance.show();
+                }
             });
         </script>
     @endsection

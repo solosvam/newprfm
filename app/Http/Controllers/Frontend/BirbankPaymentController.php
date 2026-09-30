@@ -52,6 +52,8 @@ class BirbankPaymentController extends Controller
                 $order->update(['payment_status' => 'paid']);
                 if ($order->promo_code_id) PromoCode::whereKey($order->promo_code_id)->increment('used_count');
                 app(BonusService::class)->earnForOrder($order->customer, $order, (float) $order->total);
+                // Kassa: Müştəri → Onlayn ödənişlər (xəta ödənişi pozmasın)
+                rescue(fn () => app(\App\Services\FinanceService::class)->recordOnlinePayment($payment));
                 if (filter_var($order->customer->email, FILTER_VALIDATE_EMAIL)) {
                     Mail::to($order->customer->email)->queue(
                         (new OrderCreatedMail($order, app()->getLocale()))->afterCommit()

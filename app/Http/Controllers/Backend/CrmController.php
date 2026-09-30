@@ -10,11 +10,16 @@ use App\Models\Credit\CreditStatus;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerAddress;
 use App\Models\Order\Order;
+use App\Models\Order\OrderItem;
+use App\Models\Order\OrderItemCancellation;
 use App\Models\Order\OrderStatus;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use App\Services\BonusService;
+use App\Services\OrderItemCancellationService;
 use App\Services\OrderPayLinkService;
+use App\Services\OrderStatusService;
+use App\Services\OrderRefundService;
 use App\Services\ShopPricing;
 use App\Services\SmsService;
 use Illuminate\Http\RedirectResponse;
@@ -241,18 +246,61 @@ class CrmController extends Controller
         abort_unless($order->customer_id === $customer->id, 404);
 
         $order->load([
-            'items.product', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs',
-            'paymentMethod', 'status', 'address', 'statusLogs.status',
+            'items.product.brand', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs',
+            'paymentMethod', 'status', 'address', 'statusLogs.status', 'statusLogs.user', 'courier',
             'payments' => fn ($query) => $query->latest('id'),
-            'payments.operations',
+            'payments.operations', 'payments.items.refundItems.operation', 'itemCancellations.user', 'itemCancellations.orderItem.product',
         ]);
 
         // Ödəniş linki yalnız ödənişə başlamaq mümkün olanda (onlayn üsul, ödənilməyib, ləğv deyil)
         $payLinkUrl = $order->canStartOnlinePayment() ? app(OrderPayLinkService::class)->url($order) : null;
 
+        $requests = \App\Models\Procurement\WarehouseRequest::where('order_id', $order->id)
+            ->with(['warehouse', 'items.offers', 'items.orderItem.product', 'items.orderItem.variant.size'])->latest('id')->get();
+
+        // "Əməkdaş #3" əvəzinə ad: sorğu, cavab, seçim və status qeydlərini edənlər
+        $staffIds = collect([$order->created_by])
+            ->merge($requests->pluck('created_by'))
+            ->merge($requests->flatMap->items->flatMap->offers->pluck('recorded_by'))
+            ->merge($order->items->flatMap->allocations->flatMap->logs->pluck('user_id'))
+            ->filter()->unique();
+        $staff = \App\Models\User::whereIn('id', $staffIds)->get()->mapWithKeys(fn ($u) => [$u->id => $u->full_name]);
+
+        // Məhsul ləğvi: hər məhsul üçün 1..aktiv say üzrə nəticə (modalda göstərilir)
+        $cancellation = app(OrderItemCancellationService::class);
+        $cancelBlock = $cancellation->blockReason($order);
+        $cancelPreviews = $cancelBlock ? [] : $order->items
+            ->filter(fn ($item) => $item->activeQuantity() > 0)
+            ->mapWithKeys(fn ($item) => [$item->id => collect(range(1, min(50, $item->activeQuantity())))
+                ->mapWithKeys(fn ($q) => [$q => $cancellation->preview($order, $item, $q)])->all()])
+            ->all();
+
+        // Hesablaşmalar (yalnız finance icazəsi ilə)
+        $settlement = null;
+        if (auth('admin')->user()?->can('finance')) {
+            $finance = app(\App\Services\FinanceService::class);
+            $finance->syncAccounts();
+            $settlement = [
+                'accounts' => \App\Models\Finance\FinanceAccount::whereIn('type', ['courier', 'cash', 'bank', 'owner'])->where('active', true)->orderBy('name')->get()
+                    ->sortBy(fn ($a) => array_search($a->type, ['courier', 'cash', 'bank', 'owner'], true))->values(),
+                'paid' => $finance->allocationPaid($order->items->flatMap->allocations->pluck('id')->all()),
+                'movements' => \App\Models\Finance\MoneyMovement::with(['from', 'to', 'user', 'reversedBy'])
+                    ->where('order_id', $order->id)->latest('occurred_at')->latest('id')->get(),
+            ];
+        }
+
         return view('backend.crm.order', [
-            'requests' => \App\Models\Procurement\WarehouseRequest::where('order_id', $order->id)
-                ->with(['warehouse', 'items.offers', 'items.orderItem.product', 'items.orderItem.variant.size'])->latest('id')->get(),
+            'settlement' => $settlement,
+            'cancelBlock' => $cancelBlock,
+            'cancelPreviews' => $cancelPreviews,
+            // Tarixçə: aktiv statuslar + bu sifarişdə keçilmiş köhnələr
+            'timelineStatuses' => OrderStatus::where(fn ($q) => $q->where('active', 1)->orWhereIn('id', $order->statusLogs->pluck('status_id')))
+                ->orderBy('sort_order')->orderBy('id')->get(),
+            'startBlock' => app(OrderStatusService::class)->startBlock($order),
+            'courierBlock' => app(OrderStatusService::class)->courierBlock($order),
+            'couriers' => $this->couriers(),
+            'requests' => $requests,
+            'staff' => $staff,
             'warehouses' => \App\Models\Procurement\Warehouse::where('active', true)->orderBy('name_az')->get(),
             'order' => $order,
             'payLinkUrl' => $payLinkUrl,
@@ -453,6 +501,77 @@ class CrmController extends Controller
             'message' => $message,
             'order_no' => $order->order_no,
         ]);
+    }
+
+    /** Sifariş detalı → Məhsullar → "Ləğv et": məhsulu və ya onun bir hissəsini ləğv edir */
+    public function cancelItem(Request $request, Customer $customer, Order $order, OrderItem $item, OrderItemCancellationService $service): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id && $item->order_id === $order->id, 404);
+
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:9999'],
+            'reason' => ['required', Rule::in(array_keys(OrderItemCancellation::REASONS))],
+            'note' => ['nullable', 'required_if:reason,other', 'string', 'max:2000'],
+            'customer_agreed' => ['accepted'],
+        ], [
+            'reason.required' => 'Səbəbi seçin.',
+            'note.required_if' => '"Digər" səbəbdə qeyd yazın.',
+            'customer_agreed.accepted' => 'Müştəri ilə razılaşdırıldığını təsdiqləyin.',
+        ]);
+
+        $cancellation = $service->cancel($order, $item, (int) $data['quantity'], $data['reason'], $data['note'] ?? null, (int) (auth('admin')->id() ?? auth()->id()));
+
+        $message = 'Məhsul ləğv edildi: '.$cancellation->quantity.' ədəd, '.number_format((float) $cancellation->amount, 2).' AZN.';
+        $message .= match ($cancellation->refund_status) {
+            OrderItemCancellation::REFUND_PENDING => ' Məbləğ müştərinin kartına qaytarılmalıdır.',
+            OrderItemCancellation::REFUND_BONUS => ' Məbləğ bonus balansına qaytarıldı.',
+            default => '',
+        };
+
+        return back()->with('success', $message);
+    }
+
+    /** "İcraya götür": Sifariş verildi → Hazırlanır. Bundan sonra anbar sorğusu göndərmək olar. */
+    public function startOrder(Customer $customer, Order $order, OrderStatusService $statuses): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+        $statuses->start($order, (int) auth('admin')->id());
+
+        return back()->with('success', 'Sifariş icraya götürüldü: "Hazırlanır".');
+    }
+
+    /** "Kuryer təyin et": bütün məhsullar anbarlara təyin olunandan sonra */
+    public function assignCourier(Request $request, Customer $customer, Order $order, OrderStatusService $statuses): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+        $data = $request->validate(['courier_id' => ['required', 'integer']], ['courier_id.required' => 'Kuryeri seçin.']);
+        $courier = $this->couriers()->firstWhere('id', (int) $data['courier_id']);
+        abort_if(!$courier, 422, 'Kuryer tapılmadı.');
+        $statuses->assignCourier($order, $courier, (int) auth('admin')->id());
+
+        return back()->with('success', 'Kuryer təyin olundu: '.trim($courier->full_name).'.');
+    }
+
+    /** "Kuryer" rolundakı aktiv əməkdaşlar */
+    private function couriers()
+    {
+        try {
+            return \App\Models\User::role(\App\Services\FinanceService::COURIER_ROLE, 'admin')->where('active', 1)->orderBy('name')->get();
+        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+            return collect();
+        }
+    }
+
+    /** Ödənişlər → Geri qaytarmalar → "Karta qaytar": ləğv olunan məhsulun pulu Birbank ilə qaytarılır */
+    public function refundCancellation(Customer $customer, Order $order, OrderItemCancellation $cancellation, OrderRefundService $service): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id && $cancellation->order_id === $order->id, 404);
+
+        $cancellation = $service->refundCancellation($cancellation);
+
+        return back()->with('success', $cancellation->refund_status === OrderItemCancellation::REFUND_DONE
+            ? number_format((float) $cancellation->amount, 2).' AZN müştərinin kartına qaytarıldı.'
+            : 'Qaytarma bankda yoxlanılır.');
     }
 
     /** Sifariş detalı → "SMS ilə göndər": ödəniş linkini müştəriyə yenidən göndərir */

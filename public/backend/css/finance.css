@@ -1,0 +1,13 @@
+/* Kassa və hesablar (backend/finance/index.blade.php) + sifarişdə "Hesablaşmalar" */
+.finance-accounts { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.finance-account { color: var(--body); transition: box-shadow .15s; }
+.finance-account:hover, .finance-account.is-active { color: var(--body); box-shadow: 0 0 0 1px var(--primary); }
+.finance-account .card-body { padding: 16px 18px; }
+.finance-account__name { font-weight: 600; }
+.finance-account__label { margin-top: 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; }
+.finance-account__value { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.finance-row--reversed td { color: var(--muted) !important; }
+.finance-note { white-space: normal !important; max-width: 280px; }
+.settle-stat { padding: 14px 16px; border-radius: var(--border-radius-md); background: var(--background); }
+.settle-stat span { display: block; font-size: 12px; color: var(--muted); }
+.settle-stat b { font-size: 17px; font-variant-numeric: tabular-nums; }

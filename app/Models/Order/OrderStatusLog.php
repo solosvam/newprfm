@@ -25,4 +25,9 @@ class OrderStatusLog extends Model
     {
         return $this->belongsTo(OrderStatus::class, 'status_id');
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
 }

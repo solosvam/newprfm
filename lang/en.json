@@ -562,5 +562,8 @@
     "paylink_secure": "Payment is processed on the secure Birbank page",
     "paylink_gift_wrap": "Gift wrapping",
     "paylink_address": "Delivery address",
-    "paylink_refresh": "Refresh page"
+    "paylink_refresh": "Refresh page",
+    "paylink_bonus_expected": "You will earn +:amount ₼ bonus after payment",
+    "orders_item_cancelled": ":count pcs cancelled",
+    "bonus_registration": "Registration bonus"
 }

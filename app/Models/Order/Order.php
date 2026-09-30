@@ -76,6 +76,26 @@ class Order extends Model {
         return $this->hasMany(Payment::class);
     }
 
+    /**
+     * Müştəriyə göstərilən tarixçə (yenisi yuxarıda): daxili mərhələlər "Hazırlanır"-a çevrilir,
+     * ardıcıl eyni status bir sətir olur (ilk vaxtı ilə). Operator qeydləri yalnız ləğvdə göstərilir.
+     *
+     * @return \Illuminate\Support\Collection<int, array{status: OrderStatus, at: \Illuminate\Support\Carbon, note: ?string}>
+     */
+    public function customerTimeline()
+    {
+        $rows = collect();
+        foreach ($this->statusLogs->sortBy('id') as $log) {
+            $status = $log->status?->forCustomer();
+            if (!$status || ($rows->last()['status'] ?? null)?->id === $status->id) {
+                continue;
+            }
+            $rows->push(['status' => $status, 'at' => $log->created_at, 'note' => $status->code === 'cancelled' ? $log->note : null]);
+        }
+
+        return $rows->reverse()->values();
+    }
+
     public function statusLogs()
     {
         return $this->hasMany(OrderStatusLog::class)->orderBy('created_at');
@@ -85,6 +105,10 @@ class Order extends Model {
     {
         return $this->hasOne(CreditApplication::class);
     }
+    public function itemCancellations()
+    {
+        return $this->hasMany(OrderItemCancellation::class)->orderBy('id');
+    }
     public function items()
     {
         return $this->hasMany(OrderItem::class);
@@ -93,6 +117,12 @@ class Order extends Model {
     {
         return $this->belongsTo(PaymentMethod::class);
     }
+    /** Təyin olunmuş kuryer (users, "Kuryer" rolu) */
+    public function courier()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'courier_id');
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);

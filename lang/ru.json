@@ -562,5 +562,8 @@
     "paylink_secure": "Оплата проходит на защищённой странице Birbank",
     "paylink_gift_wrap": "Подарочная упаковка",
     "paylink_address": "Адрес доставки",
-    "paylink_refresh": "Обновить страницу"
+    "paylink_refresh": "Обновить страницу",
+    "paylink_bonus_expected": "После оплаты вы получите +:amount ₼ бонусов",
+    "orders_item_cancelled": "Отменено: :count шт.",
+    "bonus_registration": "Бонус за регистрацию"
 }

@@ -24,19 +24,22 @@ class ProcurementService
     }
 
     // Lock the parent first in every mutation, serializing allocation and answer changes.
-    private function lockOrder(Order $order): Order
+    private function lockOrder(Order $order, array $allowed = OrderStatusService::PROCUREMENT): Order
     {
         $locked = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
-        $this->ensure(in_array($locked->status?->code, ['new', 'confirmed', 'preparing'], true),
+        // Sorğu/seçim yalnız "İcraya götür"dən sonra; götürmə mərhələləri kuryer təyinindən sonra da
+        $this->ensure($locked->status?->code !== 'new', 'Əvvəlcə sifarişi icraya götürün ("İcraya götür").');
+        $this->ensure(in_array($locked->status?->code, $allowed, true),
             'Bu sifarişin cari mərhələsində anbar seçimi dəyişdirilə bilməz.');
         $this->ensure((bool) $locked->customer_id, 'Əvvəlcə sifarişi müştəriyə bağlayın.');
 
         return $locked;
     }
 
-    public function createRequests(Order $order, array $warehouseIds, array $itemIds, int $actor): void
+    /** @return \Illuminate\Support\Collection<int, WarehouseRequest> yaradılan sorğular (SMS üçün) */
+    public function createRequests(Order $order, array $warehouseIds, array $itemIds, int $actor): \Illuminate\Support\Collection
     {
-        DB::transaction(function () use ($order, $warehouseIds, $itemIds, $actor) {
+        return DB::transaction(function () use ($order, $warehouseIds, $itemIds, $actor) {
             $this->lockOrder($order);
             $warehouseIds = array_unique($warehouseIds);
             $itemIds = array_unique($itemIds);
@@ -44,14 +47,20 @@ class ProcurementService
             $items = $order->items()->whereIn('id', $itemIds)->get();
             $this->ensure(count($warehouseIds) > 0 && $warehouses->count() === count($warehouseIds), 'Aktiv anbar seçin.');
             $this->ensure(count($itemIds) > 0 && $items->count() === count($itemIds), 'Məhsullar bu sifarişə aid olmalıdır.');
+            $this->ensure($items->every(fn ($item) => $item->activeQuantity() > 0), 'Ləğv olunmuş məhsula sorğu göndərilə bilməz.');
+            $created = collect();
             foreach ($warehouses as $warehouse) {
                 $request = WarehouseRequest::create([
                     'order_id' => $order->id, 'warehouse_id' => $warehouse->id, 'created_by' => $actor,
                 ]);
                 foreach ($items as $item) {
-                    $request->items()->create(['order_item_id' => $item->id, 'requested_quantity' => $item->quantity]);
+                    $request->items()->create(['order_item_id' => $item->id, 'requested_quantity' => $item->activeQuantity()]);
                 }
+                $created->push($request->setRelation('warehouse', $warehouse));
             }
+            app(OrderStatusService::class)->syncSupply($order, $actor);
+
+            return $created;
         });
     }
 
@@ -100,7 +109,7 @@ class ProcurementService
             $active = $item->allocations()->where('status', '!=', 'cancelled');
             $selected = (int) (clone $active)->sum('quantity');
             $warehouseSelected = (int) (clone $active)->where('warehouse_id', $requestItem->request->warehouse_id)->sum('quantity');
-            $this->ensure($quantity > 0 && $quantity <= $item->quantity - $selected, 'Seçilən say sifarişin qalan miqdarından çoxdur.');
+            $this->ensure($quantity > 0 && $quantity <= $item->activeQuantity() - $selected, 'Seçilən say sifarişin qalan miqdarından çoxdur.');
             $this->ensure($offer->unit_cost !== null && $quantity <= $offer->available_quantity - $warehouseSelected,
                 'Seçilən say anbarın təklif etdiyi qalan miqdardan çoxdur.');
             $allocation = $item->allocations()->create([
@@ -109,25 +118,90 @@ class ProcurementService
                 'unit_cost' => $offer->unit_cost, 'status' => 'selected', 'created_by' => $actor, 'idempotency_key' => $key,
             ]);
             $allocation->logs()->create(['from_status' => null, 'to_status' => 'selected', 'user_id' => $actor, 'created_at' => now()]);
+            app(OrderStatusService::class)->syncSupply($order, $actor);
 
             return $allocation;
         });
     }
 
-    public function cancelAllocation(Order $order, int $allocationId, string $note, int $actor): void
+    /** @return string|null ləğvdən əvvəlki status (artıq ləğv olunubsa null) */
+    public function cancelAllocation(Order $order, int $allocationId, string $note, int $actor): ?string
     {
-        DB::transaction(function () use ($order, $allocationId, $note, $actor) {
+        return DB::transaction(function () use ($order, $allocationId, $note, $actor) {
             $this->lockOrder($order);
             $allocation = OrderItemAllocation::whereIn('order_item_id', $order->items()->select('id'))->findOrFail($allocationId);
             if ($allocation->status === 'cancelled') {
-                return;
+                return null;
             }
-            $this->ensure($allocation->status === 'selected', 'Yalnız hələ icraya verilməmiş seçim ləğv edilə bilər.');
-            $allocation->update(['status' => 'cancelled']);
+            $this->ensure(in_array($allocation->status, OrderItemAllocation::CANCELLABLE, true), 'Götürülmüş məhsulun anbar seçimi ləğv edilə bilməz.');
+            $from = $allocation->status;
+            $allocation->update(['status' => 'cancelled', 'problem_type' => null]);
             AllocationStatusLog::create([
-                'order_item_allocation_id' => $allocation->id, 'from_status' => 'selected',
+                'order_item_allocation_id' => $allocation->id, 'from_status' => $from,
                 'to_status' => 'cancelled', 'user_id' => $actor, 'note' => $note, 'created_at' => now(),
             ]);
+            app(OrderStatusService::class)->syncSupply($order, $actor);
+
+            return $from;
+        });
+    }
+
+    /**
+     * Təminat hissəsinin növbəti mərhələsi (OrderItemAllocation::FLOW) və problemlər.
+     *  - notified / reserved / picked: yalnız irəli (addım atlamaq olar — məs. telefonla dərhal "ayırdı");
+     *  - problem: istənilən aktiv mərhələdən, növ və qeyd ilə;
+     *  - resume: problemdən əvvəlki mərhələyə qayıdır; "qiymət dəyişdi"də yeni alış qiyməti yazılır.
+     * Artıq həmin mərhələdədirsə — heç nə etmir (təkrar klik).
+     */
+    public function transition(Order $order, int $allocationId, string $action, array $data, int $actor): OrderItemAllocation
+    {
+        return DB::transaction(function () use ($order, $allocationId, $action, $data, $actor) {
+            $this->lockOrder($order, OrderStatusService::SUPPLY_FLOW);
+            $allocation = OrderItemAllocation::whereIn('order_item_id', $order->items()->select('id'))
+                ->lockForUpdate()->findOrFail($allocationId);
+            $from = $allocation->status;
+            $note = isset($data['note']) && trim((string) $data['note']) !== '' ? trim((string) $data['note']) : null;
+            $flow = OrderItemAllocation::FLOW;
+
+            if (in_array($action, [OrderItemAllocation::NOTIFIED, OrderItemAllocation::RESERVED, OrderItemAllocation::PICKED], true)) {
+                if ($from === $action) {
+                    return $allocation;
+                }
+                $this->ensure(in_array($from, $flow, true) && array_search($action, $flow, true) > array_search($from, $flow, true),
+                    'Bu mərhələyə keçid mümkün deyil ('.$allocation->label().').');
+                $allocation->update(['status' => $action]);
+            } elseif ($action === OrderItemAllocation::PROBLEM) {
+                $type = (string) ($data['problem_type'] ?? '');
+                $this->ensure(isset(OrderItemAllocation::PROBLEM_TYPES[$type]), 'Problemin növünü seçin.');
+                $this->ensure(in_array($from, [OrderItemAllocation::SELECTED, OrderItemAllocation::NOTIFIED, OrderItemAllocation::RESERVED], true),
+                    'Bu mərhələdə problem qeyd edilə bilməz.');
+                $allocation->update(['status' => OrderItemAllocation::PROBLEM, 'problem_type' => $type]);
+                $note = OrderItemAllocation::PROBLEM_TYPES[$type].($note ? ': '.$note : '');
+            } elseif ($action === 'resume') {
+                $this->ensure($from === OrderItemAllocation::PROBLEM, 'Seçimdə problem yoxdur.');
+                // Problemdən əvvəlki mərhələ
+                $back = AllocationStatusLog::where('order_item_allocation_id', $allocation->id)
+                    ->where('to_status', OrderItemAllocation::PROBLEM)->orderByDesc('id')->value('from_status') ?? OrderItemAllocation::SELECTED;
+                $changes = ['status' => $back, 'problem_type' => null];
+                if ($allocation->problem_type === 'price_changed') {
+                    $cost = $data['unit_cost'] ?? null;
+                    $this->ensure(is_numeric($cost) && (float) $cost > 0, 'Yeni alış qiymətini daxil edin.');
+                    $cost = round((float) $cost, 2);
+                    $note = 'Alış qiyməti '.number_format((float) $allocation->unit_cost, 2).' → '.number_format($cost, 2).' AZN'.($note ? '. '.$note : '');
+                    $changes['unit_cost'] = $cost;
+                }
+                $allocation->update($changes);
+                $action = $back;
+            } else {
+                $this->ensure(false, 'Naməlum əməliyyat.');
+            }
+
+            AllocationStatusLog::create([
+                'order_item_allocation_id' => $allocation->id, 'from_status' => $from, 'to_status' => $allocation->status,
+                'user_id' => $actor, 'note' => $note, 'created_at' => now(),
+            ]);
+
+            return $allocation;
         });
     }
 }

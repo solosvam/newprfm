@@ -95,8 +95,6 @@ class EasyOrdersController extends Controller
                     throw \Illuminate\Validation\ValidationException::withMessages(['gender' => 'Yeni müştəri üçün cinsiyyət seçin.']);
                 }
                 $created = true;
-                $registrationBonus = (int) Setting::valueOf('registration_bonus_enabled', 1) === 1
-                    ? max(0, round((float) Setting::valueOf('registration_bonus_amount', 10), 2)) : 0;
                 $customer = Customer::create([
                     'name' => $data['name'],
                     'surname' => $data['surname'],
@@ -105,15 +103,10 @@ class EasyOrdersController extends Controller
                     'email' => null,
                     'password' => null,
                     'active' => 1,
-                    'bonus_balance' => $registrationBonus,
+                    'bonus_balance' => 0,
                 ]);
-                if ($registrationBonus > 0) {
-                    $customer->bonusTransactions()->create([
-                        'type' => 'earn',
-                        'amount' => $registrationBonus,
-                        'note' => 'Qeydiyyat bonusu',
-                    ]);
-                }
+                // Qeydiyyat bonusu — saytdakı qeydiyyatla eyni qayda (BonusService)
+                $registrationBonus = app(BonusService::class)->grantRegistration($customer);
             }
             if ($data['address_choice'] === 'new') {
                 $address = $customer->addresses()->create(

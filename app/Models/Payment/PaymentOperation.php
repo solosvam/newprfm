@@ -17,6 +17,11 @@ class PaymentOperation extends Model
         return ['amount' => 'decimal:2'];
     }
 
+    public function refundItems()
+    {
+        return $this->hasMany(PaymentRefundItem::class);
+    }
+
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);

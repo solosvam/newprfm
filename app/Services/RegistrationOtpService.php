@@ -62,6 +62,9 @@ class RegistrationOtpService
             'registration_otp_expires_at' => null,
         ])->save();
 
+        // Hesab aktivləşdi — qeydiyyat bonusu (ayar açıqdırsa, bir dəfə)
+        app(BonusService::class)->grantRegistration($customer);
+
         RateLimiter::clear($key);
 
         return true;

@@ -149,8 +149,10 @@ class CheckoutController extends Controller
             // Səbətdəki məhsullar
             $cart = collect($data['cart']) -> keyBy('variant_id');
 
+            // Deaktiv məhsulun variantı da "mövcud deyil" sayılır (səbətdə köhnə qalmış ola bilər)
             $variants = ProductVariant ::whereIn('id', $cart -> keys())
                 -> where('active', 1)
+                -> whereHas('product', fn ($q) => $q -> where('active', 1))
                 -> get();
 
             abort_if(

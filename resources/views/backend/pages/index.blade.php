@@ -1,11 +1,12 @@
 @php
     $html_tag_data = [];
-    $title = 'Əsas səhifə';
+    $title = ($courier ?? null) ? 'Tapşırıqlarım' : 'Əsas səhifə';
     $breadcrumbs = ["/x"=>"ParfumShop", "/"=>"Əsas səhifə"]
 @endphp
 @extends('backend.layout',['html_tag_data'=>$html_tag_data, 'title'=>$title])
 
 @section('css')
+    @if($courier ?? null)<link rel="stylesheet" href="{{ asset_v('backend/css/courier.css') }}">@endif
 
 @endsection
 
@@ -41,6 +42,7 @@
                 <!-- Title End -->
 
                 <!-- Top Buttons Start -->
+                @unless($courier ?? null)
                 <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
                     <!-- Tour Button Start -->
                     <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" id="dashboardTourButton">
@@ -49,23 +51,15 @@
                     </button>
                     <!-- Tour Button End -->
                 </div>
+                @endunless
                 <!-- Top Buttons End -->
             </div>
         </div>
-        <div class="row">
-            <div class="col">
-                <section class="scroll-section" id="textContent">
-                    <h2 class="small-title">Header</h2>
-                    <div class="card mb-5">
-                        <div class="card-body d-flex flex-column scroll-out" data-title="Step 1" data-intro="Salamlar" data-step="1">
-                            <div class="scroll">
-                                <h3 class="card-title mb-4">Sistem hazırlanır</h3>
-                                ParfumShop.az sistemi yenilənir
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </div>
+        {{-- Rola görə: kuryer — öz sifarişləri, qalanları — ümumi panel --}}
+        @if($courier ?? null)
+            @include('backend.pages.dashboard.courier')
+        @else
+            @include('backend.pages.dashboard.admin')
+        @endif
     </div>
 @endsection

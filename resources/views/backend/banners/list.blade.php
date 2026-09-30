@@ -206,7 +206,10 @@
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const modal = document.getElementById('newBanner');
-                if (modal && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modal).show();
+                if (modal && window.bootstrap) {
+                    const instance = new bootstrap.Modal(modal);
+                    instance.show();
+                }
             });
         </script>
     @endsection

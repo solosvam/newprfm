@@ -7,7 +7,28 @@ use RuntimeException;
 
 class SmsService
 {
-    public function send(string $number, string $message): void
+    /** lsim QUICKSMS xəta kodları (docs.lsim.az/quicksms.html) */
+    public const ERRORS = [
+        -100 => 'Yanlış açar (login/parol)',
+        -101 => 'Mətn çox uzundur',
+        -102 => 'Nömrə formatı yanlışdır',
+        -103 => 'Göndərən adı yanlışdır',
+        -104 => 'SMS balansı bitib',
+        -105 => 'Nömrə qara siyahıdadır',
+        -107 => 'IP ünvanına icazə yoxdur',
+        -108 => 'Yanlış hash',
+        -109 => 'Host yoxdur',
+        -500 => 'SMS provayderində daxili xəta',
+    ];
+
+    /**
+     * SMS göndərir və provayderin tranzaksiya id-sini qaytarır.
+     * lsim HTTP 200 ilə də xəta qaytarır ({"errorCode": -104, ...}) — ona görə JSON yoxlanılır.
+     * Latın əlifbasından kənar simvol (ə, ş, ç, ...) olarsa unicode=true (1 SMS = 70 simvol).
+     *
+     * @throws RuntimeException
+     */
+    public function send(string $number, string $message): ?string
     {
         $number = $this->normalize($number);
         $login = (string) config('services.parfumshop_sms.login');
@@ -18,21 +39,36 @@ class SmsService
         if (!$login || !$password || !$sender || !$url) {
             throw new RuntimeException('SMS service konfiqurasiyası tamamlanmayıb.');
         }
+        if (strlen($number) !== 12) {
+            throw new RuntimeException('Telefon nömrəsi yanlışdır.');
+        }
 
         $pass = md5($password);
         $key = md5($pass.$login.$message.$number.$sender);
+        $query = ['login' => $login, 'msisdn' => $number, 'text' => $message, 'sender' => $sender, 'key' => $key];
+        if (!self::isGsm($message)) {
+            $query['unicode'] = 'true';
+        }
 
-        $response = Http::timeout(10)->get($url, [
-            'login' => $login,
-            'msisdn' => $number,
-            'text' => $message,
-            'sender' => $sender,
-            'key' => $key,
-        ]);
+        $response = Http::timeout(10)->get($url, $query);
 
         if (!$response->successful()) {
-            throw new RuntimeException('SMS göndərilmədi.');
+            throw new RuntimeException('SMS göndərilmədi (HTTP '.$response->status().').');
         }
+
+        $data = $response->json();
+        $code = is_array($data) ? (int) ($data['errorCode'] ?? 0) : 0;
+        if ($code < 0) {
+            throw new RuntimeException('SMS göndərilmədi: '.(self::ERRORS[$code] ?? ($data['errorMessage'] ?? 'xəta '.$code)).'.');
+        }
+
+        return is_array($data) && isset($data['obj']) ? (string) $data['obj'] : null;
+    }
+
+    /** GSM 03.38 əsas əlifbası ilə yazılıbmı (unicode lazım deyil) */
+    public static function isGsm(string $text): bool
+    {
+        return (bool) preg_match('/^[A-Za-z0-9 \r\n@£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ!"#¤%&\'()*+,\-.\/:;<=>?¡ÄÖÑÜ§¿äöñüà^{}\\\\\[~\]|€]*$/u', $text);
     }
 
     public function history(string $number): array

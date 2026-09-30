@@ -10,7 +10,7 @@
     <script src="{{asset('backend/js/cs/scrollspy.js')}}"></script>
     <script src="{{asset('backend/js/cs/datatable.extend.js')}}"></script>
     <script src="{{asset('backend/js/plugins/datatable.boxedvariations.js')}}"></script>
-    <script src="{{ asset('backend/js/brand-logos.js') }}?v={{ filemtime(public_path('backend/js/brand-logos.js')) }}"></script>
+    <script src="{{ asset_v('backend/js/brand-logos.js') }}"></script>
 @endsection
 
 @section('css')

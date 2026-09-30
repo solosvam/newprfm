@@ -7,7 +7,9 @@
 
 @section('content')
     @php
-        $statusKey = $order->status?->code ?? 'received';
+        // Daxili mərhələlər (anbar, kuryer təyini) müştəriyə "Hazırlanır" kimi görünür
+        $customerStatus = $order->status?->forCustomer();
+        $statusKey = $customerStatus?->code ?? 'received';
 
         $credit = $order->creditApplication;
 
@@ -39,7 +41,7 @@
                     <div class="od-header__title">
                         <h1>{{ __('orders_order') }} № {{ $order->order_no }}</h1>
                         <span class="order-status order-status--{{ $statusKey }}">
-                            {{ $order->status?->localized_name ?? __('orders_order_received') }}
+                            {{ $customerStatus?->localized_name ?? __('orders_order_received') }}
                         </span>
                     </div>
                     <p class="od-header__meta">
@@ -92,10 +94,13 @@
                                         <div class="od-item__price">
                                             <div class="od-item__total">{{ number_format($item->total, 2) }} ₼</div>
                                             <div class="od-item__unit">
-                                                {{ $item->quantity }} ×
+                                                {{ $item->activeQuantity() }} ×
                                                 @if($item->list_price > $item->unit_price)<s>{{ number_format($item->list_price, 2) }}</s>@endif
                                                 {{ number_format($item->unit_price, 2) }} ₼
                                             </div>
+                                            @if($item->cancelled_quantity)
+                                                <div class="od-item__unit od-item__cancelled">{{ __('orders_item_cancelled', ['count' => $item->cancelled_quantity]) }}</div>
+                                            @endif
                                         </div>
                                     </li>
                                 @endforeach
@@ -125,14 +130,14 @@
                             </div>
                             <div class="od-card__body">
                                 <ol class="od-timeline">
-                                    @forelse($order->statusLogs as $log)
-                                        <li class="od-timeline__item order-status--{{ $log->status?->code }} {{ $loop->first ? 'is-current' : '' }}">
+                                    @forelse($order->customerTimeline() as $row)
+                                        <li class="od-timeline__item order-status--{{ $row['status']->code }} {{ $loop->first ? 'is-current' : '' }}">
                                             <span class="od-timeline__dot"></span>
-                                            <div class="od-timeline__title">{{ $log->status?->localized_name }}</div>
-                                            <time class="od-timeline__time" datetime="{{ $log->created_at->toIso8601String() }}">
-                                                {{ $log->created_at->format('d.m.Y, H:i') }}
+                                            <div class="od-timeline__title">{{ $row['status']->localized_name }}</div>
+                                            <time class="od-timeline__time" datetime="{{ $row['at']->toIso8601String() }}">
+                                                {{ $row['at']->format('d.m.Y, H:i') }}
                                             </time>
-                                            @if($log->note)<p class="od-timeline__note">{{ $log->note }}</p>@endif
+                                            @if($row['note'])<p class="od-timeline__note">{{ $row['note'] }}</p>@endif
                                         </li>
                                     @empty
                                         <li class="od-timeline__item order-status--received is-current">

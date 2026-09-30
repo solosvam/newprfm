@@ -150,3 +150,4 @@
     .od-alert { flex-direction: column; align-items: stretch; }
     .od-alert__btn { width: 100%; }
 }
+.od-item__cancelled { color: var(--danger); }

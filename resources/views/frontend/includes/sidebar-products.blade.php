@@ -1,30 +1,20 @@
+{{--
+  Sidebar məhsul siyahısı (Tövsiyə olunanlar / Ən çox satılanlar).
+  Parametrlər: $items, $title, $panelId, $ranked (bool — sıra nömrəsi göstərilsin),
+  $dynamic (bool — qonaq: main.js brauzer bəyəndiklərinə görə /recommendations ilə əvəz edir)
+  Mobil (≤1024px): başlığa toxunanda açılır (data-collapsible-panel).
+--}}
 @if($items->isNotEmpty())
-    <div class="side-panel filter-card" data-collapsible-panel>
+    <section class="side-panel filter-card side-list" data-collapsible-panel>
         <button type="button" class="side-panel__toggle" data-panel-toggle aria-expanded="false" aria-controls="{{ $panelId }}">
             <h3>{{ $title }}</h3>
-            <svg class="side-panel__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            <svg class="side-panel__chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
 
         <div class="side-panel__body" id="{{ $panelId }}">
-            @foreach($items as $item)
-                @php
-                    $itemVariant = $item->variants->where('active', 1)->first();
-                    $itemImage = $item->images->first();
-                @endphp
-                <a href="{{ route('product', $item->slug) }}" class="mini-card">
-                    <div class="mini-thumb">
-                        @if($itemImage)
-                            <img src="{{ route('product.image', ['size' => 200, 'image' => $itemImage->image]) }}" alt="{{ $item->name }}" width="200" height="200" loading="lazy" decoding="async">
-                        @else
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
-                        @endif
-                    </div>
-                    <div class="mini-info">
-                        <p class="n">{{ $item->name }}</p>
-                        <p class="p">{{ $itemVariant ? number_format((float) $itemVariant->price, 2) : '' }} ₼</p>
-                    </div>
-                </a>
-            @endforeach
+            <ol class="side-list__items" @if($dynamic ?? false) data-guest-recommendations @endif>
+                @include('frontend.includes.sidebar-products-items', ['items' => $items, 'ranked' => $ranked ?? false])
+            </ol>
         </div>
-    </div>
+    </section>
 @endif

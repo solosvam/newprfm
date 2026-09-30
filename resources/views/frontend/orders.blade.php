@@ -23,7 +23,8 @@
 
                     @foreach($orders as $order)
                         @php
-                            $statusKey = $order->status?->code ?? 'received';
+                            $customerStatus = $order->status?->forCustomer(); // daxili mərhələlər → "Hazırlanır"
+                            $statusKey = $customerStatus?->code ?? 'received';
                             $visibleItems = $order->items->take(3);
                             $hiddenCount = $order->items->count() - $visibleItems->count();
                         @endphp
@@ -33,7 +34,7 @@
                                 <div class="order-card__top">
                                     <span class="order-card__no">№ {{ $order->order_no }}</span>
                                     <span class="order-status order-status--{{ $statusKey }}">
-                                        {{ $order->status?->localized_name ?? __('orders_order_received') }}
+                                        {{ $customerStatus?->localized_name ?? __('orders_order_received') }}
                                     </span>
                                     @if($order->isAwaitingPayment())
                                         <span class="order-status order-status--awaiting-payment">{{ __('orders_payment_awaiting') }}</span>

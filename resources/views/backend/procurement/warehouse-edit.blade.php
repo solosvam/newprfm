@@ -19,6 +19,14 @@
             </div>
         </div>
         @include('backend.procurement.feedback')
+        @include('backend.procurement.access-link')
+        <div class="card mb-4"><div class="card-body">
+            <h2 class="small-title">Anbarın sorğu paneli</h2>
+            <div class="d-flex flex-wrap gap-2">
+                <form method="POST" action="{{ route('admin.procurement.warehouses.link', $warehouse) }}">@csrf<button class="btn btn-outline-primary" @disabled(!$warehouse->active)>Yeni giriş linki yarat</button></form>
+                <form method="POST" action="{{ route('admin.procurement.warehouses.revoke-links', $warehouse) }}" onsubmit="return confirm('Bu anbarın bütün əvvəlki linkləri ləğv edilsin?')">@csrf<button class="btn btn-outline-danger">Əvvəlki linkləri ləğv et</button></form>
+            </div>
+        </div></div>
         <div class="row">
             <div class="col">
                 <section class="scroll-section" id="warehouseFields">

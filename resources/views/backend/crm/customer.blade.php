@@ -7,7 +7,7 @@
 @section('css')
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2.min.css')}}"/>
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2-bootstrap4.min.css')}}"/>
-    <link rel="stylesheet" href="{{ asset('backend/css/crm-order.css') }}?v={{ filemtime(public_path('backend/css/crm-order.css')) }}"/>
+    <link rel="stylesheet" href="{{ asset_v('backend/css/crm-order.css') }}"/>
         <style>
             .crm-avatar { width: 110px; height: 110px; font-size: 2rem; }
             .crm-profile-card .card-body { padding: 2rem; }
@@ -19,8 +19,8 @@
 @endsection
 
 @section('js_page')
-    <script src="{{ asset('backend/js/crm.js') }}?v={{ filemtime(public_path('backend/js/crm.js')) }}"></script>
-    <script src="{{ asset('backend/js/crm-order.js') }}?v={{ filemtime(public_path('backend/js/crm-order.js')) }}"></script>
+    <script src="{{ asset_v('backend/js/crm.js') }}"></script>
+    <script src="{{ asset_v('backend/js/crm-order.js') }}"></script>
 @endsection
 @section('content')
     <div class="container">

@@ -138,6 +138,13 @@ return [
     ],
 
     [
+        'title'      => 'Kassa',
+        'icon'       => 'wallet',
+        'route'      => 'admin.finance.index',
+        'permission' => 'finance',
+    ],
+
+    [
         'title'      => 'Sayt',
         'icon'       => 'boxes',
         'id'         => 'site-parameters',

@@ -11,6 +11,7 @@ use App\Models\Product\Size;
 use App\Models\Product\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class CatalogService
@@ -97,20 +98,6 @@ class CatalogService
 
         $priceMin = (float) ($priceBounds?->min_price ?? 0);
         $priceMax = (float) ($priceBounds?->max_price ?? $priceMin);
-        $sidebarQuery = fn () => Product::query()
-            ->with([
-                'brand',
-                'type',
-                'images',
-                'variants' => fn ($query) => $query->where('active', 1)->orderBy('price'),
-                'variants.size',
-            ])
-            ->where('active', 1)
-            ->whereHas('variants', fn ($query) => $query->where('active', 1))
-            ->orderByDesc('products.id')
-            ->limit(6)
-            ->get();
-
         $banners = [];
         foreach (Banners::where('active', 1)->get() as $banner) {
             $banners[$banner->location . $banner->device] = [
@@ -161,9 +148,74 @@ class CatalogService
                 ->get()
                 ->sortBy(fn ($size) => (float) ($size->name_az ?: $size->name_en))
                 ->values(),
-            // Müvəqqəti olaraq sabit seçim saxlanılır ki, thumbnail cache hər request-də dəyişməsin.
-            'recommendedProducts' => $sidebarQuery(),
-            'bestSellers' => $sidebarQuery(),
+            ...$this->sidebarProducts(),
         ];
+    }
+
+    public const SIDEBAR_LIMIT = 5;
+
+    /**
+     * Sidebar: "Ən çox satılanlar" — son 90 gündə satılan say (ləğv olunan miqdar və ləğv olunmuş sifarişlər çıxılır);
+     * satış azdırsa ən yeni məhsullarla tamamlanır.
+     * "Tövsiyə olunanlar" — login olan müştəriyə sifariş etdiyi və bəyəndiyi ətirlərə tərkibcə oxşar ətirlər
+     * (ProductRecommendationService); qonağa əvvəlcə ümumi seçim, sonra brauzer bəyəndiklərinə görə
+     * /recommendations ilə əvəz olunur (main.js).
+     * Ümumi ID-lər 1 saat keşlənir (thumbnail-lər sabit qalsın, hər request-də ağır sorğu olmasın).
+     */
+    private function sidebarProducts(): array
+    {
+        $reco = app(ProductRecommendationService::class);
+        $ids = $this->sidebarIds();
+        $customer = auth('web')->user();
+        $recommended = $customer
+            ? $this->recommendationsFor($reco->seedsForCustomer($customer))
+            : $reco->load(array_slice(array_values(array_diff($ids['pool'], $ids['best'])), 0, self::SIDEBAR_LIMIT));
+
+        return ['recommendedProducts' => $recommended, 'bestSellers' => $reco->load($ids['best'])];
+    }
+
+    /**
+     * Mənbə məhsullara (sifariş + bəyənilən) tərkibcə oxşar ətirlər; azdırsa ümumi seçimlə tamamlanır.
+     * Mənbə məhsullar heç vaxt göstərilmir. Mənbə yoxdursa — ümumi seçim.
+     */
+    public function recommendationsFor(array $seedIds): \Illuminate\Support\Collection
+    {
+        $reco = app(ProductRecommendationService::class);
+        $list = $reco->similarTo($seedIds, self::SIDEBAR_LIMIT);
+        if ($list->count() < self::SIDEBAR_LIMIT) {
+            $ids = $this->sidebarIds();
+            $taken = array_merge($seedIds, $list->pluck('id')->all());
+            // Əvvəl ən çox satılanlarda olmayanlar, sonra lazım gələrsə onlar da
+            $fill = array_values(array_diff(array_merge(array_diff($ids['pool'], $ids['best']), $ids['best']), $taken));
+            $list = $list->concat($reco->load(array_slice($fill, 0, self::SIDEBAR_LIMIT - $list->count())));
+        }
+
+        return $list->values();
+    }
+
+    /** @return array{best: int[], pool: int[]} keşlənmiş ümumi seçim */
+    private function sidebarIds(): array
+    {
+        return Cache::remember('catalog.sidebar.v2', 3600, function () {
+            $available = fn () => ProductRecommendationService::available();
+            $sold = DB::table('order_items')
+                ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                ->where('orders.created_at', '>=', now()->subDays(90))
+                ->whereNotIn('orders.order_status_id', DB::table('order_statuses')->where('code', 'cancelled')->select('id'))
+                ->whereIn('order_items.product_id', $available()->select('id'))
+                ->groupBy('order_items.product_id')
+                ->havingRaw('SUM(order_items.quantity - COALESCE(order_items.cancelled_quantity, 0)) > 0')
+                ->orderByRaw('SUM(order_items.quantity - COALESCE(order_items.cancelled_quantity, 0)) DESC')
+                ->limit(self::SIDEBAR_LIMIT)
+                ->pluck('order_items.product_id')->map(fn ($id) => (int) $id)->all();
+            if (count($sold) < self::SIDEBAR_LIMIT) {
+                $sold = array_merge($sold, $available()->whereNotIn('id', $sold)->orderByDesc('id')
+                    ->limit(self::SIDEBAR_LIMIT - count($sold))->pluck('id')->all());
+            }
+            // Təsadüfi ehtiyat: qonağa göstərilir və oxşar ətir az olanda boşluğu doldurur
+            $pool = $available()->whereNotIn('id', $sold)->inRandomOrder()->limit(60)->pluck('id')->all();
+
+            return ['best' => $sold, 'pool' => $pool];
+        });
     }
 }

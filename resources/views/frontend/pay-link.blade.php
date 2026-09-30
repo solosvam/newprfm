@@ -121,6 +121,17 @@
                     @endif
                     <div class="od-row od-row--total"><span>{{ __('orders_total') }}</span><span>{{ number_format($total, 2) }} ₼</span></div>
                 </div>
+
+                @if($bonus > 0)
+                    <div class="od-bonus">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
+                        @if($state === 'paid')
+                            +{{ number_format($bonus, 2) }} ₼ {{ __('orders_bonus_earned_note') }}
+                        @else
+                            {{ __('paylink_bonus_expected', ['amount' => number_format($bonus, 2)]) }}
+                        @endif
+                    </div>
+                @endif
             </div>
         </section>
 

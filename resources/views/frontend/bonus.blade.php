@@ -33,6 +33,7 @@
                                 $title = match ($transaction->type) {
                                     'earn'  => __('orders_bonus_earned'),
                                     'spend' => __('bonus_bonus_spent'),
+                                    'register' => __('bonus_registration'),
                                     default => $transaction->note ?: __('bonus_bonus_transaction'),
                                 };
                             @endphp

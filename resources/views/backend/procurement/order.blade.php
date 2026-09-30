@@ -6,6 +6,7 @@
         <a href="{{ route('admin.procurement.warehouses') }}" class="btn btn-outline-primary align-self-start">Anbarlar</a>
     </div>
     @include('backend.procurement.feedback')
+        @include('backend.procurement.access-link')
     @include('backend.procurement.order-content')
 </div>
 @endsection

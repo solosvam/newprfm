@@ -1,5 +1,7 @@
 # Admin panel design conventions
 
+Bootstrap is bundled locally at `public/backend/js/vendor/bootstrap.bundle.min.js`, version 5.0.1. Do not use `getOrCreateInstance`. Use `new bootstrap.Modal(element)` / `new bootstrap.Tab(element)` and `.show()`; reuse an existing instance via `getInstance` when needed. Check the bundled version before introducing Bootstrap APIs.
+
 The user explicitly selected these existing views as the design references for all future admin pages:
 - `resources/views/backend/user/list.blade.php`
 - `resources/views/backend/user/edit.blade.php`
@@ -29,3 +31,11 @@ Read the relevant reference before creating or redesigning an admin page. Reuse 
 - Inputs use `.form-control`, selects `.form-select`; show field errors and preserve old values.
 - Submit row: `.mb-3.row.mt-5`, with `.col-sm-8.col-md-9.col-lg-10.ms-auto` and primary “Yenilə” button.
 - Keep CSRF, authorization, and route/method requirements intact when adapting these visual references.
+
+## Detailed operational pages
+- The user also provided a parcel detail screenshot and Acorn nav/tab examples as references for order details.
+- Use a top row of three theme cards: entity facts, customer/delivery facts, and a vertical status timeline. Stack cards responsively.
+- Put extensive operational content below in Bootstrap tabs using `nav-tabs nav-tabs-line card-header-tabs` (products, history, payments, procurement).
+- Keep actions in the page header; show only implemented actions. Preserve the active tab across form submissions/reloads and support tab deep links.
+- Use existing theme colors, spacing and cards. Scope any extra CSS to the detail page.
+- Current implementation reference: `resources/views/backend/crm/order.blade.php`.

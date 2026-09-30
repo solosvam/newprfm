@@ -1,0 +1,56 @@
+/* Kuryer: əsas səhifə (pages/dashboard/courier) və sifariş (courier/order) — telefon üçün */
+.courier-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.courier-summary .card-body { padding: 16px 18px; }
+.courier-summary__label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
+.courier-summary__value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.courier-order { color: var(--body); }
+.courier-order:hover { color: var(--body); box-shadow: 0 0 0 1px var(--primary); }
+.courier-order .card-body { padding: 16px 18px; }
+.courier-order__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.courier-order__who { margin-top: 6px; font-weight: 600; }
+.courier-order__where { font-size: 13px; color: var(--muted); }
+.courier-order__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 13px; }
+
+.courier-page { max-width: 720px; }
+.courier-steps { display: flex; margin: 0; padding: 0; list-style: none; }
+.courier-steps li { position: relative; flex: 1; padding-top: 18px; font-size: 12px; color: var(--muted); text-align: center; }
+.courier-steps li::before { content: ""; position: absolute; top: 4px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--separator); z-index: 1; }
+.courier-steps li + li::after { content: ""; position: absolute; top: 9px; right: 50%; width: 100%; height: 2px; background: var(--separator); }
+.courier-steps li.is-done { color: var(--body); font-weight: 600; }
+.courier-steps li.is-done::before, .courier-steps li.is-done::after { background: var(--primary); }
+.courier-steps li.is-current::before { box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .2); }
+
+.courier-wh .card-body { padding: 16px; }
+.courier-wh__head, .courier-client { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.courier-wh__name { font-weight: 700; font-size: 16px; }
+.courier-wh__addr { display: block; font-size: 13px; }
+.courier-part { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--separator); }
+.courier-part--picked { opacity: .75; }
+.courier-part__top { display: flex; justify-content: space-between; gap: 12px; }
+.courier-part__name { font-weight: 600; }
+.courier-part__qty { font-size: 18px; font-weight: 700; white-space: nowrap; }
+.courier-part__info { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 6px; font-size: 13px; }
+.courier-part__problem { margin-top: 8px; padding: 8px 10px; border-radius: var(--border-radius-sm); background: rgba(var(--danger-rgb, 207, 45, 45), .08); color: var(--danger); font-size: 13px; }
+.courier-part__actions { display: grid; gap: 8px; margin-top: 10px; }
+.courier-part__actions .btn, .courier-actions .btn { min-height: 46px; }
+
+.courier-more > summary { list-style: none; display: flex; align-items: center; justify-content: center; }
+.courier-more > summary::-webkit-details-marker { display: none; }
+.courier-more__form { margin-top: 8px; padding: 12px; border-radius: var(--border-radius-md); background: var(--background); }
+.courier-more input, .courier-more textarea, .courier-deliver input { font-size: 16px; } /* iOS zoom olmasın */
+
+.courier-collect { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: var(--border-radius-md); }
+.courier-collect.is-cash { background: rgba(var(--warning-rgb, 235, 184, 56), .14); }
+.courier-collect.is-paid { background: rgba(var(--success-rgb, 57, 148, 46), .1); color: var(--success); }
+.courier-collect b { font-size: 18px; }
+.courier-actions { margin: 20px 0 40px; }
+
+/* Haqq-hesab tarixçəsi */
+.courier-history { padding: 4px 18px 14px; }
+.courier-history__row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--separator); }
+.courier-history__what { font-weight: 600; font-size: 14px; }
+.courier-history__meta { font-size: 12px; color: var(--muted); }
+.courier-history__sum { text-align: right; white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }
+.courier-history__after { font-size: 12px; font-weight: 400; color: var(--muted); }
+.courier-history__hint { margin-top: 12px; font-size: 12px; color: var(--muted); }

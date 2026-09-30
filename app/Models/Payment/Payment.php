@@ -4,6 +4,7 @@ namespace App\Models\Payment;
 
 use App\Models\Customer\Customer;
 use App\Models\Order\Order;
+use App\Services\Payment\PaymentItemsBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,9 +30,29 @@ class Payment extends Model
 
     protected $hidden = ['session_id'];
 
+    /**
+     * Ödəniş yarananda ona daxil olanlar (məhsullar, çatdırılma, qablaşdırma) həmin anın vəziyyəti ilə saxlanır.
+     * Birbank-da ödəniş bir neçə yerdə yaranır (adi, yadda saxlanmış kart, preavtorizasiya) — hamısı buradan keçir.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (Payment $payment) {
+            $order = $payment->order;
+            if ($order && !$payment->items()->exists()) {
+                $payment->items()->createMany(app(PaymentItemsBuilder::class)->lines($order, (float) $payment->amount));
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return ['amount' => 'decimal:2'];
+    }
+
+    /** Ödənişə daxil olan məhsullar, çatdırılma və qablaşdırma (PaymentItemsBuilder) */
+    public function items(): HasMany
+    {
+        return $this->hasMany(PaymentItem::class);
     }
 
     public function operations()

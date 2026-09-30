@@ -5,6 +5,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
 
+// Anbar portalı: qısa link /w/{token} (WarehousePortalService::TOKEN_PATTERN)
+Route::middleware([\App\Http\Middleware\WarehousePortalHeaders::class, 'throttle:60,1'])
+    ->where(['token' => \App\Services\WarehousePortalService::TOKEN_PATTERN])
+    ->name('warehouse.')->group(function () {
+        Route::get('/w/{token}', [\App\Http\Controllers\WarehousePortalController::class, 'index'])->name('portal');
+        Route::post('/w/{token}/items/{item}', [\App\Http\Controllers\WarehousePortalController::class, 'answer'])->name('answer');
+        Route::post('/w/{token}/allocations/{allocation}', [\App\Http\Controllers\WarehousePortalController::class, 'confirm'])->name('confirm');
+        // Köhnə uzun linklər: qısa ünvana yönləndirilir
+        Route::get('/warehouse-portal/{token}', fn (string $token) => redirect()->route('warehouse.portal', $token, 301))->name('legacy');
+    });
+
 use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\Frontend\RegisterController;
 use App\Http\Controllers\Frontend\MainController;
@@ -122,6 +133,7 @@ Route::controller(ProductController::class)->group(function () {
 Route::view('/cart', 'frontend.cart')->name('cart');
 Route::post('/order/one-click', [OneClickOrderController::class, 'store'])->middleware('throttle:5,1')->name('one-click.store');
 Route::get('/order/one-click/success/{order}', [OneClickOrderController::class, 'success'])->name('one-click.success');
+Route::get('/recommendations', [\App\Http\Controllers\Frontend\RecommendationController::class, 'sidebar'])->middleware('throttle:30,1')->name('recommendations.sidebar');
 Route::post('/cart/promo', [PromoCodeController::class, 'apply'])->middleware('throttle:10,1')->name('promo.apply');
 Route::delete('/cart/promo', [PromoCodeController::class, 'remove'])->name('promo.remove');
 

@@ -67,9 +67,32 @@ Route::prefix('admin')
 
         Route::middleware('auth:admin')->group(function () {
 
+            // Kuryer: öz sifarişləri (CourierController rolu və sifarişin kuryerini yoxlayır)
+            Route::controller(\App\Http\Controllers\Backend\CourierController::class)
+                ->prefix('courier')->name('courier.')->middleware('throttle:60,1')->group(function () {
+                    Route::get('/order/{order}', 'order')->name('order');
+                    Route::post('/order/{order}/parts/{allocation}/pick', 'pick')->name('pick');
+                    Route::post('/order/{order}/parts/{allocation}/pay', 'pay')->name('pay');
+                    Route::post('/order/{order}/parts/{allocation}/problem', 'problem')->name('problem');
+                    Route::post('/order/{order}/start', 'start')->name('start');
+                    Route::post('/order/{order}/arrive', 'arrive')->name('arrive');
+                    Route::post('/order/{order}/deliver', 'deliver')->name('deliver');
+                    Route::post('/order/{order}/delivery-problem', 'deliveryProblem')->name('delivery-problem');
+                });
+
+            Route::middleware('can:finance')->controller(\App\Http\Controllers\Backend\FinanceController::class)
+                ->prefix('finance')->name('finance.')->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/', 'store')->middleware('throttle:30,1')->name('store');
+                    Route::post('/{movement}/reverse', 'reverse')->middleware('throttle:30,1')->name('reverse');
+                    Route::get('/account/{account}', 'account')->name('account');
+                });
+
             Route::middleware('can:crm')->controller(\App\Http\Controllers\Backend\ProcurementController::class)
                 ->prefix('procurement')->name('procurement.')->group(function () {
                     Route::get('/warehouses', 'warehouses')->name('warehouses');
+                    Route::post('/warehouses/{warehouse}/link', 'createLink')->name('warehouses.link');
+                    Route::post('/warehouses/{warehouse}/revoke-links', 'revokeLinks')->name('warehouses.revoke-links');
                     Route::post('/warehouses', 'storeWarehouse')->name('warehouses.store');
                     Route::get('/warehouses/{warehouse}/edit', 'editWarehouse')->name('warehouses.edit');
                     Route::put('/warehouses/{warehouse}', 'updateWarehouse')->name('warehouses.update');
@@ -78,6 +101,9 @@ Route::prefix('admin')
                     Route::post('/orders/{order}/responses/{requestItem}', 'recordOffer')->name('offers.store');
                     Route::post('/orders/{order}/allocations', 'allocate')->name('allocations.store');
                     Route::post('/orders/{order}/allocations/{allocation}/cancel', 'cancelAllocation')->name('allocations.cancel');
+                    Route::post('/orders/{order}/allocations/{allocation}/status', 'transitionAllocation')->name('allocations.status');
+                    Route::post('/orders/{order}/allocations/{allocation}/sms', 'allocationSms')->name('allocations.sms');
+                    Route::post('/orders/{order}/requests/{warehouseRequest}/sms', 'requestSms')->name('requests.sms');
                 });
 
             /*
@@ -237,6 +263,11 @@ Route::prefix('admin')
                     Route::post('/customer/{customer}/order', 'storeOrder')->name('order.store');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}/order/{order}/confirm', 'confirmOneClick')->name('one-click.confirm');
+                    Route::post('/customer/{customer}/order/{order}/item/{item}/cancel', 'cancelItem')->name('order.item.cancel');
+                    Route::post('/customer/{customer}/order/{order}/start', 'startOrder')->name('order.start');
+                    Route::post('/customer/{customer}/order/{order}/courier', 'assignCourier')->name('order.courier');
+                    Route::post('/customer/{customer}/order/{order}/cancellation/{cancellation}/refund', 'refundCancellation')
+                        ->middleware(['can:refund', 'throttle:10,1'])->name('order.cancellation.refund');
                     Route::post('/customer/{customer}/order/{order}/pay-link', 'sendPayLink')->middleware('throttle:10,1')->name('order.pay-link');
                     Route::post('/customer/{customer}', 'update')->name('update');
                     Route::post('/customer/{customer}/credit-profile', 'updateCreditProfile')->name('credit-profile.update');

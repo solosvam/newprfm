@@ -11,8 +11,8 @@
 
             @if($showExtras ?? true)
             <div id="sidebarExtras">
-                @include('frontend.includes.sidebar-products', ['items' => $recommendedProducts, 'title' => __('home_recommended'), 'panelId' => 'recommendedPanelBody'])
-                @include('frontend.includes.sidebar-products', ['items' => $bestSellers, 'title' => __('home_bestsellers'), 'panelId' => 'bestSellersPanelBody'])
+                @include('frontend.includes.sidebar-products', ['items' => $recommendedProducts, 'title' => __('home_recommended'), 'panelId' => 'recommendedPanelBody', 'dynamic' => !auth('web')->check()])
+                @include('frontend.includes.sidebar-products', ['items' => $bestSellers, 'title' => __('home_bestsellers'), 'panelId' => 'bestSellersPanelBody', 'ranked' => true])
             </div>
             @endif
         </div>

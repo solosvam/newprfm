@@ -191,6 +191,14 @@
 
                                 <div class="tab-content">
                                     <div class="tab-pane fade active show" id="product-info" role="tabpanel">
+                                        <div class="form-check form-switch mb-4">
+                                            <input type="hidden" name="active" value="0">
+                                            <input class="form-check-input" type="checkbox" id="product_active" name="active" value="1" @checked(old('active', $product->active))>
+                                            <label class="form-check-label" for="product_active">
+                                                Məhsul aktivdir
+                                                <span class="text-muted small d-block">Deaktiv olsa, bütün variantları ilə birlikdə saytda görünmür.</span>
+                                            </label>
+                                        </div>
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="row">

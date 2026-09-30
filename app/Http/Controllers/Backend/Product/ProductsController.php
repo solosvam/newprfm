@@ -215,6 +215,8 @@ class ProductsController extends Controller
                 'content_az' => $request->content_az,
                 'content_en' => $request->content_en,
                 'content_ru' => $request->content_ru,
+                // Forma həmişə active göndərir (hidden 0 + checkbox 1); köhnə formada yoxdursa dəyişmir
+                'active'     => $request->has('active') ? $request->boolean('active') : $product->active,
             ]);
 
             $product->categories()->sync($request->categories);

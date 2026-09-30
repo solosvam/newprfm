@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
 use App\Models\Payment\Payment;
+use App\Services\BonusService;
 use App\Services\Payment\Birbank;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,8 +43,15 @@ class PayLinkController extends Controller
             default => 'unavailable',
         };
 
+        // Bonus: ödənilibsə yazılan, ödənilməyibsə ödənişdən sonra qazanacağı
+        $bonus = match ($state) {
+            'paid' => (float) $order->bonus_earned,
+            'pay', 'failed', 'checking' => app(BonusService::class)->amountForOrder($order),
+            default => 0.0,
+        };
+
         return response()
-            ->view('frontend.pay-link', compact('order', 'state', 'token'))
+            ->view('frontend.pay-link', compact('order', 'state', 'token', 'bonus'))
             ->header('X-Robots-Tag', 'noindex, nofollow')
             ->header('Referrer-Policy', 'no-referrer')
             ->header('Cache-Control', 'no-store, private');

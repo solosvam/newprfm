@@ -107,3 +107,21 @@ $(document).ready(function () {
     });
 });
 
+// Kopyala: <button data-copy="#inputId"> — hədəf sahənin dəyərini buferə yazır
+$(document).on('click', '[data-copy]', function () {
+    const btn = this;
+    const input = document.querySelector(btn.dataset.copy);
+    if (!input) return;
+    const label = btn.textContent;
+    const done = () => {
+        btn.textContent = 'Kopyalandı ✓';
+        setTimeout(() => { btn.textContent = label; }, 1500);
+    };
+    if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(input.value).then(done);
+    } else {
+        input.select();
+        document.execCommand('copy');
+        done();
+    }
+});
