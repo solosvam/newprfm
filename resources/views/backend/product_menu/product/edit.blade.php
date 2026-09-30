@@ -117,7 +117,21 @@
                     }
 
                     if (data.matches.ingredient_ids.length) {
-                        $('#ingredients').val(data.matches.ingredient_ids.map(String)).trigger('change');
+                        const ingredientSelect = $('#ingredients');
+
+                        (data.matches.ingredients || []).forEach(function (ingredient) {
+                            const value = String(ingredient.id);
+
+                            if (!ingredientSelect.find('option[value="' + value + '"]').length) {
+                                const label = [ingredient.name_az, ingredient.name_en]
+                                    .filter(Boolean)
+                                    .join(' | ');
+
+                                ingredientSelect.append(new Option(label, value, false, false));
+                            }
+                        });
+
+                        ingredientSelect.val(data.matches.ingredient_ids.map(String)).trigger('change');
                     }
 
                     const notes = data.product.notes.length ? data.product.notes.map(escapeHtml).join(', ') : 'tapılmadı';
