@@ -1,14 +1,13 @@
 (function () {
     'use strict';
-    // Açıq lavanda fon; yuxarı/aşağı zolaq və loqo — tünd temanın rəngləri; ölçü kartları tünd bənövşəyi
     const colors = {
-        bgTop: '#f4f0fa', bgBottom: '#e7dff3',            // fon (gradient)
-        band: '#1f1a28', logo: '#BDA4E5', bandText: '#b3a9c4', // tünd zolaqlar
-        image: '#ffffff', surface: '#ffffff',             // şəkil kartı, qiymət bloku
+        background: '#fff',                            // fon
+        band: '#1f1a28', logo: '#BDA4E5', bandText: '#fff', // tünd zolaqlar
+        image: '#ffffff',                                 // şəkil kartı
         accent: '#6f52a8',                                // brend adı
         text: '#1a1520', secondary: '#5f586b', muted: '#8a8198',
         border: '#ddd5ea', strong: '#cfc4e2',
-        card: '#2b1f4a', cardSize: '#BDA4E5', cardPrice: '#ffffff', // ölçü kartları
+        card: '#2b1f4a', cardSize: '#FFFFFF', cardPrice: '#ffffff', // ölçü kartları
         shadow: 'rgba(43,31,74,.16)',
     };
     const font = '"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
@@ -95,20 +94,14 @@
         const brandY = imageY + imageSize + 30;
         const nameY = brandY + 40;
         const subtitleY = nameY + lines.length * 51 + 10;
-        const pricesHeight = 112 + rows * 105 + (rows - 1) * 20;
-        const pricesY = subtitleY + 28 + 44;
+        const pricesHeight = rows * 105 + (rows - 1) * 20;
+        const pricesY = subtitleY + 28 + 36;
         canvas.width = 1080;
         const footer = 72;
         canvas.height = pricesY + pricesHeight + 40 + footer;
         const height = canvas.height;
-        const background = ctx.createLinearGradient(0, 0, 0, height);
-        background.addColorStop(0, colors.bgTop);
-        background.addColorStop(1, colors.bgBottom);
-        ctx.fillStyle = background;
+        ctx.fillStyle = colors.background;
         ctx.fillRect(0, 0, 1080, height);
-        const glow = ctx.createRadialGradient(540, imageY + imageSize / 2, 0, 540, imageY + imageSize / 2, 520);
-        glow.addColorStop(0, 'rgba(189,164,229,.28)'); glow.addColorStop(1, 'rgba(189,164,229,0)');
-        ctx.fillStyle = glow; ctx.fillRect(0, 0, 1080, height);
 
         // Yuxarı zolaq — tünd, loqo lavanda
         ctx.fillStyle = colors.band;
@@ -124,13 +117,11 @@
         lines.forEach((line, index) => text(ctx, line, nameY + index * 51, 42, 700, colors.text));
         text(ctx, product.subtitle, subtitleY, 28, 400, colors.secondary, 900, 1);
 
-        box(ctx, 60, pricesY, 960, pricesHeight, 20, colors.surface, colors.border, 20);
-        text(ctx, 'MÖVCUD ÖLÇÜLƏR VƏ QİYMƏTLƏR', pricesY + 30, 20, 400, colors.muted, 900, 2);
         const columns = Math.min(3, product.variants.length);
         const cardWidth = (900 - (columns - 1) * 20) / columns;
         product.variants.forEach((variant, index) => {
             const x = 90 + (index % columns) * (cardWidth + 20);
-            const y = pricesY + 82 + Math.floor(index / columns) * 125;
+            const y = pricesY + Math.floor(index / columns) * 125;
             box(ctx, x, y, cardWidth, 105, 16, colors.card, colors.card);
             text(ctx, variant.size, y + 20, 22, 600, colors.cardSize, cardWidth - 30, 0, x + cardWidth / 2);
             text(ctx, `${variant.price} ₼`, y + 56, 32, 800, colors.cardPrice, cardWidth - 30, 0, x + cardWidth / 2);

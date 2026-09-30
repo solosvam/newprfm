@@ -328,7 +328,13 @@ export async function fillPage(plan) {
         await setText('Soyad', c.surname);
         await setText('Ata adı', c.father_name);
         if (c.gender) await setCombo('Cinsi', c.gender, document, { match: 'contains' });
-        bad('Ş.V. Seriya və Ş.V. Nömrə bizdə yoxdur — vəsiqədən baxıb özünüz yazın');
+        if (c.id_card_series && c.id_card_number) {
+            const series = await setCombo('Ş.V. Seriya', c.id_card_series);
+            const number = await setText('Ş.V. Nömrə', c.id_card_number);
+            if (series && number) ok(`Vəsiqə: ${c.id_card_series} ${c.id_card_number}`);
+        } else {
+            bad('Vəsiqənin seriya/nömrəsi saytda yoxdur — vəsiqədən baxıb özünüz yazın');
+        }
     }
 
     // 4. Faktoring — məhsul sifariş məbləği və Ferrum-dakı cari limitə görə
