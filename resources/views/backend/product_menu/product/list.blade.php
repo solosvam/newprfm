@@ -136,6 +136,7 @@
                         <th class="text-muted text-small text-uppercase">Ölçü</th>
                         <th class="text-muted text-small text-uppercase">Qiymət</th>
                         <th class="text-muted text-small text-uppercase">Kateqoriya</th>
+                        <th class="text-muted text-small text-uppercase">Notlar</th>
                         <th class="text-muted text-small text-uppercase">Aktiv</th>
                         <th class="text-muted text-small text-uppercase">Əməliyyat</th>
                     </tr>
