@@ -271,11 +271,15 @@ class ProductsController extends Controller
             // Formda sürüklənmiş mövcud şəkillərin sırasını saxlayırıq.
             $this->updateImageOrder($product, $request->input('image_order', []));
 
+            $manager = ImageManager::usingDriver(Driver::class);
+
+            // Edit zamanı axtarışdan seçilən uzaq şəkilləri də məhsula əlavə et.
+            $this->storeSelectedRemoteImages($product, $request, $manager);
+
             /*
              * Yeni şəkillər
              */
             if ($request->hasFile('images')) {
-                $manager = ImageManager::usingDriver(Driver::class);
                 $sortOrder = $this->nextImageSortOrder($product);
 
                 // brand_id dəyişmiş ola bilər, relation-u yenidən oxuyuruq
