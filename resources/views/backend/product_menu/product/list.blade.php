@@ -14,10 +14,10 @@
 @endsection
 
 @section('js_page')
-    <script src="{{ asset_v('backend/js/product-poster.js') }}"></script>
+    <script src="{{ asset_v('backend/js/product-poster.js') }}?v=1"></script>
     <script src="{{ asset('backend/js/vendor/datatables.min.js') }}"></script>
     <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
-    <script src="{{ asset('backend/js/plugins/datatable.products.ajax.js')}}"></script>
+    <script src="{{ asset_v('backend/js/plugins/datatable.products.ajax.js') }}?v=1"></script>
 @endsection
 
 @section('content')
