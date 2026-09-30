@@ -251,6 +251,25 @@ class ProcurementTest extends TestCase
         $this->get($url)->assertOk();
     }
 
+    public function test_portal_shows_gender_and_type(): void
+    {
+        $a = Warehouse::create(['name_az' => 'Anbar A', 'active' => true]);
+        DB::table('brands')->insert(['id' => 1, 'name' => 'Chanel']);
+        DB::table('types')->insert(['id' => 1, 'name_az' => 'Eau de Parfum']);
+        DB::table('genders')->insert([['id' => 1, 'name_az' => 'Qadın'], ['id' => 2, 'name_az' => 'Kişi']]);
+        DB::table('products')->insert(['id' => 1, 'name' => 'Coco', 'brand_id' => 1, 'type_id' => 1]);
+        DB::table('product_genders')->insert(['product_id' => 1, 'gender_id' => 1]);
+        $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
+        $order->items()->create(['quantity' => 1, 'product_id' => 1]);
+        app(ProcurementService::class)->createRequests($order, [$a->id], [$order->items()->first()->id], 7);
+        $url = app(\App\Services\WarehousePortalService::class)->issue($a, 7);
+
+        $this->get($url)->assertOk()
+            ->assertSee('<span class="wp-chip wp-chip--gender">Qadın üçün</span>', false)
+            ->assertSee('<span class="wp-chip wp-chip--type">Eau de Parfum</span>', false)
+            ->assertDontSee('Kişi üçün');
+    }
+
     public function test_warehouse_answer_is_scoped_and_replay_safe(): void
     {
         $a = Warehouse::create(['name_az' => 'A', 'active' => true]);

@@ -32,12 +32,14 @@
         $picked = (int) $order->items->flatMap->allocations->where('status', 'picked')->sum('quantity');
         $collect = $courier['statuses']->collectAmount($order);
         $code = $order->status?->code;
+        $toReturn = (int) $order->items->flatMap->allocations->where('status', 'returning')->sum('quantity');
     @endphp
     <a href="{{ route('admin.courier.order', $order) }}" class="card courier-order mb-3">
         <div class="card-body">
             <div class="courier-order__top">
                 <strong>{{ $order->order_no }}</strong>
                 <span class="badge {{ $code === 'courier_assigned' ? 'bg-outline-primary' : 'bg-primary' }}">{{ $stepLabels[$code] ?? $order->status?->name_az }}</span>
+                @if($toReturn)<span class="badge bg-warning">Anbara qaytar: {{ $toReturn }} ədəd</span>@endif
             </div>
             <div class="courier-order__who">{{ trim($order->customer?->name.' '.$order->customer?->surname) }}</div>
             <div class="courier-order__where">{{ $order->address?->city }}{{ $order->address?->address ? ', '.$order->address->address : '' }}</div>

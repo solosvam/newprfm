@@ -124,6 +124,36 @@ class ProcurementService
         });
     }
 
+    /**
+     * Qapıda imtina edilən məhsul anbara qaytarıldı (kuryer "Qaytardım"): returning → returned.
+     * Anbara borc bu hissə üzrə silinir (FinanceService::warehouseDebts yalnız götürülmüş/qaytarılmamışı sayır).
+     */
+    public function markReturned(Order $order, int $allocationId, int $actor): OrderItemAllocation
+    {
+        return DB::transaction(function () use ($order, $allocationId, $actor) {
+            $this->lockOrder($order, ['sent', 'at_address', 'delivered']); // yoldan sonra (təhvildən sonra da)
+            $allocation = OrderItemAllocation::with(['warehouse', 'orderItem.product'])
+                ->whereIn('order_item_id', $order->items()->select('id'))->lockForUpdate()->findOrFail($allocationId);
+            if ($allocation->status === OrderItemAllocation::RETURNED) {
+                return $allocation; // təkrar klik
+            }
+            $this->ensure($allocation->status === OrderItemAllocation::RETURNING, 'Bu hissə anbara qaytarılmalı deyil.');
+            $allocation->update(['status' => OrderItemAllocation::RETURNED]);
+            AllocationStatusLog::create([
+                'order_item_allocation_id' => $allocation->id, 'from_status' => OrderItemAllocation::RETURNING,
+                'to_status' => OrderItemAllocation::RETURNED, 'user_id' => $actor, 'note' => 'Anbara qaytarıldı', 'created_at' => now(),
+            ]);
+            DB::table('order_status_logs')->insert([
+                'order_id' => $order->id, 'status_id' => $order->fresh()->order_status_id, 'user_id' => $actor, 'kind' => 'warehouse_return',
+                'note' => 'Anbara qaytarıldı: '.($allocation->warehouse?->name_az ?? 'anbar').' — '
+                    .($allocation->orderItem?->product?->name ?? 'Məhsul').' ×'.$allocation->quantity,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            return $allocation;
+        });
+    }
+
     /** @return string|null ləğvdən əvvəlki status (artıq ləğv olunubsa null) */
     public function cancelAllocation(Order $order, int $allocationId, string $note, int $actor): ?string
     {

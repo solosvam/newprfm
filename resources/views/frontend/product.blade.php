@@ -42,6 +42,8 @@
         $subtitle = collect([$genderName, $typeName])->filter()->implode(' · ');
         $initialPrice = (float) ($firstVariant?->price ?? 0);
         $firstPeriod = $creditPeriods->first();
+        // ≤ 200 AZN məbləğdə yalnız 3 və 6 ay (CreditPeriod::availableFor); variant dəyişəndə main.js yeniləyir
+        $firstAvailablePeriod = $creditPeriods->first(fn ($p) => $p->availableFor($initialPrice));
     @endphp
 
     <p class="crumb">
@@ -151,7 +153,8 @@
                         $installmentTotal = $initialPrice + (($initialPrice * $rate) / 100);
                         $installmentMonthly = $installmentTotal / $period->month;
                     @endphp
-                    <tr class="{{ $loop->first ? 'active' : '' }}" data-month="{{ $period->month }}" data-rate="{{ $rate }}">
+                    @php $isFirstAvailable = $firstAvailablePeriod && $period->is($firstAvailablePeriod); @endphp
+                    <tr class="{{ $isFirstAvailable ? 'active' : '' }}" data-month="{{ $period->month }}" data-rate="{{ $rate }}" @if(!$period->availableFor($initialPrice)) hidden @endif>
                         <td>
                             <input
                                 type="radio"
@@ -159,7 +162,7 @@
                                 value="{{ $period->month }}"
                                 data-monthly="{{ $installmentMonthly }}"
                                 data-total="{{ $installmentTotal }}"
-                                {{ $loop->first ? 'checked' : '' }}
+                                {{ $isFirstAvailable ? 'checked' : '' }}
                             >
                         </td>
                         <td>{{ $period->month }} {{ __('product_month') }}{{ $rate == 0 ? ' ' . __('product_interest_free') : '' }}</td>

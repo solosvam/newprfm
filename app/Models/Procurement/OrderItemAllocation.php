@@ -13,6 +13,7 @@ class OrderItemAllocation extends Model
      |   selected → notified → reserved → picked
      |   problem — istənilən aktiv mərhələdən; həll: əvvəlki mərhələyə qayıdır və ya ləğv
      |   cancelled — picked-dən sonra mümkün deyil
+     |   picked → returning (qapıda imtina: kuryer məhsulu anbara aparır) → returned (kuryer "Qaytardım")
      */
     public const SELECTED = 'selected';
     public const NOTIFIED = 'notified';
@@ -20,6 +21,8 @@ class OrderItemAllocation extends Model
     public const PICKED = 'picked';
     public const PROBLEM = 'problem';
     public const CANCELLED = 'cancelled';
+    public const RETURNING = 'returning';
+    public const RETURNED = 'returned';
 
     public const LABELS = [
         self::SELECTED => 'Anbar seçilib',
@@ -28,7 +31,15 @@ class OrderItemAllocation extends Model
         self::PICKED => 'Götürülüb',
         self::PROBLEM => 'Problem',
         self::CANCELLED => 'Ləğv edilib',
+        self::RETURNING => 'Anbara qaytarılır',
+        self::RETURNED => 'Anbara qaytarıldı',
     ];
+
+    /** Təminatda sayılmır (məhsulun aktiv miqdarını ödəmir) */
+    public const SUPPLY_INACTIVE = [self::CANCELLED, self::RETURNING, self::RETURNED];
+
+    /** Anbara borc yaradır: götürülüb və ya hələ qaytarılmayıb (məhsul kuryerdədir) */
+    public const DEBT_STATUSES = [self::PICKED, self::RETURNING];
 
     /** Normal axın: hər mərhələdən irəli getmək olar (məs. telefonla dərhal "ayırdı") */
     public const FLOW = [self::SELECTED, self::NOTIFIED, self::RESERVED, self::PICKED];

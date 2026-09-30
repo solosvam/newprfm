@@ -12,6 +12,7 @@ class OrderItemCancellation extends Model
     public const REASONS = [
         'not_in_stock' => 'Anbarlarda yoxdur',
         'customer_refused' => 'Müştəri imtina etdi',
+        'door_refused' => 'Qapıda imtina',
         'other' => 'Digər',
     ];
 

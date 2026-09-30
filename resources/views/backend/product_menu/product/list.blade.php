@@ -14,12 +14,14 @@
 @endsection
 
 @section('js_page')
+    <script src="{{ asset_v('backend/js/product-poster.js') }}"></script>
     <script src="{{ asset('backend/js/vendor/datatables.min.js') }}"></script>
     <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
     <script src="{{ asset('backend/js/plugins/datatable.products.ajax.js')}}"></script>
 @endsection
 
 @section('content')
+    @include('backend.product_menu.product.partials.poster-modal')
     <div class="container">
         <div class="page-title-container">
             <div class="row">

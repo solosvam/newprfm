@@ -5,6 +5,8 @@
 @endphp
 @extends('backend.layout',[ 'title'=>$title])
 @section('css')
+    <link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/cropper.min.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('backend/css/crm-credit-profile.css') }}">
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2.min.css')}}"/>
     <link rel="stylesheet" href="{{asset('backend/css/vendor/select2-bootstrap4.min.css')}}"/>
     <link rel="stylesheet" href="{{ asset_v('backend/css/crm-order.css') }}"/>
@@ -19,10 +21,14 @@
 @endsection
 
 @section('js_page')
+    <script src="{{ asset_v('frontend/js/vendor/cropper.min.js') }}"></script>
+    <script src="{{ asset_v('frontend/js/id-card-cropper.js') }}"></script>
+    <script src="{{ asset_v('backend/js/crm-credit-profile.js') }}"></script>
     <script src="{{ asset_v('backend/js/crm.js') }}"></script>
     <script src="{{ asset_v('backend/js/crm-order.js') }}"></script>
 @endsection
 @section('content')
+    @include('components.id-card-crop-dialog')
     <div class="container">
         <!-- Title and Top Buttons Start -->
         <div class="page-title-container">
@@ -49,7 +55,7 @@
                                data-bs-html="true"
                                data-bs-content="
                                    <ul class='mb-0 ps-3 small'>
-                                       <li><b>Mobil no:</b> 0 ilə başlayan 10 rəqəm (0103227575)</li>
+                                       <li><b>Mobil no:</b> 0103227575 və ya 994103227575</li>
                                        <li><b>Ad Soyad:</b> boşluqla ayır (Ruf Ibr)</li>
                                        <li><b>FİN:</b> nöqtə ilə başlayan 8 simvol (.A1B2C34)</li>
                                    </ul>
@@ -304,4 +310,5 @@
             </div>
         </div>
     </div>
+    @include('backend.crm.partials.create-customer-modal')
 @endsection

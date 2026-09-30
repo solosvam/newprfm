@@ -41,6 +41,8 @@ body { margin: 0; background: var(--wp-bg); color: var(--wp-text); font: 16px/1.
 .wp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .wp-chip { padding: 4px 10px; border-radius: 999px; background: var(--wp-bg); font-size: 13px; font-weight: 600; }
 .wp-chip--need { background: var(--wp-accent-soft); color: var(--wp-accent); }
+.wp-chip--gender { background: var(--wp-part-soft); color: var(--wp-part); }
+.wp-chip--type { background: var(--wp-card); color: var(--wp-text); box-shadow: inset 0 0 0 1px var(--wp-line); }
 .wp-card__meta { margin-top: 8px; font-size: 12px; color: var(--wp-muted); }
 
 /* Mövcudluq: böyük radio düymələr */

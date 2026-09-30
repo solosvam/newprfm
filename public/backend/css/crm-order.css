@@ -136,3 +136,4 @@
 }
 .crm-search-results .search-item { cursor: pointer; }
 .crm-search-results .search-item:hover { background: var(--background, #f6f6f6); }
+.crm-search-empty { color: var(--muted, #6c757d); font-size: 14px; }

@@ -104,6 +104,65 @@ class CourierFlowTest extends TestCase
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
     }
 
+    public function test_returning_part_keeps_warehouse_debt_until_returned(): void
+    {
+        $courier = User::forceCreate(['name' => 'Fərid']);
+        [$order, $part, $wh] = $this->assigned($courier);
+        app(ProcurementService::class)->transition($order, $part->id, 'picked', [], $courier->id);
+        $f = app(FinanceService::class);
+        $f->warehouseAccount($wh);
+        $this->assertSame(8000, $f->warehouseDebts()[$wh->id]);
+
+        $part->fresh()->update(['status' => 'returning']);   // qapıda imtina — məhsul hələ kuryerdədir
+        $this->assertSame(8000, $f->warehouseDebts()[$wh->id]);
+        $part->fresh()->update(['status' => 'returned']);    // anbara qaytarıldı
+        $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
+    }
+
+    public function test_courier_can_transfer_order_before_picking(): void
+    {
+        (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
+        Schema::table('users', fn (Blueprint $t) => $t->boolean('active')->default(true));
+        \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
+        [$a, $b] = [User::forceCreate(['name' => 'Anar']), User::forceCreate(['name' => 'Bəxtiyar'])];
+        $a->assignRole(FinanceService::COURIER_ROLE);
+        $b->assignRole(FinanceService::COURIER_ROLE);
+        [$order, $part] = $this->assigned($a);
+        $s = app(OrderStatusService::class);
+
+        $this->assertNull($s->transferBlock($order));
+        $this->assertSame(['Bəxtiyar'], $s->couriers()->reject(fn ($u) => $u->id === $a->id)->pluck('name')->all());
+        try {
+            $s->transferCourier($order, $a, $a->id); // özünə
+            $this->fail('Özünə ötürmək olmaz');
+        } catch (ValidationException) {
+        }
+        $s->transferCourier($order, $s->couriers()->firstWhere('id', $b->id), $a->id); // controller kimi — bazadan
+        $this->assertSame($b->id, (int) $order->fresh()->courier_id);
+        $this->assertSame('courier_assigned', $this->statusCode($order));
+        $this->assertStringContainsString('→ Bəxtiyar', DB::table('order_status_logs')->where('kind', 'courier_change')->value('note'));
+
+        // Artıq A-nın sifarişi deyil; B götürəndən sonra ötürmək olmaz
+        try {
+            $s->transferCourier($order, $a, $a->id);
+            $this->fail('Başqasının sifarişi');
+        } catch (HttpException) {
+        }
+        app(ProcurementService::class)->transition($order, $part->id, 'picked', [], $b->id);
+        $this->assertStringContainsString('götürülüb', (string) $s->transferBlock($order->fresh()));
+    }
+
+    public function test_delivery_problem_is_marked_as_notice(): void
+    {
+        $courier = User::forceCreate(['name' => 'Fərid']);
+        [$order, $part] = $this->assigned($courier);
+        app(ProcurementService::class)->transition($order, $part->id, 'picked', [], $courier->id);
+        $s = app(OrderStatusService::class);
+        $s->startDelivery($order, $courier->id);
+        $s->deliveryProblem($order, $courier->id, 'Müştəri qapını açmır');
+        $this->assertSame('Çatdırılma problemi: Müştəri qapını açmır', DB::table('order_status_logs')->where('kind', 'delivery_problem')->value('note'));
+    }
+
     public function test_other_courier_cannot_touch_the_order(): void
     {
         [$order] = $this->assigned(User::forceCreate(['name' => 'A']));

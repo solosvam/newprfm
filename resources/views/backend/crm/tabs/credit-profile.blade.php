@@ -1,5 +1,14 @@
 <div class="p-3">
-    <form method="POST" action="{{ route('admin.crm.credit-profile.update', $customer) }}" enctype="multipart/form-data">
+    <form id="crmCreditProfileForm"
+          data-ocr-url="{{ route('admin.crm.credit-profile.ocr', $customer) }}"
+          data-ocr-reading="{{ __('credit_ocr_reading') }}"
+          data-ocr-done="{{ __('credit_ocr_done') }}"
+          data-ocr-nothing="{{ __('credit_ocr_nothing') }}"
+          data-ocr-not-card="{{ __('credit_ocr_not_card') }}"
+          data-ocr-name-mismatch="{{ __('credit_ocr_name_mismatch') }}"
+          data-error-message="{{ __('credit_generic_error') }}"
+          data-double-side-series='@json(\App\Models\Customer\CustomerCreditProfile::DOUBLE_SIDE_SERIES)'
+          method="POST" action="{{ route('admin.crm.credit-profile.update', $customer) }}" enctype="multipart/form-data">
         @csrf
         <div class="row g-3">
             <div class="col-md-6"><label class="form-label">Ata adı</label><input class="form-control" name="father_name" value="{{ old('father_name', $profile?->father_name) }}" required></div>
@@ -23,15 +32,24 @@
             <div class="col-md-6"><label class="form-label">Qohum mobil</label><input class="form-control" name="relative_2_phone" value="{{ old('relative_2_phone', $profile?->relative_2_phone) }}" required></div>
             <div class="col-md-6"><label class="form-label">İş yeri</label><input class="form-control" name="workplace_name" value="{{ old('workplace_name', $profile?->workplace_name) }}" required></div>
             <div class="col-md-6"><label class="form-label">Əmək haqqı</label><input class="form-control" type="number" step="0.01" min="0.01" name="salary" value="{{ old('salary', $profile?->salary) }}" required></div>
+            <div class="col-12"><p class="text-muted mb-0">{{ __('credit_section_documents_hint') }}</p></div>
+            @php $needsBack = \App\Models\Customer\CustomerCreditProfile::needsBackSide($series); @endphp
             @foreach(['id_card_front' => 'Şəxsiyyət vəsiqəsi — ön', 'id_card_back' => 'Şəxsiyyət vəsiqəsi — arxa (yalnız AZE üçün)'] as $field => $label)
-                <div class="col-md-6">
-                    <label class="form-label">{{ $label }}</label>
-                    @if($profile?->{$field})
-                        <a href="{{ asset('frontend/uploads/customers/' . basename($profile->{$field})) }}" target="_blank" class="d-block mb-2">
-                            <img src="{{ asset('frontend/uploads/customers/' . basename($profile->{$field})) }}" class="img-fluid rounded border" style="max-height:140px;" alt="{{ $label }}">
-                        </a>
-                    @endif
-                    <input class="form-control" type="file" name="{{ $field }}" accept="image/jpeg,image/png,image/webp" @required($field === 'id_card_front' && !$profile?->{$field})>
+                @php $hasImage = (bool) $profile?->{$field}; $isBack = $field === 'id_card_back'; @endphp
+                <div class="col-md-6" @if($isBack) data-back-side @if(!$needsBack) hidden @endif @endif>
+                    <label class="form-label" for="crm-{{ $field }}">{{ $label }} *</label>
+                    <div data-photo="{{ $field }}">
+                        <img src="{{ $hasImage ? asset('frontend/uploads/customers/' . basename($profile->{$field})) : '' }}"
+                             class="crm-credit-preview img-fluid rounded border d-block mb-2" alt="{{ $label }}"
+                             @if(!$hasImage) hidden @endif>
+                        <input @class(['form-control', 'is-invalid' => $errors->has($field)]) id="crm-{{ $field }}"
+                               type="file" name="{{ $field }}" accept="image/jpeg,image/png,image/webp"
+                               @required(!$hasImage && (!$isBack || $needsBack))>
+                        <div class="invalid-feedback" data-error="{{ $field }}">{{ $errors->first($field) }}</div>
+                    </div>
+                    @unless($isBack)
+                        <div class="alert mt-2 mb-0" data-ocr-status aria-live="polite" hidden></div>
+                    @endunless
                 </div>
             @endforeach
             <div class="col-12"><button type="submit" class="btn btn-primary">Dəyişiklikləri yadda saxla</button></div>

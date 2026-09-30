@@ -1,7 +1,7 @@
 {{--
   Anbar portalı → "Seçilənlər": operator bu anbarın təklifini seçib.
   Seçilib / Anbara bildirildi → "Rezerv etdim" və ya "Problem var"; Rezervdə / Problem — yalnız vəziyyət.
-  Parametrlər: $allocation (orderItem.product.brand, orderItem.variant.size, logs), $token
+  Parametrlər: $allocation (orderItem.product.brand/genders/type, orderItem.variant.size, logs), $token
 --}}
 @php
     $product = $allocation->orderItem?->product;
@@ -16,6 +16,7 @@
         <h2 class="wp-card__title">{{ $product?->name ?? 'Məhsul məlumatı yoxdur' }}</h2>
         <div class="wp-chips">
             @if($size)<span class="wp-chip">{{ $size }}</span>@endif
+            @include('warehouse.partials.product-chips', ['product' => $product])
             <span class="wp-chip wp-chip--need">Seçildi: {{ $allocation->quantity }} ədəd</span>
             <span class="wp-chip">{{ number_format((float) $allocation->unit_cost, 2) }} AZN / ədəd</span>
         </div>

@@ -10,7 +10,8 @@
     $staff = $staff ?? collect();
 
     // Təminat: hər məhsul üzrə aktiv (ləğv olunmamış) anbar seçimləri
-    $supply = $order->items->mapWithKeys(fn ($item) => [$item->id => min($item->activeQuantity(), (int) $item->allocations->where('status', '!=', 'cancelled')->sum('quantity'))]);
+    $inactive = \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE; // ləğv / anbara qaytarılır / qaytarıldı
+    $supply = $order->items->mapWithKeys(fn ($item) => [$item->id => min($item->activeQuantity(), (int) $item->allocations->whereNotIn('status', $inactive)->sum('quantity'))]);
     $needTotal = (int) $order->items->sum(fn ($item) => $item->activeQuantity());
     $cancelPreviews = $cancelPreviews ?? [];
     $cancelBlock = $cancelBlock ?? null;
@@ -19,7 +20,15 @@
     $refundedToCard = (float) $order->itemCancellations->where('refund_status', \App\Models\Order\OrderItemCancellation::REFUND_DONE)->sum('amount');
     $supplyTotal = (int) $supply->sum();
     $supplyPercent = $needTotal ? round($supplyTotal / $needTotal * 100) : 0;
-    $activeParts = $order->items->flatMap->allocations->where('status', '!=', 'cancelled');
+    $activeParts = $order->items->flatMap->allocations->whereNotIn('status', $inactive);
+    $returningParts = $order->items->flatMap(fn ($item) => $item->allocations->where('status', 'returning')->map(fn ($a) => ['item' => $item, 'a' => $a]));
+    $doorBlock = $doorBlock ?? 'x';
+
+    // Kuryer bildirişləri: problem, qapıda imtina, anbara qaytarma, kuryerin ötürməsi (yenisi yuxarıda)
+    $noticeLabels = ['delivery_problem' => ['Çatdırılma problemi', 'danger'], 'door_refusal' => ['Qapıda imtina', 'warning'],
+        'warehouse_return' => ['Anbara qaytarıldı', 'success'], 'courier_change' => ['Kuryer dəyişdi', 'info']];
+    $notices = $order->statusLogs->whereIn('kind', array_keys($noticeLabels))->sortByDesc('id')->values();
+    $openProblems = $activeParts->where('status', 'problem');
     $pickedTotal = (int) $activeParts->where('status', 'picked')->sum('quantity');
     $problemCount = $activeParts->where('status', 'problem')->count();
     $requestItems = $requests->flatMap->items;
@@ -27,6 +36,7 @@
 
     // Status tarixçəsi: "Ləğv edildi" yalnız baş verəndə göstərilir
     $timelineLogs = $order->statusLogs->sortBy('id')->keyBy('status_id');
+    $logsByStatus = $order->statusLogs->sortBy('id')->groupBy('status_id'); // bir statusda bir neçə qeyd ola bilər
     $currentStatusId = $order->statusLogs->sortBy('id')->last()?->status_id ?? $order->order_status_id;
     $steps = $timelineStatuses->filter(fn ($s) => $s->code !== 'cancelled' || $timelineLogs->has($s->id));
 @endphp
@@ -84,6 +94,34 @@
     @include('backend.procurement.feedback')
     @include('backend.procurement.access-link')
 
+    {{-- Kuryer bildirişləri + açıq problemlər --}}
+    @if($notices->isNotEmpty() || $openProblems->isNotEmpty() || $returningParts->isNotEmpty())
+        <div class="card mb-3 od-notices"><div class="card-body">
+            <h2 class="small-title mb-2">Kuryer bildirişləri</h2>
+            @foreach($openProblems as $part)
+                <div class="od-notice is-danger">
+                    <span class="badge bg-danger">Toplama problemi</span>
+                    <span>{{ $part->warehouse?->name_az }} — {{ \App\Models\Procurement\OrderItemAllocation::PROBLEM_TYPES[$part->problem_type] ?? 'Problem' }}@if($part->logs->last()?->note): {{ $part->logs->last()->note }}@endif</span>
+                    <span class="od-notice__meta">{{ $part->logs->last()?->created_at?->format('d.m.Y H:i') }}</span>
+                </div>
+            @endforeach
+            @foreach($returningParts as ['item' => $item, 'a' => $part])
+                <div class="od-notice is-warning">
+                    <span class="badge bg-warning">Anbara qaytarılır</span>
+                    <span>{{ $item->product?->name }} ×{{ $part->quantity }} → {{ $part->warehouse?->name_az }} (kuryer "Qaytardım" seçəndə bağlanır)</span>
+                </div>
+            @endforeach
+            @foreach($notices as $log)
+                @php [$label, $tone] = $noticeLabels[$log->kind]; @endphp
+                <div class="od-notice is-{{ $tone }}">
+                    <span class="badge bg-{{ $tone }}">{{ $label }}</span>
+                    <span>{{ $log->note }}</span>
+                    <span class="od-notice__meta">{{ $log->created_at?->format('d.m.Y H:i') }}@if($log->user) · {{ $log->user->full_name }}@endif</span>
+                </div>
+            @endforeach
+        </div></div>
+    @endif
+
     {{-- Üst kartlar --}}
     <div class="row g-3 mb-3">
         <div class="col-12 col-md-6 col-xl-4 d-flex flex-column">
@@ -136,7 +174,10 @@
                                 <div class="od-steps__title">{{ $step->name_az }}</div>
                                 @if($log)
                                     <div class="od-steps__meta">{{ $log->created_at?->format('d.m.Y H:i') }}@if($log->user) · {{ $log->user->full_name }}@endif</div>
-                                    @if($log->note)<div class="od-steps__note">{{ $log->note }}</div>@endif
+                                    {{-- bu statusdakı bütün qeydlər (kuryer bildirişləri yuxarıda ayrıca da görünür) --}}
+                                    @foreach($logsByStatus->get($step->id, collect())->filter(fn ($l) => $l->note) as $noteLog)
+                                        <div class="od-steps__note">@if($logsByStatus->get($step->id)->count() > 1)<span class="text-muted">{{ $noteLog->created_at?->format('H:i') }}</span> @endif{{ $noteLog->note }}</div>
+                                    @endforeach
                                 @endif
                             </li>
                         @endforeach
@@ -227,6 +268,11 @@
                                 <span class="badge {{ $supplyBadge }}">{{ $item->supplyLabel() }}@if(in_array($supplyStatus, ['partly_allocated'], true)) · {{ $got }}/{{ $active }}@endif</span>
                             </td>
                             <td class="text-end">
+                                @if(!$doorBlock && $item->activeQuantity() > 0 && $needTotal > 1)
+                                    <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" data-bs-toggle="modal" data-bs-target="#doorRefuseModal"
+                                            data-action="{{ route('admin.crm.order.item.refuse', [$customer, $order, $item]) }}"
+                                            data-title="{{ $itemTitle }}" data-active="{{ $active }}">Qapıda imtina</button>
+                                @endif
                                 @if(isset($cancelPreviews[$item->id]))
                                     <button type="button" class="btn btn-sm btn-outline-danger text-nowrap" data-bs-toggle="modal" data-bs-target="#cancelItemModal"
                                             data-action="{{ route('admin.crm.order.item.cancel', [$customer, $order, $item]) }}"
@@ -304,7 +350,7 @@
                     <div class="mb-3"><label class="form-label" for="cancelQty">Ləğv edilən say</label><select id="cancelQty" name="quantity" class="form-select"></select></div>
                     <div class="mb-3"><label class="form-label" for="cancelReason">Səbəb</label>
                         <select id="cancelReason" name="reason" class="form-select" required>
-                            @foreach(\App\Models\Order\OrderItemCancellation::REASONS as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
+                            @foreach(\App\Models\Order\OrderItemCancellation::REASONS as $value => $label)@continue($value === 'door_refused')<option value="{{ $value }}">{{ $label }}</option>@endforeach
                         </select></div>
                     <div class="mb-3"><label class="form-label" for="cancelNote">Qeyd</label><textarea id="cancelNote" name="note" rows="2" maxlength="2000" class="form-control" placeholder="Müştəri ilə nə razılaşdırıldı"></textarea></div>
                     <label class="form-check mb-4">
@@ -320,6 +366,23 @@
                     <div class="form-text mt-2">Məhsul sifarişdən silinmir — tarixçədə qalır. Artıq qalan anbar seçimləri bağlanır.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-danger">Ləğv et</button></div>
+            </form></div>
+        </div>
+    @endif
+
+    {{-- Qapıda imtina (kuryer zəng edib bildirir): məbləğ azalır, məhsul anbara qaytarılır --}}
+    @if(!$doorBlock)
+        <div class="modal modal-right fade" id="doorRefuseModal" tabindex="-1" aria-labelledby="doorRefuseTitle" aria-hidden="true">
+            <div class="modal-dialog"><form class="modal-content" method="POST" action="">
+                @csrf
+                <div class="modal-header"><h5 class="modal-title" id="doorRefuseTitle">Qapıda imtina</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+                <div class="modal-body">
+                    <div class="fw-bold mb-1" data-door-item></div>
+                    <div class="mb-3"><label class="form-label" for="doorQty">Müştəri götürmədi</label><select id="doorQty" name="quantity" class="form-select"></select></div>
+                    <div class="mb-3"><label class="form-label" for="doorNote">Qeyd</label><textarea id="doorNote" name="note" rows="2" maxlength="2000" class="form-control" placeholder="Məs.: ətri bəyənmədi"></textarea></div>
+                    <div class="form-text">Sifarişin yekunu azalır, kuryer yeni məbləği alır. Məhsul kuryerdə "Anbara qaytarılır" olur — kuryer anbara verəndə "Qaytardım" seçir.</div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-warning">Qeyd et</button></div>
             </form></div>
         </div>
     @endif

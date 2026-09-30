@@ -8,7 +8,7 @@
         ->filter(fn ($row) => $row['a']->status !== 'cancelled' || ($settlement['paid'][$row['a']->id] ?? 0) !== 0);
     $cost = fn ($a) => (int) round($a->quantity * (float) $a->unit_cost * 100);
     $money = fn ($cents) => number_format($cents / 100, 2).' AZN';
-    $pickedCost = $parts->filter(fn ($r) => $r['a']->status === 'picked')->sum(fn ($r) => $cost($r['a']));
+    $pickedCost = $parts->filter(fn ($r) => in_array($r['a']->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true))->sum(fn ($r) => $cost($r['a'])); // götürülüb + hələ qaytarılmayıb
     $allCost = $parts->filter(fn ($r) => $r['a']->status !== 'cancelled')->sum(fn ($r) => $cost($r['a']));
     $paidTotal = $parts->sum(fn ($r) => $settlement['paid'][$r['a']->id] ?? 0);
     $goods = (int) round(((float) $order->subtotal - (float) $order->discount) * 100);
@@ -37,10 +37,10 @@
                 <td>{{ $item->product?->name ?? 'Məhsul' }}<span class="od-sub">{{ $item->variant?->size?->name_az }}</span></td>
                 <td>{{ $a->warehouse->name_az }}</td>
                 <td class="od-num">{{ $a->quantity }} × {{ number_format((float) $a->unit_cost, 2) }}</td>
-                <td>{{ $a->label() }}@if($a->status !== 'picked' && $a->status !== 'cancelled')<span class="od-sub">borc götürüləndə yaranır</span>@endif</td>
+                <td>{{ $a->label() }}@if($a->status === 'returned')<span class="od-sub">anbara qaytarılıb — borc yoxdur</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) && $a->status !== 'cancelled')<span class="od-sub">borc götürüləndə yaranır</span>@endif</td>
                 <td class="od-num">{{ $money($cost($a)) }}</td>
                 <td class="od-num text-success">{{ $paid ? $money($paid) : '—' }}</td>
-                <td class="od-num {{ $left > 0 && $a->status === 'picked' ? 'text-danger fw-bold' : ($left < 0 ? 'text-warning' : '') }}">
+                <td class="od-num {{ $left > 0 && in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) ? 'text-danger fw-bold' : ($left < 0 ? 'text-warning' : '') }}">
                     {{ $left === 0 ? 'Ödənilib' : $money(abs($left)) }}@if($left < 0)<span class="od-sub">anbardan geri alınmalıdır</span>@endif
                 </td>
                 <td class="text-end">

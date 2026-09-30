@@ -60,6 +60,7 @@
                 <h2 class="wp-card__title">{{ $product?->name ?? 'Məhsul məlumatı yoxdur' }}</h2>
                 <div class="wp-chips">
                     @if($size)<span class="wp-chip">{{ $size }}</span>@endif
+                    @include('warehouse.partials.product-chips', ['product' => $product])
                     <span class="wp-chip wp-chip--need">Lazımdır: {{ $quantity }} ədəd</span>
                 </div>
                 <div class="wp-card__meta">Sorğu #{{ $item->warehouse_request_id }} · {{ $item->created_at?->format('d.m.Y H:i') }}</div>

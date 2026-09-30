@@ -31,7 +31,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let lastCheckedMobile = '';
 
     Inputmask({
-        mask: '\\9\\9\\4 99 999 99 99',
+        // 994-dən sonra birinci rəqəm 0 ola bilməz (0 basılsa qəbul olunmur, növbəti rəqəm gözlənilir)
+        mask: '\\9\\9\\4 N9 999 99 99',
+        definitions: { N: { validator: '[1-9]' } },
         placeholder: '_',
         showMaskOnHover: false,
         showMaskOnFocus: true,

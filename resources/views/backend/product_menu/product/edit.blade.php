@@ -46,6 +46,7 @@
 @endsection
 
 @section('js_page')
+    <script src="{{ asset_v('backend/js/product-poster.js') }}"></script>
     <script src="{{ asset('backend/js/vendor/select2.full.min.js') }}"></script>
     <script src="{{ asset('backend/js/forms/controls.select2.js') }}"></script>
 
@@ -407,12 +408,19 @@
 @endsection
 
 @section('content')
+    @include('backend.product_menu.product.partials.poster-modal')
     <div class="container">
         <div class="page-title-container">
             <div class="row">
                 <div class="col-12 col-sm-6">
                     <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
                     @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
+                </div>
+                <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
+                    <button type="button" class="btn btn-outline-primary w-100 w-sm-auto"
+                            data-product-poster-url="{{ route('admin.product.poster', $product) }}">
+                        Poster paylaş
+                    </button>
                 </div>
             </div>
         </div>

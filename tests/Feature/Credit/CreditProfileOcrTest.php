@@ -70,7 +70,23 @@ class CreditProfileOcrTest extends TestCase
     public function test_unavailable_without_key(): void
     {
         $this->vision(null, false);
-        $this->actingAs($this->customer())->sendCard()->assertStatus(503);
+        $this->actingAs($this->customer())->sendCard()->assertStatus(422); // 5xx yox — Cloudflare udur
+    }
+
+    public function test_vision_error_returns_readable_json(): void
+    {
+        $mock = Mockery::mock(GoogleVisionOcr::class);
+        $mock->shouldReceive('isConfigured')->andReturn(true);
+        $mock->shouldReceive('text')->andThrow(new \RuntimeException('PERMISSION_DENIED'));
+        $this->app->instance(GoogleVisionOcr::class, $mock);
+        config(['app.debug' => true]);
+
+        $this->actingAs($this->customer())->sendCard()->assertStatus(422)
+            ->assertJsonPath('message', __('credit_ocr_failed'))
+            ->assertJsonPath('debug', 'RuntimeException: PERMISSION_DENIED');
+
+        config(['app.debug' => false]);
+        $this->actingAs($this->customer())->sendCard()->assertStatus(422)->assertJsonMissingPath('debug');
     }
 
     public function test_image_is_required(): void

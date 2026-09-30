@@ -87,10 +87,10 @@
                             <td>@if($order)<a href="{{ route('admin.crm.order', [$order->customer_id, $order->id]) }}#settlements">{{ $order->order_no }}</a>@else — @endif</td>
                             <td>{{ $a->orderItem?->product?->name }}<span class="d-block small text-muted">{{ $a->orderItem?->variant?->size?->name_az }}</span></td>
                             <td class="text-nowrap">{{ $a->quantity }} × {{ number_format((float) $a->unit_cost, 2) }}</td>
-                            <td>{{ $a->label() }}@if($a->status !== 'picked')<span class="d-block small text-muted">borc götürüləndə yaranır</span>@endif</td>
+                            <td>{{ $a->label() }}@if($a->status === 'returned')<span class="d-block small text-muted">anbara qaytarılıb — borc yoxdur</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true))<span class="d-block small text-muted">borc götürüləndə yaranır</span>@endif</td>
                             <td class="text-nowrap">{{ $money($cost) }}</td>
                             <td class="text-nowrap text-success">{{ $paid ? $money($paid) : '—' }}</td>
-                            <td class="text-nowrap fw-bold {{ $a->status === 'picked' ? 'text-danger' : '' }}">{{ $money($left) }}</td>
+                            <td class="text-nowrap fw-bold {{ in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) ? 'text-danger' : '' }}">{{ $money($left) }}</td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#warehousePayModal"
                                         data-allocation="{{ $a->id }}" data-left="{{ number_format($left / 100, 2, '.', '') }}"

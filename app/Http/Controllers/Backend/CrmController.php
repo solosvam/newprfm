@@ -138,6 +138,11 @@ class CrmController extends Controller
             ->with('success', 'Müştəri məlumatları yeniləndi.');
     }
 
+    public function creditProfileOcr(Customer $customer, Request $request, \App\Services\IdCard\IdCardReader $reader): JsonResponse
+    {
+        return $reader->read($request, $customer);
+    }
+
     public function updateCreditProfile(Customer $customer, Request $request): RedirectResponse
     {
         $profile = $customer->creditProfile;
@@ -178,6 +183,58 @@ class CrmController extends Controller
         $customer->creditProfile()->updateOrCreate([], $data);
 
         return redirect()->route('admin.crm.customer', $customer->id)->with('success', 'Kredit profili yeniləndi.');
+    }
+
+    /**
+     * Yeni müştəri (CRM axtarışında nömrə tapılmayanda). Aktiv yaradılır; şifrə təsadüfidir,
+     * istəyə görə SMS ilə göndərilir (sonra "Şifrəni sıfırla" ilə də göndərmək olar).
+     */
+    public function storeCustomer(Request $request, SmsService $sms): RedirectResponse
+    {
+        // 0103227575 / +994 10 322 75 75 → 994103227575
+        $digits = preg_replace('/\D+/', '', (string) $request->input('mobile'));
+        if (preg_match('/^(?:994|0)?([1-9]\d{8})$/', $digits, $m)) {
+            $digits = '994'.$m[1];
+        }
+        $request->merge(['mobile' => $digits]);
+
+        $data = $request->validateWithBag('createCustomer', [
+            'name' => ['required', 'string', 'max:30'],
+            'surname' => ['required', 'string', 'max:30'],
+            'mobile' => ['required', 'regex:/^994[1-9]\d{8}$/', Rule::unique('customers', 'mobile')],
+            'email' => ['nullable', 'email', 'max:50', Rule::unique('customers', 'email')],
+            'gender' => ['required', 'in:0,1'],
+            'send_password' => ['nullable', 'boolean'],
+        ], [
+            'mobile.regex' => 'Mobil nömrəni düzgün yazın (994XXXXXXXXX, 994-dən sonra 0 olmur).',
+            'mobile.unique' => 'Bu nömrə ilə müştəri artıq var.',
+            'email.unique' => 'Bu e-poçt ilə müştəri artıq var.',
+            'gender.required' => 'Cinsi seçin.',
+        ], ['name' => 'Ad', 'surname' => 'Soyad', 'mobile' => 'Mobil', 'email' => 'E-poçt']);
+
+        $password = (string) random_int(100000, 999999);
+        $customer = Customer::create([
+            'name' => $data['name'],
+            'surname' => $data['surname'],
+            'mobile' => $data['mobile'],
+            'email' => $data['email'] ?? null,
+            'gender' => (int) $data['gender'],
+            'password' => bcrypt($password),
+            'active' => true,
+        ]);
+
+        $message = 'Müştəri yaradıldı: '.$customer->fullname.'.';
+        if ($request->boolean('send_password')) {
+            try {
+                $sms->send($customer->mobile, "Hörmətli {$customer->fullname}, Parfumshop hesabınız yaradıldı. Şifrəniz: {$password}");
+                $message .= ' Şifrə SMS ilə göndərildi.';
+            } catch (\Throwable $e) {
+                report($e);
+                $message .= ' SMS göndərilmədi — "Şifrəni sıfırla" ilə yenidən göndərin.';
+            }
+        }
+
+        return redirect()->route('admin.crm.customer', $customer->id)->with('success', $message);
     }
 
     public function resetPassword($id)
@@ -297,6 +354,7 @@ class CrmController extends Controller
         return view('backend.crm.order', [
             'settlement' => $settlement,
             'cancelBlock' => $cancelBlock,
+            'doorBlock' => $cancellation->doorBlockReason($order),
             'cancelPreviews' => $cancelPreviews,
             // Tarixçə: aktiv statuslar + bu sifarişdə keçilmiş köhnələr
             'timelineStatuses' => OrderStatus::where(fn ($q) => $q->where('active', 1)->orWhereIn('id', $order->statusLogs->pluck('status_id')))
@@ -515,7 +573,7 @@ class CrmController extends Controller
 
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:9999'],
-            'reason' => ['required', Rule::in(array_keys(OrderItemCancellation::REASONS))],
+            'reason' => ['required', Rule::in(array_diff(array_keys(OrderItemCancellation::REASONS), ['door_refused']))], // qapıda imtina — ayrıca
             'note' => ['nullable', 'required_if:reason,other', 'string', 'max:2000'],
             'customer_agreed' => ['accepted'],
         ], [
@@ -546,6 +604,20 @@ class CrmController extends Controller
     }
 
     /** "Kuryer təyin et": bütün məhsullar anbarlara təyin olunandan sonra */
+    /** Qapıda imtina — operator (kuryer zəng edib bildirir) */
+    public function refuseItem(Request $request, Customer $customer, Order $order, OrderItem $item, OrderItemCancellationService $service): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id && $item->order_id === $order->id, 404);
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:9999'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ], ['quantity.required' => 'Sayı seçin.']);
+        $cancellation = $service->refuseAtDoor($order, $item, (int) $data['quantity'], $data['note'] ?? null, (int) auth('admin')->id());
+
+        return back()->with('success', 'Qapıda imtina qeyd olundu: '.$cancellation->quantity.' ədəd, −'
+            .number_format((float) $cancellation->amount, 2).' AZN. Kuryer yeni məbləği alacaq və məhsulu anbara qaytaracaq.');
+    }
+
     public function assignCourier(Request $request, Customer $customer, Order $order, OrderStatusService $statuses): RedirectResponse
     {
         abort_unless($order->customer_id === $customer->id, 404);

@@ -17,7 +17,7 @@ trait OrderStatusFixtures
         if (!Schema::hasTable('order_status_logs')) {
             Schema::create('order_status_logs', function (Blueprint $t) {
                 $t->id(); $t->unsignedBigInteger('order_id'); $t->unsignedBigInteger('status_id')->nullable();
-                $t->unsignedBigInteger('user_id')->nullable(); $t->text('note')->nullable(); $t->timestamps();
+                $t->unsignedBigInteger('user_id')->nullable(); $t->text('note')->nullable(); $t->string('kind', 30)->nullable(); $t->timestamps();
             });
         }
         $codes = ['preparing' => 1, 'new' => 11, 'warehouse_requested' => 12, 'warehouses_assigned' => 13,

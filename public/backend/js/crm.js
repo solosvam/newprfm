@@ -2,6 +2,7 @@
 
 window.initTabContent = function () {
     new AcornIcons().replace();
+    if (window.initCrmCreditProfile) window.initCrmCreditProfile();
 
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
         new bootstrap.Tooltip(el);
@@ -39,9 +40,10 @@ $(document).ready(function () {
         }
 
         searchTimer = setTimeout(function () {
-            $.get(ajax_url.search.customer.crm, { q }, function (data) {
+            $.get(ajax_url.search.customer.crm, { q }, function (response) {
+                const data = response.results || [];
                 if (!data.length) {
-                    $('#search-results').hide();
+                    showNotFound(response);
                     return;
                 }
 
@@ -61,6 +63,44 @@ $(document).ready(function () {
             });
         }, 300);
     });
+
+    // Tapılmadı: ad/FİN — sadəcə mesaj; nömrə — "Yeni müştəri yarat" (modal nömrə ilə açılır)
+    function showNotFound(response) {
+        const box = $('#search-results').empty();
+        const message = $('<div class="p-3 crm-search-empty"></div>');
+        if (!response.kind) {
+            message.text('Axtarış formatı: mobil nömrə (0103227575), Ad Soyad və ya .FİN');
+            box.append(message).show();
+            return;
+        }
+        message.text(response.kind === 'phone' ? 'Bu nömrə ilə müştəri tapılmadı.' : 'Müştəri tapılmadı.');
+        box.append(message);
+        if (response.kind === 'phone' && response.mobile) {
+            const create = $('<button type="button" class="btn btn-primary btn-sm mt-2 d-block">Yeni müştəri yarat</button>');
+            create.on('click', function () { openCreateCustomer(response.mobile); });
+            message.append(create);
+        }
+        box.show();
+    }
+
+    function openCreateCustomer(mobile) {
+        const modalEl = document.getElementById('createCustomerModal');
+        if (!modalEl) return;
+        const form = modalEl.querySelector('form');
+        form.reset();
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        modalEl.querySelector('.alert')?.remove();
+        form.querySelector('[name="mobile"]').value = mobile;
+        $('#search-results').hide();
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
+        modalEl.addEventListener('shown.bs.modal', () => form.querySelector('[name="name"]').focus(), { once: true });
+    }
+
+    // Yaratma xətası olanda modal yenidən açılır (daxil edilənlər old() ilə qalır)
+    const reopen = document.querySelector('#createCustomerModal[data-open-on-load]');
+    if (reopen) (bootstrap.Modal.getInstance(reopen) || new bootstrap.Modal(reopen)).show();
+    $('#createCustomerModal form').on('submit', function () { $(this).find('button.btn-primary').prop('disabled', true); });
 
 // Nəticəyə klik
     $(document).on('click', '.search-item', function () {

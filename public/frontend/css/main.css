@@ -341,3 +341,8 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 .section-head { display: flex; justify-content: space-between; align-items: baseline; margin: 8px 0 16px; }
 .section-head h2 { font-size: 19px; margin: 0; }
 .section-head a { font-size: 13px; color: var(--accent); font-weight: 600; }
+
+/* Hissə-hissə: məbləğə uyğun olmayan aylar (CreditPeriod::availableFor) gizlədilir */
+.installment__period[hidden],
+.credit-modal-pill[hidden],
+.installment-table tr[hidden] { display: none !important; }

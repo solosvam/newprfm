@@ -35,7 +35,7 @@ class OrderItem extends Model
         $need = $this->activeQuantity();
         if ($need === 0) return 'cancelled';
 
-        $parts = $this->allocations->where('status', '!=', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
+        $parts = $this->allocations->whereNotIn('status', \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE);
         if ($parts->contains('status', \App\Models\Procurement\OrderItemAllocation::PROBLEM)) return 'problem';
 
         $sum = fn (array $statuses) => (int) $parts->whereIn('status', $statuses)->sum('quantity');

@@ -54,3 +54,8 @@
 .courier-history__sum { text-align: right; white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }
 .courier-history__after { font-size: 12px; font-weight: 400; color: var(--muted); }
 .courier-history__hint { margin-top: 12px; font-size: 12px; color: var(--muted); }
+
+/* Qapıda imtina → anbara qaytarılacaq */
+.courier-wh--return { border: 1px solid var(--warning); }
+.courier-part--returning { border-left: 3px solid var(--warning); }
+.courier-refuse + .courier-refuse { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--separator); }

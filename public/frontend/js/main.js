@@ -316,7 +316,15 @@
                 radio.dataset.monthly = monthly.toFixed(2);
                 radio.dataset.total = total.toFixed(2);
             }
+            // ≤ limit məbləğdə yalnız icazəli aylar (CreditPeriod::availableFor)
+            const rule = appData.creditRule;
+            row.hidden = Boolean(rule) && price <= rule.limit && !rule.months.includes(months);
         });
+        const checked = installment.querySelector('tr[data-month]:not([hidden]) input[name="installment"]:checked');
+        if (!checked) {
+            const first = installment.querySelector('tr[data-month]:not([hidden]) input[name="installment"]');
+            if (first) { first.checked = true; first.dispatchEvent(new Event('change', { bubbles: true })); }
+        }
 
         // Birbank is always displayed as six interest-free installments.
         const headline = installment.querySelector('[data-installment-headline]');

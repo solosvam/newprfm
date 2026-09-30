@@ -126,6 +126,79 @@ class OrderItemCancellationTest extends TestCase
         $this->assertEquals(197.50, DB::table('customers')->value('bonus_balance'));
     }
 
+    /** Qapıda ödəniş, hər iki məhsul götürülüb (Rose Oud ×2 bir hissədə), kuryer ünvandadır */
+    private function atDoor(): array
+    {
+        $order = $this->order(['payment_method_id' => 2, 'payment_status' => 'cod', 'bonus_earned' => 0]);
+        $procurement = app(ProcurementService::class);
+        $wh = Warehouse::create(['name_az' => 'Anbar A']);
+        $procurement->createRequests($order, [$wh->id], [$order->items[0]->id, $order->items[1]->id], 7);
+        $parts = [];
+        foreach (WarehouseRequestItem::orderBy('id')->get() as $i => $ri) {
+            $offer = $procurement->recordOffer($order, $ri->id, ['available_quantity' => $i === 0 ? 2 : 1, 'unit_cost' => '80', 'source' => 'phone'], 7);
+            $parts[] = $part = $procurement->allocate($order, $offer->id, $i === 0 ? 2 : 1, 7);
+            $procurement->transition($order, $part->id, 'picked', [], 7);
+        }
+        app(\App\Services\OrderStatusService::class)->set($order->fresh(), 'at_address', 7);
+
+        return [$order->fresh('items'), $parts];
+    }
+
+    public function test_door_refusal_reduces_total_and_splits_picked_part_for_return(): void
+    {
+        [$order, [$part]] = $this->atDoor();
+        $service = app(OrderItemCancellationService::class);
+
+        $c = $service->refuseAtDoor($order, $order->items[0], 1, 'bəyənmədi', 9);
+
+        $this->assertSame('door_refused', $c->reason);
+        $this->assertEquals(146.25, $c->amount);
+        $this->assertNull($c->refund_status);                        // nağd — qaytarma yox
+        $this->assertEquals(248.75, $order->fresh()->total);          // kuryer bu məbləği alır
+        $this->assertSame(1, $order->items[0]->fresh()->activeQuantity());
+
+        // Hissə bölündü: 1 götürülüb (müştəridə), 1 anbara qaytarılır
+        $this->assertSame(['picked', 1], [$part->fresh()->status, (int) $part->fresh()->quantity]);
+        $returning = OrderItemAllocation::where('status', 'returning')->sole();
+        $this->assertSame(1, (int) $returning->quantity);
+        $this->assertSame($part->warehouse_id, $returning->warehouse_id);
+        $this->assertNotSame($part->idempotency_key, $returning->idempotency_key);
+        $this->assertSame('picked', $order->items[0]->fresh('allocations')->supplyStatus()); // qalan 1 ədəd tam təmin
+
+        $log = DB::table('order_status_logs')->where('kind', 'door_refusal')->sole();
+        $this->assertStringContainsString('Qapıda imtina: Rose Oud ×1', $log->note);
+        $this->assertStringContainsString('bəyənmədi', $log->note);
+
+        // Kuryer anbara qaytardı (təkrar klik — eyni nəticə)
+        app(ProcurementService::class)->markReturned($order, $returning->id, 9);
+        app(ProcurementService::class)->markReturned($order, $returning->id, 9);
+        $this->assertSame('returned', $returning->fresh()->status);
+        $this->assertSame(1, DB::table('order_status_logs')->where('kind', 'warehouse_return')->count());
+    }
+
+    public function test_door_refusal_rules(): void
+    {
+        $service = app(OrderItemCancellationService::class);
+        // Hələ kuryer mərhələsi deyil
+        $early = $this->order(['payment_method_id' => 2, 'payment_status' => 'cod']);
+        $this->assertNotNull($service->doorBlockReason($early));
+
+        [$order] = $this->atDoor();
+        $this->assertNull($service->doorBlockReason($order));
+        // Bütün məhsullardan imtina — sifariş ləğvi ayrıca
+        $service->refuseAtDoor($order, $order->items[0], 2, null, 9);
+        try {
+            $service->refuseAtDoor($order->fresh('items'), $order->items[1], 1, null, 9);
+            $this->fail('Son məhsuldan imtina qadağandır');
+        } catch (ValidationException $e) {
+            $this->assertStringContainsString('Problem', collect($e->errors())->flatten()->first());
+        }
+        // Qaytarılmalı olmayan hissə "Qaytardım" edilə bilməz
+        $picked = OrderItemAllocation::where('status', 'picked')->first();
+        $this->expectException(ValidationException::class);
+        app(ProcurementService::class)->markReturned($order, $picked->id, 9);
+    }
+
     public function test_excess_warehouse_selections_are_closed_newest_first(): void
     {
         $order = $this->order(['payment_status' => 'pending', 'bonus_earned' => 0]);

@@ -48,8 +48,26 @@ function initCreditApplicationModal() {
     const currency = new Intl.NumberFormat(document.documentElement.lang || 'az', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const format = value => currency.format(value) + ' ₼';
 
+    let creditRule = null;
+    try { creditRule = JSON.parse(document.getElementById('app-data')?.textContent || '{}').creditRule || null; } catch (e) {}
+
+    // ≤ limit qiymətdə yalnız icazəli aylar (CreditPeriod::availableFor)
+    function filterPeriods(price) {
+        const inputs = [...periodOptions.querySelectorAll('input[name=credit_period_id]')];
+        inputs.forEach(input => {
+            input.closest('label').hidden = Boolean(creditRule) && price <= creditRule.limit
+                && !creditRule.months.includes(Number(input.dataset.months));
+        });
+        const checked = inputs.find(input => input.checked);
+        if (!checked || checked.closest('label').hidden) {
+            const first = inputs.find(input => !input.closest('label').hidden);
+            if (first) first.checked = true;
+        }
+    }
+
     function calculate() {
         const price = Number(variantOptions.querySelector('input:checked')?.dataset.price || 0);
+        filterPeriods(price);
         const rate = Number(periodOptions.querySelector('input:checked')?.dataset.rate || 0);
         const months = Number(periodOptions.querySelector('input:checked')?.dataset.months || 1);
         const total = Math.round(price * (1 + rate / 100) * 100) / 100;

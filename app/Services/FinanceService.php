@@ -62,7 +62,7 @@ class FinanceService
     /** Anbarlara borc: götürülmüş hissələrin dəyəri − anbar hesabına ödənilən (warehouse_id => cents) */
     public function warehouseDebts(): Collection
     {
-        $owed = OrderItemAllocation::where('status', OrderItemAllocation::PICKED)
+        $owed = OrderItemAllocation::whereIn('status', OrderItemAllocation::DEBT_STATUSES)
             ->selectRaw('warehouse_id, SUM(quantity * unit_cost) as total')->groupBy('warehouse_id')->pluck('total', 'warehouse_id');
         $balances = $this->balances();
 

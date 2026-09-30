@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer\CustomerCreditProfile;
-use App\Services\IdCard\GoogleVisionOcr;
-use App\Services\IdCard\IdCardParser;
-use App\Services\IdCard\NameMatcher;
+use App\Services\IdCard\IdCardReader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -31,36 +29,9 @@ class CreditProfileController extends Controller
      * Vəsiqənin ön üzünün şəklindən (kəsilmiş JPEG) ata adı, FİN, seriya, nömrəni oxuyur — formanı doldurmaq üçün.
      * Şəkil saxlanmır; yalnız Google Vision-a göndərilir. Ad-soyad hesabdakı ilə müqayisə olunur (bloklamır).
      */
-    public function ocr(Request $request, GoogleVisionOcr $ocr, IdCardParser $parser, NameMatcher $matcher)
+    public function ocr(Request $request, IdCardReader $reader)
     {
-        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
-
-        if (!$ocr->isConfigured()) {
-            return response()->json(['message' => __('credit_ocr_unavailable')], 503);
-        }
-
-        try {
-            $card = $parser->parse($ocr->text(file_get_contents($request->file('image')->getRealPath())));
-        } catch (\Throwable $e) {
-            report($e);
-
-            return response()->json(['message' => __('credit_ocr_failed')], 502);
-        }
-
-        $user = $request->user();
-        $fields = array_filter([
-            'father_name' => $card['father_name'],
-            'fin' => $card['fin'],
-            'id_card_series' => in_array($card['series'], CustomerCreditProfile::ID_CARD_SERIES, true) ? $card['series'] : null,
-            'id_card_number' => $card['number'],
-        ]);
-
-        return response()->json([
-            'fields' => (object) $fields,
-            'is_id_card' => $card['type'] !== null,
-            'card_name' => trim(($card['name'] ?? '').' '.($card['surname'] ?? '')) ?: null,
-            'name_match' => $matcher->matches($card['name'], $card['surname'], $user->name, $user->surname),
-        ]);
+        return $reader->read($request, $request->user());
     }
 
     public function update(Request $request)

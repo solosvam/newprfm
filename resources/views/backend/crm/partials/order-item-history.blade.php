@@ -26,6 +26,7 @@
                 $stepLabel = [
                     'selected' => 'seçildi', 'notified' => '— anbara bildirildi', 'reserved' => '— anbar ayırdı',
                     'picked' => '— götürüldü', 'problem' => '— problem', 'cancelled' => 'seçimi ləğv edildi',
+                    'returning' => '— qapıda imtina, anbara qaytarılır', 'returned' => '— anbara qaytarıldı',
                 ][$log->to_status] ?? $log->to_status;
                 if ($log->from_status === 'problem' && $log->to_status !== 'cancelled') $stepLabel = '— problem həll edildi';
                 $events->push(['at' => $log->created_at, 'item' => $item->id, 'tone' => $bad ? 'danger' : '', 'icon' => $bad ? 'close' : 'check',

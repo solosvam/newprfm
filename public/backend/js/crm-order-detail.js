@@ -70,6 +70,24 @@ $(document).ready(function () {
         form.addEventListener('submit', () => form.querySelector('button.btn-danger').disabled = true);
     }
 
+    // Qapıda imtina (Məhsullar tabı): kuryer yolda/ünvanda — say seçilir, məhsul anbara qaytarılır
+    const doorModal = document.getElementById('doorRefuseModal');
+    if (doorModal) {
+        const form = doorModal.querySelector('form');
+        const qty = form.querySelector('[name="quantity"]');
+        doorModal.addEventListener('show.bs.modal', event => {
+            const btn = event.relatedTarget;
+            if (!btn) return;
+            form.reset();
+            form.action = btn.dataset.action;
+            doorModal.querySelector('[data-door-item]').textContent = btn.dataset.title;
+            const max = Number(btn.dataset.active) || 1;
+            qty.innerHTML = '';
+            for (let q = 1; q <= max; q++) qty.add(new Option(q + ' ədəd', String(q)));
+        });
+        form.addEventListener('submit', () => form.querySelector('button.btn-warning').disabled = true);
+    }
+
     // Karta qaytarma: təsdiq pəncərəsi (Ödənişlər → Geri qaytarmalar)
     const refundModal = document.getElementById('refundConfirmModal');
     if (refundModal) {

@@ -1,6 +1,7 @@
 {{--
-  Kuryer → sifariş (telefon üçün). Anbarlardan götürmə (Götürdüm / Ödədim / Problem),
-  hədiyyəlik qablaşdırma, müştəri, çatdırılma (Çatdırılmaya başladım → Ünvandayam → Təhvil verdim).
+  Kuryer → sifariş (telefon üçün). Anbarlardan götürmə (Götürdüm / Ödədim / Problem) — yalnız yola çıxmazdan əvvəl,
+  başqa kuryerə ötürmə, hədiyyəlik qablaşdırma, müştəri, çatdırılma (Çatdırılmaya başladım → Ünvandayam → Təhvil verdim),
+  qapıda imtina və imtina edilən məhsulun anbara qaytarılması ("Qaytardım").
 --}}
 @use('App\Models\Procurement\OrderItemAllocation', 'Part')
 @php
@@ -39,7 +40,8 @@
         @endforeach
     </ol>
 
-    {{-- 1. Anbarlardan götürmə --}}
+    {{-- 1. Anbarlardan götürmə — yola çıxandan sonra gizlənir --}}
+    @if($code === 'courier_assigned')
     <h2 class="small-title">Anbarlardan götürmə</h2>
     @foreach($byWarehouse as $rows)
         @php $w = $rows->first()['a']->warehouse; @endphp
@@ -50,15 +52,14 @@
                     @if($w->address)<a class="courier-wh__addr" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($w->address) }}" target="_blank" rel="noopener">{{ $w->address }}</a>@endif
                     @if($w->contact_name)<div class="text-muted small">{{ $w->contact_name }}</div>@endif
                 </div>
-                @if($w->phone)<a href="tel:{{ $w->phone }}" class="btn btn-outline-primary btn-icon btn-icon-only" aria-label="Zəng et"><i data-acorn-icon="phone" data-acorn-size="18"></i></a>@endif
             </div>
 
             @foreach($rows as ['item' => $item, 'a' => $part])
                 @php
                     $cost = (int) round($part->quantity * (float) $part->unit_cost * 100);
                     $left = $cost - ($paid[$part->id] ?? 0);
-                    $canAct = $code === 'courier_assigned';                               // götürmə, problem
-                    $canPay = in_array($code, ['courier_assigned', 'sent', 'at_address'], true); // ödəniş sonra da
+                    $canAct = true;  // bu bölmə yalnız toplama mərhələsində görünür
+                    $canPay = true;
                 @endphp
                 <div class="courier-part courier-part--{{ $part->status }}">
                     <div class="courier-part__top">
@@ -116,6 +117,56 @@
         </div></div>
     @endforeach
 
+    {{-- Başqa kuryerə ötür (anbarlar uzaqdırsa) — heç nə götürülməyibsə --}}
+    @if(!$transferBlock && $couriers->isNotEmpty())
+        <details class="courier-more mb-3">
+            <summary class="btn btn-outline-secondary w-100">Başqa kuryerə ötür</summary>
+            <form method="POST" action="{{ route('admin.courier.transfer', $order) }}" data-once class="courier-more__form">
+                @csrf
+                <label class="form-label" for="transferCourier">Kuryer</label>
+                <select id="transferCourier" name="courier_id" class="form-select" required>
+                    <option value="">— seçin —</option>
+                    @foreach($couriers as $c)<option value="{{ $c->id }}">{{ trim($c->full_name) }}</option>@endforeach
+                </select>
+                <button class="btn btn-primary w-100 mt-2">Ötür</button>
+                <div class="text-muted small mt-1">Sifariş sizin siyahınızdan çıxacaq.</div>
+            </form>
+        </details>
+    @elseif($transferBlock && !str_starts_with($transferBlock, 'Yola'))
+        <div class="text-muted small mb-3">{{ $transferBlock }}</div>
+    @endif
+    @endif
+
+    {{-- Qapıda imtina edilən məhsullar — anbara qaytarılacaq (anbar adı/ünvanı, telefon yox) --}}
+    @if($returning->isNotEmpty())
+        <h2 class="small-title mt-2">Anbara qaytarılacaq</h2>
+        @foreach($returning as $rows)
+            @php $w = $rows->first()['a']->warehouse; @endphp
+            <div class="card mb-3 courier-wh courier-wh--return"><div class="card-body">
+                <div class="courier-wh__head">
+                    <div>
+                        <div class="courier-wh__name">{{ $w->name_az }}</div>
+                        @if($w->address)<a class="courier-wh__addr" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($w->address) }}" target="_blank" rel="noopener">{{ $w->address }}</a>@endif
+                    </div>
+                </div>
+                @foreach($rows as ['item' => $item, 'a' => $part])
+                    <div class="courier-part courier-part--returning">
+                        <div class="courier-part__top">
+                            <div>
+                                <div class="courier-part__name">{{ $item->product?->name }}</div>
+                                <div class="text-muted small">{{ collect([$item->product?->brand?->name, $item->variant?->size?->name_az])->filter()->implode(' · ') }}</div>
+                            </div>
+                            <div class="courier-part__qty">× {{ $part->quantity }}</div>
+                        </div>
+                        <form method="POST" action="{{ route('admin.courier.returned', [$order, $part->id]) }}" data-once class="mt-2">
+                            @csrf<button class="btn btn-warning w-100">Qaytardım</button>
+                        </form>
+                    </div>
+                @endforeach
+            </div></div>
+        @endforeach
+    @endif
+
     @if($order->gift_wrap)
         <div class="alert alert-info">🎁 <strong>Hədiyyəlik qablaşdırma:</strong> məhsulları bükün və loqolu çantaya qoyun.</div>
     @endif
@@ -164,6 +215,30 @@
                     <button class="btn btn-success btn-lg w-100">Təhvil verdim</button>
                 @endif
             </form>
+            {{-- Qapıda imtina: müştəri məhsullardan birini götürmür --}}
+            @php $refusable = $order->items->filter(fn ($i) => $i->activeQuantity() > 0); @endphp
+            @if(!$doorBlock && $refusable->sum(fn ($i) => $i->activeQuantity()) > 1)
+                <details class="courier-more mt-2">
+                    <summary class="btn btn-outline-warning w-100">Müştəri məhsuldan imtina etdi</summary>
+                    <div class="courier-more__form">
+                        @foreach($refusable as $ri)
+                            <form method="POST" action="{{ route('admin.courier.refuse', [$order, $ri]) }}" data-once class="courier-refuse">
+                                @csrf
+                                <div class="fw-bold">{{ $ri->product?->name }}</div>
+                                <div class="text-muted small mb-1">{{ collect([$ri->product?->brand?->name, $ri->variant?->size?->name_az])->filter()->implode(' · ') }} · {{ number_format((float) $ri->unit_price, 2) }} AZN</div>
+                                <div class="d-flex gap-2">
+                                    <select name="quantity" class="form-select" aria-label="Neçə ədəd götürmədi">
+                                        @for($q = 1; $q <= $ri->activeQuantity(); $q++)<option value="{{ $q }}">{{ $q }} ədəd götürmədi</option>@endfor
+                                    </select>
+                                    <button class="btn btn-warning text-nowrap">Qeyd et</button>
+                                </div>
+                                <input type="text" name="note" maxlength="2000" class="form-control mt-1" placeholder="Qeyd (istəyə görə)">
+                            </form>
+                        @endforeach
+                        <div class="text-muted small">Məbləğ avtomatik azalacaq, məhsulu anbara qaytaracaqsınız.</div>
+                    </div>
+                </details>
+            @endif
             <details class="courier-more mt-2">
                 <summary class="btn btn-outline-danger w-100">Problem (müştəri yoxdur, qəbul etmir...)</summary>
                 <form method="POST" action="{{ route('admin.courier.delivery-problem', $order) }}" data-once class="courier-more__form">

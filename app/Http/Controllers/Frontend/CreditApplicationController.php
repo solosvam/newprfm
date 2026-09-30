@@ -33,6 +33,11 @@ class CreditApplicationController extends Controller
         abort_unless($variant->product?->active, 404);
         $period = CreditPeriod::whereKey($draft['credit_period_id'])->where('active', 1)->firstOrFail();
         $price = (float) $variant->price;
+        if (!$period->availableFor($price)) {
+            throw ValidationException::withMessages(['credit_period_id' => __('credit_period_not_available', [
+                'limit' => CreditPeriod::SMALL_AMOUNT_LIMIT, 'months' => implode(', ', CreditPeriod::SMALL_AMOUNT_MONTHS),
+            ])]);
+        }
         $rate = (float) $period->interest_rate;
         $total = round($price * (1 + $rate / 100), 2);
         $monthly = round($total / $period->month, 2);

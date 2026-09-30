@@ -20,12 +20,12 @@ class WarehousePortalController extends Controller
 
         if ($tab === 'selected') {
             $items = $portal->selections($access->warehouse_id)
-                ->with(['orderItem.product.brand', 'orderItem.variant.size', 'logs'])
+                ->with(['orderItem.product.brand', 'orderItem.product.genders', 'orderItem.product.type', 'orderItem.variant.size', 'logs'])
                 ->orderByRaw("CASE WHEN status IN ('selected','notified') THEN 0 ELSE 1 END")->orderByDesc('id')
                 ->paginate(20)->withQueryString();
         } else {
             $items = ($answered ? $base->has('offers') : $base->doesntHave('offers'))
-                ->with(['orderItem.product.brand', 'orderItem.variant.size', 'offers'])
+                ->with(['orderItem.product.brand', 'orderItem.product.genders', 'orderItem.product.type', 'orderItem.variant.size', 'offers'])
                 ->orderBy('id')->paginate(20)->withQueryString();
         }
 

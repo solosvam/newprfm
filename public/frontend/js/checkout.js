@@ -170,8 +170,25 @@
         };
     }
 
+    // ≤ limit məbləğdə yalnız icazəli aylar (CreditPeriod::availableFor) — məbləğ dəyişəndə yenilənir
+    let creditRule = null;
+    try { creditRule = JSON.parse(document.getElementById('app-data')?.textContent || '{}').creditRule || null; } catch (e) {}
+
+    function filterPeriods() {
+        periodRadios.forEach(radio => {
+            const hide = Boolean(creditRule) && state.total <= creditRule.limit
+                && !creditRule.months.includes(Number(radio.dataset.months));
+            radio.closest('label').hidden = hide;
+            if (hide && radio.checked) {
+                radio.checked = false;
+                if (els.periodInput) els.periodInput.value = '';
+            }
+        });
+    }
+
     function updateCredit() {
         if (!periodRadios.length) return;
+        filterPeriods();
 
         periodRadios.forEach(radio => {
             const target = radio.parentElement.querySelector('[data-monthly]');

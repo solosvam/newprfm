@@ -155,6 +155,10 @@ class ProductsAjax {
                             >
                                 Edit
                             </a>
+                            <button type="button" class="btn btn-outline-primary btn-sm ms-1"
+                                    data-product-poster-url="/admin/product/${Number(row.id)}/poster">
+                                Poster paylaş
+                            </button>
                         `;
                     }
                 }

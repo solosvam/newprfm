@@ -32,10 +32,14 @@ class AjaxController extends Controller
         if (!$q) return response()->json([]);
 
         $customers = collect();
+        $kind = null;   // phone | fin | name — tapılmayanda JS-ə lazımdır (nömrədə "Yeni müştəri yarat")
+        $mobile = null;
 
-        // 0 ile baslayan 10 rəqəm — mobil nömrə
-        if (preg_match('/^0\d{9}$/', $q)) {
-            $mobile = "994".substr($q, 1);
+        // Mobil nömrə: 0103227575, 994103227575, +994 10 322 75 75, 103227575 (994-dən sonra 0 olmur)
+        $digits = preg_replace('/[\s\-()+]/', '', $q);
+        if (ctype_digit($digits) && preg_match('/^(?:994|0)?([1-9]\d{8})$/', $digits, $m)) {
+            $kind = 'phone';
+            $mobile = '994'.$m[1];
 
             $customers = Customer::where('mobile', $mobile)
                 ->limit(5)
@@ -44,6 +48,7 @@ class AjaxController extends Controller
 
         // Nöqtə ilə başlayır — FIN kod
         elseif (str_starts_with($q, '.')) {
+            $kind = 'fin';
             $fin = ltrim($q, '.');
 
             $customers = Customer::whereHas('creditProfile', function ($query) use ($fin) {
@@ -55,6 +60,7 @@ class AjaxController extends Controller
 
         // Ad soyad — boşluq var
         elseif (str_contains($q, ' ')) {
+            $kind = 'name';
             [$name, $surname] = explode(' ', $q, 2);
 
             $customers = Customer::where('name', 'like', "%{$name}%")
@@ -70,7 +76,7 @@ class AjaxController extends Controller
             ];
         }
 
-        return response()->json($results);
+        return response()->json(['kind' => $kind, 'mobile' => $mobile, 'results' => $results]);
     }
 
     /**

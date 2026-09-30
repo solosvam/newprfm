@@ -168,7 +168,8 @@ $(function () {
                 ocrMessage(kind, lines);
             })
             .fail(function (xhr) {
-                ocrMessage('bad', [(xhr.responseJSON && xhr.responseJSON.message) || genericError]);
+                const json = xhr.responseJSON || {};
+                ocrMessage('bad', [json.message || genericError].concat(json.debug ? [json.debug] : [])); // debug yalnız APP_DEBUG=true
             });
     }
 

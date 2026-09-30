@@ -25,6 +25,8 @@
             'favoriteRemoved' => __('notification_removed_from_favorites'),
             'selectBrand' => __('home_select_brand'),
         ],
+        // hissə-hissə: ≤ limit məbləğdə yalnız bu aylar (CreditPeriod::availableFor ilə eyni)
+        'creditRule' => \App\Models\Credit\CreditPeriod::amountRule(),
     ];
 @endphp
 <script type="application/json" id="app-data">@json($appData)</script>

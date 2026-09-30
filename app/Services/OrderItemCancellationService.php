@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Order\OrderItemCancellation;
+use App\Models\Procurement\AllocationStatusLog;
 use App\Models\Procurement\OrderItemAllocation;
 use App\Services\Payment\PaymentItemsBuilder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,11 +22,18 @@ use Illuminate\Validation\ValidationException;
  *    Bonusla ödənilibsə: məbləğ dərhal bonus balansına qayıdır. Nağd: kuryerin alacağı məbləğ azalır.
  *  - Qazanılmış bonus artıq yazılıbsa, fərqi geri alınır ("Sifariş ləğvi" qeydi ilə).
  *  - Artıq qalan anbar seçimləri (ən yenisindən) bağlanır.
+ *
+ * Qapıda imtina (refuseAtDoor): kuryer ünvandadır, müştəri məhsullardan birini götürmür.
+ *  Eyni hesablama; götürülmüş anbar hissəsi ləğv edilmir — "Anbara qaytarılır" olur (kuryer sonra "Qaytardım").
+ *  Kuryerin alacağı nağd məbləğ yeni yekundur.
  */
 class OrderItemCancellationService
 {
     /** Kuryer təyin edilməzdən əvvəlki mərhələlər */
     public const EDITABLE_STATUSES = ['new', 'confirmed', 'preparing', 'warehouse_requested', 'warehouses_assigned'];
+
+    /** Qapıda imtina — kuryer yoldadır / ünvandadır */
+    public const DOOR_STATUSES = ['sent', 'at_address'];
 
     public function __construct(
         private PaymentItemsBuilder $shares,
@@ -43,6 +52,19 @@ class OrderItemCancellationService
         return match (true) {
             !in_array($order->status?->code, self::EDITABLE_STATUSES, true) => 'Bu mərhələdə məhsul ləğv edilə bilməz.',
             $order->paymentMethod?->code === 'installment' => 'Hissə-hissə (kredit) sifarişində məhsul ləğvi hələ dəstəklənmir.',
+            $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
+            default => null,
+        };
+    }
+
+    /** Qapıda imtina mümkün deyilsə səbəbi */
+    public function doorBlockReason(Order $order): ?string
+    {
+        $order->loadMissing(['status', 'paymentMethod']);
+
+        return match (true) {
+            !in_array($order->status?->code, self::DOOR_STATUSES, true) => 'Qapıda imtina yalnız kuryer yolda və ya ünvanda olanda qeyd olunur.',
+            $order->paymentMethod?->code === 'installment' => 'Hissə-hissə (kredit) sifarişində qapıda imtina hələ dəstəklənmir.',
             $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
             default => null,
         };
@@ -88,27 +110,44 @@ class OrderItemCancellationService
 
     public function cancel(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor): OrderItemCancellation
     {
-        return DB::transaction(function () use ($order, $item, $quantity, $reason, $note, $actor) {
+        return $this->apply($order, $item, $quantity, $reason, $note, $actor, false);
+    }
+
+    /** Qapıda imtina — operator (CRM) və ya kuryer (öz səhifəsi) */
+    public function refuseAtDoor(Order $order, OrderItem $item, int $quantity, ?string $note, int $actor): OrderItemCancellation
+    {
+        return $this->apply($order, $item, $quantity, 'door_refused', $note, $actor, true);
+    }
+
+    private function apply(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor, bool $door): OrderItemCancellation
+    {
+        return DB::transaction(function () use ($order, $item, $quantity, $reason, $note, $actor, $door) {
             $order = Order::with(['items', 'status', 'paymentMethod', 'customer'])->lockForUpdate()->findOrFail($order->id);
             $item = $order->items->firstWhere('id', $item->id);
 
             $this->ensure($item !== null, 'Məhsul bu sifarişə aid deyil.');
-            $this->ensure(($block = $this->blockReason($order)) === null, (string) $block);
+            $this->ensure(($block = $door ? $this->doorBlockReason($order) : $this->blockReason($order)) === null, (string) $block);
             $this->ensure(isset(OrderItemCancellation::REASONS[$reason]), 'Səbəbi seçin.');
             $this->ensure($quantity >= 1 && $quantity <= $item->activeQuantity(), 'Ləğv edilən say qalan miqdardan çox ola bilməz.');
             $remaining = $order->items->sum(fn ($i) => $i->activeQuantity()) - $quantity;
-            $this->ensure($remaining > 0, 'Sifarişdə ən azı bir məhsul qalmalıdır. Hamısı ləğv olunursa, sifarişi ləğv edin.');
+            $this->ensure($remaining > 0, $door
+                ? 'Müştəri bütün məhsullardan imtina edirsə, "Problem" bildirin — operator sifarişi ləğv edəcək.'
+                : 'Sifarişdə ən azı bir məhsul qalmalıdır. Hamısı ləğv olunursa, sifarişi ləğv edin.');
 
             $result = $this->preview($order, $item, $quantity);
 
-            // Artıq qalan anbar seçimləri: ən yenisindən bağlanır
-            $keep = $item->activeQuantity() - $quantity;
-            $allocations = OrderItemAllocation::where('order_item_id', $item->id)->where('status', '!=', 'cancelled')->orderByDesc('id')->get();
-            $selected = (int) $allocations->sum('quantity');
-            foreach ($allocations as $allocation) {
-                if ($selected <= $keep) break;
-                $this->procurement->cancelAllocation($order, $allocation->id, 'Məhsul ləğv edildi: '.$quantity.' ədəd', $actor);
-                $selected -= (int) $allocation->quantity;
+            if ($door) {
+                $this->returnPicked($item, $quantity, $note, $actor);
+            } else {
+                // Artıq qalan anbar seçimləri: ən yenisindən bağlanır
+                $keep = $item->activeQuantity() - $quantity;
+                $allocations = OrderItemAllocation::where('order_item_id', $item->id)->where('status', '!=', 'cancelled')->orderByDesc('id')->get();
+                $selected = (int) $allocations->sum('quantity');
+                foreach ($allocations as $allocation) {
+                    if ($selected <= $keep) break;
+                    $this->procurement->cancelAllocation($order, $allocation->id, 'Məhsul ləğv edildi: '.$quantity.' ədəd', $actor);
+                    $selected -= (int) $allocation->quantity;
+                }
             }
 
             $item->update([
@@ -154,11 +193,53 @@ class OrderItemCancellationService
                 'refund_status' => $result['refund'],
                 'created_by' => $actor,
             ]);
-            // Qalan miqdarın hamısı seçilibsə "Anbarlar təyin olundu"
-            app(OrderStatusService::class)->syncSupply($order, $actor);
+            if ($door) {
+                // Sifariş səhifəsində "Kuryer bildirişləri"ndə görünür
+                DB::table('order_status_logs')->insert([
+                    'order_id' => $order->id, 'status_id' => $order->order_status_id, 'user_id' => $actor, 'kind' => 'door_refusal',
+                    'note' => 'Qapıda imtina: '.$productName.' — '.number_format($result['amount'], 2).' AZN. Yeni yekun: '
+                        .number_format($result['total'], 2).' AZN.'.($note ? ' '.$note : ''),
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            } else {
+                // Qalan miqdarın hamısı seçilibsə "Anbarlar təyin olundu"
+                app(OrderStatusService::class)->syncSupply($order, $actor);
+            }
 
             return $cancellation;
         });
+    }
+
+    /**
+     * Qapıda imtina: götürülmüş hissələrdən (ən yenisindən) imtina edilən say "Anbara qaytarılır" olur.
+     * Hissənin bir qismi qaytarılırsa, hissə bölünür (qalan — götürülüb, ayrılan — qaytarılır).
+     */
+    private function returnPicked(OrderItem $item, int $quantity, ?string $note, int $actor): void
+    {
+        $parts = OrderItemAllocation::where('order_item_id', $item->id)->where('status', OrderItemAllocation::PICKED)
+            ->lockForUpdate()->orderByDesc('id')->get();
+        $this->ensure((int) $parts->sum('quantity') >= $quantity, 'Bu məhsuldan kuryerdə '.(int) $parts->sum('quantity').' ədəd var.');
+
+        $left = $quantity;
+        foreach ($parts as $part) {
+            if ($left <= 0) break;
+            $take = min($left, (int) $part->quantity);
+            if ($take === (int) $part->quantity) {
+                $part->update(['status' => OrderItemAllocation::RETURNING]);
+                $target = $part;
+            } else {
+                $part->update(['quantity' => (int) $part->quantity - $take]);
+                $target = $part->replicate();
+                $target->forceFill(['quantity' => $take, 'status' => OrderItemAllocation::RETURNING, 'idempotency_key' => (string) Str::uuid()])->save();
+            }
+            AllocationStatusLog::create([
+                'order_item_allocation_id' => $target->id, 'from_status' => OrderItemAllocation::PICKED,
+                'to_status' => OrderItemAllocation::RETURNING, 'user_id' => $actor,
+                'note' => 'Qapıda imtina: '.$take.' ədəd'.($target->id !== $part->id ? ' (#'.$part->id.'-dən ayrıldı)' : '').($note ? ' — '.$note : ''),
+                'created_at' => now(),
+            ]);
+            $left -= $take;
+        }
     }
 
     /** Pul artıq alınıbsa necə qaytarılacaq; alınmayıbsa (nağd, ödənilməmiş onlayn) null */

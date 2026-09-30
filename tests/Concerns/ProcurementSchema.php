@@ -41,6 +41,24 @@ trait ProcurementSchema
         Schema::create('products', function (Blueprint $t) {
             $t->id();
             $t->string('name');
+            $t->integer('brand_id')->nullable();
+            $t->integer('type_id')->nullable();
+        });
+        Schema::create('brands', function (Blueprint $t) {
+            $t->id();
+            $t->string('name');
+        });
+        Schema::create('types', function (Blueprint $t) {
+            $t->id();
+            $t->string('name_az');
+        });
+        Schema::create('genders', function (Blueprint $t) {
+            $t->id();
+            $t->string('name_az');
+        });
+        Schema::create('product_genders', function (Blueprint $t) {
+            $t->integer('product_id');
+            $t->integer('gender_id');
         });
         Schema::create('product_variants', function (Blueprint $t) {
             $t->id();

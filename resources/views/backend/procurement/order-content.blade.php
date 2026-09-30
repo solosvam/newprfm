@@ -62,7 +62,7 @@
 @foreach($order->items->filter(fn ($i) => $i->activeQuantity() > 0) as $item)
     @php
         $need = $item->activeQuantity(); // ləğv olunan miqdar təmin edilmir
-        $active = $item->allocations->where('status', '!=', 'cancelled');
+        $active = $item->allocations->whereNotIn('status', \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE);
         $selected = (int) $active->sum('quantity');
         $missing = max(0, $need - $selected);
         $percent = $need ? min(100, round($selected / $need * 100)) : 0;
@@ -173,7 +173,7 @@
                         <div class="proc-alloc__sms {{ $allocSms->isSent() ? 'is-ok' : 'is-bad' }}">{{ $allocSms->isSent() ? '✓ SMS '.$allocSms->created_at->format('d.m H:i') : '✕ SMS getmədi: '.$allocSms->error }}</div>
                     @endif
                     <div class="proc-alloc__foot">
-                        <span class="badge {{ ['cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger', 'picked' => 'bg-success', 'reserved' => 'bg-outline-success'][$status] ?? 'bg-outline-primary' }}">{{ $allocation->label() }}</span>
+                        <span class="badge {{ ['cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger', 'picked' => 'bg-success', 'reserved' => 'bg-outline-success', 'returning' => 'bg-warning', 'returned' => 'bg-outline-muted'][$status] ?? 'bg-outline-primary' }}">{{ $allocation->label() }}</span>
                         @if($lastLog)<span class="text-muted small">{{ $lastLog->created_at->format('d.m H:i') }}@if($who($lastLog->user_id)) · {{ $who($lastLog->user_id) }}@endif @if($isCancelled && $lastLog->note) · {{ $lastLog->note }}@endif</span>@endif
 
                         @if($flowEditable && !$isCancelled && $status !== 'picked')
@@ -252,7 +252,7 @@
                 <div class="mb-4">
                     <div class="form-label fw-bold">Məhsullar</div>
                     @foreach($order->items->filter(fn ($i) => $i->activeQuantity() > 0) as $item)
-                        @php $missing = max(0, $item->activeQuantity() - (int) $item->allocations->where('status', '!=', 'cancelled')->sum('quantity')); @endphp
+                        @php $missing = max(0, $item->activeQuantity() - (int) $item->allocations->whereNotIn('status', \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE)->sum('quantity')); @endphp
                         <label class="form-check">
                             <input class="form-check-input" type="checkbox" name="item_ids[]" value="{{ $item->id }}" @checked($missing > 0)>
                             <span class="form-check-label">{{ $itemName($item) }}@if($itemSize($item)) · {{ $itemSize($item) }}@endif × {{ $item->activeQuantity() }}

@@ -78,6 +78,9 @@ Route::prefix('admin')
                     Route::post('/order/{order}/arrive', 'arrive')->name('arrive');
                     Route::post('/order/{order}/deliver', 'deliver')->name('deliver');
                     Route::post('/order/{order}/delivery-problem', 'deliveryProblem')->name('delivery-problem');
+                    Route::post('/order/{order}/items/{item}/refuse', 'refuse')->name('refuse');
+                    Route::post('/order/{order}/parts/{allocation}/returned', 'returned')->name('returned');
+                    Route::post('/order/{order}/transfer', 'transfer')->name('transfer');
                 });
 
             // Ferrum Chrome extension-u (extensions/ferrum-filler): sifariş + kredit məlumatları JSON
@@ -267,17 +270,20 @@ Route::prefix('admin')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
                     Route::get('/customer/{id}', 'customer')->name('customer');
+                    Route::post('/customer', 'storeCustomer')->middleware('throttle:20,1')->name('customer.store');
                     Route::get('/customer/{customer}/tab/{tab}', 'tab')->name('tab');
                     Route::post('/customer/{customer}/order', 'storeOrder')->name('order.store');
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}/order/{order}/confirm', 'confirmOneClick')->name('one-click.confirm');
                     Route::post('/customer/{customer}/order/{order}/item/{item}/cancel', 'cancelItem')->name('order.item.cancel');
+                    Route::post('/customer/{customer}/order/{order}/item/{item}/refuse', 'refuseItem')->name('order.item.refuse');
                     Route::post('/customer/{customer}/order/{order}/start', 'startOrder')->name('order.start');
                     Route::post('/customer/{customer}/order/{order}/courier', 'assignCourier')->name('order.courier');
                     Route::post('/customer/{customer}/order/{order}/cancellation/{cancellation}/refund', 'refundCancellation')
                         ->middleware(['can:refund', 'throttle:10,1'])->name('order.cancellation.refund');
                     Route::post('/customer/{customer}/order/{order}/pay-link', 'sendPayLink')->middleware('throttle:10,1')->name('order.pay-link');
                     Route::post('/customer/{customer}', 'update')->name('update');
+                    Route::post('/customer/{customer}/credit-profile/ocr', 'creditProfileOcr')->middleware('throttle:10,1')->name('credit-profile.ocr');
                     Route::post('/customer/{customer}/credit-profile', 'updateCreditProfile')->name('credit-profile.update');
                     Route::post('/customer/{customer}/reset-password', 'resetPassword')->name('reset-password');
                     Route::get('/customer/{customer}/sms', 'sms')->name('sms');
@@ -456,6 +462,7 @@ Route::prefix('admin')
                     Route::post('/import/fragrantica-preview', [ProductImportController::class, 'preview'])->name('import.fragrantica-preview');
                     Route::post('/import/ai-generate', [ProductImportController::class, 'generateWithAi'])->name('import.ai-generate');
                     Route::post('/import/image-search', [ProductImportController::class, 'searchImages'])->name('import.image-search');
+                    Route::get('/{product}/poster', 'poster')->name('poster');
                     Route::get('/edit/{id}', 'edit')->name('edit');
                     Route::post('/add', 'create')->name('create');
                     Route::post('/update/{id}', 'update')->name('update');

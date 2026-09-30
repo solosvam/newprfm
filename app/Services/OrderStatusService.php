@@ -230,9 +230,51 @@ class OrderStatusService
         DB::transaction(function () use ($order, $actor, $note) {
             $locked = $this->courierOrder($order, $actor);
             DB::table('order_status_logs')->insert([
-                'order_id' => $locked->id, 'status_id' => $locked->order_status_id, 'user_id' => $actor,
+                'order_id' => $locked->id, 'status_id' => $locked->order_status_id, 'user_id' => $actor, 'kind' => 'delivery_problem',
                 'note' => 'Çatdırılma problemi: '.$note, 'created_at' => now(), 'updated_at' => now(),
             ]);
+        });
+    }
+
+    /** Aktiv kuryerlər (rol yoxdursa — boş) */
+    public function couriers()
+    {
+        try {
+            return User::role(FinanceService::COURIER_ROLE, 'admin')->where('active', 1)->orderBy('name')->get();
+        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+            return collect();
+        }
+    }
+
+    /** Kuryerin sifarişi başqa kuryerə ötürməsinə mane olan səbəb (yoxdursa null) */
+    public function transferBlock(Order $order): ?string
+    {
+        $order->loadMissing(['status', 'items.allocations']);
+
+        return match (true) {
+            $order->status?->code !== 'courier_assigned' => 'Yola çıxandan sonra sifariş ötürülmür.',
+            $order->items->flatMap->allocations->contains('status', OrderItemAllocation::PICKED)
+                => 'Məhsul artıq götürülüb — ötürmək olmaz. Operatorla əlaqə saxlayın.',
+            default => null,
+        };
+    }
+
+    /** Kuryer öz sifarişini başqa kuryerə ötürür (məs. anbarlar ona uzaqdır) — toplamadan əvvəl */
+    public function transferCourier(Order $order, User $to, int $actor): void
+    {
+        DB::transaction(function () use ($order, $to, $actor) {
+            $locked = $this->courierOrder($order, $actor);
+            $this->ensure(($block = $this->transferBlock($locked)) === null, (string) $block);
+            $this->ensure($to->id !== $actor, 'Başqa kuryer seçin.');
+            $this->ensure($to->active && $to->hasRole(FinanceService::COURIER_ROLE, 'admin'), 'Seçilən əməkdaş aktiv kuryer deyil.');
+            $from = User::find($actor);
+            $locked->forceFill(['courier_id' => $to->id])->save();
+            DB::table('order_status_logs')->insert([
+                'order_id' => $locked->id, 'status_id' => $locked->order_status_id, 'user_id' => $actor, 'kind' => 'courier_change',
+                'note' => 'Kuryer sifarişi ötürdü: '.trim((string) $from?->full_name).' → '.trim((string) $to->full_name),
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+            app(FinanceService::class)->courierAccount($to);
         });
     }
 
