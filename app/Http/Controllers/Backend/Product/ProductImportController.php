@@ -37,7 +37,7 @@ class ProductImportController extends Controller
             'matches' => [
                 'brand_id' => $this->findBrand($product['brand']),
                 'gender_ids' => $this->findGenders($product['gender']),
-                'ingredient_ids' => $this->findIngredients($product['notes']),
+                'ingredient_ids' => $this->findOrCreateIngredients($product['notes'], $openAi),
             ],
         ]);
     }
@@ -117,6 +117,56 @@ class ProductImportController extends Controller
             ->pluck('id')
             ->values()
             ->all();
+    }
+
+    private function findOrCreateIngredients(array $notes, OpenAiPerfumeService $openAi): array
+    {
+        $notes = collect($notes)
+            ->filter(fn ($note) => is_string($note) && trim($note) !== '')
+            ->map(fn (string $note) => trim($note))
+            ->unique(fn (string $note) => $this->normalize($note))
+            ->values();
+
+        $existingIds = $this->findIngredients($notes->all());
+        $existingNames = Ingredient::query()
+            ->whereIn('id', $existingIds)
+            ->pluck('name_en')
+            ->map(fn (string $name) => $this->normalize($name))
+            ->all();
+
+        $missing = $notes
+            ->reject(fn (string $note) => in_array($this->normalize($note), $existingNames, true))
+            ->values()
+            ->all();
+
+        if ($missing) {
+            $translations = $openAi->translateIngredients($missing);
+
+            foreach ($translations as $translation) {
+                $nameEn = trim((string) ($translation['name_en'] ?? ''));
+                $nameAz = trim((string) ($translation['name_az'] ?? ''));
+                $nameRu = trim((string) ($translation['name_ru'] ?? ''));
+
+                if ($nameEn === '' || $nameAz === '' || $nameRu === '') {
+                    continue;
+                }
+
+                $original = collect($missing)->first(
+                    fn (string $note) => $this->normalize($note) === $this->normalize($nameEn)
+                );
+
+                if (!$original) {
+                    continue;
+                }
+
+                Ingredient::firstOrCreate(
+                    ['name_en' => $original],
+                    ['name_az' => $nameAz, 'name_ru' => $nameRu]
+                );
+            }
+        }
+
+        return $this->findIngredients($notes->all());
     }
 
     private function findIngredients(array $notes): array
