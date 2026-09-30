@@ -17,6 +17,25 @@ class OpenAiPerfumeService
         return $this->request($this->factsPrompt($url), $this->factsSchema());
     }
 
+    public function translateIngredients(array $names): array
+    {
+        $names = collect($names)->filter(fn ($name) => is_string($name) && trim($name) !== '')
+            ->map(fn (string $name) => trim($name))->unique()->values()->all();
+
+        if (!$names) {
+            return [];
+        }
+
+        $data = $this->request(
+            $this->ingredientTranslationsPrompt($names),
+            $this->ingredientTranslationsSchema(count($names)),
+            false,
+            false
+        );
+
+        return $data['ingredients'];
+    }
+
     public function generateSearchTerms(string $brand, string $name): array
     {
         $data = $this->request(
@@ -125,6 +144,26 @@ Qaydalar:
 PROMPT;
     }
 
+
+    private function ingredientTranslationsPrompt(array $names): string
+    {
+        $list = implode("\n", array_map(fn (string $name) => '- '.$name, $names));
+
+        return <<<PROMPT
+Parfumshop.az üçün ətir notlarının adlarını tərcümə et.
+
+İngiliscə notlar:
+{$list}
+
+Qaydalar:
+- name_en verilən İngilis adını dəyişmədən saxla.
+- name_az Azərbaycan dilində ətirçilikdə təbii və qısa ad olsun.
+- name_ru Rus dilində ətirçilikdə təbii və qısa ad olsun.
+- Yalnız ətir notunun adını tərcümə et; izah və əlavə mətn yazma.
+- Girişdəki bütün notları və yalnız onları eyni sayda qaytar.
+- Yalnız verilmiş JSON sxeminə uyğun cavab ver.
+PROMPT;
+    }
 
     private function searchTermsPrompt(string $brand, string $name): string
     {
@@ -256,6 +295,32 @@ PROMPT;
                 'notes' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'accords' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'source_description' => ['type' => ['string', 'null']],
+            ],
+        ];
+    }
+
+    private function ingredientTranslationsSchema(int $count): array
+    {
+        return [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'required' => ['ingredients'],
+            'properties' => [
+                'ingredients' => [
+                    'type' => 'array',
+                    'minItems' => $count,
+                    'maxItems' => $count,
+                    'items' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'required' => ['name_en', 'name_az', 'name_ru'],
+                        'properties' => [
+                            'name_en' => ['type' => 'string'],
+                            'name_az' => ['type' => 'string'],
+                            'name_ru' => ['type' => 'string'],
+                        ],
+                    ],
+                ],
             ],
         ];
     }
