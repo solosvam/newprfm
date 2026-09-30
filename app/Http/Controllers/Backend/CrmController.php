@@ -15,6 +15,7 @@ use App\Models\Order\OrderItemCancellation;
 use App\Models\Order\OrderStatus;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
+use App\Models\SmsTemplate;
 use App\Services\BonusService;
 use App\Services\OrderItemCancellationService;
 use App\Services\OrderPayLinkService;
@@ -226,7 +227,12 @@ class CrmController extends Controller
         $message = 'Müştəri yaradıldı: '.$customer->fullname.'.';
         if ($request->boolean('send_password')) {
             try {
-                $sms->send($customer->mobile, "Hörmətli {$customer->fullname}, Parfumshop hesabınız yaradıldı. Şifrəniz: {$password}");
+                // Şablon "SMS şablonları"ndan; deaktivdirsə və ya {password} silinibsə — standart mətn (şifrə mütləq getməlidir)
+                $text = SmsTemplate::message('crm_customer_created', ['fullname' => $customer->fullname, 'password' => $password]);
+                if ($text === null || !str_contains($text, $password)) {
+                    $text = "Hormetli {$customer->fullname}, Parfumshop hesabiniz yaradildi. Sifreniz: {$password}";
+                }
+                $sms->send($customer->mobile, $text);
                 $message .= ' Şifrə SMS ilə göndərildi.';
             } catch (\Throwable $e) {
                 report($e);

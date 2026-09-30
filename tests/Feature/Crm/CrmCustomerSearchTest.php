@@ -21,6 +21,7 @@ class CrmCustomerSearchTest extends TestCase
         Schema::create('permissions', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('guard_name'), $t->timestamps()]);
         Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('surname')->nullable(), $t->string('mobile'),
             $t->string('email')->nullable(), $t->integer('gender')->nullable(), $t->string('password')->nullable(), $t->boolean('active')->default(false), $t->timestamps()]);
+        Schema::create('sms_templates', fn (Blueprint $t) => [$t->increments('id'), $t->string('code'), $t->string('name'), $t->text('template'), $t->boolean('active')->default(true)]);
         Schema::create('customer_credit_profiles', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->string('fin')->nullable(), $t->timestamps()]);
         DB::table('customers')->insert(['id' => 5, 'name' => 'Aysel', 'surname' => 'Məmmədova', 'mobile' => '994501234567']);
 
@@ -56,7 +57,7 @@ class CrmCustomerSearchTest extends TestCase
     public function test_create_customer_from_phone(): void
     {
         $sms = Mockery::mock(SmsService::class);
-        $sms->shouldReceive('send')->once()->withArgs(fn ($to, $text) => $to === '994551112233' && str_contains($text, 'Şifrəniz'));
+        $sms->shouldReceive('send')->once()->withArgs(fn ($to, $text) => $to === '994551112233' && str_contains($text, 'Sifreniz'));
         $this->app->instance(SmsService::class, $sms);
 
         $response = $this->post('/admin/crm/customer', ['mobile' => '055 111 22 33', 'name' => 'Rəşad', 'surname' => 'Əliyev', 'gender' => '1', 'send_password' => '1']);
@@ -67,6 +68,26 @@ class CrmCustomerSearchTest extends TestCase
         $this->assertSame(1, (int) $customer->active);
         $this->assertNull($customer->email);
         $this->assertTrue(Hash::check('x', Hash::make('x')) && strlen((string) $customer->password) > 20); // hash, açıq şifrə yox
+    }
+
+    public function test_create_customer_sms_uses_template(): void
+    {
+        DB::table('sms_templates')->insert(['code' => 'crm_customer_created', 'name' => 'x', 'template' => 'Salam {fullname}, kod: {password}', 'active' => 1]);
+        $sms = Mockery::mock(SmsService::class);
+        $sms->shouldReceive('send')->once()->withArgs(fn ($to, $text) => (bool) preg_match('/^Salam Rəşad Əliyev, kod: \d{6}$/u', $text));
+        $this->app->instance(SmsService::class, $sms);
+
+        $this->post('/admin/crm/customer', ['mobile' => '055 111 22 33', 'name' => 'Rəşad', 'surname' => 'Əliyev', 'gender' => '1', 'send_password' => '1']);
+    }
+
+    public function test_create_customer_sms_falls_back_when_password_removed_from_template(): void
+    {
+        DB::table('sms_templates')->insert(['code' => 'crm_customer_created', 'name' => 'x', 'template' => 'Salam {fullname}', 'active' => 1]);
+        $sms = Mockery::mock(SmsService::class);
+        $sms->shouldReceive('send')->once()->withArgs(fn ($to, $text) => str_contains($text, 'Sifreniz: '));
+        $this->app->instance(SmsService::class, $sms);
+
+        $this->post('/admin/crm/customer', ['mobile' => '055 111 22 33', 'name' => 'Rəşad', 'surname' => 'Əliyev', 'gender' => '1', 'send_password' => '1']);
     }
 
     public function test_create_customer_validation(): void
