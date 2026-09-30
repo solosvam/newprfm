@@ -109,7 +109,7 @@ return [
                 'permission' => 'type.menu',
             ],
             [
-                'title'      => 'Ingredientlər',
+                'title'      => 'Notlar',
                 'route'      => 'admin.ingredient.list',
                 'permission' => 'ingredient.menu',
             ],
