@@ -179,40 +179,110 @@ class FragranticaImportService
 
     private function extractNoteGroups(string $html): array
     {
-        return [
-            'top' => $this->extractNoteSection($html, ['Top Notes', 'Top Note'], ['Middle Notes', 'Middle Note', 'Heart Notes', 'Heart Note', 'Base Notes', 'Base Note']),
-            'middle' => $this->extractNoteSection($html, ['Middle Notes', 'Middle Note', 'Heart Notes', 'Heart Note'], ['Base Notes', 'Base Note']),
-            'base' => $this->extractNoteSection($html, ['Base Notes', 'Base Note'], ['Perfume rating', 'Fragrantica Trends', 'main accords', 'Main Accords']),
-        ];
+        $links = $this->noteLinksWithPositions($html);
+
+        if (!$links) {
+            return ['top' => [], 'middle' => [], 'base' => []];
+        }
+
+        $groups = ['top' => [], 'middle' => [], 'base' => []];
+
+        foreach ([
+            'top' => ['Top Notes', 'Top Note'],
+            'middle' => ['Middle Notes', 'Middle Note', 'Heart Notes', 'Heart Note'],
+            'base' => ['Base Notes', 'Base Note'],
+        ] as $type => $headings) {
+            $headingPosition = $this->closestHeadingBeforeNotes($html, $headings, $links);
+
+            if ($headingPosition === null) {
+                continue;
+            }
+
+            $nextHeading = $this->nextNoteHeadingPosition($html, $headingPosition);
+
+            foreach ($links as $link) {
+                if ($link['position'] <= $headingPosition) {
+                    continue;
+                }
+
+                if ($nextHeading !== null && $link['position'] >= $nextHeading) {
+                    break;
+                }
+
+                // Fragrantica pyramid blocks keep note links close to their heading.
+                // This prevents unrelated recommendation/sidebar note links leaking in.
+                if ($link['position'] - $headingPosition > 15000) {
+                    break;
+                }
+
+                $groups[$type][] = $link['name'];
+            }
+
+            $groups[$type] = array_values(array_unique(array_filter($groups[$type])));
+        }
+
+        return $groups;
     }
 
-    private function extractNoteSection(string $html, array $headings, array $endHeadings): array
+    private function noteLinksWithPositions(string $html): array
     {
-        $start = null;
+        preg_match_all(
+            '/<a[^>]+href=["\'][^"\']*\/notes\/[^"\']+["\'][^>]*>(.*?)<\/a>/is',
+            $html,
+            $matches,
+            PREG_OFFSET_CAPTURE
+        );
+
+        $links = [];
+
+        foreach ($matches[0] ?? [] as $index => $match) {
+            $name = $this->clean($matches[1][$index][0] ?? '');
+
+            if ($name !== '') {
+                $links[] = [
+                    'name' => $name,
+                    'position' => $match[1],
+                ];
+            }
+        }
+
+        return $links;
+    }
+
+    private function closestHeadingBeforeNotes(string $html, array $headings, array $links): ?int
+    {
+        $candidates = [];
 
         foreach ($headings as $heading) {
-            $position = stripos($html, $heading);
+            $offset = 0;
 
-            if ($position !== false && ($start === null || $position < $start)) {
-                $start = $position;
+            while (($position = stripos($html, $heading, $offset)) !== false) {
+                $nextLink = collect($links)->first(fn (array $link) => $link['position'] > $position);
+
+                if ($nextLink && $nextLink['position'] - $position <= 4000) {
+                    $candidates[] = $position;
+                }
+
+                $offset = $position + strlen($heading);
             }
         }
 
-        if ($start === null) {
-            return [];
-        }
+        return $candidates ? max($candidates) : null;
+    }
 
-        $end = strlen($html);
+    private function nextNoteHeadingPosition(string $html, int $after): ?int
+    {
+        $positions = [];
 
-        foreach ($endHeadings as $heading) {
-            $position = stripos($html, $heading, $start + 1);
+        foreach (['Top Notes', 'Top Note', 'Middle Notes', 'Middle Note', 'Heart Notes', 'Heart Note', 'Base Notes', 'Base Note'] as $heading) {
+            $position = stripos($html, $heading, $after + 1);
 
-            if ($position !== false && $position < $end) {
-                $end = $position;
+            if ($position !== false) {
+                $positions[] = $position;
             }
         }
 
-        return $this->extractNotesFromLinks(substr($html, $start, $end - $start));
+        return $positions ? min($positions) : null;
     }
 
     private function preferredNotes(array $groups): array
