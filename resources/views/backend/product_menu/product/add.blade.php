@@ -75,6 +75,17 @@
                     }
 
                     const notes = data.product.notes.length ? data.product.notes.map(escapeHtml).join(', ') : 'tapılmadı';
+                    const noteGroups = data.product.note_groups || {};
+                    const topNotes = (noteGroups.top || []).slice(0, 3).map(escapeHtml).join(', ');
+                    const middleNotes = (noteGroups.middle || []).slice(0, 2).map(escapeHtml).join(', ');
+                    const baseNotes = (noteGroups.base || []).slice(0, 2).map(escapeHtml).join(', ');
+                    const notePyramid = topNotes || middleNotes || baseNotes
+                        ? `<div class="small mt-2">
+                            ${topNotes ? `<strong>Top:</strong> ${topNotes}<br>` : ''}
+                            ${middleNotes ? `<strong>Middle:</strong> ${middleNotes}<br>` : ''}
+                            ${baseNotes ? `<strong>Base:</strong> ${baseNotes}` : ''}
+                           </div>`
+                        : '';
                     const accords = data.product.accords.length ? data.product.accords.map(escapeHtml).join(', ') : 'tapılmadı';
                     const sourceDescription = data.product.source_description
                         ? `<details class="mt-2"><summary>Mənbədən çıxarılan izah</summary><div class="small mt-2">${escapeHtml(data.product.source_description)}</div></details>`
@@ -85,7 +96,8 @@
                             <strong>${escapeHtml(data.product.brand)} — ${escapeHtml(data.product.name)}</strong><br>
                             ${data.product.year ? `Buraxılış ili: ${data.product.year}<br>` : ''}
                             ${data.product.perfumer ? `Parfümer: ${data.product.perfumer}<br>` : ''}
-                            Notlar: ${notes}<br>
+                            Seçilən notlar: ${notes}<br>
+                            ${notePyramid}
                             Akkordlar: ${accords}
                             ${sourceDescription}
                             <div class="small mt-2">Uyğun gələn brend, cinsiyyət və notlar formda avtomatik seçildi. Yoxlayıb düzəldə bilərsən.</div>
