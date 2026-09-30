@@ -358,6 +358,7 @@ class ProductsController extends Controller
             'variants',
             'categories',
         ])
+            ->withCount('ingredients')
             ->orderByDesc('id')
             ->get();
 
@@ -384,6 +385,8 @@ class ProductsController extends Controller
                     ->first()?->price,
 
                 'category_count' => $product->categories->count(),
+
+                'ingredient_count' => (int) $product->ingredients_count,
 
                 'active' => (int) $product->active,
             ];
