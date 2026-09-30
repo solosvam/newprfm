@@ -71,8 +71,12 @@ class FragranticaImportService
             $gender ??= strtolower($matches[1]);
         }
 
-        if (!$notes) {
-            $notes = $this->extractNotesFromLinks($html);
+        $noteGroups = $this->extractNoteGroups($html);
+
+        if ($noteGroups['top'] || $noteGroups['middle'] || $noteGroups['base']) {
+            $notes = $this->preferredNotes($noteGroups);
+        } elseif (!$notes) {
+            $notes = array_slice($this->extractNotesFromLinks($html), 0, 5);
         }
 
         if (!$name || !$brand) {
@@ -95,6 +99,7 @@ class FragranticaImportService
             'year' => $year,
             'perfumer' => $perfumer ?: null,
             'notes' => $notes,
+            'note_groups' => $noteGroups,
             'accords' => $this->extractAccords($text),
             'source_description' => $sourceDescription,
         ];
@@ -170,6 +175,57 @@ class FragranticaImportService
             fn (string $note) => $this->clean($note),
             preg_split('/,\s*/', $notes) ?: []
         )));
+    }
+
+    private function extractNoteGroups(string $html): array
+    {
+        return [
+            'top' => $this->extractNoteSection($html, ['Top Notes', 'Top Note'], ['Middle Notes', 'Middle Note', 'Heart Notes', 'Heart Note', 'Base Notes', 'Base Note']),
+            'middle' => $this->extractNoteSection($html, ['Middle Notes', 'Middle Note', 'Heart Notes', 'Heart Note'], ['Base Notes', 'Base Note']),
+            'base' => $this->extractNoteSection($html, ['Base Notes', 'Base Note'], ['Perfume rating', 'Fragrantica Trends', 'main accords', 'Main Accords']),
+        ];
+    }
+
+    private function extractNoteSection(string $html, array $headings, array $endHeadings): array
+    {
+        $start = null;
+
+        foreach ($headings as $heading) {
+            $position = stripos($html, $heading);
+
+            if ($position !== false && ($start === null || $position < $start)) {
+                $start = $position;
+            }
+        }
+
+        if ($start === null) {
+            return [];
+        }
+
+        $end = strlen($html);
+
+        foreach ($endHeadings as $heading) {
+            $position = stripos($html, $heading, $start + 1);
+
+            if ($position !== false && $position < $end) {
+                $end = $position;
+            }
+        }
+
+        return $this->extractNotesFromLinks(substr($html, $start, $end - $start));
+    }
+
+    private function preferredNotes(array $groups): array
+    {
+        return collect([
+            ...array_slice($groups['top'], 0, 3),
+            ...array_slice($groups['middle'], 0, 2),
+            ...array_slice($groups['base'], 0, 2),
+        ])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function extractNotesFromLinks(string $html): array
