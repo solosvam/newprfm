@@ -48,6 +48,7 @@ class ProductsAjax {
                 {data: 'variant_count'},
                 {data: 'price'},
                 {data: 'category_count'},
+                {data: 'ingredient_count'},
                 {data: 'active'},
                 {data: null}
             ],
@@ -123,6 +124,18 @@ class ProductsAjax {
                 {
                     targets: 8,
                     render: function (data) {
+                        const count = parseInt(data) || 0;
+
+                        if (count === 0) {
+                            return '<span class="badge bg-outline-danger">0 not</span>';
+                        }
+
+                        return `${count} not`;
+                    }
+                },
+                {
+                    targets: 9,
+                    render: function (data) {
                         if (parseInt(data) === 1) {
                             return '<span class="badge bg-outline-success">Aktiv</span>';
                         }
@@ -131,7 +144,7 @@ class ProductsAjax {
                     }
                 },
                 {
-                    targets: 9,
+                    targets: 10,
                     orderable: false,
                     searchable: false,
                     render: function (data, type, row) {
