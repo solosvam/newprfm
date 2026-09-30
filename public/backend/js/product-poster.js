@@ -2,9 +2,9 @@
     'use strict';
     const colors = {
         background: '#fff',                            // fon
-        band: '#1f1a28', logo: '#BDA4E5', bandText: '#fff', // tünd zolaqlar
+        band: '#22193a', logo: '#BDA4E5', bandText: '#fff', // tünd zolaqlar
         image: '#ffffff',                                 // şəkil kartı
-        accent: '#6f52a8',                                // brend adı
+        accent: '#000',                                // brend adı
         text: '#1a1520', secondary: '#5f586b', muted: '#8a8198',
         border: '#ddd5ea', strong: '#cfc4e2',
         card: '#2b1f4a', cardSize: '#FFFFFF', cardPrice: '#ffffff', // ölçü kartları
