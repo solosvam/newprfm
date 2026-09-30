@@ -276,7 +276,7 @@
                                                     <select class="form-select select2-tags" multiple name="ingredients[]" id="ingredients">
                                                         @foreach($ingredients as $ingredient)
                                                             <option value="{{ $ingredient->id }}" @selected(in_array($ingredient->id, $selectedIngredients))>
-                                                                {{ $ingredient->name_az }}
+                                                                {{ $ingredient->name_az }} | {{ $ingredient->name_en }}
                                                             </option>
                                                         @endforeach
                                                     </select>
