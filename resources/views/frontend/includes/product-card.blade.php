@@ -1,5 +1,7 @@
                     @php
                         $image = $product->images->first();
+                        // Hover-də ikinci şəkil: yalnız ünvan yazılır, main.js ilk hover-də yükləyir (mobildə heç vaxt)
+                        $hoverImage = $product->images->skip(1)->first();
                         $gender = $product->genders->first();
                         $variants = $product->variants->where('active', 1);
                         $firstVariant = $variants->first();
@@ -14,7 +16,7 @@
                             : null;
                     @endphp
                     <div class="card" data-href="{{ route('product', $product->slug) }}">
-                        <div class="thumb">
+                        <div class="thumb" @if($image && $hoverImage) data-hover-src="{{ route('product.image', ['size' => 400, 'image' => $hoverImage->image]) }}" @endif>
                             <div class="thumb-actions">
                                 @include('frontend.includes.favorite-button', ['product' => $product, 'selected' => false])
 

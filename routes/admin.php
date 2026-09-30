@@ -80,6 +80,13 @@ Route::prefix('admin')
                     Route::post('/order/{order}/delivery-problem', 'deliveryProblem')->name('delivery-problem');
                 });
 
+            // Ferrum Chrome extension-u (extensions/ferrum-filler): sifariş + kredit məlumatları JSON
+            Route::middleware(['can:ferrum', 'throttle:30,1'])->controller(\App\Http\Controllers\Backend\FerrumController::class)
+                ->prefix('ferrum')->name('ferrum.')->group(function () {
+                    Route::get('/orders/{ref}', 'order')->where('ref', '[A-Za-z0-9-]{1,30}')->name('order');
+                    Route::get('/orders/{order}/id-card/{side}', 'idCard')->whereNumber('order')->whereIn('side', ['front', 'back'])->name('id-card');
+                });
+
             Route::middleware('can:finance')->controller(\App\Http\Controllers\Backend\FinanceController::class)
                 ->prefix('finance')->name('finance.')->group(function () {
                     Route::get('/', 'index')->name('index');
@@ -184,6 +191,7 @@ Route::prefix('admin')
                     Route::get('/list', 'index')->name('list');
                     Route::get('/edit/{id}', 'edit')->name('edit');
                     Route::get('/permissions/{id}', 'permissions')->name('permissions');
+                    Route::post('/permissions/{id}', 'togglePermissions')->middleware('throttle:60,1')->name('permissions.toggle');
                     Route::post('/add', 'create')->name('add');
                     Route::post('/update/{id}', 'update')->name('update');
                 });
@@ -289,7 +297,7 @@ Route::prefix('admin')
                 ->group(function () {
                     Route::get('search-customer/crm',   'searchCustomerCrm')->name('search.customer.crm');
                     Route::get('search-product/crm',    'searchProductCrm')->middleware('can:crm')->name('search.product.crm');
-                    Route::post('/set-role-permission', 'setRolePermission')->name('set-role-permission');
+                    Route::post('/set-role-permission', 'setRolePermission')->middleware('can:role.list')->name('set-role-permission');
                 });
 
 

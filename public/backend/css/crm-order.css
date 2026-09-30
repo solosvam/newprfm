@@ -126,3 +126,13 @@
     .crm-result { grid-template-columns: 1fr 1fr 42px; }
     .crm-result__name { grid-column: 1 / -1; }
 }
+
+/* CRM müştəri axtarışı (crm/customer.blade.php) — başlıq sətrində geniş input */
+.crm-search-box { width: min(100%, 460px); }
+.crm-search-box .form-control { width: 100%; }
+.crm-search-results {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 1050;
+    width: 100%; max-height: 300px; overflow-y: auto;
+}
+.crm-search-results .search-item { cursor: pointer; }
+.crm-search-results .search-item:hover { background: var(--background, #f6f6f6); }

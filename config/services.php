@@ -62,6 +62,11 @@ return [
         'api_key' => env('SERPER_API_KEY'),
     ],
 
+    // Vəsiqə OCR (kredit profili): servis hesabının JSON açarı — storage/app altında, git-ə düşmür
+    'google_vision' => [
+        'key_path' => env('GOOGLE_VISION_KEY_PATH'),
+    ],
+
     // Brend loqoları (SVG → PNG): https://worldvectorlogo.com/docs/
     'worldvectorlogo' => [
         'api_key' => env('WORLDVECTORLOGO_API_KEY'),

@@ -46,23 +46,18 @@ $(document).ready(function () {
                 }
 
                 if (data.length === 1) {
-                    window.location.href = 'crm/customer' + '/' + data[0].id;
+                    window.location.href = ajax_url.crm.customer.replace(':id', data[0].id);
                     return;
                 }
 
                 let html = '';
                 data.forEach(function (item) {
-                    const badge = item.type === 'int'
-                        ? '<span class="badge bg-primary ms-1">Xaricdən daşınma</span>'
-                        : `<span class="badge bg-warning text-dark ms-1">Ölkədaxili daşınma</span>`;
-
-                    html += `<div class="p-3 border-bottom search-item" style="cursor:pointer;"
-                              data-id="${item.id}" data-type="${item.type}">
-                            ${item.fullname} ${badge}
-                         </div>`;
+                    html += `<div class="p-3 border-bottom search-item" style="cursor:pointer;" data-id="${Number(item.id)}"></div>`;
                 });
 
                 $('#search-results').html(html).show();
+                // Ad textContent ilə yazılır — HTML kimi yox (XSS olmasın)
+                $('#search-results .search-item').each(function (i) { this.textContent = data[i].fullname; });
             });
         }, 300);
     });
@@ -70,12 +65,12 @@ $(document).ready(function () {
 // Nəticəyə klik
     $(document).on('click', '.search-item', function () {
 
-        window.location.href = 'crm/customer' + '/' + $(this).data('id');
+        window.location.href = ajax_url.crm.customer.replace(':id', $(this).data('id'));
     });
 
 // Kənarı klikləyəndə bağla
     $(document).on('click', function (e) {
-        if (!$(e.target).closest('#cashier-search, #search-results').length) {
+        if (!$(e.target).closest('#crm-search, #search-results').length) {
             $('#search-results').hide();
         }
     });

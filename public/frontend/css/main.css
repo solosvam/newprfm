@@ -304,10 +304,39 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
     margin-top: 16px;
 }
 
-.hero-banner { margin: 10px 0; overflow: hidden; border-radius: 16px; aspect-ratio: var(--banner-desktop-ratio); position: relative; }
-.hero-banner img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.hero-banner__link, .hero-banner__picture { display: block; width: 100%; height: 100%; }
-.hero-banner__mobile-overlay { display: none; }
+/* Banner slayderi (includes/banner-slider.blade.php + js/banner-slider.js).
+   Lent scroll-snap ilə sürüşür: toxunma/trackpad sürüşdürməsi JS-siz işləyir. */
+.hero-banner { margin: 10px 0; overflow: hidden; border-radius: 16px; aspect-ratio: var(--banner-ratio); position: relative; }
+.hero-banner--mobile { display: none; }
+.hero-banner__track {
+    display: flex; height: 100%; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.hero-banner__track::-webkit-scrollbar { display: none; }
+.hero-banner__track:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+.hero-banner__slide { flex: 0 0 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: block; }
+.hero-banner img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+
+.hero-banner__arrow {
+    position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 38px; height: 38px;
+    margin-top: -19px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    background: rgba(255, 255, 255, .85); color: #1a1520; box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+    opacity: 0; transition: opacity .2s ease;
+}
+.hero-banner__arrow--prev { left: 14px; }
+.hero-banner__arrow--next { right: 14px; }
+.hero-banner:hover .hero-banner__arrow, .hero-banner__arrow:focus-visible { opacity: 1; }
+
+.hero-banner__dots { position: absolute; left: 50%; bottom: 12px; z-index: 2; display: flex; gap: 6px; transform: translateX(-50%); }
+.hero-banner__dot {
+    width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; cursor: pointer;
+    background: rgba(255, 255, 255, .55); box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); transition: width .25s ease, background-color .25s ease;
+}
+.hero-banner__dot[aria-current="true"] { width: 22px; background: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-banner__track { scroll-behavior: auto; }
+}
 
 .section-head { display: flex; justify-content: space-between; align-items: baseline; margin: 8px 0 16px; }
 .section-head h2 { font-size: 19px; margin: 0; }

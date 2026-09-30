@@ -1,25 +1,66 @@
 /* =========================================================
-   BRANDS PAGE (A-Z listing)
+   BRANDS PAGE (A–Z) — resources/views/frontend/brands.blade.php
+   Kartlar catalog.css-dəki .brand-card loqo üslubunu (multiply / dark invert) istifadə edir.
    ========================================================= */
-.brand-groups { columns: 3 220px; column-gap: 44px; }
-.brand-group { break-inside: avoid; margin-bottom: 32px; display: flow-root; }
-.brand-group__letter { float: left; font-size: 38px; font-weight: 800; color: var(--text); line-height: 1; margin: 0 16px 0 0; }
-.brand-group__list { list-style: none; padding: 0; margin: 0; }
-.brand-group__list li { padding: 3px 0; }
-.brand-group__list a { font-size: 14px; color: var(--text-secondary); transition: color 0.12s; }
-.brand-group__list a:hover { color: var(--accent); }
+.brands-page { padding: 8px 0 40px; }
+.brands-page [hidden] { display: none !important; } /* .brand-card display:flex hidden-i üstələməsin */
 
-.brand-sidebar .account-nav { border-top: 1px solid var(--border); margin-top: 4px; }
-.account-nav-item {
-    display: flex; align-items: center; gap: 10px; padding: 12px 4px;
-    border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text-secondary);
+.brands-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; margin-bottom: 20px; }
+.brands-head h1 { margin: 0; font-size: 28px; font-weight: 800; color: var(--text); }
+.brands-head__count { margin: 4px 0 0; font-size: 14px; color: var(--text-secondary); }
+
+.brands-search {
+    display: flex; align-items: center; gap: 8px; width: min(100%, 340px); height: 44px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text-secondary);
+    transition: border-color .15s;
 }
-.account-nav-item img { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.55; }
-.account-nav-item:hover { color: var(--text); }
-.account-nav-item:hover img { opacity: 1; }
-.account-nav-item.active { color: var(--accent); font-weight: 600; }
-.account-nav-item.active img { opacity: 1; }
-.account-nav-item--filter { font-weight: 600; color: var(--text); cursor: pointer; }
-.account-nav-item--filter img { opacity: 1; }
-.account-nav-credit { display: block; text-align: center; margin-top: 16px; width: 100%; }
+.brands-search:focus-within { border-color: var(--accent); }
+.brands-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 14px; }
 
+.brands-az {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; padding: 10px;
+    border: 1px solid var(--border); border-radius: 14px; background: var(--surface);
+}
+.brands-az a, .brands-az span {
+    display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px;
+    border-radius: 9px; font-size: 14px; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+}
+.brands-az a { color: var(--text); transition: background-color .15s, color .15s; }
+.brands-az a:hover, .brands-az a:focus-visible { background: var(--accent); color: var(--on-accent); }
+.brands-az span { color: var(--text-muted); opacity: .5; }
+.brands-az a.is-dim { color: var(--text-muted); opacity: .45; pointer-events: none; }
+
+.brands-letter { margin-bottom: 32px; scroll-margin-top: 90px; }
+.brands-letter__title {
+    display: flex; align-items: center; gap: 14px; margin: 0 0 14px;
+    font-size: 26px; font-weight: 800; color: var(--text); line-height: 1;
+}
+.brands-letter__title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.brands-letter__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+
+/* Kart: .brand-card-in loqo üslubu + şaquli düzülüş */
+.brand-card.brand-tile {
+    flex-direction: column; justify-content: flex-start; gap: 6px; min-width: 0; height: auto;
+    padding: 16px 12px 14px; white-space: normal; text-align: center;
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.brand-card.brand-tile:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, .06); }
+.brand-tile__logo { display: grid; place-items: center; width: 100%; height: 44px; margin-bottom: 4px; }
+.brand-tile__logo img { max-width: 120px; max-height: 40px; }
+.brand-tile__logo .brand-logo { width: 120px; height: 38px; }
+.brand-tile__initial {
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-size: 18px; font-weight: 800;
+}
+.brand-tile__name { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.25; overflow-wrap: anywhere; }
+.brand-tile__count { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+
+.brands-empty { padding: 40px 0; text-align: center; color: var(--text-secondary); }
+
+@media (max-width: 760px) {
+    .brands-head h1 { font-size: 24px; }
+    .brands-search { width: 100%; }
+    .brands-az { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 24px; border-radius: 0; border-left: 0; border-right: 0; }
+    .brands-az::-webkit-scrollbar { display: none; }
+    .brands-letter__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}

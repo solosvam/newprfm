@@ -1,0 +1,26 @@
+/* Rolun icazələri (backend/roles/permissions.blade.php) */
+.rp-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.rp-search { flex: 1 1 240px; max-width: 360px; margin: 0; }
+.rp-summary { margin-left: auto; color: var(--muted); }
+.rp-summary b { color: var(--body); font-size: 1.05em; }
+
+.rp-group__head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--separator); }
+.rp-group__icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: var(--border-radius-md); background: rgba(var(--primary-rgb), .1); color: var(--primary); flex-shrink: 0; }
+.rp-group__title { margin: 0; font-size: 1rem; font-weight: 600; color: var(--body); }
+.rp-group__count { font-weight: 600; }
+
+.rp-list { display: flex; flex-direction: column; }
+.rp-item {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px;
+    margin: 0 -10px; padding: 9px 10px; border-radius: var(--border-radius-md); cursor: pointer; transition: background-color .15s;
+}
+.rp-item + .rp-item { border-top: 1px solid var(--separator-light, var(--separator)); }
+.rp-item:hover { background: rgba(var(--primary-rgb), .04); }
+.rp-item .form-check-input { cursor: pointer; }
+.rp-item__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rp-item__desc { color: var(--body); line-height: 1.3; }
+.rp-item__code { font-size: 11.5px; color: var(--muted); background: none; padding: 0; word-break: break-all; }
+.rp-item__state { min-width: 18px; font-size: 13px; text-align: right; }
+.rp-item__state.is-ok { color: var(--success); }
+.rp-item__state.is-bad { color: var(--danger); }
+.rp-item.is-saving { opacity: .6; pointer-events: none; }

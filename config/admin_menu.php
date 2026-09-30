@@ -65,6 +65,23 @@ return [
                     ],
                 ],
             ],
+            [
+                'title'      => 'Sayt',
+                'id'         => 'site-parameters',
+                'permission' => 'site.menu',
+                'children'   => [
+                    [
+                        'title'      => 'Bannerlər',
+                        'route'      => 'admin.banner.list',
+                        'permission' => 'site.banners',
+                    ],
+                    [
+                        'title'      => 'FAQ',
+                        'route'      => 'admin.faq.list',
+                        'permission' => 'site.faq',
+                    ],
+                ],
+            ],
         ],
     ],
 
@@ -142,25 +159,6 @@ return [
         'icon'       => 'wallet',
         'route'      => 'admin.finance.index',
         'permission' => 'finance',
-    ],
-
-    [
-        'title'      => 'Sayt',
-        'icon'       => 'boxes',
-        'id'         => 'site-parameters',
-        'permission' => 'site.menu',
-        'children'   => [
-            [
-                'title'      => 'Bannerlər',
-                'route'      => 'admin.banner.list',
-                'permission' => 'site.banners',
-            ],
-            [
-                'title'      => 'FAQ',
-                'route'      => 'admin.faq.list',
-                'permission' => 'site.faq',
-            ],
-        ],
     ],
 
     [

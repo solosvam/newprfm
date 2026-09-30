@@ -23,7 +23,6 @@
             <h4>{{ __('footer_help') }}</h4>
             <ul>
                 <li><a href="{{ route('cart') }}">{{ __('common_cart') }}</a></li>
-                <li><a href="{{ route('internal-credit') }}">{{ __('common_installments') }}</a></li>
                 <li><a href="{{ route('brands') }}">{{ __('common_brands') }}</a></li>
                 <li><a href="{{ auth()->check() ? route('profile') : route('front.login') }}">{{ __('footer_account') }}</a></li>
             </ul>

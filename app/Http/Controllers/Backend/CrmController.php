@@ -141,20 +141,25 @@ class CrmController extends Controller
     public function updateCreditProfile(Customer $customer, Request $request): RedirectResponse
     {
         $profile = $customer->creditProfile;
-        $request->merge(['fin' => strtoupper(trim((string) $request->input('fin')))]);
+        $request->merge([
+            'fin' => strtoupper(trim((string) $request->input('fin'))),
+            'id_card_number' => strtoupper(preg_replace('/\s+/', '', (string) $request->input('id_card_number'))),
+        ]);
 
         $data = $request->validate([
             'father_name' => ['required', 'string', 'max:100'],
             'fin' => ['required', 'regex:/^[A-Z0-9]{7}$/', \Illuminate\Validation\Rule::unique('customer_credit_profiles', 'fin')->ignore($profile?->id)],
+            'id_card_series' => ['required', \Illuminate\Validation\Rule::in(\App\Models\Customer\CustomerCreditProfile::ID_CARD_SERIES)],
+            'id_card_number' => ['required', 'regex:/^[A-Z0-9]{1,8}$/'],
             'relative_1_name' => ['required', 'string', 'max:100'],
             'relative_1_phone' => ['required', 'regex:/^\\+?[0-9 ]{9,16}$/'],
             'relative_2_name' => ['required', 'string', 'max:100'],
             'relative_2_phone' => ['required', 'regex:/^\\+?[0-9 ]{9,16}$/'],
             'workplace_name' => ['required', 'string', 'max:255'],
             'salary' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
-            'position' => ['required', 'string', 'max:150'],
             'id_card_front' => [$profile?->id_card_front ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'id_card_back' => [$profile?->id_card_back ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'id_card_back' => [\Illuminate\Validation\Rule::requiredIf(fn () => !$profile?->id_card_back
+                && \App\Models\Customer\CustomerCreditProfile::needsBackSide($request->input('id_card_series'))), 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         foreach (['id_card_front', 'id_card_back'] as $field) {

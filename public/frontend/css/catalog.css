@@ -229,6 +229,14 @@
 
 .thumb { aspect-ratio: 1; border-radius: 10px; background: var(--image-bg); display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 10px; color: var(--accent); overflow: hidden; }
 .thumb img { width: 100%; height: 100%; object-fit: contain; display: block;mix-blend-mode: multiply; }
+/* Hover-də ikinci şəkil (main.js yükləyir; hazır olana qədər əsas şəkil qalır) */
+.thumb .thumb-alt { position: absolute; inset: 0; opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+/* Şəkillər multiply ilə qarışır — hover-də əsas şəkil gizlənir, yoxsa ikisi üst-üstə görünür */
+.thumb.has-alt > img:not(.thumb-alt) { transition: opacity .3s ease; }
+@media (hover: hover) {
+    .thumb.has-alt:hover .thumb-alt { opacity: 1; }
+    .thumb.has-alt:hover > img:not(.thumb-alt) { opacity: 0; }
+}
 
 .thumb-actions { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; gap: 6px; cursor: pointer; }
 .icon-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: rgba(255,255,255,0.85); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: color 0.15s, background 0.15s; }

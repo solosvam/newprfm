@@ -73,7 +73,6 @@ Route::controller(SearchController::class)->group(function () {
 
 Route::controller(MainController::class)->group(function () {
     Route::get('/', 'index')->name('home');
-    Route::get('/internal-credit', 'credit')->name('internal-credit');
 });
 
 
@@ -236,6 +235,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(CreditProfileController::class)->group(function () {
         Route::get('/profile/credit', 'edit')->name('profile.credit');
         Route::post('/profile/credit', 'update')->name('profile.credit.update');
+        Route::post('/profile/credit/ocr', 'ocr')->middleware('throttle:10,1')->name('profile.credit.ocr');
 
     });
 

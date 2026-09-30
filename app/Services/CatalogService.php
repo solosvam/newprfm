@@ -98,9 +98,14 @@ class CatalogService
 
         $priceMin = (float) ($priceBounds?->min_price ?? 0);
         $priceMax = (float) ($priceBounds?->max_price ?? $priceMin);
+        // Eyni yerə (topweb, topmobile, ...) bir neçə banner — slayder. Əvvəl hər yeni banner
+        // əvvəlkinin üstünə yazılırdı və yalnız sonuncu görünürdü.
         $banners = [];
-        foreach (Banners::where('active', 1)->get() as $banner) {
-            $banners[$banner->location . $banner->device] = [
+        foreach (Banners::where('active', 1)->orderBy('id')->get() as $banner) {
+            if (!$banner->imageForLocale()) {
+                continue;
+            }
+            $banners[$banner->location . $banner->device][] = [
                 'image' => $banner->imageForLocale(),
                 'url' => $banner->link_url,
             ];
@@ -127,6 +132,8 @@ class CatalogService
         return [
             'bannerDimensions' => $bannerDimensions,
             'banners' => $banners,
+            // Admin → Ayarlar → Bannerlər → "Slayd keçidi" (saniyə)
+            'bannerInterval' => min(60, max(2, (int) \App\Models\Setting::valueOf('banner_slide_interval', 5))),
             'priceMin' => $priceMin,
             'priceMax' => $priceMax,
             'brands' => Brand::query()

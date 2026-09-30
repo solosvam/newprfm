@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Parfumshop → Ferrum",
+  "short_name": "PS Ferrum",
+  "version": "0.4.0",
+  "description": "Parfumshop sifarişinin müştəri və kredit məlumatlarını çəkir və Ferrum Capital formasına doldurur.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Parfumshop → Ferrum",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://parfumshop.az/*",
+    "https://www.parfumshop.az/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "http://*.test/*",
+    "https://*.test/*",
+    "https://pm.ferrumcapital.az/*"
+  ]
+}

@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer\CustomerCreditProfile;
+use App\Services\IdCard\GoogleVisionOcr;
+use App\Services\IdCard\IdCardParser;
+use App\Services\IdCard\NameMatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -23,6 +27,42 @@ class CreditProfileController extends Controller
         ]);
     }
 
+    /**
+     * Vəsiqənin ön üzünün şəklindən (kəsilmiş JPEG) ata adı, FİN, seriya, nömrəni oxuyur — formanı doldurmaq üçün.
+     * Şəkil saxlanmır; yalnız Google Vision-a göndərilir. Ad-soyad hesabdakı ilə müqayisə olunur (bloklamır).
+     */
+    public function ocr(Request $request, GoogleVisionOcr $ocr, IdCardParser $parser, NameMatcher $matcher)
+    {
+        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
+
+        if (!$ocr->isConfigured()) {
+            return response()->json(['message' => __('credit_ocr_unavailable')], 503);
+        }
+
+        try {
+            $card = $parser->parse($ocr->text(file_get_contents($request->file('image')->getRealPath())));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => __('credit_ocr_failed')], 502);
+        }
+
+        $user = $request->user();
+        $fields = array_filter([
+            'father_name' => $card['father_name'],
+            'fin' => $card['fin'],
+            'id_card_series' => in_array($card['series'], CustomerCreditProfile::ID_CARD_SERIES, true) ? $card['series'] : null,
+            'id_card_number' => $card['number'],
+        ]);
+
+        return response()->json([
+            'fields' => (object) $fields,
+            'is_id_card' => $card['type'] !== null,
+            'card_name' => trim(($card['name'] ?? '').' '.($card['surname'] ?? '')) ?: null,
+            'name_match' => $matcher->matches($card['name'], $card['surname'], $user->name, $user->surname),
+        ]);
+    }
+
     public function update(Request $request)
     {
         $user = $request->user();
@@ -30,6 +70,7 @@ class CreditProfileController extends Controller
 
         $request->merge([
             'fin' => strtoupper(trim((string) $request->input('fin'))),
+            'id_card_number' => strtoupper(preg_replace('/\s+/', '', (string) $request->input('id_card_number'))),
         ]);
 
         $data = $request->validate(
@@ -106,6 +147,16 @@ class CreditProfileController extends Controller
                     ->ignore($profile?->id),
             ],
 
+            'id_card_series' => [
+                'required',
+                Rule::in(CustomerCreditProfile::ID_CARD_SERIES),
+            ],
+
+            'id_card_number' => [
+                'required',
+                'regex:/^[A-Z0-9]{1,8}$/',
+            ],
+
             'relative_1_name' => [
                 'required',
                 'string',
@@ -135,8 +186,11 @@ class CreditProfileController extends Controller
                 'max:5120',
             ],
 
+            // arxa üz yalnız AZE (köhnə vəsiqə) üçün məcburidir
             'id_card_back' => [
-                $profile?->id_card_back ? 'nullable' : 'required',
+                Rule::requiredIf(fn () => !$profile?->id_card_back
+                    && CustomerCreditProfile::needsBackSide(request()->input('id_card_series'))),
+                'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:5120',
@@ -155,11 +209,6 @@ class CreditProfileController extends Controller
                 'max:99999999.99',
             ],
 
-            'position' => [
-                'required',
-                'string',
-                'max:150',
-            ],
         ];
     }
 
@@ -175,6 +224,7 @@ class CreditProfileController extends Controller
             'image' => __('credit_image'),
             'mimes' => __('credit_mimes'),
             'fin.unique' => __('credit_fin_unique'),
+            'id_card_series.in' => __('credit_id_card_series_invalid'),
         ];
     }
 
@@ -183,6 +233,8 @@ class CreditProfileController extends Controller
         $fields = [
             'father_name',
             'fin',
+            'id_card_series',
+            'id_card_number',
             'relative_1_name',
             'relative_1_phone',
             'relative_2_name',
@@ -191,7 +243,6 @@ class CreditProfileController extends Controller
             'id_card_back',
             'workplace_name',
             'salary',
-            'position',
         ];
 
         $attributes = [];

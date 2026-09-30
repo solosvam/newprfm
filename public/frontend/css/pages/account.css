@@ -106,6 +106,7 @@
 /* Credit profile form */
 .credit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .credit-field { display: flex; flex-direction: column; gap: 6px; }
+.credit-field[hidden] { display: none; }
 .credit-field label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
 .credit-field input[type="text"],
 .credit-field input[type="tel"],
@@ -113,7 +114,30 @@
     height: 42px; border: 1px solid var(--border); border-radius: var(--radius, 8px);
     background: var(--bg); color: var(--text); padding: 0 14px; font-size: 14px;
 }
-.credit-field input:focus { outline: none; border-color: var(--accent); }
+.credit-field input:focus,
+.credit-field select:focus { outline: none; border-color: var(--accent); }
+/* Vəsiqə: seriya (select2) + nömrə */
+.credit-idcard { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 8px; }
+.credit-idcard select {
+    height: 42px; border: 1px solid var(--border); border-radius: var(--radius, 8px);
+    background: var(--bg); color: var(--text); padding: 0 10px; font-size: 14px; min-width: 0;
+}
+.credit-idcard select.is-invalid { border-color: var(--danger); }
+/* qlobal select2 stili (brend seçimi, hündür) — burada digər inputlarla eyni ölçü */
+.credit-idcard .select2-container--default .select2-selection--single {
+    height: 42px !important; padding: 0 30px 0 12px !important;
+    border-radius: var(--radius, 8px) !important;
+}
+.credit-idcard .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 14px; font-weight: 600; letter-spacing: .5px;
+}
+.credit-idcard .select2-container--default .select2-selection--single .select2-selection__placeholder { font-weight: 400; letter-spacing: 0; }
+.credit-idcard .select2-container--default .select2-selection--single .select2-selection__arrow { right: 10px !important; }
+.credit-idcard .select2-container--default.select2-container--focus .select2-selection--single,
+.credit-idcard .select2-container--default.select2-container--open .select2-selection--single { border-color: var(--accent) !important; }
+.credit-idcard select.is-invalid + .select2-container .select2-selection--single { border-color: var(--danger) !important; }
+/* açılan siyahı seçim sahəsindən enli olsun (104px dar qalır) */
+.select2-dropdown.credit-series-dropdown { min-width: 150px; }
 .credit-field input.is-invalid:not([type="file"]) { border-color: var(--danger); }
 
 .credit-photos-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -399,8 +423,11 @@
 }
 .credit-section__title { margin: 0 0 14px; font-size: 15px; font-weight: 700; color: var(--text); }
 .credit-section__hint { margin: -8px 0 14px; font-size: 12.5px; line-height: 1.45; color: var(--text-secondary); }
-.credit-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 761px) {
+    .credit-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } /* mobil media query-ni ləğv etməsin */
+}
 .credit-field input.is-upper { text-transform: uppercase; letter-spacing: .5px; }
+.credit-field input.is-upper::placeholder { text-transform: none; letter-spacing: 0; }
 
 @media (max-width: 760px) {
     .order-card__payment {
@@ -415,3 +442,50 @@
 .order-card__pay { position: relative; z-index: 1; margin: 0; }
 .order-card__pay .btn { width: auto; margin: 0; padding: 0 22px; }
 
+
+/* Vəsiqə şəklinin kəsilməsi — modal (id-card-cropper.js) */
+.idcrop {
+    width: min(720px, calc(100vw - 24px)); max-width: 100%; max-height: calc(100dvh - 24px);
+    border: 0; border-radius: 18px; padding: 18px; background: var(--surface); color: var(--text);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, .25);
+}
+.idcrop[open] { display: flex; flex-direction: column; gap: 12px; }
+.idcrop::backdrop { background: rgba(0, 0, 0, .65); }
+.idcrop__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.idcrop__title { margin: 0; font-size: 17px; font-weight: 700; }
+.idcrop__close { border: 0; background: transparent; font-size: 26px; line-height: 1; cursor: pointer; color: var(--text); }
+.idcrop__hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
+.idcrop__stage { height: min(56vh, 440px); background: #111; border-radius: 12px; overflow: hidden; }
+.idcrop__stage img { display: block; max-width: 100%; }
+.idcrop__tools { display: flex; justify-content: center; gap: 8px; }
+.idcrop__tools button {
+    width: 42px; height: 38px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--bg); color: var(--text); font-size: 18px; cursor: pointer;
+}
+.idcrop__tools button:hover { border-color: var(--accent); color: var(--accent); }
+.idcrop__checks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+.idcrop__checks li { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+.idcrop__checks li::before { content: '•'; font-weight: 700; }
+.idcrop__checks li.is-ok { color: var(--success, #2f7d4f); }
+.idcrop__checks li.is-ok::before { content: '✓'; }
+.idcrop__checks li.is-bad { color: var(--warning, #b54708); }
+.idcrop__checks li.is-bad::before { content: '⚠'; }
+.idcrop__actions { display: flex; justify-content: flex-end; gap: 10px; }
+.idcrop__actions .btn { min-width: 120px; }
+.idcrop__actions [data-crop-confirm].is-warning { background: var(--warning, #b54708); border-color: var(--warning, #b54708); }
+/* Cropper.js çərçivəsi — kart künclərini aydın göstər */
+.idcrop .cropper-view-box { outline: 2px solid #fff; outline-color: rgba(255, 255, 255, .9); border-radius: 10px; }
+.idcrop .cropper-face { border-radius: 10px; }
+@media (max-width: 760px) {
+    .idcrop { padding: 14px; border-radius: 14px; }
+    .idcrop__stage { height: 52vh; }
+    .idcrop__actions .btn { flex: 1; min-width: 0; }
+}
+
+/* OCR nəticəsi (vəsiqənin ön üzü) */
+.credit-ocr { font-size: 12.5px; line-height: 1.45; padding: 8px 10px; border-radius: var(--radius, 8px); background: var(--surface-2); }
+.credit-ocr.is-loading { color: var(--text-muted); }
+.credit-ocr.is-ok { color: var(--success, #2f7d4f); }
+.credit-ocr.is-bad { color: var(--warning, #b54708); }
+.credit-field input.is-autofilled,
+.credit-idcard select.is-autofilled + .select2-container.select2-container--default .select2-selection--single { background: color-mix(in srgb, var(--success, #2f7d4f) 8%, var(--bg)) !important; }

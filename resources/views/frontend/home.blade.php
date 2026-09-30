@@ -28,3 +28,7 @@
 
     @include('frontend.includes.bottom-banners')
 @endsection
+
+@section('page-scripts')
+    <script src="{{ asset_v('frontend/js/banner-slider.js') }}" defer></script>
+@endsection

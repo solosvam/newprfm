@@ -228,11 +228,13 @@ html, body { overflow-x: hidden; }
 }
 
 /* =========================================================
-   HERO BANNER — mobile image swap
+   HERO BANNER — mobildə mobil slayder (varsa), oxlar gizli
    ========================================================= */
 @media (max-width: 760px) {
-    .hero-banner { aspect-ratio: var(--banner-mobile-ratio, var(--banner-desktop-ratio)); }
-    .hero-banner__mobile-overlay { display: block; position: absolute; inset: 0; z-index: 1; }
+    .hero-banner--desktop { display: none; }
+    .hero-banner--mobile { display: block; }
+    .hero-banner__arrow { display: none; }
+    .hero-banner__dots { bottom: 8px; }
     header:not(:has(.cats)) .header-row {
         padding-bottom: 12px;
     }

@@ -28,15 +28,35 @@
         <div class="page-title-container">
             <div class="row">
                 <!-- Title Start -->
-                <div class="col-12 col-md-7">
-                    <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
+                <div class="col-12 col-sm-4">
+                    <h1 class="mb-0 pb-0 display-4" id="title">{{$title}}</h1>
                     @include('backend._layout.breadcrumb',['breadcrumbs'=>$breadcrumbs])
                 </div>
                 <!-- Title End -->
 
                 <!-- Top Buttons Start -->
-                <div class="col-12 col-md-5 d-flex align-items-start justify-content-end">
-
+                <div class="col-12 col-sm-8 d-flex align-items-start justify-content-end">
+                    <!-- Tour Button Start -->
+                    <div class="position-relative crm-search-box">
+                        <input type="text"
+                               id="crm-search"
+                               class="form-control form-control-lg"
+                               placeholder="Mobil no, Ad Soyad, .FIN"
+                               autocomplete="off"
+                               data-bs-toggle="popover"
+                               data-bs-placement="bottom"
+                               data-bs-trigger="focus"
+                               data-bs-html="true"
+                               data-bs-content="
+                                   <ul class='mb-0 ps-3 small'>
+                                       <li><b>Mobil no:</b> 0 ilə başlayan 10 rəqəm (0103227575)</li>
+                                       <li><b>Ad Soyad:</b> boşluqla ayır (Ruf Ibr)</li>
+                                       <li><b>FİN:</b> nöqtə ilə başlayan 8 simvol (.A1B2C34)</li>
+                                   </ul>
+                                   " autofocus>
+                        <div id="search-results" class="crm-search-results bg-white border rounded shadow-sm"></div>
+                    </div>
+                    <!-- Tour Button End -->
                 </div>
                 <!-- Top Buttons End -->
             </div>

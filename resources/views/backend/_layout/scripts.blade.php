@@ -47,6 +47,7 @@
             },
         },
         crm:{
+            customer: "{{ route('admin.crm.customer', ':id') }}",
             sms: "{{ route('admin.crm.sms', ':id') }}",
             resetPassword: "{{ route('admin.crm.reset.password', ':id') }}",
             refund: "{{ route('admin.refund.store') }}",

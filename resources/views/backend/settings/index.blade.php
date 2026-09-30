@@ -144,7 +144,7 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="settings-card-head">
-                                <h5 class="mb-0">Banner ölçüləri</h5>
+                                <h5 class="mb-0">Bannerlər</h5>
                                 <span class="text-muted small">Yeni bannerlər bu ölçülərə kəsiləcək</span>
                             </div>
 
@@ -184,6 +184,21 @@
                                     @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-sm-6">
+                                    <label for="banner_slide_interval" class="form-label">Slayd keçidi</label>
+                                    <div class="input-group has-validation">
+                                        <input id="banner_slide_interval" type="number" name="banner_slide_interval"
+                                               min="2" max="60" step="1"
+                                               value="{{ old('banner_slide_interval', $bannerSlideInterval) }}"
+                                               @class(['form-control', 'is-invalid' => $errors->has('banner_slide_interval')]) required>
+                                        <span class="input-group-text">saniyə</span>
+                                        @error('banner_slide_interval')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="form-text">Eyni yerdə bir neçə banner olanda hər biri neçə saniyə göstərilsin (2–60).</div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -8,6 +8,7 @@
 
 @section('css')
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/datatables.min.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('backend/css/banners.css') }}">
 @endsection
 
 @section('js_page')
@@ -15,6 +16,7 @@
     <script src="{{ asset('backend/js/cs/scrollspy.js') }}"></script>
     <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
     <script src="{{ asset('backend/js/plugins/datatable.boxedvariations.js') }}"></script>
+    <script src="{{ asset_v('backend/js/banner-preview.js') }}"></script>
 @endsection
 
 @section('content')
@@ -100,14 +102,20 @@
                                 <td>{{ $banner->id }}</td>
                                 <td>
                                     @if($thumbnail)
+                                        {{-- Kiçik önizləmə; üzərinə gələndə böyük ölçü (backend/js/banner-preview.js) --}}
                                         <img src="{{ asset('frontend/uploads/banners/' . basename($thumbnail)) }}"
-                                             alt="Banner #{{ $banner->id }}"
-                                             class="rounded" style="width:100px;height:55px;object-fit:cover">
+                                             alt="Banner #{{ $banner->id }}" class="banner-thumb" tabindex="0" data-banner-preview>
                                     @else
                                         <span class="text-muted">Şəkil yoxdur</span>
                                     @endif
                                 </td>
-                                <td>{{ $banner->device === 'mobile' ? 'Mobil' : 'Veb' }}</td>
+                                <td>
+                                    @if($banner->device === 'mobile')
+                                        <span class="badge bg-outline-warning">Mobil</span>
+                                    @else
+                                        <span class="badge bg-outline-primary">Veb</span>
+                                    @endif
+                                </td>
                                 <td>{{ $banner->location === 'top' ? 'Yuxarı' : 'Aşağı' }}</td>
                                 <td>
                                     @foreach(['az' => 'AZ', 'en' => 'EN', 'ru' => 'RU'] as $locale => $label)

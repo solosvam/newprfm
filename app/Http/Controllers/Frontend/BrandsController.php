@@ -9,14 +9,35 @@ use Illuminate\Http\Request;
 
 class BrandsController extends Controller
 {
+    /** Hərf zolağı: rəqəmlər + ingilis əlifbası A–Z */
+    public const LETTERS = ['0–9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
     public function index()
     {
         $brands = Brand::where('active', 1)
+            ->withCount(['products as products_count' => fn ($q) => $q->where('active', 1)])
             ->orderBy('name')
-            ->get()
-            ->groupBy(fn ($brand) => strtoupper(substr($brand->name, 0, 1)));
+            ->get();
 
-        return view('frontend.brands', compact('brands'));
+        // İlk hərf latına çevrilir (Ö → O, Ş → S, É → E), rəqəmlə başlayanlar "0–9", qalanı "#"
+        $groups = $brands->groupBy(function ($brand) {
+            $first = strtoupper(\Illuminate\Support\Str::ascii(mb_substr(trim($brand->name), 0, 1)));
+
+            return match (true) {
+                ctype_digit($first) => '0–9',
+                (bool) preg_match('/^[A-Z]$/', $first) => $first,
+                default => '#',
+            };
+        });
+        $order = array_flip(self::LETTERS);
+        $groups = $groups->sortBy(fn ($items, $letter) => [$order[$letter] ?? 1000, $letter]);
+
+        return view('frontend.brands', [
+            'groups' => $groups,
+            'total' => $brands->count(),
+            'letters' => collect(self::LETTERS)->merge($groups->keys())->unique()->values(),
+        ]);
     }
 
     public function products(Request $request, string $slug, CatalogService $catalog)

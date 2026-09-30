@@ -26,6 +26,7 @@ class SettingsController extends Controller
             'registrationBonusEnabled' => (bool) Setting::valueOf('registration_bonus_enabled', 1),
             'registrationBonusAmount' => Setting::valueOf('registration_bonus_amount', 10),
             'bannerSizes' => $bannerSizes,
+            'bannerSlideInterval' => Setting::valueOf('banner_slide_interval', 5),
             'deliveryMode' => Setting::valueOf('delivery_mode','free'),
             'deliveryFee' => Setting::valueOf('delivery_fee',0),
             'freeDeliveryFrom' => Setting::valueOf('free_delivery_from',0),
@@ -49,6 +50,8 @@ class SettingsController extends Controller
             'credit_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             'delivery_mode' => ['required', 'in:free,paid,threshold'],
             'gift_wrap_mode' => ['required', 'in:free,paid'],
+            // Eyni yerdə bir neçə banner olanda hər slaydın göstərilmə müddəti (saniyə)
+            'banner_slide_interval' => ['required', 'integer', 'min:2', 'max:60'],
         ];
 
         foreach (array_keys(Setting::BANNER_DIMENSIONS) as $key) {

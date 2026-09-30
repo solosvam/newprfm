@@ -253,6 +253,23 @@
         }
     }
 
+    // Məhsul kartı: hover-də ikinci şəkil. Yalnız siçanlı cihazda, ilk hover-də yüklənir;
+    // şəkil gələnə qədər əsas şəkil qalır, sonra CSS yumşaq keçid edir (.has-alt).
+    if (window.matchMedia('(hover: hover)').matches) {
+        document.addEventListener('pointerover', event => {
+            if (event.pointerType && event.pointerType !== 'mouse') return;
+            const thumb = event.target.closest?.('.thumb[data-hover-src]');
+            if (!thumb || thumb.dataset.hoverLoaded) return;
+            thumb.dataset.hoverLoaded = '1';
+            const img = new Image();
+            img.className = 'thumb-alt';
+            img.alt = '';
+            img.decoding = 'async';
+            img.onload = () => { thumb.appendChild(img); thumb.classList.add('has-alt'); };
+            img.src = thumb.dataset.hoverSrc;
+        });
+    }
+
     async function syncFavorites() {
         if (!loggedIn) {
             const ids = readArray(favoritesKey).map(Number);
