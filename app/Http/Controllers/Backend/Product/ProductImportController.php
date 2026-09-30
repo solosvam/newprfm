@@ -32,12 +32,17 @@ class ProductImportController extends Controller
             }
         }
 
+        $ingredientIds = $this->findOrCreateIngredients($product['notes'], $openAi);
+
         return response()->json([
             'product' => $product,
             'matches' => [
                 'brand_id' => $this->findBrand($product['brand']),
                 'gender_ids' => $this->findGenders($product['gender']),
-                'ingredient_ids' => $this->findOrCreateIngredients($product['notes'], $openAi),
+                'ingredient_ids' => $ingredientIds,
+                'ingredients' => Ingredient::query()
+                    ->whereIn('id', $ingredientIds)
+                    ->get(['id', 'name_az', 'name_en']),
             ],
         ]);
     }
