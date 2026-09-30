@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
-    $title = 'Ingredientlər';
-    $breadcrumbs = ["/"=>"ParfumShop", ""=>"Ingredientlər"]
+    $title = 'Notlar';
+    $breadcrumbs = ["/"=>"ParfumShop", ""=>"Notlar"]
 @endphp
 @extends('backend.layout',['html_tag_data'=>$html_tag_data, 'title'=>$title])
 
@@ -26,7 +26,7 @@
                 <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
                     <!-- Tour Button Start -->
                     <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newAdmin">
-                        <span>Yeni Ingredient</span>
+                        <span>Yeni Not</span>
                         <i data-acorn-icon="plus"></i>
                     </button>
                     <!-- Tour Button End -->
@@ -94,7 +94,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Yeni Ingredient</h5>
+                        <h5 class="modal-title">Yeni Not</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
