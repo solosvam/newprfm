@@ -35,6 +35,7 @@ class ProductSearchServiceTest extends TestCase
         (require database_path('migrations/2026_09_30_160000_create_search_aliases_table.php'))->up();
         (require database_path('migrations/2026_10_01_190000_add_match_type_to_search_aliases.php'))->up(); // artıq sözlər
         (require database_path('migrations/2026_10_01_200000_make_safe_extra_words_stems.php'))->up();
+        (require database_path('migrations/2026_10_02_100000_add_conjunction_extra_words.php'))->up();
 
         DB::table('brands')->insert([
             ['id' => 1, 'name' => 'Christian Dior'], ['id' => 2, 'name' => 'Creed'], ['id' => 3, 'name' => 'Tom Ford'],
@@ -390,5 +391,23 @@ class ProductSearchServiceTest extends TestCase
         $this->assertSame([90], $this->ids('xahiş edirəm aventus göndərin'));        // xahis…, edirem…, gonder…
         $this->assertSame([93], $this->ids('marly layton'));                          // "la" tam söz — Layton qalır
         $this->assertSame('exact', SearchAlias::where('alias_normalized', 'la')->value('match_type'));
+    }
+
+    public function test_brand_name_word_repeated_is_model_and_short_words_are_whole(): void
+    {
+        DB::table('brands')->insert(['id' => 8, 'name' => 'Nina Ricci']);
+        DB::table('products')->insert([
+            ['id' => 98, 'brand_id' => 8, 'type_id' => 1, 'name' => 'Nina', 'slug' => 'p-98'],
+            ['id' => 99, 'brand_id' => 8, 'type_id' => 1, 'name' => 'Love in Paris', 'slug' => 'p-99'],
+        ]);
+        DB::table('product_variants')->insert([['product_id' => 98, 'size_id' => 1, 'price' => 150], ['product_id' => 99, 'size_id' => 1, 'price' => 178]]);
+        app(ProductSearchService::class)->forgetCache();
+        $search = fn (string $message) => $this->ids(\App\Services\Search\ProductQueryParser::parse($message)['query']);
+
+        $this->assertSame([98], $search('Salam nina ricci nina etiri var? Ve qiymer'));
+        $this->assertEqualsCanonicalizing([98, 99], $this->ids('nina ricci'));   // yalnız brend — hamısı
+        $this->assertSame([99], $this->ids('nina ricci love'));
+        $this->assertSame([], $this->ids('nina ricci ov'));                       // qısa söz bütöv olmalıdır ("Love" içində yox)
+        $this->assertSame([92], $this->ids('212 vip'));
     }
 }

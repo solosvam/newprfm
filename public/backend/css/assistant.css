@@ -133,3 +133,11 @@ select.as-input { padding: 7px 8px; }
 /* Şəkildən axtarış */
 .as-search-image { display: block; max-width: 100%; max-height: 120px; margin: 8px auto 0; border-radius: 8px; border: 1px solid var(--as-border); }
 .as-search-image[hidden] { display: none; }
+
+.as-btn[hidden] { display: none; }
+
+/* Nömrə ilə əl ilə axtarış */
+.as-lookup p { margin: 0 0 6px; }
+.as-lookup-row { display: flex; gap: 6px; }
+.as-lookup-row .as-input { flex: 1; }
+.as-lookup-row .as-btn-sm { margin-top: 0; }

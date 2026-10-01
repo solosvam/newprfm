@@ -200,11 +200,34 @@
             });
     }
 
+    // Nömrə ilə əl ilə axtarış: Messenger / Instagram (Business Suite) söhbətlərində nömrə görünmür,
+    // WhatsApp-da isə saxlanmış kontaktda — operator müştəridən soruşub yazır
+    function lookupForm(hint) {
+        const form = el('form', 'as-lookup');
+        const input = el('input', 'as-input');
+        input.type = 'tel';
+        input.placeholder = '050 123 45 67';
+        input.maxLength = 20;
+        const button = el('button', 'as-btn as-btn-sm', 'Tap');
+        button.type = 'submit';
+        const row = el('div', 'as-lookup-row');
+        row.append(input, button);
+        form.append(el('p', 'as-muted', hint), row);
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const phone = input.value.replace(/\D+/g, '');
+            if (phone.length < 9) { input.focus(); return; }
+            currentPhone = null;
+            loadCustomer(phone);
+        });
+        return form;
+    }
+
     function onChat(chat) {
         if (!chat || !chat.phone) announce(null);
         if (!chat) {
             currentPhone = null;
-            show(el('p', 'as-muted', 'Söhbət seçilməyib'));
+            show(lookupForm('Söhbətdə nömrə yoxdur — müştərini nömrə ilə tapın:'));
         } else if (chat.phone) {
             loadCustomer(chat.phone);
         } else {
@@ -212,9 +235,12 @@
             show(
                 el('p', null, chat.title),
                 el('p', 'as-muted', 'Saxlanmış kontakt — nömrə görünmür. WhatsApp-da söhbətin başlığına klikləyin (Kişi bilgisi), nömrə yadda qalacaq.'),
+                lookupForm('Və ya nömrəni yazın:'),
             );
         }
     }
+
+    onChat(null); // başlanğıc: WhatsApp-dan söhbət gələnə qədər (Business Suite-də — həmişə) əl ilə axtarış
 
     /* ---------- ətir axtarışı ---------- */
     function note(text) {

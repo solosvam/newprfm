@@ -2,7 +2,6 @@
 
 namespace App\Services\Search;
 
-use App\Models\Product\Product;
 use App\Services\IdCard\GoogleVisionOcr;
 
 /**
@@ -13,19 +12,11 @@ use App\Services\IdCard\GoogleVisionOcr;
  */
 class ImageProductSearch
 {
-    /** Ətir şəkillərində/skrinşotlarda tez-tez olan, adı bildirməyən sözlər */
-    private const GENERIC = [
-        'eau', 'de', 'du', 'des', 'la', 'le', 'les', 'parfum', 'parfums', 'perfume', 'perfumes', 'fragrance', 'toilette', 'cologne',
-        'edp', 'edt', 'edc', 'extrait', 'spray', 'vaporisateur', 'natural', 'naturel', 'ml', 'fl', 'oz', 'pour', 'homme', 'femme',
-        'men', 'women', 'man', 'woman', 'for', 'him', 'her', 'the', 'and', 'by', 'new', 'tester', 'original', 'orijinal',
-        'bottle', 'glass', 'product', 'brand', 'azn', 'manat', 'endirim', 'sebet', 'sebete', 'qiymet', 'kisi', 'qadin', 'unisex',
-    ];
-
-    private const MAX_CHECKS = 25;
 
     public function __construct(
         private GoogleVisionOcr $vision,
         private ProductSearchService $search,
+        private ProductTextExtractor $extractor,
     ) {}
 
     public function isConfigured(): bool
@@ -56,7 +47,7 @@ class ImageProductSearch
         $fallback = null;
         $checked = [];
         foreach ($candidates as [$source, $text]) {
-            $query = $this->meaningful($text, $checked);
+            $query = $this->extractor->extract($text, $checked);
             if ($query === '') {
                 continue;
             }
@@ -67,45 +58,6 @@ class ImageProductSearch
         }
 
         return $this->result($fallback[1] ?? null, $size, false, $fallback[0] ?? null, $hints);
-    }
-
-    /** "Dior Sauvage Eau de Parfum 100 ml 250 AZN" → "dior sauvage" (yalnız tanınan sözlər, sıra saxlanır) */
-    private function meaningful(string $text, array &$checked): string
-    {
-        $tokens = array_unique(array_filter(
-            explode(' ', ProductSearchNormalizer::normalize(mb_substr($text, 0, 2000))),
-            fn (string $token) => strlen($token) >= 2 && !ctype_digit($token)
-                && !in_array($token, self::GENERIC, true)
-        ));
-
-        $known = [];
-        foreach ($tokens as $token) {
-            $checked[$token] ??= count($checked) < self::MAX_CHECKS ? $this->isKnown($token) : false;
-            if ($checked[$token]) {
-                $known[] = $token;
-            }
-            if (count($known) >= 6) {
-                break;
-            }
-        }
-
-        return implode(' ', $known);
-    }
-
-    /** Söz brend/alias kimi tanınırsa və ya hansısa aktiv məhsulun adında varsa */
-    private function isKnown(string $token): bool
-    {
-        $parsed = $this->search->interpret($token);
-        if ($parsed['brands'] || ($parsed['words'] && $parsed['words'] !== [$token])) {
-            return true;
-        }
-        if (strlen($token) < 3) {
-            return false;
-        }
-
-        return Product::query()->where('active', 1)
-            ->where('name', 'like', '%'.addcslashes($token, '%_\\').'%')
-            ->exists();
     }
 
     /** Skrinşotdakı "100 ml" — ölçü önə çıxsın */

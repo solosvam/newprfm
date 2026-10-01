@@ -86,7 +86,7 @@ return [
     ],
 
     [
-        'title'    => 'Məhsullar',
+        'title'    => 'Kataloq',
         'icon'     => 'gift',
         'id'       => 'whmenu',
         'children' => [

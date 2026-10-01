@@ -19,13 +19,23 @@ register_shutdown_function(function () use (&$creditProfileExportFinished, $cred
 class CreditProfileExportDatabase
 {
     private $connection;
-    public function query($sql)
+    private function connect()
     {
         // Connect only after the controller has checked the token and parameters.
         if (!$this->connection) {
             $this->connection = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
         }
-        return $this->connection->query($sql);
+        return $this->connection;
+    }
+
+    public function query($sql)
+    {
+        return $this->connect()->query($sql);
+    }
+
+    public function escape($value)
+    {
+        return $this->connect()->escape($value);
     }
 }
 

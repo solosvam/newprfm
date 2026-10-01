@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class ProductSearchService
 {
-    public const CACHE_KEY = 'product-search-vocabulary:v3';
+    public const CACHE_KEY = 'product-search-vocabulary:v4';
 
     private const MAX_PHRASE = 4;
 
@@ -76,6 +76,7 @@ class ProductSearchService
         $words = [];
         $label = [];
         $alternatives = [];
+        $brandTokens = []; // brend adı kimi artıq işlənmiş sözlər: [brand_id => ['nina' => true, 'ricci' => true]]
 
         for ($i = 0, $count = count($tokens); $i < $count;) {
             [$entry, $length] = $this->match($tokens, $i, $vocabulary);
@@ -96,6 +97,14 @@ class ProductSearchService
                 $i++;
                 continue;
             }
+            // Brendin adındakı söz İKİNCİ dəfə gəlibsə, model adıdır: "nina ricci NINA" → brend Nina Ricci + ətir "Nina".
+            // ("herrera carolina" — "carolina" əvvəl işlənməyib, brend kimi qalır)
+            if ($length === 1 && ($entry['source'] ?? null) === 'name' && isset($brandTokens[$entry['brand_id']][$tokens[$i]])) {
+                $words[] = $tokens[$i];
+                $label[] = $tokens[$i];
+                $i++;
+                continue;
+            }
             $i += $length;
 
             if ($entry['type'] === SearchAlias::IGNORE) {
@@ -103,6 +112,11 @@ class ProductSearchService
             }
             if ($entry['brand_id']) {
                 $brands[$entry['brand_id']] = true;
+                if ($entry['type'] === SearchAlias::BRAND) {
+                    foreach (array_slice($tokens, $i - $length, $length) as $used) {
+                        $brandTokens[$entry['brand_id']][$used] = true;
+                    }
+                }
             }
             if ($entry['type'] === SearchAlias::MODEL) {
                 $original = ProductSearchNormalizer::normalize($entry['original']);
@@ -187,12 +201,28 @@ class ProductSearchService
 
     private function find(array $brandIds, array $words, int $limit, array $alternatives = []): Collection
     {
-        $like = fn (string $word) => '%'.addcslashes($word, '%_\\').'%';
-        $allWords = function (Builder $query, array $words) use ($like) {
+        $escape = fn (string $word) => addcslashes($word, '%_\\');
+        // Söz adda: uzun söz — hissə kimi də ("sauvage" → "Sauvage Elixir");
+        // qısa söz (≤ 3 hərf) — yalnız bütöv söz kimi, yoxsa "ve" "Love"-u, "no" "Noir"-i tapır
+        $contains = function (Builder $query, string $column, string $word) use ($escape) {
+            if (strlen($word) > 3) {
+                return $query->where($column, 'like', '%'.$escape($word).'%');
+            }
+            $w = $escape($word);
+
+            return $query->where(fn (Builder $exact) => $exact->where($column, 'like', $w)
+                ->orWhere($column, 'like', $w.' %')
+                ->orWhere($column, 'like', '% '.$w)
+                ->orWhere($column, 'like', '% '.$w.' %'));
+        };
+        // Brend tanınıbsa, sözlər yalnız məhsul adında axtarılır: "nina ricci nina" → "nina" brend adına yox, ətir adına
+        $nameOnly = $brandIds !== [];
+        $allWords = function (Builder $query, array $words) use ($contains, $nameOnly) {
             foreach ($words as $word) {
-                $query->where(fn (Builder $match) => $match
-                    ->where('products.name', 'like', $like($word))
-                    ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', 'like', $like($word))));
+                $query->where(fn (Builder $match) => $nameOnly
+                    ? $contains($match, 'products.name', $word)
+                    : $contains($match, 'products.name', $word)
+                        ->orWhereHas('brand', fn (Builder $brand) => $contains($brand, 'name', $word)));
             }
         };
 
@@ -236,7 +266,7 @@ class ProductSearchService
                     continue;
                 }
                 $names[$brand->id] = $brand->name;
-                $brands[$key] = ['type' => SearchAlias::BRAND, 'brand_id' => $brand->id, 'original' => null];
+                $brands[$key] = ['type' => SearchAlias::BRAND, 'brand_id' => $brand->id, 'original' => null, 'source' => 'name'];
                 foreach (array_unique(explode(' ', $key)) as $word) {
                     if (strlen($word) >= 3 && !in_array($word, self::BRAND_STOP_WORDS, true)) {
                         $wordOwners[$word][$brand->id] = true;
@@ -246,7 +276,7 @@ class ProductSearchService
             // "dior" → Christian Dior: söz yalnız bir brendin adındadırsa və başqa brendin tam adı deyilsə
             foreach ($wordOwners as $word => $owners) {
                 if (count($owners) === 1 && !isset($brands[$word])) {
-                    $brands[$word] = ['type' => SearchAlias::BRAND, 'brand_id' => array_key_first($owners), 'original' => null];
+                    $brands[$word] = ['type' => SearchAlias::BRAND, 'brand_id' => array_key_first($owners), 'original' => null, 'source' => 'name'];
                 }
             }
 
