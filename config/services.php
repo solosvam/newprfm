@@ -3,7 +3,7 @@
 return [
 
     'legacy_customers' => [
-        'url' => env('LEGACY_CUSTOMER_EXPORT_URL', 'https://www.parfumshop.az/index.php?route=api/customer_export'),
+        'url' => env('LEGACY_CUSTOMER_EXPORT_URL', 'https://www.parfumshop.az/customer-export.php'),
         'token' => env('LEGACY_CUSTOMER_EXPORT_TOKEN'),
     ],
 

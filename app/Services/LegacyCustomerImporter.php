@@ -40,6 +40,9 @@ class LegacyCustomerImporter
             throw new RuntimeException('Köhnə API HTTP '.$response->status().' qaytardı. Tokeni və endpoint-i yoxlayın.');
         }
         $data = $response->json();
+        if (!is_array($data)) {
+            throw new RuntimeException('Köhnə API təmiz JSON qaytarmır (HTML və ya başqa mətn gəlir). Köhnədə customer-export.php giriş faylını yerləşdirin və LEGACY_CUSTOMER_EXPORT_URL ünvanını ona dəyişin.');
+        }
         $p = is_array($data) ? ($data['pagination'] ?? null) : null;
         if (!is_array($data) || ($data['version'] ?? null) !== 1 || !is_array($data['customers'] ?? null)
             || !array_is_list($data['customers']) || !is_array($p)
@@ -70,7 +73,22 @@ class LegacyCustomerImporter
     public function import(array $row, bool $apply): array
     {
         $id = $row['customer_id'] ?? null;
-        if (is_int($id) && $id > 0 && (isset($this->seenIds[$id]) || Customer::where('old_customer_id', $id)->exists())) {
+        $date = $row['date_added'] ?? null;
+        if (Validator::make(['date_added' => $date], ['date_added' => ['required', 'string', 'date_format:Y-m-d H:i:s']])->fails()) {
+            return ['status' => 'invalid', 'old_customer_id' => $id, 'reason' => 'Uyğunsuz sahələr: date_added'];
+        }
+        if (is_int($id) && $id > 0 && isset($this->seenIds[$id])) {
+            return ['status' => 'already_imported', 'old_customer_id' => $id];
+        }
+        if (is_int($id) && $id > 0 && ($existing = Customer::where('old_customer_id', $id)->first())) {
+            if ($existing->created_at?->format('Y-m-d H:i:s') !== $date) {
+                if ($apply) {
+                    // Query builder updates only this column; Eloquent would also touch updated_at.
+                    DB::table('customers')->where('id', $existing->id)->update(['created_at' => $date]);
+                }
+                $this->seenIds[$id] = true;
+                return ['status' => $apply ? 'dates_updated' : 'would_update_date', 'old_customer_id' => $id];
+            }
             return ['status' => 'already_imported', 'old_customer_id' => $id];
         }
         $data = [
@@ -101,7 +119,7 @@ class LegacyCustomerImporter
         }
         $emailKey = $data['email'] === null ? null : mb_strtolower($data['email']);
 
-        $result = DB::transaction(function () use ($data, $apply, $id, $cents, $emailKey) {
+        $result = DB::transaction(function () use ($data, $apply, $id, $cents, $emailKey, $date) {
             if (Customer::where('old_customer_id', $id)->exists()) {
                 return ['status' => 'already_imported', 'old_customer_id' => $id];
             }
@@ -112,15 +130,17 @@ class LegacyCustomerImporter
                 return ['status' => 'conflict', 'old_customer_id' => $id, 'reason' => 'E-poçt artıq mövcuddur.'];
             }
             if ($apply) {
-                $customer = Customer::create([
+                $customer = new Customer([
                     'old_customer_id' => $id, 'name' => $data['name'], 'surname' => $data['surname'],
                     'email' => $data['email'], 'mobile' => $data['mobile'], 'gender' => (int) $data['sex'] === 1 ? 1 : 0,
                     'password' => null, 'active' => true, 'bonus_balance' => self::decimal($cents),
                 ]);
+                $customer->created_at = $date;
+                $customer->save();
                 if ($cents > 0) {
                     $customer->bonusTransactions()->create([
                         'type' => 'adjustment', 'amount' => self::decimal($cents),
-                        'note' => 'Köhnə sistemdən köçürülən bonus (oc_customer.customer_id: '.$id.')',
+                        'note' => 'Köhnə sistemdən köçürülən bonus',
                     ]);
                 }
             }

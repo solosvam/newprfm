@@ -5,6 +5,7 @@ Bu paket köhnə `solosvam/parfumshop` layihəsinin controller quruluşuna uyğu
 ## Yerləşdirmə
 
 1. `catalog/controller/api/customer_export.php` faylını köhnə saytda eyni qovluğa yerləşdirin.
+   `customer-export.php` faylını da saytın kökünə, `config.php` ilə yanaşı yerləşdirin. Bu giriş faylı storefront `index.php`-ni işlətmir və JSON-a HTML qarışmasının qarşısını alır.
 2. Köhnə saytın kök `config.php` faylında `<?php` daxilində, varsa bağlanan `?>` işarəsindən əvvəl əlavə edin:
 
 ```php
@@ -26,7 +27,7 @@ Köhnə saytın domenini aşağıdakı `OLD_DOMAIN` yerinə yazın. `TOKEN` yeri
 ```bash
 curl --fail-with-body \
   -H 'X-Customer-Export-Token: TOKEN' \
-  'https://OLD_DOMAIN/index.php?route=api/customer_export&limit=200&after_id=0'
+  'https://OLD_DOMAIN/customer-export.php?limit=200&after_id=0'
 ```
 
 Nümunə cavab:
@@ -42,6 +43,7 @@ Nümunə cavab:
       "email": "customer@example.com",
       "telephone": "994103227575",
       "sex": 1,
+      "date_added": "2019-05-17 14:23:45",
       "bonus": "12.50"
     }
   ],
@@ -62,7 +64,7 @@ Nümunə cavab:
 `has_more = true` olduqda cavabdakı `next_after_id` və ilk cavabdakı `snapshot_max_id` ilə növbəti sorğunu edin:
 
 ```text
-index.php?route=api/customer_export&limit=200&after_id=NEXT_AFTER_ID&snapshot_max_id=FIRST_SNAPSHOT_MAX_ID
+customer-export.php?limit=200&after_id=NEXT_AFTER_ID&snapshot_max_id=FIRST_SNAPSHOT_MAX_ID
 ```
 
 `has_more = false` olduqda export bitib. Eyni import boyunca ilk `snapshot_max_id` dəyişməsin: export başladıqdan sonra yaradılan müştərilər bu keçidə daxil edilmir. Bu, bazanın dondurulmuş surəti deyil; mövcud müştərinin məlumatı/bonusu sorğular arasında dəyişərsə cari dəyəri qaytarılır. Son köçürmədə köhnə saytdakı bonus dəyişikliklərini dayandırmaq və balansları tutuşdurmaq lazımdır.
@@ -80,4 +82,4 @@ index.php?route=api/customer_export&limit=200&after_id=NEXT_AFTER_ID&snapshot_ma
 
 Yeni importer `customer_id → old_customer_id`, `firstname → name`, `lastname → surname`, `telephone → mobile`, `sex 1 → gender 1`, `sex 2 → gender 0`, `bonus → bonus_balance` uyğunluğunu tətbiq etməlidir. Köçürülən hesablar `active = 1`, `password = NULL` yaradılmalıdır ki, ilk girişdə SMS təsdiqindən sonra şifrə təyin edilsin.
 
-Köçürmə tamamlandıqdan sonra controller-i və config tokenini köhnə saytdan silin.
+Köçürmə tamamlandıqdan sonra `customer-export.php`, controller və config tokenini köhnə saytdan silin.

@@ -5,7 +5,7 @@
 Yeni saytın `.env` faylında:
 
 ```dotenv
-LEGACY_CUSTOMER_EXPORT_URL=https://www.parfumshop.az/index.php?route=api/customer_export
+LEGACY_CUSTOMER_EXPORT_URL=https://www.parfumshop.az/customer-export.php
 LEGACY_CUSTOMER_EXPORT_TOKEN=KOHNE_CONFIG_PHP_DEKI_EYNI_TOKEN
 ```
 
@@ -34,8 +34,9 @@ php artisan parfumshop:import-customers --apply
 - `sex = 1` kişi (`gender = 1`), `sex = 2` qadın (`gender = 0`). Digərləri hesabatda uyğunsuz sayılır.
 - `bonus < 1` üçün 0. Digər məbləğlər yeni `decimal(12,2)` balansına uyğun 2 onluq yerə yuvarlaqlaşdırılır. Hesablama float olmadan qəpiklə aparılır.
 - Yeni hesab: `active = 1`, `password = NULL`. İlk girişdə SMS OTP və yeni şifrə yaratma axını işləyir. Import zamanı SMS/e-mail və qeydiyyat bonusu verilmir.
+- Köhnə `date_added` yeni `created_at` sahəsinə yazılır; yeni hesabda `updated_at` import vaxtıdır. Tarix `Y-m-d H:i:s` formatında olmalıdır, səhv/boş tarixli qeydlər hesabatda göstərilir.
 - Müsbət ilkin bonus üçün `adjustment` tarixçə qeydi yaradılır. Hesab və bonus tarixçəsi eyni transaction-dadır.
-- `old_customer_id` nullable və unique-dir. Əvvəl köçürülən ID yenidən yazılmır; balans, şifrə və müştəri məlumatları dəyişdirilmir.
+- `old_customer_id` nullable və unique-dir. Əvvəl köçürülən hesab yenidən yaradılmır. `created_at` köhnə `date_added` ilə fərqlənirsə yalnız `created_at` yenilənir; `updated_at`, balans, şifrə və digər sahələr dəyişdirilmir. Sınaqda `Tarix yenilənəcək`, real importda `Tarix yeniləndi` sayında görünür.
 - Mövcud və ya həmin importda əvvəl qəbul edilmiş nömrə/email konfliktləri avtomatik birləşdirilmir. Email müqayisəsi böyük-kiçik hərfə həssas deyil.
 - Ad/soyad boş və ya 30 simvoldan uzun, email səhv və ya 50 simvoldan uzun olduqda qeyd hesabatda saxlanılır; məlumat kəsilmir.
 - API tokeni başqa domenə yönləndirmə ilə ötürülmür. Redirect cavabı xəta sayılır.

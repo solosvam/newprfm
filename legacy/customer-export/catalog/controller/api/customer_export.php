@@ -54,7 +54,7 @@ class ControllerApiCustomerExport extends Controller
         // No trimming, prefix insertion or stripping of punctuation: only exact stored numbers qualify.
         // CHAR_LENGTH also rejects a trailing newline that some regexp engines allow with $.
         $query = $this->db->query(
-            'SELECT customer_id, firstname, lastname, email, telephone, sex, '
+            'SELECT customer_id, firstname, lastname, email, telephone, sex, date_added, '
             . 'CASE WHEN bonus IS NULL OR bonus < 1 THEN 0 ELSE bonus END AS bonus '
             . 'FROM `' . $table . '` '
             . 'WHERE customer_id > ' . $after . ' AND customer_id <= ' . $snapshot . ' '
@@ -73,6 +73,7 @@ class ControllerApiCustomerExport extends Controller
                 'email' => $row['email'],
                 'telephone' => (string) $row['telephone'],
                 'sex' => $row['sex'] === null ? null : (int) $row['sex'],
+                'date_added' => $row['date_added'],
                 // Keep monetary values as decimal strings; do not convert them to floats.
                 'bonus' => (string) $row['bonus'],
             );

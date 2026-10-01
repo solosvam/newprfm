@@ -2,7 +2,8 @@
     "manifest_version": 3,
     "name": "Parfumshop Assistant",
     "short_name": "PS Assistant",
-    "version": "0.6.0",
+    "version": "0.6.1",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmK4wV1pJZQKN1sIeSrB2UvZCcMB8Ymghd1jEajsqzSRI/9C9aP9SlxEeM2I2wxCkJFmo6533nGyykaY9CkNRILEFhDmiI3A1P980+Lscp7bOav3Tdk24vApzEf6ohIjLM6TbMsnfLOdPHIIfJcJleoJq1sca1lzCKxyWmJbHAGsA3+JgLPxYyDlktiaLMKUHp97UseNRpA9Etwu1f2BivVo0ktYqFrwlDyhTO0zxeiFHRWL3YEnKjftu6lRYO8Xumu2+edjascCfHp2STdGaU3kLyv+5F255wvPF04/CfHNZRuIjV5w5SBhRzFJKCVjjILEx7fwXA4/dRvJfL6jSsQIDAQAB",
     "description": "Operatorlar üçün yan panel: müştəri, ətir axtarışı, poster.",
     "action": {
         "default_title": "Parfumshop Assistant",
@@ -41,8 +42,7 @@
         "scripting"
     ],
     "host_permissions": [
-        "https://parfumshop.az/*",
-        "https://www.parfumshop.az/*",
+        "https://last.parfumshop.az/*",
         "http://localhost/*",
         "http://*.test/*",
         "https://*.test/*",

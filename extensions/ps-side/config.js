@@ -1,2 +1,3 @@
-// Panelin açdığı sayt. Lokal test üçün məsələn 'http://parfumshop.test'
-const PS_SITE = 'https://parfumshop.test';
+// Panelin açdığı sayt (admin paneli bu ünvanda olmalıdır).
+// Lokal test üçün: 'https://parfumshop.test' (manifest host_permissions-da da olmalıdır)
+const PS_SITE = 'https://last.parfumshop.az';

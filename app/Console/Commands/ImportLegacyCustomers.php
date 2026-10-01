@@ -47,10 +47,16 @@ class ImportLegacyCustomers extends Command
 
         $stream = null;
         $path = null;
-        $counts = array_fill_keys(['created', 'would_create', 'already_imported', 'conflict', 'invalid'], 0);
+        $counts = array_fill_keys(['created', 'would_create', 'already_imported', 'conflict', 'invalid', 'dates_updated', 'would_update_date'], 0);
         $bonus = 0;
         $finished = false;
         $error = null;
+        $stopped = false;
+        if (extension_loaded('pcntl')) {
+            $this->trap([SIGINT, SIGTERM], function () use (&$stopped): void {
+                $stopped = true;
+            });
+        }
         try {
             $directory = storage_path('app/private/imports');
             if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
@@ -67,9 +73,11 @@ class ImportLegacyCustomers extends Command
             $write(['event' => 'start', 'mode' => $apply ? 'apply' : 'dry-run', 'after_id' => $after, 'snapshot_max_id' => $snapshot]);
             $this->info($apply ? 'Real import başlayır.' : 'Sınaq rejimi: müştəri və bonus məlumatları bazaya yazılmır.');
             do {
+                if ($stopped) break;
                 $page = $importer->page($after, $batch, $snapshot);
                 $snapshot = $page['pagination']['snapshot_max_id'];
                 foreach ($page['customers'] as $row) {
+                    if ($stopped) break 2;
                     try {
                         $result = $importer->import($row, $apply);
                     } catch (Throwable $e) {
@@ -84,7 +92,8 @@ class ImportLegacyCustomers extends Command
                 $write(['event' => 'page_complete', 'after_id' => $after, 'snapshot_max_id' => $snapshot]);
                 $this->line('Son köhnə ID: '.$after.' / '.$snapshot.'; baxılan: '.array_sum($counts));
             } while ($page['pagination']['has_more']);
-            $finished = true;
+            $finished = !$stopped;
+            if ($stopped) $this->warn('Import dayandırıldı. Kilid açılır; əvvəl köçürülənlər saxlanılır.');
         } catch (Throwable $e) {
             $error = $e instanceof RuntimeException ? $e->getMessage() : 'Import alınmadı. Baza və fayl sistemini yoxlayın.';
             $this->error($error);
@@ -96,8 +105,9 @@ class ImportLegacyCustomers extends Command
                 fclose($stream);
             }
             $lock->release();
+            $this->untrap();
         }
-        $this->table(['Yaradıldı', 'Yaradılacaq', 'Əvvəl köçürülüb', 'Konflikt', 'Uyğunsuz'], [array_values($counts)]);
+        $this->table(['Yaradıldı', 'Yaradılacaq', 'Əvvəl köçürülüb', 'Konflikt', 'Uyğunsuz', 'Tarix yeniləndi', 'Tarix yenilənəcək'], [array_values($counts)]);
         $this->line(($apply ? 'Köçürülən' : 'Köçürüləcək').' bonus: '.LegacyCustomerImporter::decimal($bonus));
         if ($path) $this->line('Hesabat: '.$path);
         if (!$finished || $counts['conflict'] > 0 || $counts['invalid'] > 0) {

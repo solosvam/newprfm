@@ -43,7 +43,7 @@ class LegacyCustomerImportTest extends TestCase
     {
         return array_replace(['customer_id' => $id, 'firstname' => 'Ad', 'lastname' => 'Soyad',
             'email' => 'test'.$id.'@example.com', 'telephone' => '99410'.str_pad((string) $id, 7, '0', STR_PAD_LEFT),
-            'sex' => 1, 'bonus' => '12.50'], $changes);
+            'sex' => 1, 'bonus' => '12.50', 'date_added' => '2019-05-17 14:23:45'], $changes);
     }
 
     private function page(array $rows, int $after = 0, int $snapshot = 100, bool $more = false, int $limit = 200): array
@@ -65,6 +65,8 @@ class LegacyCustomerImportTest extends TestCase
         $this->assertSame(0, $customer->gender);
         $this->assertTrue($customer->active);
         $this->assertNull($customer->password);
+        $this->assertSame('2019-05-17 14:23:45', $customer->created_at->format('Y-m-d H:i:s'));
+        $this->assertTrue($customer->updated_at->isToday());
         $this->assertEquals(12.50, $customer->bonus_balance);
         $this->assertDatabaseHas('customer_bonus_transactions', ['customer_id' => $customer->id, 'type' => 'adjustment', 'amount' => 12.50]);
         $this->assertSame('created', $importer->import($this->row(2), true)['status']);
@@ -204,5 +206,39 @@ class LegacyCustomerImportTest extends TestCase
         $this->assertAuthenticatedAs(Customer::first());
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('new-password', Customer::first()->password));
         $this->assertEquals(12.50, Customer::first()->bonus_balance);
+    }
+
+    public function test_html_before_json_fails_with_specific_message_and_no_writes(): void
+    {
+        Http::fake(['*' => Http::response('<html>Storefront</html>'.json_encode($this->page([$this->row()])), 200)]);
+        $this->artisan('parfumshop:import-customers --apply')
+            ->expectsOutputToContain('Köhnə API təmiz JSON qaytarmır')
+            ->assertExitCode(1);
+        $this->assertSame(0, Customer::count());
+    }
+
+    public function test_previously_imported_date_is_backfilled_without_touching_updated_at_or_bonus(): void
+    {
+        (new LegacyCustomerImporter())->import($this->row(), true);
+        DB::table('customers')->update(['created_at' => '2026-10-01 10:00:00', 'updated_at' => '2026-10-01 11:00:00', 'bonus_balance' => '3.00']);
+        $customer = Customer::first();
+        $before = $customer->getAttributes();
+        $this->assertSame('would_update_date', (new LegacyCustomerImporter())->import($this->row(), false)['status']);
+        $this->assertSame($before, $customer->fresh()->getAttributes());
+        $this->assertSame('dates_updated', (new LegacyCustomerImporter())->import($this->row(), true)['status']);
+        $after = $customer->fresh()->getAttributes();
+        $this->assertSame('2019-05-17 14:23:45', $after['created_at']);
+        unset($before['created_at'], $after['created_at']);
+        $this->assertSame($before, $after);
+        $this->assertSame(1, DB::table('customer_bonus_transactions')->count());
+        $this->assertSame('already_imported', (new LegacyCustomerImporter())->import($this->row(), true)['status']);
+    }
+
+    public function test_invalid_legacy_date_does_not_create_or_update_customer(): void
+    {
+        foreach ([null, '0000-00-00 00:00:00', '2020-02-30 12:00:00'] as $date) {
+            $this->assertSame('invalid', (new LegacyCustomerImporter())->import($this->row(1, ['date_added' => $date]), true)['status']);
+        }
+        $this->assertSame(0, Customer::count());
     }
 }

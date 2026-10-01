@@ -26,7 +26,7 @@ class ExportTestDatabase
         $this->pdo->sqliteCreateFunction('regexp', function ($pattern, $value) {
             return preg_match('/' . $pattern . '/', (string) $value);
         }, 2);
-        $this->pdo->exec('CREATE TABLE oc_customer (customer_id INTEGER PRIMARY KEY, firstname TEXT, lastname TEXT, email TEXT, telephone TEXT, sex INTEGER, bonus DECIMAL)');
+        $this->pdo->exec('CREATE TABLE oc_customer (customer_id INTEGER PRIMARY KEY, firstname TEXT, lastname TEXT, email TEXT, telephone TEXT, sex INTEGER, bonus DECIMAL, date_added TEXT)');
     }
     public function query($sql)
     {
@@ -37,8 +37,8 @@ class ExportTestDatabase
     }
     public function insert($id, $phone, $bonus, $sex = 1)
     {
-        $statement = $this->pdo->prepare('INSERT INTO oc_customer VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $statement->execute(array($id, 'Test', 'Customer', 'test@example.com', $phone, $sex, $bonus));
+        $statement = $this->pdo->prepare('INSERT INTO oc_customer VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $statement->execute(array($id, 'Test', 'Customer', 'test@example.com', $phone, $sex, $bonus, '2019-05-17 14:23:45'));
     }
 }
 define('DB_PREFIX', 'oc_');
@@ -92,7 +92,8 @@ verify(array_column($first['customers'], 'customer_id') === array(1, 3), 'Exact 
 verify($first['customers'][0]['bonus'] === '0' && $first['customers'][1]['bonus'] === '0', 'Bonus under 1 was not zeroed.');
 verify($first['customers'][1]['sex'] === 2, 'Legacy sex mapping changed.');
 verify($first['pagination']['next_after_id'] === 3 && $first['pagination']['snapshot_max_id'] === 11, 'Cursor metadata is wrong.');
-verify(array_keys($first['customers'][0]) === array('customer_id', 'firstname', 'lastname', 'email', 'telephone', 'sex', 'bonus'), 'Unexpected customer fields were exported.');
+verify(array_keys($first['customers'][0]) === array('customer_id', 'firstname', 'lastname', 'email', 'telephone', 'sex', 'date_added', 'bonus'), 'Unexpected customer fields were exported.');
+verify($first['customers'][0]['date_added'] === '2019-05-17 14:23:45', 'Legacy creation date changed.');
 $database->insert(12, '994553227575', '100');
 list($second) = callExport(array('after_id' => '3', 'snapshot_max_id' => '11', 'limit' => '2'));
 verify(array_column($second['customers'], 'customer_id') === array(5, 7), 'Second page skipped or repeated customers.');
