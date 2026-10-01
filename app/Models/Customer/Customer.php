@@ -15,6 +15,7 @@ class Customer extends Authenticatable
     protected $guard = 'web';
 
     protected $fillable = [
+        'old_customer_id',
         'name',
         'surname',
         'gender',

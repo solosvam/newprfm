@@ -2,6 +2,11 @@
 
 return [
 
+    'legacy_customers' => [
+        'url' => env('LEGACY_CUSTOMER_EXPORT_URL', 'https://www.parfumshop.az/index.php?route=api/customer_export'),
+        'token' => env('LEGACY_CUSTOMER_EXPORT_TOKEN'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
