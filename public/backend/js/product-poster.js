@@ -2,7 +2,8 @@
     'use strict';
     const colors = {
         background: '#fff',                            // fon
-        band: '#22193a', logo: '#BDA4E5', bandText: '#fff', // tünd zolaqlar
+        band: '#22193a', logo: '#22193a', bandText: '#fff', // yuxarı: ağ fon + tünd loqo; aşağı: tünd zolaq
+        rule: '#8a8198',                                  // loqonun yanlarındakı nazik xətlər
         image: '#ffffff',                                 // şəkil kartı
         accent: '#000',                                // brend adı
         text: '#1a1520', secondary: '#5f586b', muted: '#8a8198',
@@ -103,11 +104,21 @@
         ctx.fillStyle = colors.background;
         ctx.fillRect(0, 0, 1080, height);
 
-        // Yuxarı zolaq — tünd, loqo lavanda
-        ctx.fillStyle = colors.band;
-        ctx.fillRect(0, 0, 1080, 142);
-        const logoWidth = 65 * logo.naturalWidth / logo.naturalHeight;
-        ctx.drawImage(logo, 540 - logoWidth / 2, 38, logoWidth, 65);
+        // Yuxarı hissə — ağ fon, tünd loqo, yanlarında nazik xətlər: — PARFUMSHOP.AZ —
+        const logoHeight = 65;
+        const logoWidth = logoHeight * logo.naturalWidth / logo.naturalHeight;
+        const logoY = 38;
+        ctx.drawImage(logo, 540 - logoWidth / 2, logoY, logoWidth, logoHeight);
+        ctx.strokeStyle = colors.rule;
+        ctx.lineWidth = 2;
+        const ruleY = logoY + logoHeight * 0.42; // loqonun böyük yazısının ortası
+        const gap = 28, ruleLength = 70;
+        ctx.beginPath();
+        ctx.moveTo(540 - logoWidth / 2 - gap - ruleLength, ruleY);
+        ctx.lineTo(540 - logoWidth / 2 - gap, ruleY);
+        ctx.moveTo(540 + logoWidth / 2 + gap, ruleY);
+        ctx.lineTo(540 + logoWidth / 2 + gap + ruleLength, ruleY);
+        ctx.stroke();
 
         box(ctx, 540 - imageSize / 2, imageY, imageSize, imageSize, 24, colors.image, colors.strong, 30);
         const scale = Math.min((imageSize - 40) / image.naturalWidth, (imageSize - 40) / image.naturalHeight);
@@ -129,7 +140,7 @@
         // Aşağı zolaq
         ctx.fillStyle = colors.band;
         ctx.fillRect(0, height - footer, 1080, footer);
-        text(ctx, 'www.parfumshop.az • Orijinal Ətirlər', height - footer + 26, 19, 500, colors.bandText, 960, 1.5);
+        text(ctx, 'www.ParfumShop.az • Orijinal Ətirlər', height - footer + 24, 22, 600, colors.bandText, 960, 1);
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
         if (!blob) throw new Error('PNG hazırlamaq mümkün olmadı.');
         return { blob, filename: product.filename };
@@ -144,6 +155,9 @@
             return navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]).then(() => true, () => false);
         } catch (error) { return Promise.resolve(false); }
     }
+
+    // Operator paneli (backend/assistant) də eyni posteri çəkir
+    window.ProductPoster = { render: renderPoster, copy: clipboardWrite };
 
     document.addEventListener('DOMContentLoaded', function () {
         const element = document.getElementById('productPosterModal');

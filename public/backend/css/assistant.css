@@ -1,0 +1,135 @@
+:root {
+    --as-bg: #f6f3fb;
+    --as-card: #ffffff;
+    --as-text: #1f1a28;
+    --as-muted: #6f6880;
+    --as-accent: #6f52a8;
+    --as-border: #e4dcf0;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--as-bg);
+    color: var(--as-text);
+    font: 14px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.as { padding: 10px; }
+.as-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; margin-bottom: 10px;
+    background: #1f1a28; color: #BDA4E5; border-radius: 10px;
+}
+.as-user { color: #d9d2e6; font-size: 12px; }
+.as-card {
+    background: var(--as-card); border: 1px solid var(--as-border);
+    border-radius: 10px; padding: 10px;
+}
+.as-card p { margin: 0 0 4px; }
+.as-ok { color: var(--as-accent); font-weight: 600; }
+.as-muted { color: var(--as-muted); font-size: 12px; }
+
+/* Müştəri kartı */
+.as-card + .as-card { margin-top: 10px; }
+.as-card[hidden] { display: none; }
+.as-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.as-name { font-size: 15px; }
+.as-phone { color: var(--as-muted); font-size: 12px; margin: 2px 0 6px; }
+.as-facts { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; }
+.as-orders { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid var(--as-border); font-size: 12px; }
+.as-orders li + li { margin-top: 4px; }
+.as-link { color: var(--as-accent); text-decoration: none; font-weight: 600; }
+.as-link:hover { text-decoration: underline; }
+.as-warn { color: #b45309; font-weight: 600; }
+.as-btn {
+    display: inline-block; margin-top: 4px; padding: 6px 10px; border-radius: 8px;
+    background: var(--as-accent); color: #fff; text-decoration: none; font-size: 13px;
+}
+.as-label { color: var(--as-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.as-query { font-weight: 600; margin: 2px 0 0; }
+
+/* Ətir axtarışı */
+.as-input {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--as-border); border-radius: 8px;
+    font: inherit; color: var(--as-text); background: #fff; outline: none;
+}
+.as-input:focus { border-color: var(--as-accent); box-shadow: 0 0 0 3px rgba(111, 82, 168, .15); }
+.as-search-note { margin: 6px 0 0; }
+.as-search-note[hidden] { display: none; }
+.as-results { list-style: none; margin: 0; padding: 0; }
+.as-product { display: flex; gap: 8px; padding: 8px 0; border-top: 1px solid var(--as-border); }
+.as-results .as-product:first-child { margin-top: 8px; }
+.as-thumb {
+    flex: 0 0 52px; height: 52px; border-radius: 8px; background: #fff;
+    border: 1px solid var(--as-border); overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.as-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.as-info { min-width: 0; flex: 1; }
+.as-title { display: block; color: var(--as-text); font-weight: 600; text-decoration: none; line-height: 1.25; }
+.as-title:hover { color: var(--as-accent); }
+.as-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.as-chip {
+    display: inline-flex; gap: 4px; padding: 2px 6px; border-radius: 6px; font-size: 12px;
+    background: var(--as-bg); border: 1px solid var(--as-border);
+}
+.as-chip.is-match { background: #2b1f4a; border-color: #2b1f4a; color: #fff; }
+.as-chip.is-match strong { color: #BDA4E5; }
+
+/* Poster */
+.as-btn { border: 0; cursor: pointer; font: inherit; }
+.as-btn:disabled { opacity: .55; cursor: default; }
+.as-btn-sm { margin-top: 6px; padding: 4px 10px; font-size: 12px; }
+.as-btn-light { background: var(--as-bg); color: var(--as-accent); border: 1px solid var(--as-border); }
+.as-hint { margin-top: 6px; }
+.as-poster[hidden] { display: none; }
+.as-close { border: 0; background: none; font-size: 20px; line-height: 1; color: var(--as-muted); cursor: pointer; }
+.as-poster-status { margin: 4px 0 8px; font-size: 12px; }
+.as-poster-img { display: block; width: 100%; border-radius: 8px; border: 1px solid var(--as-border); }
+.as-poster-img[hidden] { display: none; }
+.as-poster-actions { display: flex; gap: 6px; margin-top: 8px; }
+.as-poster-actions [hidden] { display: none; }
+
+/* Yeni müştəri forması */
+.as-form { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--as-border); }
+.as-field { display: block; margin-top: 8px; }
+.as-field > span { display: block; font-size: 12px; color: var(--as-muted); margin-bottom: 3px; }
+.as-field input[readonly] { background: var(--as-bg); color: var(--as-muted); }
+.as-field.is-invalid .as-input { border-color: #dc2626; }
+.as-field-error { display: block; color: #dc2626; font-size: 12px; margin-top: 3px; }
+.as-radios { display: flex; gap: 16px; }
+.as-radios label, .as-check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.as-check { margin: 10px 0 4px; font-size: 13px; }
+.as-form-error[hidden] { display: none; }
+.as-form .as-btn { margin-top: 8px; width: 100%; padding: 8px 10px; }
+.as-notice { margin: 0 0 6px; }
+.as-missing { align-items: center; }
+.as-missing .as-btn-sm { margin-top: 0; }
+
+/* Kredit profili */
+.as-credit-toggle {
+    width: 100%; border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left;
+}
+.as-credit-form[hidden], .as-credit-status[hidden], [data-back-side][hidden] { display: none; }
+.as-credit-status { margin: 6px 0 0; font-size: 12px; }
+.as-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.as-idcard img { display: block; width: 100%; aspect-ratio: 85.6 / 54; object-fit: cover; border-radius: 6px; border: 1px solid var(--as-border); margin-bottom: 4px; }
+.as-idcard img[hidden] { display: none; }
+.as-file { display: inline-block; margin-top: 0; }
+.as-pair { display: grid; grid-template-columns: 90px 1fr; gap: 8px; }
+.as-upper { text-transform: uppercase; }
+select.as-input { padding: 7px 8px; }
+.as-field.is-flash .as-input, .as-field.is-flash img { animation: as-flash 1.6s ease-out; }
+@keyframes as-flash { 0% { box-shadow: 0 0 0 3px rgba(111, 82, 168, .55); background: #f3edff; } 100% { box-shadow: 0 0 0 0 rgba(111, 82, 168, 0); } }
+.as-credit-warn { margin: 0 0 6px; }
+
+/* Vəsiqə kəsmə pəncərəsi (crm-credit-profile.css admin temasının dəyişənlərini istifadə edir) */
+:root { --foreground: #fff; --body: #1f1a28; --muted: #6f6880; --separator: #e4dcf0; --background: #f6f3fb; --primary: #6f52a8; }
+.idcrop { width: calc(100vw - 16px); padding: 12px; }
+.idcrop__stage { height: 48vh; }
+.idcrop .btn { border: 0; border-radius: 8px; padding: 8px 12px; font: inherit; cursor: pointer; }
+.idcrop .btn-light { background: var(--background); color: var(--body); }
+.idcrop .btn-dark { background: #1f1a28; color: #fff; }
+.idcrop__actions .btn { min-width: 0; flex: 1; }
+
+/* Şəkildən axtarış */
+.as-search-image { display: block; max-width: 100%; max-height: 120px; margin: 8px auto 0; border-radius: 8px; border: 1px solid var(--as-border); }
+.as-search-image[hidden] { display: none; }

@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Backend\AssistantController;
+use App\Http\Controllers\Backend\FerrumController;
+use App\Http\Controllers\Backend\FinanceController;
+use App\Http\Controllers\Backend\ProcurementController;
+use App\Http\Middleware\AssistantFrame;
+use App\Services\AdminMenuService;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Backend\UserController;
@@ -26,7 +32,7 @@ use App\Http\Controllers\Backend\Product\CategoriesController;
 use App\Http\Controllers\Backend\Product\ProductsController;
 use App\Http\Controllers\Backend\Product\ReviewsController;
 use App\Http\Controllers\Backend\Product\ProductImportController;
-use App\Http\Controllers\Backend\Product\ProductSearchTermsController;
+use App\Http\Controllers\Backend\Product\SearchAliasController;
 
 
 /*
@@ -84,13 +90,26 @@ Route::prefix('admin')
                 });
 
             // Ferrum Chrome extension-u (extensions/ferrum-filler): sifariş + kredit məlumatları JSON
-            Route::middleware(['can:ferrum', 'throttle:30,1'])->controller(\App\Http\Controllers\Backend\FerrumController::class)
+            Route::middleware(['can:ferrum', 'throttle:30,1'])->controller(FerrumController::class)
                 ->prefix('ferrum')->name('ferrum.')->group(function () {
                     Route::get('/orders/{ref}', 'order')->where('ref', '[A-Za-z0-9-]{1,30}')->name('order');
                     Route::get('/orders/{order}/id-card/{side}', 'idCard')->whereNumber('order')->whereIn('side', ['front', 'back'])->name('id-card');
                 });
 
-            Route::middleware('can:finance')->controller(\App\Http\Controllers\Backend\FinanceController::class)
+            // Operator yan paneli (extensions/ps-side)
+            Route::middleware('can:crm')->controller(AssistantController::class)
+                ->prefix('assistant')->group(function () {
+                    Route::get('/', 'index')->middleware(AssistantFrame::class)->name('assistant');
+                    Route::get('/customer', 'customer')->middleware('throttle:60,1')->name('assistant.customer');
+                    Route::post('/customer', 'storeCustomer')->middleware('throttle:20,1')->name('assistant.customer.store');
+                    Route::post('/customer/{customer}/credit-profile/ocr', 'creditOcr')->whereNumber('customer')->middleware('throttle:10,1')->name('assistant.credit.ocr');
+                    Route::post('/customer/{customer}/credit-profile', 'creditProfile')->whereNumber('customer')->middleware('throttle:20,1')->name('assistant.credit.update');
+                    Route::get('/search', 'search')->middleware('throttle:60,1')->name('assistant.search');
+                    Route::post('/search-image', 'searchImage')->middleware('throttle:20,1')->name('assistant.search-image');
+                    Route::get('/poster/{product}', 'poster')->whereNumber('product')->middleware('throttle:60,1')->name('assistant.poster');
+                });
+
+            Route::middleware('can:finance')->controller(FinanceController::class)
                 ->prefix('finance')->name('finance.')->group(function () {
                     Route::get('/', 'index')->name('index');
                     Route::post('/', 'store')->middleware('throttle:30,1')->name('store');
@@ -98,7 +117,7 @@ Route::prefix('admin')
                     Route::get('/account/{account}', 'account')->name('account');
                 });
 
-            Route::middleware('can:crm')->controller(\App\Http\Controllers\Backend\ProcurementController::class)
+            Route::middleware('can:crm')->controller(ProcurementController::class)
                 ->prefix('procurement')->name('procurement.')->group(function () {
                     Route::get('/warehouses', 'warehouses')->name('warehouses');
                     Route::post('/warehouses/{warehouse}/link', 'createLink')->name('warehouses.link');
@@ -128,7 +147,7 @@ Route::prefix('admin')
             Route::get('/shortcuts', [MainController::class, 'shortcuts'])
                 ->name('shortcuts');
 
-            Route::get('/search-pages', function (\App\Services\AdminMenuService $menu) {
+            Route::get('/search-pages', function (AdminMenuService $menu) {
                 return response()->json($menu->searchPages())
                     ->header('Cache-Control', 'private, no-store');
             })->name('search-pages');
@@ -378,6 +397,9 @@ Route::prefix('admin')
                     Route::post('/update/{id}', 'update')->name('update');
                     Route::get('/{brand}/logo-search', 'searchLogo')->name('logo.search');
                     Route::post('/{brand}/logo', 'applyLogo')->name('logo.apply');
+                    Route::post('/{brand}/aliases/suggest', 'suggestAliases')->middleware('can:product.search')->name('aliases.suggest');
+                    Route::post('/{brand}/aliases', 'storeAliases')->middleware('can:product.search')->name('aliases.store');
+                    Route::delete('/{brand}/aliases/{alias}', 'destroyAlias')->middleware('can:product.search')->name('aliases.destroy');
                 });
 
 
@@ -469,20 +491,16 @@ Route::prefix('admin')
                     Route::post('/delete/{id}', 'destroy')->name('destroy');
                 });
 
-            Route::controller(ProductSearchTermsController::class)
+            // Axtarış lüğəti (search_aliases) + statistika
+            Route::controller(SearchAliasController::class)
                 ->middleware('can:product.search')
-                ->prefix('product/search-terms')
-                ->name('product.search-terms.')
+                ->prefix('product/search-aliases')
+                ->name('product.search-aliases.')
                 ->group(function () {
-                    Route::get('/products-data', 'productsData')->name('products.data');
-                    Route::get('/products', 'productLookup')->name('products');
-                    Route::post('/no-result', 'attachNoResult')->name('no-result.attach');
-                    Route::delete('/no-result', 'destroyNoResult')->name('no-result.destroy');
                     Route::get('/', 'index')->name('index');
-                    Route::get('/{product}', 'show')->name('show');
-                    Route::post('/{product}', 'store')->name('store');
-                    Route::put('/term/{term}', 'updateTerm')->name('term.update');
-                    Route::delete('/term/{term}', 'destroy')->name('destroy');
+                    Route::post('/', 'store')->name('store');
+                    Route::delete('/no-result', 'destroyNoResult')->name('no-result.destroy');
+                    Route::delete('/{alias}', 'destroy')->whereNumber('alias')->name('destroy');
                 });
 
         });

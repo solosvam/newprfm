@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Söhbət baloncuğu + ətir damlası: həm açıq, həm tünd Chrome panelində seçilsin -->
+  <path fill="#8b6ad6" d="M34 4 H94 A30 30 0 0 1 124 34 V78 A30 30 0 0 1 94 108 H54 L26 126 L30 106 A30 30 0 0 1 4 78 V34 A30 30 0 0 1 34 4 Z"/>
+  <path fill="#ffffff" d="M64 22 C57 32 42 50 42 65 A22 22 0 0 0 86 65 C86 50 71 32 64 22 Z"/>
+</svg>

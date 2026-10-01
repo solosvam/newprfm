@@ -100,6 +100,10 @@ $(document).ready(function () {
     // Yaratma xətası olanda modal yenidən açılır (daxil edilənlər old() ilə qalır)
     const reopen = document.querySelector('#createCustomerModal[data-open-on-load]');
     if (reopen) (bootstrap.Modal.getInstance(reopen) || new bootstrap.Modal(reopen)).show();
+
+    // Operator panelindən (WhatsApp): /admin/crm?new_customer=994501234567 — "Yeni müştəri" nömrə ilə açılır
+    const newCustomer = new URLSearchParams(window.location.search).get('new_customer');
+    if (!reopen && newCustomer && /^994[1-9]\d{8}$/.test(newCustomer)) openCreateCustomer(newCustomer);
     $('#createCustomerModal form').on('submit', function () { $(this).find('button.btn-primary').prop('disabled', true); });
 
 // Nəticəyə klik

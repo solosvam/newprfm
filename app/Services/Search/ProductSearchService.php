@@ -2,191 +2,262 @@
 
 namespace App\Services\Search;
 
+use App\Models\Product\Brand;
 use App\Models\Product\Product;
-use App\Models\Product\ProductSearchTerm;
+use App\Models\Product\SearchAlias;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * Məhsul axtarışı — lüğət əsasında (search_aliases), oxşarlıq hesablaması yoxdur.
+ *
+ * 1) Mətn normallaşdırılır: "Diyor SAVAJ" → "diyor savaj".
+ * 2) Sözlər soldan sağa tanınır, ən uzun birləşmə birinci ("tom ford" → "tom"-dan əvvəl):
+ *      lüğət (brend / model / nəzərə alma) → brendin tam adı → brend adının tək sözü ("dior" → Christian Dior).
+ * 3) Brendlər filtr olur; model adları və tanınmayan sözlər məhsulun (və ya brendin) adında axtarılır — hər söz uyğun gəlməlidir.
+ *
+ * Sözlərin sırası rol oynamır: "creed aventus" = "aventus creed" = "krid aventos" (lüğətdə krid, aventos varsa).
+ * Yazılmaqda olan son söz: lüğətdə tam yoxdursa, onunla BAŞLAYAN alias-lar da nəzərə alınır
+ * ("krid" yazılıb, lüğətdə "kridd" → Creed də nəticəyə düşür); tam yazılanda ("kridd") yalnız konkret brend qalır.
+ * Tanınmayan səhv yazılış nəticə vermir → "Nəticəsiz axtarışlar"a düşür → admin lüğətə əlavə edir.
+ */
 class ProductSearchService
 {
-    private const CACHE_KEY = 'product-search-terms:v1';
+    public const CACHE_KEY = 'product-search-vocabulary:v2';
 
+    private const MAX_PHRASE = 4;
+
+    /** Brend adlarında təkbaşına brend sayılmayan sözlər ("Parfums de Marly" → "parfums" Marly demək deyil) */
+    /** Prefiks uyğunluğu üçün son sözün minimum uzunluğu */
+    private const MIN_PREFIX = 2;
+
+    /**
+     * Tanınmayan söz kimi qalanda axtarışa düşməyən ümumi sözlər: qutuda/adın yanında yazılır, amma məhsul adında yoxdur.
+     * "essential paris bois imperial" → "paris" atılır (Essential Parfums PARIS). Brendin tam adı ("Parfums de Marly")
+     * əvvəlcə bütöv tanındığı üçün bu sözlər oradan itmir.
+     */
+    private const QUERY_STOP_WORDS = [
+        'paris', 'london', 'milano', 'italia', 'eau', 'de', 'du', 'la', 'le', 'parfum', 'parfums', 'perfume', 'perfumes',
+        'toilette', 'cologne', 'edp', 'edt', 'edc', 'spray', 'ml',
+    ];
+
+    private const BRAND_STOP_WORDS = ['parfums', 'parfum', 'perfumes', 'perfume', 'paris', 'london', 'fragrances', 'the', 'and'];
+
+    /** @return array{results: array, suggestion: null, interpreted: ?string} */
     public function search(string $query, int $limit = 6): array
     {
-        $normalizedQuery = ProductSearchNormalizer::normalize($query);
-
-        if (mb_strlen($normalizedQuery, 'UTF-8') < 2) {
-            return ['results' => [], 'suggestion' => null];
+        $parsed = $this->interpret($query);
+        if ($parsed['brands'] === [] && $parsed['words'] === [] && $parsed['alternatives'] === []) {
+            return ['results' => [], 'suggestion' => null, 'interpreted' => null];
         }
 
-        // Köhnə saytdakı kimi: ilk söz brend, qalan hissə məhsul adı.
-        // Nəticə yoxdursa mövcud fonetik/ağıllı axtarışa keç.
-        $parts = explode(' ', $normalizedQuery, 2);
-        if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
-            $brandPart = $parts[0];
-            $namePart = $parts[1];
-            $brandAndName = Product::query()
-                ->where('active', 1)
-                ->whereHas('brand', fn ($brand) => $brand->where('name', 'LIKE', '%'.$brandPart.'%'))
-                ->where('name', 'LIKE', '%'.$namePart.'%')
-                ->with([
-                    'brand', 'type', 'genders', 'images',
-                    'variants' => fn ($variantQuery) => $variantQuery->where('active', 1)->orderBy('price'),
-                    'variants.size',
-                ])
-                ->orderByDesc('id')
-                ->limit($limit)
-                ->get();
+        $products = $this->find($parsed['brands'], $parsed['words'], $limit, $parsed['alternatives']);
 
-            if ($brandAndName->isNotEmpty()) {
-                return [
-                    'results' => $brandAndName->map(fn (Product $product) => $this->formatProduct($product))->all(),
-                    'suggestion' => null,
-                ];
+        // "sauvage 100" — rəqəm adda yoxdursa rəqəmsiz yenidən (ölçü və s.); "212 VIP" kimi adlar isə birinci cəhddə tapılır
+        if ($products->isEmpty()) {
+            $withoutNumbers = array_values(array_filter($parsed['words'], fn (string $word) => !ctype_digit($word)));
+            if ($withoutNumbers !== $parsed['words'] && ($withoutNumbers !== [] || $parsed['brands'] !== [] || $parsed['alternatives'] !== [])) {
+                $products = $this->find($parsed['brands'], $withoutNumbers, $limit, $parsed['alternatives']);
             }
         }
-
-        $phoneticQuery = ProductSearchNormalizer::phonetic($query);
-        $signature = ProductSearchNormalizer::tokenSignature($query);
-        $scores = [];
-        $suggestion = null;
-        $suggestionScore = 0.0;
-
-        foreach ($this->terms() as $term) {
-            $score = max(
-                $this->similarity($normalizedQuery, $term['normalized_term'], $signature, $term['token_signature']),
-                $this->similarity($phoneticQuery, $term['phonetic_term'], $signature, $term['token_signature'])
-            );
-
-            if ($score < 55) {
-                continue;
-            }
-
-            $score += min(((int) $term['priority']) / 1000, 1);
-            $productId = (int) $term['product_id'];
-            $scores[$productId] = max($scores[$productId] ?? 0, $score);
-
-            if (
-                $term['source'] === 'canonical'
-                && $term['normalized_term'] !== $normalizedQuery
-                && $score > $suggestionScore
-            ) {
-                $suggestion = $term['term'];
-                $suggestionScore = $score;
-            }
-        }
-
-        arsort($scores, SORT_NUMERIC);
-        $bestScore = reset($scores);
-        $relevanceFloor = max(68, $bestScore - 18);
-        $scores = array_filter(
-            $scores,
-            fn (float $score) => $score >= $relevanceFloor
-        );
-        $scores = array_slice($scores, 0, max($limit * 4, 20), true);
-
-        if ($scores === []) {
-            return ['results' => [], 'suggestion' => null];
-        }
-
-        $products = Product::query()
-            ->whereIn('id', array_keys($scores))
-            ->where('active', 1)
-            ->with([
-                'brand',
-                'type',
-                'genders',
-                'images',
-                'variants' => fn ($variantQuery) => $variantQuery->where('active', 1)->orderBy('price'),
-                'variants.size',
-            ])
-            ->get()
-            ->sortByDesc(fn (Product $product) => $scores[$product->id] ?? 0)
-            ->take($limit)
-            ->values();
 
         return [
             'results' => $products->map(fn (Product $product) => $this->formatProduct($product))->all(),
-            'suggestion' => $suggestionScore >= 72 ? $suggestion : null,
+            'suggestion' => null,
+            'interpreted' => $parsed['label'],
         ];
     }
 
-    public function forgetCachedTerms(): void
+    /**
+     * Mətni brendlərə və axtarılacaq sözlərə ayırır.
+     * "Diyor savaj orijinal" → brands [Dior id], words ["sauvage"], label "Christian Dior sauvage"
+     *
+     * alternatives — yazılmaqda olan son söz üçün variantlar (ən azı biri uyğun gəlməlidir):
+     *   "krid" → [[brands: [Creed]], [words: ["krid"]]] — "kridd" alias-ı və adi LIKE
+     *
+     * @return array{brands: int[], words: string[], alternatives: array<array{brands: int[], words: string[]}>, label: ?string}
+     */
+    public function interpret(string $query): array
+    {
+        $tokens = array_values(array_filter(explode(' ', ProductSearchNormalizer::normalize(mb_substr($query, 0, 200))), 'strlen'));
+        $vocabulary = $this->vocabulary();
+        $brands = [];
+        $words = [];
+        $label = [];
+        $alternatives = [];
+
+        for ($i = 0, $count = count($tokens); $i < $count;) {
+            [$entry, $length] = $this->match($tokens, $i, $vocabulary);
+            if (!$entry && ($prefix = $this->prefixAlternatives($tokens, $i, $vocabulary))) {
+                $alternatives = $prefix;
+                $label[] = implode(' ', array_slice($tokens, $i));
+                break; // qalan hissə (son söz) variantlara çevrildi
+            }
+            if (!$entry && in_array($tokens[$i], self::QUERY_STOP_WORDS, true)) {
+                $i++;
+                continue;
+            }
+            if (!$entry) {
+                $words[] = $tokens[$i];
+                $label[] = $tokens[$i];
+                $i++;
+                continue;
+            }
+            $i += $length;
+
+            if ($entry['type'] === SearchAlias::IGNORE) {
+                continue;
+            }
+            if ($entry['brand_id']) {
+                $brands[$entry['brand_id']] = true;
+            }
+            if ($entry['type'] === SearchAlias::MODEL) {
+                $original = ProductSearchNormalizer::normalize($entry['original']);
+                array_push($words, ...array_filter(explode(' ', $original), 'strlen'));
+                $label[] = $entry['original'];
+            } else {
+                $label[] = $vocabulary['names'][$entry['brand_id']] ?? '';
+            }
+        }
+
+        return [
+            'brands' => array_keys($brands),
+            'words' => array_values(array_unique($words)),
+            'alternatives' => $alternatives,
+            'label' => $label ? trim(implode(' ', array_unique(array_filter($label)))) : null,
+        ];
+    }
+
+    public function forgetCache(): void
     {
         Cache::forget(self::CACHE_KEY);
     }
 
-    private function terms(): Collection
+    /** $i mövqeyindən başlayan ən uzun tanınan birləşmə: [entry, sözlərin sayı] */
+    private function match(array $tokens, int $i, array $vocabulary): array
     {
-        return Cache::remember(self::CACHE_KEY, now()->addMinutes(10), fn () => ProductSearchTerm::query()
-            ->where('active', 1)
-            ->toBase()
-            ->get([
-                'product_id',
-                'term',
-                'normalized_term',
-                'phonetic_term',
-                'token_signature',
-                'source',
-                'priority',
+        for ($length = min(self::MAX_PHRASE, count($tokens) - $i); $length >= 1; $length--) {
+            $phrase = implode(' ', array_slice($tokens, $i, $length));
+            $entry = $vocabulary['aliases'][$phrase] ?? $vocabulary['brands'][$phrase] ?? null;
+            if ($entry) {
+                return [$entry, $length];
+            }
+        }
+
+        return [null, 1];
+    }
+
+    /**
+     * Mətnin qalan hissəsi (son söz və ya "ermani ko" kimi birləşmə) lüğətdə tam yoxdursa —
+     * onunla başlayan alias-lar variant olur, üstəlik mətnin özü adi LIKE ilə. Variant yoxdursa [].
+     */
+    private function prefixAlternatives(array $tokens, int $i, array $vocabulary): array
+    {
+        $tail = array_slice($tokens, $i);
+        $phrase = implode(' ', $tail);
+        if (count($tail) > self::MAX_PHRASE || strlen($phrase) < self::MIN_PREFIX) {
+            return [];
+        }
+
+        $alternatives = [];
+        foreach ($vocabulary['aliases'] as $key => $entry) {
+            if ($entry['type'] === SearchAlias::IGNORE || $key === $phrase || !str_starts_with($key, $phrase)) {
+                continue;
+            }
+            $alternative = [
+                'brands' => $entry['brand_id'] ? [$entry['brand_id']] : [],
+                'words' => $entry['type'] === SearchAlias::MODEL
+                    ? array_values(array_filter(explode(' ', ProductSearchNormalizer::normalize($entry['original'])), 'strlen'))
+                    : [],
+            ];
+            $alternatives[serialize($alternative)] = $alternative;
+        }
+        if (!$alternatives) {
+            return [];
+        }
+        // "cree" → Creed adi LIKE ilə də tapılsın
+        $alternatives[] = ['brands' => [], 'words' => $tail];
+
+        return array_values($alternatives);
+    }
+
+    private function find(array $brandIds, array $words, int $limit, array $alternatives = []): Collection
+    {
+        $like = fn (string $word) => '%'.addcslashes($word, '%_\\').'%';
+        $allWords = function (Builder $query, array $words) use ($like) {
+            foreach ($words as $word) {
+                $query->where(fn (Builder $match) => $match
+                    ->where('products.name', 'like', $like($word))
+                    ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', 'like', $like($word))));
+            }
+        };
+
+        return Product::query()
+            ->where('products.active', 1)
+            ->when($brandIds, fn (Builder $query) => $query->whereIn('products.brand_id', $brandIds))
+            ->where(fn (Builder $query) => $allWords($query, $words))
+            // son söz: variantlardan ən azı biri
+            ->when($alternatives, fn (Builder $query) => $query->where(function (Builder $any) use ($alternatives, $allWords) {
+                foreach ($alternatives as $alternative) {
+                    $any->orWhere(function (Builder $one) use ($alternative, $allWords) {
+                        if ($alternative['brands']) {
+                            $one->whereIn('products.brand_id', $alternative['brands']);
+                        }
+                        $allWords($one, $alternative['words']);
+                    });
+                }
+            }))
+            ->with([
+                'brand', 'type', 'genders', 'images',
+                'variants' => fn ($variants) => $variants->where('active', 1)->orderBy('price'),
+                'variants.size',
             ])
-            ->map(fn ($term) => (array) $term));
+            // qısa ad daha dəqiq uyğunluqdur: "Sauvage" → "Sauvage Elixir"-dən əvvəl
+            ->orderByRaw('LENGTH(products.name)')
+            ->orderByDesc('products.id')
+            ->limit($limit)
+            ->get();
     }
 
-    private function similarity(string $needle, ?string $haystack, string $needleSignature, ?string $haystackSignature): float
+    /** Brend adları + lüğət — keşdə (brend və ya alias dəyişəndə təzələnir) */
+    private function vocabulary(): array
     {
-        $haystack = (string) $haystack;
+        return Cache::remember(self::CACHE_KEY, now()->addHour(), function () {
+            $names = [];
+            $brands = [];
+            $wordOwners = [];
+            foreach (Brand::query()->get(['id', 'name']) as $brand) {
+                $key = ProductSearchNormalizer::normalize($brand->name);
+                if ($key === '') {
+                    continue;
+                }
+                $names[$brand->id] = $brand->name;
+                $brands[$key] = ['type' => SearchAlias::BRAND, 'brand_id' => $brand->id, 'original' => null];
+                foreach (array_unique(explode(' ', $key)) as $word) {
+                    if (strlen($word) >= 3 && !in_array($word, self::BRAND_STOP_WORDS, true)) {
+                        $wordOwners[$word][$brand->id] = true;
+                    }
+                }
+            }
+            // "dior" → Christian Dior: söz yalnız bir brendin adındadırsa və başqa brendin tam adı deyilsə
+            foreach ($wordOwners as $word => $owners) {
+                if (count($owners) === 1 && !isset($brands[$word])) {
+                    $brands[$word] = ['type' => SearchAlias::BRAND, 'brand_id' => array_key_first($owners), 'original' => null];
+                }
+            }
 
-        if ($needle === '' || $haystack === '') {
-            return 0;
-        }
+            $aliases = [];
+            foreach (SearchAlias::query()->get(['alias_normalized', 'type', 'brand_id', 'original']) as $alias) {
+                $aliases[$alias->alias_normalized] = [
+                    'type' => $alias->type,
+                    'brand_id' => $alias->brand_id,
+                    'original' => $alias->original,
+                ];
+            }
 
-        if ($needle === $haystack) {
-            return 100;
-        }
-
-        if ($needleSignature !== '' && $needleSignature === $haystackSignature) {
-            return 98;
-        }
-
-        if (str_contains($haystack, $needle)) {
-            return 90;
-        }
-
-        $phraseScore = $this->distanceScore($needle, $haystack);
-        $needleTokens = array_filter(explode(' ', $needle));
-        $haystackTokens = array_filter(explode(' ', $haystack));
-
-        if ($needleTokens === [] || $haystackTokens === []) {
-            return $phraseScore;
-        }
-
-        $tokenScores = [];
-        foreach ($needleTokens as $needleToken) {
-            $tokenScores[] = max(array_map(
-                fn (string $haystackToken) => $this->distanceScore($needleToken, $haystackToken),
-                $haystackTokens
-            ));
-        }
-
-        // İki və daha çox sözlü sorğuda hər söz eyni məhsulla əlaqəli olmalıdır.
-        // Məsələn "aventus creed" yazanda təkcə "vertus" oxşarlığı kifayət etmir.
-        if (count($needleTokens) > 1 && min($tokenScores) < 75) {
-            return 0;
-        }
-
-        return max($phraseScore, array_sum($tokenScores) / count($tokenScores));
-    }
-
-    private function distanceScore(string $first, string $second): float
-    {
-        $length = max(strlen($first), strlen($second));
-
-        if ($length === 0) {
-            return 0;
-        }
-
-        return max(0, 100 - (levenshtein($first, $second) / $length * 100));
+            return ['aliases' => $aliases, 'brands' => $brands, 'names' => $names];
+        });
     }
 
     private function formatProduct(Product $product): array

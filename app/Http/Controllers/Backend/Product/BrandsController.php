@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Backend\Product;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product\Brand;
+use App\Models\Product\SearchAlias;
+use App\Services\OpenAiPerfumeService;
+use App\Services\Search\ProductSearchNormalizer;
 use App\Services\BrandLogoService;
 use App\Services\SerperImageSearchService;
 use App\Services\WorldVectorLogoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Throwable;
 
@@ -17,8 +22,9 @@ class BrandsController extends Controller
 {
     public function index()
     {
-        $brands = Brand::withCount(['products as products_count' => fn ($q) => $q->where('active', 1)])
+        $brands = Brand::withCount(['products as products_count' => fn ($q) => $q->where('active', 1), 'searchAliases'])
             ->when(request('logo') === 'missing', fn ($q) => $q->where(fn ($w) => $w->whereNull('image')->orWhere('image', '')))
+            ->when(request('aliases') === 'missing', fn ($q) => $q->doesntHave('searchAliases'))
             ->orderBy('name','asc')->get(); // DataTables: səhifələmə və axtarış brauzerdə
 
         return view('backend.product_menu.brands.list',[
@@ -53,7 +59,7 @@ class BrandsController extends Controller
 
     public function edit($id)
     {
-        $brand = Brand::findOrFail($id);
+        $brand = Brand::with('searchAliases')->findOrFail($id);
         return view('backend.product_menu.brands.edit',[
             'brand' => $brand
         ]);
@@ -92,6 +98,68 @@ class BrandsController extends Controller
 
         return redirect(route('admin.brand.list'))
             ->with('success', 'Brend məlumatları yeniləndi!');
+    }
+
+    public function suggestAliases(Brand $brand, OpenAiPerfumeService $ai): JsonResponse
+    {
+        try {
+            $suggestions = $ai->suggestBrandAliases($brand->name, $brand->searchAliases()->pluck('alias')->all());
+            $blocked = SearchAlias::pluck('alias_normalized')->merge(
+                Brand::pluck('name')->map(fn ($name) => ProductSearchNormalizer::normalize($name))
+            )->flip();
+            $aliases = [];
+            foreach ($suggestions as $suggestion) {
+                if (!is_string($suggestion)) continue;
+                $suggestion = trim($suggestion);
+                if (preg_match('/\p{Cyrillic}/u', $suggestion)) continue;
+                $normalized = ProductSearchNormalizer::normalize($suggestion);
+                if (mb_strlen($suggestion) > 100 || strlen($normalized) < 3 || isset($blocked[$normalized])) continue;
+                $aliases[$normalized] = $suggestion;
+                if (count($aliases) >= 30) break;
+            }
+
+            return response()->json(['aliases' => array_values($aliases)]);
+        } catch (Throwable $e) {
+            report($e);
+            return response()->json(['message' => 'Alias təklifləri alınmadı. AI bağlantısını yoxlayıb yenidən cəhd edin.'], 422);
+        }
+    }
+
+    public function storeAliases(Request $request, Brand $brand): JsonResponse
+    {
+        $data = $request->validate([
+            'aliases' => ['required', 'array', 'min:1', 'max:30'],
+            'aliases.*' => ['required', 'string', 'max:100'],
+        ]);
+        $aliases = [];
+        foreach ($data['aliases'] as $alias) {
+            $normalized = ProductSearchNormalizer::normalize($alias);
+            if (strlen($normalized) < 3) {
+                throw ValidationException::withMessages(['aliases' => 'Alias ən azı 3 hərf və ya rəqəmdən ibarət olmalıdır.']);
+            }
+            $aliases[$normalized] = trim($alias);
+        }
+
+        DB::transaction(function () use ($aliases, $brand) {
+            $conflict = SearchAlias::whereIn('alias_normalized', array_keys($aliases))->exists();
+            $brandNames = Brand::pluck('name')->map(fn ($name) => ProductSearchNormalizer::normalize($name));
+            if ($conflict || $brandNames->intersect(array_keys($aliases))->isNotEmpty()) {
+                throw ValidationException::withMessages(['aliases' => 'Seçilən yazılışlardan biri artıq lüğətdə və ya brend adlarında var. Təklifləri yenidən alın.']);
+            }
+            foreach ($aliases as $alias) {
+                SearchAlias::create(['alias' => $alias, 'type' => SearchAlias::BRAND,
+                    'brand_id' => $brand->id, 'created_by' => auth('admin')->id()]);
+            }
+        });
+
+        return response()->json(['message' => count($aliases).' alias əlavə edildi.', 'aliases' => $brand->searchAliases()->get(['id', 'alias'])]);
+    }
+
+    public function destroyAlias(Brand $brand, SearchAlias $alias): JsonResponse
+    {
+        abort_unless($alias->brand_id == $brand->id && $alias->type === SearchAlias::BRAND, 404);
+        $alias->delete();
+        return response()->json(['message' => 'Alias silindi.']);
     }
 
     /**

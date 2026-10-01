@@ -97,7 +97,7 @@ return [
             ],
             [
                 'title'      => 'Axtarış idarəetməsi',
-                'route'      => 'admin.product.search-terms.index',
+                'route'      => 'admin.product.search-aliases.index',
                 'permission' => 'product.search',
             ],
             [

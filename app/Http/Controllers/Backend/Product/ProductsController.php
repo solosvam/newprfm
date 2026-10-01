@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\Product;
 
+use App\Services\ProductPosterData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AddProductRequest;
 use App\Models\Order\OrderItem;
@@ -30,30 +31,13 @@ class ProductsController extends Controller
         ]);
     }
 
-    public function poster(Product $product): \Illuminate\Http\JsonResponse
+    public function poster(Product $product, ProductPosterData $poster): \Illuminate\Http\JsonResponse
     {
-        $product->load(['brand', 'type', 'genders', 'images', 'variants.size']);
-        $image = $product->images->first()?->image;
-        $variants = $product->variants->where('active', 1)->sortBy('price')->values();
+        $data = $poster->for($product);
 
-        if (!$image || $variants->isEmpty()) {
-            return response()->json(['message' => 'Poster üçün məhsul şəkli və ən azı bir aktiv ölçü olmalıdır.'], 422);
-        }
-
-        return response()->json([
-            'brand' => $product->brand?->name ?? '',
-            'name' => $product->name,
-            'subtitle' => $product->genders->pluck('name_az')->filter()->unique()->implode(', ')
-                . ($product->genders->pluck('name_az')->filter()->isNotEmpty() && $product->type?->name_az ? ' | ' : '')
-                . ($product->type?->name_az ?? ''),
-            'image' => asset('frontend/uploads/products/' . basename($image)),
-            'logo' => asset('frontend/images/logo.svg'),
-            'filename' => (\Illuminate\Support\Str::slug($product->brand?->name . ' ' . $product->name) ?: 'parfumshop-product') . '.png',
-            'variants' => $variants->map(fn ($variant) => [
-                'size' => $variant->size?->name_az ?? 'Ölçü',
-                'price' => number_format((float) $variant->price, 2, '.', ''),
-            ]),
-        ]);
+        return $data
+            ? response()->json($data)
+            : response()->json(['message' => 'Poster üçün məhsul şəkli və ən azı bir aktiv ölçü olmalıdır.'], 422);
     }
 
     public function add()

@@ -15,8 +15,9 @@ use App\Models\Order\OrderItemCancellation;
 use App\Models\Order\OrderStatus;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
-use App\Models\SmsTemplate;
 use App\Services\BonusService;
+use App\Services\Crm\CreditProfileUpdater;
+use App\Services\Crm\CustomerRegistration;
 use App\Services\OrderItemCancellationService;
 use App\Services\OrderPayLinkService;
 use App\Services\OrderStatusService;
@@ -144,44 +145,9 @@ class CrmController extends Controller
         return $reader->read($request, $customer);
     }
 
-    public function updateCreditProfile(Customer $customer, Request $request): RedirectResponse
+    public function updateCreditProfile(Customer $customer, Request $request, CreditProfileUpdater $updater): RedirectResponse
     {
-        $profile = $customer->creditProfile;
-        $request->merge([
-            'fin' => strtoupper(trim((string) $request->input('fin'))),
-            'id_card_number' => strtoupper(preg_replace('/\s+/', '', (string) $request->input('id_card_number'))),
-        ]);
-
-        $data = $request->validate([
-            'father_name' => ['required', 'string', 'max:100'],
-            'fin' => ['required', 'regex:/^[A-Z0-9]{7}$/', \Illuminate\Validation\Rule::unique('customer_credit_profiles', 'fin')->ignore($profile?->id)],
-            'id_card_series' => ['required', \Illuminate\Validation\Rule::in(\App\Models\Customer\CustomerCreditProfile::ID_CARD_SERIES)],
-            'id_card_number' => ['required', 'regex:/^[A-Z0-9]{1,8}$/'],
-            'relative_1_name' => ['required', 'string', 'max:100'],
-            'relative_1_phone' => ['required', 'regex:/^\\+?[0-9 ]{9,16}$/'],
-            'relative_2_name' => ['required', 'string', 'max:100'],
-            'relative_2_phone' => ['required', 'regex:/^\\+?[0-9 ]{9,16}$/'],
-            'workplace_name' => ['required', 'string', 'max:255'],
-            'salary' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
-            'id_card_front' => [$profile?->id_card_front ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'id_card_back' => [\Illuminate\Validation\Rule::requiredIf(fn () => !$profile?->id_card_back
-                && \App\Models\Customer\CustomerCreditProfile::needsBackSide($request->input('id_card_series'))), 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-        ]);
-
-        foreach (['id_card_front', 'id_card_back'] as $field) {
-            unset($data[$field]);
-            if ($request->hasFile($field)) {
-                $file = $request->file($field);
-                $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('frontend/uploads/customers'), $filename);
-                $data[$field] = $filename;
-                if ($profile?->{$field}) {
-                    @unlink(public_path('frontend/uploads/customers/' . basename($profile->{$field})));
-                }
-            }
-        }
-
-        $customer->creditProfile()->updateOrCreate([], $data);
+        $updater->update($customer, $request);
 
         return redirect()->route('admin.crm.customer', $customer->id)->with('success', 'Kredit profili yeniləndi.');
     }
@@ -190,54 +156,16 @@ class CrmController extends Controller
      * Yeni müştəri (CRM axtarışında nömrə tapılmayanda). Aktiv yaradılır; şifrə təsadüfidir,
      * istəyə görə SMS ilə göndərilir (sonra "Şifrəni sıfırla" ilə də göndərmək olar).
      */
-    public function storeCustomer(Request $request, SmsService $sms): RedirectResponse
+    public function storeCustomer(Request $request, CustomerRegistration $registration): RedirectResponse
     {
-        // 0103227575 / +994 10 322 75 75 → 994103227575
-        $digits = preg_replace('/\D+/', '', (string) $request->input('mobile'));
-        if (preg_match('/^(?:994|0)?([1-9]\d{8})$/', $digits, $m)) {
-            $digits = '994'.$m[1];
-        }
-        $request->merge(['mobile' => $digits]);
+        $request->merge(['mobile' => CustomerRegistration::normalizeMobile($request->input('mobile'))]);
+        $data = $request->validateWithBag('createCustomer', CustomerRegistration::rules(), CustomerRegistration::messages(), CustomerRegistration::attributes());
 
-        $data = $request->validateWithBag('createCustomer', [
-            'name' => ['required', 'string', 'max:30'],
-            'surname' => ['required', 'string', 'max:30'],
-            'mobile' => ['required', 'regex:/^994[1-9]\d{8}$/', Rule::unique('customers', 'mobile')],
-            'email' => ['nullable', 'email', 'max:50', Rule::unique('customers', 'email')],
-            'gender' => ['required', 'in:0,1'],
-            'send_password' => ['nullable', 'boolean'],
-        ], [
-            'mobile.regex' => 'Mobil nömrəni düzgün yazın (994XXXXXXXXX, 994-dən sonra 0 olmur).',
-            'mobile.unique' => 'Bu nömrə ilə müştəri artıq var.',
-            'email.unique' => 'Bu e-poçt ilə müştəri artıq var.',
-            'gender.required' => 'Cinsi seçin.',
-        ], ['name' => 'Ad', 'surname' => 'Soyad', 'mobile' => 'Mobil', 'email' => 'E-poçt']);
-
-        $password = (string) random_int(100000, 999999);
-        $customer = Customer::create([
-            'name' => $data['name'],
-            'surname' => $data['surname'],
-            'mobile' => $data['mobile'],
-            'email' => $data['email'] ?? null,
-            'gender' => (int) $data['gender'],
-            'password' => bcrypt($password),
-            'active' => true,
-        ]);
+        ['customer' => $customer, 'sms' => $sms] = $registration->register($data, $request->boolean('send_password'));
 
         $message = 'Müştəri yaradıldı: '.$customer->fullname.'.';
-        if ($request->boolean('send_password')) {
-            try {
-                // Şablon "SMS şablonları"ndan; deaktivdirsə və ya {password} silinibsə — standart mətn (şifrə mütləq getməlidir)
-                $text = SmsTemplate::message('crm_customer_created', ['fullname' => $customer->fullname, 'password' => $password]);
-                if ($text === null || !str_contains($text, $password)) {
-                    $text = "Hormetli {$customer->fullname}, Parfumshop hesabiniz yaradildi. Sifreniz: {$password}";
-                }
-                $sms->send($customer->mobile, $text);
-                $message .= ' Şifrə SMS ilə göndərildi.';
-            } catch (\Throwable $e) {
-                report($e);
-                $message .= ' SMS göndərilmədi — "Şifrəni sıfırla" ilə yenidən göndərin.';
-            }
+        if ($sms !== null) {
+            $message .= $sms ? ' Şifrə SMS ilə göndərildi.' : ' SMS göndərilmədi — "Şifrəni sıfırla" ilə yenidən göndərin.';
         }
 
         return redirect()->route('admin.crm.customer', $customer->id)->with('success', $message);

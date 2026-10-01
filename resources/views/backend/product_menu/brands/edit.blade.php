@@ -9,6 +9,10 @@
 
 @endsection
 
+@section('js_page')
+    <script src="{{ asset_v('backend/js/brand-aliases.js') }}"></script>
+@endsection
+
 @section('content')
     <div class="container">
         <div class="page-title-container">
@@ -80,5 +84,38 @@
                 </section>
             </div>
         </div>
+        <section class="scroll-section mt-4" id="brandAliases" data-brand-aliases
+                 data-suggest-url="{{ route('admin.brand.aliases.suggest', $brand) }}"
+                 data-store-url="{{ route('admin.brand.aliases.store', $brand) }}"
+                 data-delete-url="{{ route('admin.brand.aliases.destroy', ['brand' => $brand, 'alias' => '__ALIAS__']) }}">
+            <h2 class="small-title">{{ $brand->name }} — axtarış aliasları</h2>
+            <div class="card mb-5"><div class="card-body">
+                <p class="text-muted">Brendin səhv yazılışlarını və qısaltmalarını lüğətə əlavə edin. AI təkliflərindən yalnız təsdiqlədiyiniz variantlar yadda saxlanılır.</p>
+                <div class="d-flex flex-wrap gap-2 mb-3" data-existing-aliases>
+                    @forelse($brand->searchAliases as $alias)
+                        <span class="badge bg-outline-primary d-inline-flex align-items-center gap-2" data-alias-id="{{ $alias->id }}">
+                            <span>{{ $alias->alias }}</span>
+                            @can('product.search')
+                                <button type="button" class="btn btn-sm btn-link p-0" data-alias-delete="{{ $alias->id }}" aria-label="{{ $alias->alias }} aliasını sil">×</button>
+                            @endcan
+                        </span>
+                    @empty
+                        <span class="text-muted" data-alias-empty>Bu brend üçün alias yoxdur.</span>
+                    @endforelse
+                </div>
+                @can('product.search')
+                    <button type="button" class="btn btn-outline-primary mb-3" data-alias-suggest>AI ilə yazılış variantları təklif et</button>
+                    <div role="status" aria-live="polite" class="mb-3" data-alias-status></div>
+                    <form data-brand-alias-form hidden>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="brandAliasesAll" data-alias-all>
+                            <label for="brandAliasesAll" class="form-check-label">Hamısını seç</label>
+                        </div>
+                        <div class="row g-2 mb-3" data-alias-candidates></div>
+                        <button type="submit" class="btn btn-primary" data-alias-save disabled>Seçilənləri təsdiqlə (<span data-alias-count>0</span>)</button>
+                    </form>
+                @endcan
+            </div></div>
+        </section>
     </div>
 @endsection

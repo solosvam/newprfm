@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Product\ProductSearchClick;
 use App\Models\Product\ProductSearchLog;
+use App\Services\Search\ProductSearchLogger;
 use App\Services\Search\ProductSearchNormalizer;
 use App\Services\Search\ProductSearchService;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +14,7 @@ use Illuminate\Support\Str;
 
 class SearchController extends Controller
 {
-    public function suggestions(Request $request, ProductSearchService $search): JsonResponse
+    public function suggestions(Request $request, ProductSearchService $search, ProductSearchLogger $logger): JsonResponse
     {
         $data = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
@@ -28,15 +29,7 @@ class SearchController extends Controller
         }
 
         $visitorId = $request->cookie('parfumshop_search_visitor') ?: (string) Str::uuid();
-        $log = ProductSearchLog::create([
-            'query' => $query,
-            'normalized_query' => $normalizedQuery,
-            'visitor_id' => $visitorId,
-            'user_id' => auth()->id(),
-            'result_count' => count($result['results']),
-            'matched_product_ids' => array_column($result['results'], 'id'),
-            'searched_at' => now(),
-        ]);
+        $log = $logger->record($query, $normalizedQuery, $visitorId, auth()->id(), array_column($result['results'], 'id'));
 
         $result['search_log_id'] = $log->id;
         $response = response()->json($result);

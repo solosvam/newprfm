@@ -71,5 +71,8 @@ return [
     'worldvectorlogo' => [
         'api_key' => env('WORLDVECTORLOGO_API_KEY'),
     ],
+    'assistant' => [
+        'extension_id' => env('ASSISTANT_EXTENSION_ID'),
+    ],
 
 ];

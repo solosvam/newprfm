@@ -69,7 +69,8 @@
                                 </div>
                                 <div class="col-12 col-sm-7 col-lg-9 col-xxl-10 text-end mb-1">
                                     <div class="d-inline-block me-1">
-                                        <a href="{{ route('admin.brand.list') }}" class="btn btn-sm {{ request('logo') === 'missing' ? 'btn-outline-muted' : 'btn-primary' }}">Hamısı</a>
+                                        <a href="{{ route('admin.brand.list') }}" class="btn btn-sm {{ request('logo') === 'missing' || request('aliases') === 'missing' ? 'btn-outline-muted' : 'btn-primary' }}">Hamısı</a>
+                                        <a href="{{ route('admin.brand.list', ['aliases' => 'missing']) }}" class="btn btn-sm {{ request('aliases') === 'missing' ? 'btn-primary' : 'btn-outline-muted' }}">Aliası olmayanlar</a>
                                         <a href="{{ route('admin.brand.list', ['logo' => 'missing']) }}" class="btn btn-sm {{ request('logo') === 'missing' ? 'btn-primary' : 'btn-outline-muted' }}">Loqosu olmayanlar</a>
                                     </div>
                                     <div class="d-inline-block">
@@ -106,6 +107,7 @@
                                     <th class="text-muted text-small text-uppercase" data-orderable="false">LOQO</th>
                                     <th class="text-muted text-small text-uppercase">AD</th>
                                     <th class="text-muted text-small text-uppercase">MƏHSUL</th>
+                                    <th class="text-muted text-small text-uppercase">ALİAS SAYI</th>
                                     <th class="text-muted text-small text-uppercase">STATUS</th>
                                     <th class="text-muted text-small text-uppercase" data-orderable="false">ƏMƏLİYYAT</th>
                                 </tr>
@@ -122,6 +124,7 @@
                                         </td>
                                         <td>{{ $brand->name }}</td>
                                         <td class="text-alternate" data-order="{{ $brand->products_count }}">{{ $brand->products_count }}</td>
+                                        <td data-order="{{ $brand->search_aliases_count }}"><a href="{{ route('admin.brand.edit', $brand->id) }}#brandAliases" class="badge {{ $brand->search_aliases_count ? 'bg-outline-primary' : 'bg-outline-warning' }}">{{ $brand->search_aliases_count }}</a></td>
                                         <td class="text-alternate">{{ $brand->active ? 'Aktiv' : 'Deaktiv' }}</td>
                                         <td class="text-alternate">
                                             <button type="button" class="btn btn-outline-primary btn-sm"
