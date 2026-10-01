@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Cache;
  *
  * 1) Mətn normallaşdırılır: "Diyor SAVAJ" → "diyor savaj".
  * 2) Sözlər soldan sağa tanınır, ən uzun birləşmə birinci ("tom ford" → "tom"-dan əvvəl):
- *      lüğət (brend / model / nəzərə alma) → brendin tam adı → brend adının tək sözü ("dior" → Christian Dior).
+ *      lüğət (brend / model / artıq söz) → brendin tam adı → brend adının tək sözü ("dior" → Christian Dior).
  * 3) Brendlər filtr olur; model adları və tanınmayan sözlər məhsulun (və ya brendin) adında axtarılır — hər söz uyğun gəlməlidir.
  *
  * Sözlərin sırası rol oynamır: "creed aventus" = "aventus creed" = "krid aventos" (lüğətdə krid, aventos varsa).
@@ -24,23 +24,13 @@ use Illuminate\Support\Facades\Cache;
  */
 class ProductSearchService
 {
-    public const CACHE_KEY = 'product-search-vocabulary:v2';
+    public const CACHE_KEY = 'product-search-vocabulary:v3';
 
     private const MAX_PHRASE = 4;
 
     /** Brend adlarında təkbaşına brend sayılmayan sözlər ("Parfums de Marly" → "parfums" Marly demək deyil) */
     /** Prefiks uyğunluğu üçün son sözün minimum uzunluğu */
     private const MIN_PREFIX = 2;
-
-    /**
-     * Tanınmayan söz kimi qalanda axtarışa düşməyən ümumi sözlər: qutuda/adın yanında yazılır, amma məhsul adında yoxdur.
-     * "essential paris bois imperial" → "paris" atılır (Essential Parfums PARIS). Brendin tam adı ("Parfums de Marly")
-     * əvvəlcə bütöv tanındığı üçün bu sözlər oradan itmir.
-     */
-    private const QUERY_STOP_WORDS = [
-        'paris', 'london', 'milano', 'italia', 'eau', 'de', 'du', 'la', 'le', 'parfum', 'parfums', 'perfume', 'perfumes',
-        'toilette', 'cologne', 'edp', 'edt', 'edc', 'spray', 'ml',
-    ];
 
     private const BRAND_STOP_WORDS = ['parfums', 'parfum', 'perfumes', 'perfume', 'paris', 'london', 'fragrances', 'the', 'and'];
 
@@ -94,7 +84,9 @@ class ProductSearchService
                 $label[] = implode(' ', array_slice($tokens, $i));
                 break; // qalan hissə (son söz) variantlara çevrildi
             }
-            if (!$entry && in_array($tokens[$i], self::QUERY_STOP_WORDS, true)) {
+            // "Artıq söz" kökü (lüğət, match_type = prefix): "göndərirsiniz" → "gonder…" — yalnız tanınmayan söz üçün,
+            // ona görə brendin tam adı ("Parfums de Marly") və alias-lar əvvəlcə bütöv tanınır
+            if (!$entry && $this->isStem($tokens[$i], $vocabulary['stems'])) {
                 $i++;
                 continue;
             }
@@ -127,6 +119,17 @@ class ProductSearchService
             'alternatives' => $alternatives,
             'label' => $label ? trim(implode(' ', array_unique(array_filter($label)))) : null,
         ];
+    }
+
+    private function isStem(string $token, array $stems): bool
+    {
+        foreach ($stems as $stem) {
+            if ($stem !== '' && str_starts_with($token, $stem)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function forgetCache(): void
@@ -248,7 +251,11 @@ class ProductSearchService
             }
 
             $aliases = [];
-            foreach (SearchAlias::query()->get(['alias_normalized', 'type', 'brand_id', 'original']) as $alias) {
+            $stems = [];
+            foreach (SearchAlias::query()->get(['alias_normalized', 'type', 'match_type', 'brand_id', 'original']) as $alias) {
+                if ($alias->isStem()) {
+                    $stems[] = $alias->alias_normalized;
+                }
                 $aliases[$alias->alias_normalized] = [
                     'type' => $alias->type,
                     'brand_id' => $alias->brand_id,
@@ -256,7 +263,7 @@ class ProductSearchService
                 ];
             }
 
-            return ['aliases' => $aliases, 'brands' => $brands, 'names' => $names];
+            return ['aliases' => $aliases, 'brands' => $brands, 'names' => $names, 'stems' => $stems];
         });
     }
 

@@ -10,20 +10,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const brandSelect = form.querySelector('[data-alias-brand]');
     const brandField = form.querySelector('[data-alias-field="brand"]');
     const modelField = form.querySelector('[data-alias-field="model"]');
+    const ignoreField = form.querySelector('[data-alias-field="ignore"]');
     const optional = form.querySelector('[data-alias-optional]');
 
     const modal = () => bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
 
-    // brend: brend məcburi; model: brend istəyə bağlı + düzgün ad; nəzərə alma: heç biri
+    // brend: brend məcburi; model: brend istəyə bağlı + düzgün ad; artıq söz: tam söz və ya kök
     function applyType() {
         const type = typeSelect.value;
         brandField.hidden = type === 'ignore';
         modelField.hidden = type !== 'model';
+        ignoreField.hidden = type !== 'ignore';
         optional.hidden = type !== 'model';
         form.querySelectorAll('[data-alias-hint]').forEach((hint) => { hint.hidden = hint.dataset.aliasHint !== type; });
     }
     typeSelect.addEventListener('change', applyType);
     applyType();
+
+    // Artıq söz: default — kök; 4 hərfdən qısa söz avtomatik "yalnız bu söz" (de, la, var — kök olsa adları atar).
+    // Admin özü seçibsə, ona toxunmuruq.
+    const matchExact = form.querySelector('#aliasMatchExact');
+    const matchPrefix = form.querySelector('#aliasMatchPrefix');
+    let matchTouched = form.querySelector('[name="confirm_prefix"]') !== null; // xəta ilə qayıdıbsa — seçim adminindir
+    [matchExact, matchPrefix].forEach((radio) => radio.addEventListener('change', () => { matchTouched = true; }));
+
+    function autoMatch() {
+        if (matchTouched) return;
+        const letters = aliasInput.value.trim().replace(/[^\p{L}\p{N}]+/gu, '');
+        (letters.length > 0 && letters.length < 4 ? matchExact : matchPrefix).checked = true;
+    }
+    aliasInput.addEventListener('input', autoMatch);
 
     if (window.jQuery && window.jQuery.fn.select2) {
         window.jQuery(brandSelect).select2({
@@ -41,6 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const query = button.dataset.aliasQuery || '';
             aliasInput.value = query;
             fromInput.value = query;
+            matchTouched = false;
+            autoMatch();
             modal().show();
         });
     });

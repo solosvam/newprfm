@@ -7,7 +7,10 @@ use App\Services\Search\ProductSearchService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
-/** Axtarış lüğəti: "diyor" → Christian Dior (brend), "savaj" → Sauvage (model), "orijinal" → nəzərə alma */
+/**
+ * Axtarış lüğəti: "diyor" → Christian Dior (brend), "savaj" → Sauvage (model), "orijinal" → artıq söz (axtarışda atılır).
+ * Artıq söz kök kimi də ola bilər (match_type = prefix): "göndər" → göndərirsiniz, göndərin, göndərilir.
+ */
 class SearchAlias extends Model
 {
     public const BRAND = 'brand';
@@ -17,12 +20,25 @@ class SearchAlias extends Model
     public const TYPES = [
         self::BRAND => 'Brend',
         self::MODEL => 'Model',
-        self::IGNORE => 'Nəzərə alma',
+        self::IGNORE => 'Artıq söz',
     ];
+
+    public const EXACT = 'exact';
+    public const PREFIX = 'prefix';
+
+    /** Kök: bu uzunluqdan qısa olmasın — "va" kimi kök çox sözü atar */
+    public const MIN_PREFIX_LENGTH = 3;
 
     protected $table = 'search_aliases';
 
-    protected $fillable = ['alias', 'alias_normalized', 'type', 'brand_id', 'original', 'created_by'];
+    protected $fillable = ['alias', 'alias_normalized', 'type', 'match_type', 'brand_id', 'original', 'created_by'];
+
+    protected $attributes = ['match_type' => self::EXACT];
+
+    public function isStem(): bool
+    {
+        return $this->type === self::IGNORE && $this->match_type === self::PREFIX;
+    }
 
     protected static function booted(): void
     {

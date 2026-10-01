@@ -283,7 +283,9 @@
             })
             .then((data) => {
                 if (!data.results.length) {
-                    note(data.query ? `"${data.query}" tapılmadı — səhv yazılışdırsa, "Axtarış idarəetməsi"ndə alias əlavə edin` : 'Mətndə ətir adı tapılmadı');
+                    // artıq sözlər atılmış halda göstərilir — qalan sözlərdən hansı tanınmadığı görünsün
+                    const shown = data.interpreted || '';
+                    note(shown ? `"${shown}" tapılmadı — səhv yazılış və ya artıq sözdürsə, "Axtarış idarəetməsi"ndə əlavə edin` : 'Mətndə ətir adı tapılmadı');
                     return;
                 }
                 const parts = [`"${data.interpreted || data.query}"`];

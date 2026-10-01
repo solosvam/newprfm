@@ -7,6 +7,11 @@ return [
         'token' => env('LEGACY_CUSTOMER_EXPORT_TOKEN'),
     ],
 
+    'legacy_credit_profiles' => [
+        'url' => env('LEGACY_CREDIT_EXPORT_URL', 'https://www.parfumshop.az/credit-profile-export.php'),
+        'images_url' => 'https://www.parfumshop.az/credit_images/',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

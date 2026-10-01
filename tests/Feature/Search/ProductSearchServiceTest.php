@@ -33,6 +33,8 @@ class ProductSearchServiceTest extends TestCase
             $t->decimal('price', 10, 2), $t->boolean('active')->default(true)]);
         Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->string('image'), $t->integer('sort_order')->default(0)]);
         (require database_path('migrations/2026_09_30_160000_create_search_aliases_table.php'))->up();
+        (require database_path('migrations/2026_10_01_190000_add_match_type_to_search_aliases.php'))->up(); // artıq sözlər
+        (require database_path('migrations/2026_10_01_200000_make_safe_extra_words_stems.php'))->up();
 
         DB::table('brands')->insert([
             ['id' => 1, 'name' => 'Christian Dior'], ['id' => 2, 'name' => 'Creed'], ['id' => 3, 'name' => 'Tom Ford'],
@@ -52,7 +54,7 @@ class ProductSearchServiceTest extends TestCase
         foreach ([
             ['diyor', 'brand', 1, null], ['krid', 'brand', 2, null], ['kridd', 'brand', 2, null], ['kreed', 'brand', 2, null], ['tom', 'brand', 3, null],
             ['ermani kod', 'model', 4, '212 VIP'],
-            ['savaj', 'model', 1, 'Sauvage'], ['aventos', 'model', null, 'Aventus'], ['orijinal', 'ignore', null, null],
+            ['savaj', 'model', 1, 'Sauvage'], ['aventos', 'model', null, 'Aventus'],
         ] as [$alias, $type, $brand, $original]) {
             SearchAlias::create(['alias' => $alias, 'type' => $type, 'brand_id' => $brand, 'original' => $original]);
         }
@@ -335,5 +337,58 @@ class ProductSearchServiceTest extends TestCase
         $this->assertSame([96], $this->ids('essential paris bois imperial'));
         $this->assertSame([96], $this->ids('Essential Parfums Bois Impérial eau de parfum'));
         $this->assertSame([93], $this->ids('parfums de marly layton')); // brendin tam adı yenə tanınır
+    }
+
+    public function test_whatsapp_messages_with_extra_words_and_suffixes(): void
+    {
+        DB::table('products')->insert(['id' => 97, 'brand_id' => 3, 'type_id' => 1, 'name' => 'Lost Cherry', 'slug' => 'p-97']);
+        DB::table('product_variants')->insert(['product_id' => 97, 'size_id' => 1, 'price' => 690]);
+        $search = fn (string $message) => $this->ids(\App\Services\Search\ProductQueryParser::parse($message)['query']);
+
+        $this->assertSame([97], $search('Salam sizdə tom ford lost cherry ətrinin 100 mlsi var?'));
+        $this->assertSame([90], $search('Salam, Krid aventos 100 lük neçəyədi?'));
+        $this->assertSame([91], $search('Oud Wood olanı Naxçıvana göndərirsiniz? Orijinaldır?')); // kök: olan-, naxcivan-, gonder-, orijinal-
+        $this->assertSame([], $search('salam neçəyədi 100'));                                     // ad yoxdur
+    }
+
+    public function test_admin_adds_stem_with_conflict_confirmation(): void
+    {
+        Schema::create('permissions', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('guard_name'), $t->timestamps()]);
+        Schema::create('product_search_logs', fn (Blueprint $t) => [$t->id(), $t->string('query'), $t->string('normalized_query'), $t->string('visitor_id'),
+            $t->integer('user_id')->nullable(), $t->integer('result_count'), $t->json('matched_product_ids')->nullable(), $t->timestamp('searched_at')]);
+        $user = new \App\Models\User(['name' => 'Admin']);
+        $user->id = 1;
+        Gate::before(fn () => true);
+        $this->actingAs($user, 'admin');
+
+        // "çatdır" kökü heç bir adla toqquşmur
+        $this->post('/admin/product/search-aliases', ['alias' => 'yolla', 'type' => 'ignore', 'match_type' => 'prefix'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame([90], $this->ids('aventus yollayirsiniz'));
+
+        // "oud" kökü "Oud Wood"u da atar — təsdiqsiz rədd, təsdiqlə əlavə
+        $this->post('/admin/product/search-aliases', ['alias' => 'Oud', 'type' => 'ignore', 'match_type' => 'prefix'])
+            ->assertSessionHasErrors('confirm_prefix', null, 'createAlias');
+        $this->post('/admin/product/search-aliases', ['alias' => 'Oud', 'type' => 'ignore', 'match_type' => 'prefix', 'confirm_prefix' => '1'])
+            ->assertSessionHasNoErrors();
+        $this->assertTrue(SearchAlias::where('alias_normalized', 'oud')->where('match_type', 'prefix')->exists());
+
+        // qısa kök
+        $this->post('/admin/product/search-aliases', ['alias' => 'xy', 'type' => 'ignore', 'match_type' => 'prefix'])
+            ->assertSessionHasErrors('alias', null, 'createAlias');
+
+        // uyğunluq seçilməyibsə: uzun söz — kök, qısa söz — tam
+        $this->post('/admin/product/search-aliases', ['alias' => 'təcili', 'type' => 'ignore'])->assertSessionHasNoErrors();
+        $this->post('/admin/product/search-aliases', ['alias' => 'pls', 'type' => 'ignore'])->assertSessionHasNoErrors();
+        $this->assertSame('prefix', SearchAlias::where('alias_normalized', 'tecili')->value('match_type'));
+        $this->assertSame('exact', SearchAlias::where('alias_normalized', 'pls')->value('match_type'));
+    }
+
+    public function test_long_extra_words_are_stems_short_ones_exact(): void
+    {
+        $this->assertSame([90], $this->ids('salamlar krid aventus'));                 // salam… kök
+        $this->assertSame([90], $this->ids('xahiş edirəm aventus göndərin'));        // xahis…, edirem…, gonder…
+        $this->assertSame([93], $this->ids('marly layton'));                          // "la" tam söz — Layton qalır
+        $this->assertSame('exact', SearchAlias::where('alias_normalized', 'la')->value('match_type'));
     }
 }

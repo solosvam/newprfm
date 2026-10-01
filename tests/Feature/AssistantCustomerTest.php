@@ -74,31 +74,22 @@ class AssistantCustomerTest extends TestCase
         $this->getJson('/admin/assistant/customer?phone=994603831010')->assertUnauthorized();
     }
 
-    public function test_search_query_is_cleaned_from_whatsapp_message(): void
+    /** Burada yalnız ölçü ayrılır; artıq sözləri (salam, göndər…) axtarış lüğətdən atır — ProductSearchServiceTest */
+    public function test_query_parser_extracts_size(): void
     {
         $cases = [
-            'Salam, Dior Savaj 100 lük neçəyədi?' => ['dior savaj', '100'],
+            'Salam, Dior Savaj 100 lük neçəyədi?' => ['salam dior savaj 100 luk neceyedi', '100'],
             'chanel bleu 100ml' => ['chanel bleu', '100'],
-            'Ermani kod 50 ml qiyməti' => ['ermani kod', '50'],
-            'Aventus var?' => ['aventus', null],
-            'Salam, Giorgio Armani Stronger With You Intensely 100ml olanı Naxçıvana göndərirsiniz? Orijinaldır?'
-                => ['giorgio armani stronger with you intensely', '100'],
-            'Salam sizdə tom ford lost cherry ətrinin 100 mlsi var?' => ['tom ford lost cherry', '100'],
-            'Lost Cherry 50mllik qiymətini deyin' => ['lost cherry', '50'],
-            'Salam. Mənə INITIO Parfums Privés – Side Effect Eau de Parfum 90 ml, məhz orijinal, zavod qablaşdırmasında lazımdır.Sizde Varmi?'
-                => ['initio parfums prives side effect', '90'],
-            'salam 100' => ['', '100'],
+            'Lost Cherry 50mllik' => ['lost cherry', '50'],
+            'tom ford 100 mlsi' => ['tom ford 100 mlsi', '100'],
+            '212 VIP' => ['212 vip', '212'],
+            'Aventus var?' => ['aventus var', null],
         ];
         foreach ($cases as $text => [$query, $size]) {
             $this->assertSame(['query' => $query, 'size' => $size], AssistantController::parseQuery($text), $text);
         }
     }
 
-    public function test_search_without_perfume_name_returns_empty(): void
-    {
-        $this->getJson('/admin/assistant/search?q='.urlencode('salam neçəyədi 100'))
-            ->assertOk()->assertJson(['query' => '', 'size' => '100', 'results' => []]);
-    }
 
     public function test_panel_creates_customer_without_leaving_whatsapp(): void
     {

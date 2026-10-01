@@ -75,7 +75,7 @@ class ImageProductSearch
         $tokens = array_unique(array_filter(
             explode(' ', ProductSearchNormalizer::normalize(mb_substr($text, 0, 2000))),
             fn (string $token) => strlen($token) >= 2 && !ctype_digit($token)
-                && !in_array($token, self::GENERIC, true) && !in_array($token, ProductQueryParser::FILLER, true)
+                && !in_array($token, self::GENERIC, true)
         ));
 
         $known = [];

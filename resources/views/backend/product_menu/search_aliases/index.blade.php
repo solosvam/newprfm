@@ -153,7 +153,7 @@
                         <tbody>
                         @foreach($aliases as $alias)
                             <tr>
-                                <td class="fw-semibold">{{ $alias->alias }}</td>
+                                <td class="fw-semibold">{{ $alias->alias }}@if($alias->isStem())<span class="text-alternate" title="Kök: bu sözlə başlayan bütün sözlər">…</span>@endif</td>
                                 <td><span class="badge {{ $typeBadges[$alias->type] ?? 'bg-outline-muted' }}">{{ $types[$alias->type] ?? $alias->type }}</span></td>
                                 <td>
                                     @if($alias->type === 'model')
@@ -162,7 +162,9 @@
                                     @elseif($alias->type === 'brand')
                                         {{ $alias->brand?->name ?? '—' }}
                                     @else
-                                        <span class="text-alternate">axtarışda nəzərə alınmır</span>
+                                        <span class="text-alternate">
+                                            {{ $alias->isStem() ? 'kök — bu sözlə başlayanlar axtarışda atılır' : 'axtarışda atılır' }}
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="text-alternate">{{ $alias->created_at?->format('d.m.Y') }}</td>
@@ -214,7 +216,7 @@
                                 @if($createErrors->has('type'))<div class="invalid-feedback">{{ $createErrors->first('type') }}</div>@endif
                                 <div class="form-text" data-alias-hint="brand">Səhv yazılış brendə bağlanır: diyor → Christian Dior.</div>
                                 <div class="form-text" data-alias-hint="model">Səhv yazılış modelin düzgün adına bağlanır: savaj → Sauvage. Brend seçilsə, yalnız o brenddə axtarılır.</div>
-                                <div class="form-text" data-alias-hint="ignore">Söz axtarışda atılır: orijinal, qiymət, salam.</div>
+                                <div class="form-text" data-alias-hint="ignore">Söz axtarışda atılır: salam, orijinal, Naxçıvana, göndərirsiniz.</div>
                             </div>
                             <div class="mb-3" data-alias-field="brand">
                                 <label class="form-label" for="aliasBrand">
@@ -227,6 +229,37 @@
                                     @endforeach
                                 </select>
                                 @if($createErrors->has('brand_id'))<div class="invalid-feedback d-block">{{ $createErrors->first('brand_id') }}</div>@endif
+                            </div>
+                            {{-- Artıq söz: tam söz və ya kök (şəkilçili formalar) --}}
+                            <div class="mb-3" data-alias-field="ignore">
+                                <label class="form-label">Uyğunluq</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="match_type" id="aliasMatchExact" value="exact"
+                                           @checked(old('match_type') === 'exact')>
+                                    <label class="form-check-label" for="aliasMatchExact">Yalnız bu söz <span class="text-muted">(salam)</span></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="match_type" id="aliasMatchPrefix" value="prefix"
+                                           @checked(old('match_type', 'prefix') === 'prefix')>
+                                    <label class="form-check-label" for="aliasMatchPrefix">
+                                        Kök — şəkilçili formaları da <span class="text-muted">(göndər → göndərirsiniz, göndərin)</span>
+                                    </label>
+                                </div>
+                                <div class="form-text">
+                                    Kök şəkilçisiz yazılır: <b>salam</b>, <b>göndər</b>, <b>naxçıvan</b>.
+                                    4 hərfdən qısa sözlər (<b>de</b>, <b>la</b>, <b>var</b>) avtomatik "yalnız bu söz" olur —
+                                    kök olsalar Delina, Layton, Varvatos kimi adları da atardılar.
+                                </div>
+                                @if($createErrors->has('confirm_prefix'))
+                                    <div class="alert alert-warning mt-2 mb-0 py-2">
+                                        {{ $createErrors->first('confirm_prefix') }}
+                                        <div class="form-check mt-2 mb-0">
+                                            <input class="form-check-input" type="checkbox" name="confirm_prefix" value="1" id="aliasConfirmPrefix">
+                                            <label class="form-check-label" for="aliasConfirmPrefix">Bəli, kök kimi əlavə et</label>
+                                        </div>
+                                        <div class="small mt-1">Və ya yuxarıda <b>"Yalnız bu söz"</b> seçib yenidən göndərin.</div>
+                                    </div>
+                                @endif
                             </div>
                             <div class="mb-3" data-alias-field="model">
                                 <label class="form-label" for="aliasOriginal">Modelin düzgün adı</label>
