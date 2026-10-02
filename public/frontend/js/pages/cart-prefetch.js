@@ -2,6 +2,8 @@
 // Skelet sətirləri göstərir və məhsul sorğusunu erkən başladır;
 // nəticəni cart.js window.__cartPrefetch-dən götürür.
 (() => {
+    // Hesab səbəti asinxron olaraq DB-dən gəlir; qonaq localStorage-ını oxumuruq.
+    if (document.body.dataset.auth === '1') return;
     const root = document.getElementById('cartPage');
     const items = document.getElementById('cartItems');
     let cart = [];
