@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Services\Dashboard\AdminDashboard;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
 {
     /** Əsas səhifə: rola görə — kuryerə öz sifarişləri, qalanlarına ümumi panel */
-    public function index()
+    public function index(Request $request, AdminDashboard $stats)
     {
         $user = auth('admin')->user();
         $courier = null;
+        $dashboard = null;
         if ($user?->hasRole(\App\Services\FinanceService::COURIER_ROLE, 'admin')) {
             $finance = app(\App\Services\FinanceService::class);
             $account = $finance->courierAccount($user);
@@ -29,9 +31,26 @@ class MainController extends Controller
                 'statuses' => app(\App\Services\OrderStatusService::class),
                 'history' => $this->courierHistory($account),
             ];
+        } else {
+            $period = AdminDashboard::period($request->query('period'));
+            // Dizayn yoxlaması: lokal mühitdə /admin?demo=1 — saxta rəqəmlər, bazaya toxunmur
+            $demo = app()->environment('local') && $request->boolean('demo');
+            $dashboard = ['period' => $period, 'demo' => $demo] + ($demo ? $stats->demo($period) : [
+                'stats' => $stats->stats($period),
+                'payments' => $stats->paymentMethods($period),
+                'sales' => $stats->sales(7),
+                'active' => $stats->activeStatuses(),
+                'top' => $stats->topProducts($period),
+                'attention' => $stats->attention(),
+                'searches' => $stats->searches($period),
+                'online' => $stats->onlinePayments($period),
+                'sources' => $stats->sources($period),
+                'customerSources' => $stats->customerSources($period),
+                'finance' => $user->can('finance') ? $stats->finance() : null,
+            ]);
         }
 
-        return view('backend.pages.index', compact('courier'));
+        return view('backend.pages.index', compact('courier', 'dashboard'));
     }
 
     /**

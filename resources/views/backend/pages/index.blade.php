@@ -7,31 +7,28 @@
 
 @section('css')
     @if($courier ?? null)<link rel="stylesheet" href="{{ asset_v('backend/css/courier.css') }}">@endif
+    @if($dashboard ?? null)<link rel="stylesheet" href="{{ asset_v('backend/css/dashboard.css') }}">@endif
 
 @endsection
 
 @section('js_vendor')
-    <script src="{{ asset('backend/js/vendor/intro.min.js') }}"></script>
+    @if($dashboard ?? null)
+        <script src="{{ asset('backend/js/vendor/Chart.bundle.min.js') }}"></script>
+        <script src="{{ asset('backend/js/vendor/chartjs-plugin-datalabels.js') }}"></script>
+    @endif
 @endsection
 
 @section('js_page')
-    <script>
-        if (typeof introJs !== 'undefined' && document.getElementById('dashboardTourButton') !== null) {
-            document.getElementById('dashboardTourButton').addEventListener('click', (event) => {
-                introJs()
-                    .setOption('nextLabel', '<span>Next</span><i class="cs-chevron-right"></i>')
-                    .setOption('prevLabel', '<i class="cs-chevron-left"></i><span>Prev</span>')
-                    .setOption('skipLabel', '<i class="cs-close"></i>')
-                    .setOption('doneLabel', '<i class="cs-check"></i><span>Done</span>')
-                    .setOption('overlayOpacity', 0.5)
-                    .start();
-            });
-        }
-    </script>
+    @if($dashboard ?? null)
+        <script src="{{ asset_v('backend/js/cs/charts.extend.js') }}"></script>
+        <script src="{{ asset_v('backend/js/dashboard.js') }}"></script>
+    @endif
 @endsection
 
 @section('content')
     <div class="container">
+        {{-- Başlıq yalnız kuryer səhifəsində; admin dashboard-u birbaşa göstəricilərlə başlayır --}}
+        @if($courier ?? null)
         <div class="page-title-container">
             <div class="row">
                 <!-- Title Start -->
@@ -41,20 +38,9 @@
                 </div>
                 <!-- Title End -->
 
-                <!-- Top Buttons Start -->
-                @unless($courier ?? null)
-                <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
-                    <!-- Tour Button Start -->
-                    <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" id="dashboardTourButton">
-                        <span>Take a Tour</span>
-                        <i data-acorn-icon="flag"></i>
-                    </button>
-                    <!-- Tour Button End -->
-                </div>
-                @endunless
-                <!-- Top Buttons End -->
             </div>
         </div>
+        @endif
         {{-- Rola görə: kuryer — öz sifarişləri, qalanları — ümumi panel --}}
         @if($courier ?? null)
             @include('backend.pages.dashboard.courier')

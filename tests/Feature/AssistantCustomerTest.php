@@ -22,7 +22,7 @@ class AssistantCustomerTest extends TestCase
         Schema::create('permissions', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('guard_name'), $t->timestamps()]);
         Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('surname')->nullable(), $t->string('mobile'),
             $t->string('email')->nullable(), $t->integer('gender')->nullable(), $t->string('password')->nullable(), $t->boolean('active')->default(false),
-            $t->decimal('bonus_balance', 10, 2)->default(0), $t->timestamps()]);
+            $t->decimal('bonus_balance', 10, 2)->default(0), $t->string('source', 20)->nullable(), $t->timestamps()]);
         Schema::create('sms_templates', fn (Blueprint $t) => [$t->increments('id'), $t->string('code'), $t->string('name'), $t->text('template'), $t->boolean('active')->default(true)]);
         Schema::create('customer_credit_profiles', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->string('fin')->nullable(),
             $t->string('father_name')->nullable(), $t->string('id_card_series')->nullable(), $t->string('id_card_number')->nullable(),

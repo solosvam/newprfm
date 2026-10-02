@@ -104,6 +104,7 @@ class EasyOrdersController extends Controller
                     'password' => null,
                     'active' => 1,
                     'bonus_balance' => 0,
+                    'source' => 'easy_order',
                 ]);
                 // Qeydiyyat bonusu — saytdakı qeydiyyatla eyni qayda (BonusService)
                 $registrationBonus = app(BonusService::class)->grantRegistration($customer);

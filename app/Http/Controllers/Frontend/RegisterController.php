@@ -45,6 +45,7 @@ class RegisterController extends Controller
             'gender' => (int) $data['gender'],
             'password' => Hash::make($data['password']),
             'active' => false,
+            'source' => 'website',
         ]);
 
         $request->session()->put('register.customer_id', $customer->id);

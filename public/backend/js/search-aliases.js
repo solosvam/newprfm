@@ -64,6 +64,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     modalElement.addEventListener('shown.bs.modal', () => aliasInput.focus());
 
+    // Dashboard-dan "Alias əlavə et": ?alias=sorğu — modal mətnlə açılır
+    const preset = new URLSearchParams(window.location.search).get('alias');
+    if (preset && !modalElement.hasAttribute('data-open-on-load')) {
+        aliasInput.value = preset;
+        fromInput.value = preset;
+        matchTouched = false;
+        autoMatch();
+        modal().show();
+    }
+
     // səhv olanda modal yenidən açılır
     if (modalElement.hasAttribute('data-open-on-load')) modal().show();
 

@@ -141,7 +141,7 @@ class AssistantController extends Controller
         $request->merge(['mobile' => CustomerRegistration::normalizeMobile($request->input('mobile'))]);
         $data = $request->validate(CustomerRegistration::rules(), CustomerRegistration::messages(), CustomerRegistration::attributes());
 
-        ['customer' => $customer, 'sms' => $sms] = $registration->register($data, $request->boolean('send_password'));
+        ['customer' => $customer, 'sms' => $sms] = $registration->register($data, $request->boolean('send_password'), 'assistant');
 
         return response()->json([
             'id' => $customer->id,

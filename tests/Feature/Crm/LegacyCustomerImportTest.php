@@ -33,6 +33,7 @@ class LegacyCustomerImportTest extends TestCase
             $t->rememberToken(); $t->timestamps();
         });
         (require database_path('migrations/2026_10_01_180000_add_old_customer_id_to_customers.php'))->up();
+        (require database_path('migrations/2026_10_02_120000_add_source_to_customers.php'))->up();
         Schema::create('customer_bonus_transactions', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->string('type'); $t->decimal('amount', 12, 2);
             $t->string('note')->nullable(); $t->timestamps();
@@ -62,6 +63,7 @@ class LegacyCustomerImportTest extends TestCase
         $this->assertSame('created', $importer->import($this->row(1, ['sex' => 2]), true)['status']);
         $customer = Customer::first();
         $this->assertSame(1, $customer->old_customer_id);
+        $this->assertSame('legacy', $customer->source);
         $this->assertSame(0, $customer->gender);
         $this->assertTrue($customer->active);
         $this->assertNull($customer->password);

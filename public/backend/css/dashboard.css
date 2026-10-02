@@ -1,0 +1,17 @@
+/* Admin əsas səhifəsi (pages/dashboard/admin.blade.php) */
+
+.dashboard-progress {
+    height: 4px;
+}
+
+/* Aktiv sifariş mərhələləri: geniş ekranda 7 kart bir sırada */
+@media (min-width: 1400px) {
+    .dashboard-steps > * {
+        flex: 0 0 auto;
+        width: calc(100% / 7);
+    }
+}
+
+.dashboard-top-img {
+    object-fit: cover;
+}

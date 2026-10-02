@@ -14,8 +14,25 @@ class Customer extends Authenticatable
 
     protected $guard = 'web';
 
+    /** Müştəri haradan yaranıb (customers.source) */
+    public const SOURCES = [
+        'website' => 'Saytda qeydiyyat',
+        'crm' => 'CRM (operator)',
+        'assistant' => 'Operator paneli (extension)',
+        'easy_order' => 'Asan sifarişdən',
+        'legacy' => 'Köhnə sistemdən',
+    ];
+
+    public function sourceLabel(): ?string
+    {
+        $code = $this->source ?? ($this->old_customer_id ? 'legacy' : null);
+
+        return $code ? (self::SOURCES[$code] ?? $code) : null;
+    }
+
     protected $fillable = [
         'old_customer_id',
+        'source',
         'name',
         'surname',
         'gender',

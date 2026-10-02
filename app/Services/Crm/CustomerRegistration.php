@@ -54,7 +54,7 @@ class CustomerRegistration
      *
      * @return array{customer: Customer, sms: ?bool} sms: null — istənməyib, true — getdi, false — getmədi
      */
-    public function register(array $data, bool $sendPassword): array
+    public function register(array $data, bool $sendPassword, string $source = 'crm'): array
     {
         $password = (string) random_int(100000, 999999);
         $customer = Customer::create([
@@ -65,6 +65,7 @@ class CustomerRegistration
             'gender' => (int) $data['gender'],
             'password' => bcrypt($password),
             'active' => true,
+            'source' => $source,
         ]);
 
         $sms = null;

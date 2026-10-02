@@ -133,7 +133,7 @@ class LegacyCustomerImporter
                 $customer = new Customer([
                     'old_customer_id' => $id, 'name' => $data['name'], 'surname' => $data['surname'],
                     'email' => $data['email'], 'mobile' => $data['mobile'], 'gender' => (int) $data['sex'] === 1 ? 1 : 0,
-                    'password' => null, 'active' => true, 'bonus_balance' => self::decimal($cents),
+                    'password' => null, 'active' => true, 'bonus_balance' => self::decimal($cents), 'source' => 'legacy',
                 ]);
                 $customer->created_at = $date;
                 $customer->save();

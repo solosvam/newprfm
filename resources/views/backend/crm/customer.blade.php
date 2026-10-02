@@ -120,6 +120,11 @@
                                     <i data-acorn-icon="mobile" data-acorn-size="16" class="me-1"></i>
                                     <span class="align-middle">{{ $customer->mobile }}</span>
                                 </div>
+                                @if($customer->sourceLabel())
+                                    <div class="text-small text-muted mt-1" title="Müştəri haradan yaranıb">
+                                        {{ $customer->sourceLabel() }} · {{ $customer->created_at?->format('d.m.Y') }}
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="d-flex flex-row justify-content-between w-100 w-sm-50 w-xl-100">
