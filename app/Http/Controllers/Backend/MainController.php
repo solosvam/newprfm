@@ -46,6 +46,7 @@ class MainController extends Controller
                 'online' => $stats->onlinePayments($period),
                 'sources' => $stats->sources($period),
                 'customerSources' => $stats->customerSources($period),
+                'carts' => $stats->carts(),
                 'finance' => $user->can('finance') ? $stats->finance() : null,
             ]);
         }

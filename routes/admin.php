@@ -21,6 +21,8 @@ use App\Http\Controllers\Backend\SettingsController;
 use App\Http\Controllers\Backend\SmsTemplateController;
 use App\Http\Controllers\Backend\CrmController;
 use App\Http\Controllers\Backend\EasyOrdersController;
+use App\Http\Controllers\Backend\OrdersController;
+use App\Http\Controllers\Backend\CartsController;
 use App\Http\Controllers\Backend\PromoCodesController;
 use App\Http\Controllers\Backend\RefundController;
 
@@ -264,6 +266,12 @@ Route::prefix('admin')
                     Route::get('/', 'index')->name('index');
                     Route::post('/', 'update')->name('update');
                 });
+
+            // Satış: ümumi sifariş siyahısı və səbətdəki mallar
+            Route::middleware('can:crm')->group(function () {
+                Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
+                Route::get('/carts', [CartsController::class, 'index'])->name('carts.index');
+            });
 
             Route::prefix('easy-orders')->name('easy-orders.')->controller(EasyOrdersController::class)->middleware('can:crm')->group(function () {
                 Route::get('/', 'index')->name('index');

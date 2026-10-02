@@ -30,6 +30,12 @@
             'favoriteRemoved' => __('notification_removed_from_favorites'),
             'selectBrand' => __('home_select_brand'),
         ],
+        // Web push (OneSignal): promptNow — səhifə özü icazə istəməyi tələb edir (məs. sifariş tamamlandı)
+        'push' => config('services.onesignal.app_id') ? [
+            'appId' => config('services.onesignal.app_id'),
+            'customerId' => auth()->id(),
+            'promptNow' => trim($__env->yieldContent('push-prompt')) === '1',
+        ] : null,
         // hissə-hissə: ≤ limit məbləğdə yalnız bu aylar (CreditPeriod::availableFor ilə eyni)
         'creditRule' => \App\Models\Credit\CreditPeriod::amountRule(),
     ];

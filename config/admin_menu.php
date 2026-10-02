@@ -52,10 +52,6 @@ return [
                 'permission' => 'credit.menu',
                 'children'   => [
                     [
-                        'title' => 'Müraciətlər',
-                        'route' => 'admin.credit.applications',
-                    ],
-                    [
                         'title' => 'Faizlər',
                         'route' => 'admin.credit.periods',
                     ],
@@ -134,10 +130,31 @@ return [
     ],
 
     [
-        'title'      => 'Asan sifariş',
-        'icon'       => 'cart',
-        'route'      => 'admin.easy-orders.index',
-        'permission' => 'crm',
+        'title'    => 'Satış',
+        'icon'     => 'cart',
+        'id'       => 'salesMenu',
+        'children' => [
+            [
+                'title'      => 'Sifarişlər',
+                'route'      => 'admin.orders.index',
+                'permission' => 'crm',
+            ],
+            [
+                'title'      => 'Kredit müraciətləri',
+                'route'      => 'admin.credit.applications',
+                'permission' => 'credit.menu',
+            ],
+            [
+                'title'      => 'Asan sifarişlər',
+                'route'      => 'admin.easy-orders.index',
+                'permission' => 'crm',
+            ],
+            [
+                'title'      => 'Səbətdəki mallar',
+                'route'      => 'admin.carts.index',
+                'permission' => 'crm',
+            ],
+        ],
     ],
 
     [

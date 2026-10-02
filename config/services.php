@@ -55,6 +55,11 @@ return [
         ],
     ],
 
+    // Web push: https://onesignal.com — App ID hər domen üçün ayrıdır (test / canlı)
+    'onesignal' => [
+        'app_id' => env('ONESIGNAL_APP_ID'),
+    ],
+
     'parfumshop_sms' => [
         'url' => env('PARFUMSHOP_SMS_URL', 'https://apps.lsim.az/quicksms/v1/send'),
         'history_url' => env('PARFUMSHOP_SMS_HISTORY_URL', 'https://apps.lsim.az/information/search-by-msisdn'),

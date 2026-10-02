@@ -39,7 +39,8 @@
         ['key' => 'reviews', 'title' => 'Təsdiq gözləyən rəy', 'hint' => 'Saytda görünmür', 'icon' => 'message',
             'url' => $user?->can('product.reviews') ? route('admin.product.review.list') : null],
         ['key' => 'refunds', 'title' => 'Gözləyən refund', 'hint' => 'Karta qaytarılmalıdır', 'icon' => 'credit-card', 'url' => null],
-        ['key' => 'courier', 'title' => 'Kuryerdə ləngiyən', 'hint' => '1 gündən çox', 'icon' => 'delivery-truck', 'url' => null],
+        ['key' => 'courier', 'title' => 'Kuryerdə ləngiyən', 'hint' => '1 gündən çox', 'icon' => 'delivery-truck',
+            'url' => $user?->can('crm') ? route('admin.orders.index', ['status' => 'courier_late']) : null],
     ];
 @endphp
 <div class="mb-5">
@@ -527,23 +528,102 @@
     @endif
 </div>
 
+{{-- Səbətlərdə qalan məhsullar (indiki an) --}}
+@php
+    $carts = $dashboard['carts'];
+    $canCrm = auth('admin')->user()?->can('crm');
+    $cartUrl = fn (array $params = []) => $canCrm ? route('admin.carts.index', $params) : null;
+    $cartCards = [
+        ['title' => 'Səbəti dolu müştəri', 'icon' => 'user', 'value' => $money($carts['customers']), 'color' => 'primary', 'hint' => null, 'url' => $cartUrl()],
+        ['title' => 'Səbətdəki məhsul', 'icon' => 'cart', 'value' => $money($carts['quantity']).' ədəd', 'color' => 'primary', 'hint' => null, 'url' => $cartUrl(['view' => 'products'])],
+        ['title' => 'Təxmini dəyər', 'icon' => 'money', 'value' => $money($carts['value']).' ₼', 'color' => 'success', 'hint' => 'Hazırkı qiymətlə', 'url' => $cartUrl(['sort' => 'value'])],
+        ['title' => '1 gündən çox gözləyən', 'icon' => 'clock', 'value' => $money($carts['stale']), 'color' => 'warning', 'hint' => 'Səbətinə 24 saatdır toxunmayan müştəri', 'url' => $cartUrl(['stale' => 1])],
+    ];
+@endphp
+<div class="row">
+    <div class="col-12 col-xl-6 mb-5">
+        <h2 class="small-title">Səbətlərdə — hazırki vəziyyət</h2>
+        <div class="row g-2">
+            @foreach($cartCards as $card)
+                <div class="col-12 col-sm-6">
+                    <div class="card h-100 {{ $card['url'] ? 'hover-border-primary' : '' }}">
+                        <div class="h-100 row g-0 card-body align-items-center py-3">
+                            <div class="col-auto">
+                                <div class="sw-6 sh-6 rounded-md d-flex justify-content-center align-items-center border border-{{ $card['color'] }}">
+                                    <i data-acorn-icon="{{ $card['icon'] }}" class="text-{{ $card['color'] }}"></i>
+                                </div>
+                            </div>
+                            <div class="col ps-3">
+                                <div class="heading mb-1 lh-1-25">{{ $card['title'] }}</div>
+                                <div class="cta-2 text-{{ $card['color'] }}">{{ $card['value'] }}</div>
+                                @if($card['hint'])
+                                    <div class="text-small text-muted">{{ $card['hint'] }}</div>
+                                @endif
+                                @if($card['url'])
+                                    <a href="{{ $card['url'] }}" class="stretched-link" aria-label="{{ $card['title'] }}"></a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-6 mb-5">
+        <h2 class="small-title">Səbətlərdə ən çox olanlar</h2>
+        <div class="card h-100-card">
+            <div class="card-body py-3">
+                @forelse($carts['top'] as $item)
+                    <div class="d-flex align-items-center justify-content-between py-2 {{ $loop->last ? '' : 'border-bottom border-separator-light' }}">
+                        <div class="min-w-0 pe-3">
+                            @if($item['id'] && auth('admin')->user()?->can('products.menu'))
+                                <a href="{{ route('admin.product.edit', $item['id']) }}" class="body-link d-block text-truncate">{{ $item['name'] }}</a>
+                            @else
+                                <div class="text-truncate">{{ $item['name'] }}</div>
+                            @endif
+                            <div class="text-small text-muted text-truncate">{{ $item['brand'] }}{{ $item['size'] ? ' · '.$item['size'] : '' }} · {{ $money($item['price'], 2) }} ₼</div>
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            <div class="cta-3 text-primary">{{ $item['customers'] }} <span class="text-small text-muted">müştəri</span></div>
+                            <div class="text-small text-muted">{{ $item['quantity'] }} ədəd</div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-muted text-center py-4">Səbətlərdə məhsul yoxdur</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Aktiv sifarişlər mərhələlər üzrə --}}
 @php $activeTotal = array_sum(array_column($dashboard['active'], 'count')); @endphp
 <div class="mb-5">
     <div class="d-flex justify-content-between align-items-center">
         <h2 class="small-title">Aktiv sifarişlər</h2>
-        <span class="text-small text-muted mb-2">Cəmi: {{ $activeTotal }}</span>
+        @if(auth('admin')->user()?->can('crm'))
+            <a href="{{ route('admin.orders.index', ['status' => 'active']) }}" class="btn btn-icon btn-icon-end btn-xs btn-background-alternate p-0 text-small mb-2">
+                <span class="align-bottom">Cəmi {{ $activeTotal }} · Hamısına bax</span>
+                <i data-acorn-icon="chevron-right" class="align-middle" data-acorn-size="12"></i>
+            </a>
+        @else
+            <span class="text-small text-muted mb-2">Cəmi: {{ $activeTotal }}</span>
+        @endif
     </div>
     <div class="row g-2 row-cols-2 row-cols-md-4 dashboard-steps">
         @foreach($dashboard['active'] as $step)
             <div class="col">
-                <div class="card h-100 {{ $step['count'] ? '' : 'opacity-50' }}">
+                <div class="card h-100 {{ $step['count'] ? 'hover-border-primary' : 'opacity-50' }}">
                     <div class="card-body text-center d-flex flex-column align-items-center py-4">
                         <div class="{{ $step['count'] ? 'bg-gradient-light' : 'border border-primary' }} sw-6 sh-6 rounded-xl d-flex justify-content-center align-items-center mb-3">
                             <i data-acorn-icon="{{ $step['icon'] }}" class="{{ $step['count'] ? 'text-white' : 'text-primary' }}"></i>
                         </div>
                         <div class="heading lh-1-25 mb-2 sh-5 d-flex align-items-center">{{ $step['name'] }}</div>
                         <div class="display-6 text-primary">{{ $step['count'] }}</div>
+                        @if($step['count'] && auth('admin')->user()?->can('crm'))
+                            <a href="{{ route('admin.orders.index', ['status' => $step['code']]) }}" class="stretched-link" aria-label="{{ $step['name'] }}"></a>
+                        @endif
                     </div>
                 </div>
             </div>

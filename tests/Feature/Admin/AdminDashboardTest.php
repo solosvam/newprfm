@@ -28,13 +28,16 @@ class AdminDashboardTest extends TestCase
         Schema::create('users', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('surname')->nullable(), $t->string('email')->nullable(), $t->string('password')->nullable(), $t->boolean('active')->default(true), $t->timestamps()]);
         (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        Schema::create('order_statuses', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable()]);
-        Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable()]);
+        Schema::create('order_statuses', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->boolean('active')->default(true), $t->integer('sort_order')->default(0)]);
+        Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->integer('sort_order')->default(0)]);
         DB::table('payment_methods')->insert([['id' => 1, 'code' => 'cash', 'name_az' => 'Qapıda nağd'], ['id' => 2, 'code' => 'card_online', 'name_az' => 'Kartla onlayn'], ['id' => 3, 'code' => 'birbank_installment', 'name_az' => 'Birbank taksit'], ['id' => 4, 'code' => 'installment', 'name_az' => 'Hissə-hissə ödəniş']]);
-        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->timestamps()]);
+        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->string('order_no')->nullable(), $t->string('guest_mobile')->nullable(), $t->string('payment_status')->nullable(), $t->timestamps()]);
         Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->unsignedBigInteger('product_id')->nullable(), $t->integer('quantity')->default(1), $t->integer('cancelled_quantity')->default(0), $t->decimal('total', 12, 2)->default(0)]);
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->unsignedBigInteger('brand_id')->nullable()]);
+        Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_id'), $t->unsignedBigInteger('size_id')->nullable(), $t->decimal('price', 12, 2)]);
+        Schema::create('customer_cart_items', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->unsignedBigInteger('product_variant_id'), $t->unsignedInteger('quantity'), $t->timestamps()]);
         Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_id'), $t->string('image'), $t->integer('sort_order')->default(0)]);
         Schema::create('warehouse_requests', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->timestamps()]);
         Schema::create('warehouse_request_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('warehouse_request_id')]);
@@ -46,7 +49,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('payments', fn (Blueprint $t) => [$t->id(), $t->decimal('amount', 12, 2), $t->string('status'), $t->timestamps()]);
         Schema::create('order_item_cancellations', fn (Blueprint $t) => [$t->id(), $t->string('refund_status')->nullable()]);
         Schema::create('order_item_allocations', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_item_id'), $t->unsignedBigInteger('warehouse_id')->nullable(), $t->integer('quantity'), $t->decimal('unit_cost', 12, 2), $t->string('status')]);
-        Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->integer('old_customer_id')->nullable(), $t->string('source', 20)->nullable(), $t->boolean('active')->default(true), $t->decimal('bonus_balance', 12, 2)->default(0), $t->timestamps()]);
+        Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->string('mobile')->nullable(), $t->integer('old_customer_id')->nullable(), $t->string('source', 20)->nullable(), $t->boolean('active')->default(true), $t->decimal('bonus_balance', 12, 2)->default(0), $t->timestamps()]);
         Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::table('permissions', fn (Blueprint $t) => $t->string('description')->nullable());
         (require database_path('migrations/2026_09_29_200000_create_finance_tables.php'))->up();
@@ -241,6 +244,93 @@ class AdminDashboardTest extends TestCase
         $this->assertSame(20.0, $data['bonus']);
     }
 
+    public function test_carts_summary_and_top(): void
+    {
+        DB::table('brands')->insert(['id' => 1, 'name' => 'Creed']);
+        DB::table('products')->insert([['id' => 1, 'name' => 'Aventus', 'brand_id' => 1], ['id' => 2, 'name' => 'Viking', 'brand_id' => 1]]);
+        DB::table('sizes')->insert(['id' => 1, 'name_az' => '100 ml']);
+        DB::table('product_variants')->insert([['id' => 10, 'product_id' => 1, 'size_id' => 1, 'price' => 500], ['id' => 20, 'product_id' => 2, 'size_id' => 1, 'price' => 300]]);
+        DB::table('customer_cart_items')->insert([
+            ['customer_id' => 1, 'product_variant_id' => 10, 'quantity' => 1, 'created_at' => '2026-09-30 10:00', 'updated_at' => '2026-09-30 10:00'],
+            ['customer_id' => 2, 'product_variant_id' => 10, 'quantity' => 2, 'created_at' => '2026-10-02 10:00', 'updated_at' => '2026-10-02 10:00'],
+            ['customer_id' => 2, 'product_variant_id' => 20, 'quantity' => 1, 'created_at' => '2026-10-02 10:00', 'updated_at' => '2026-10-02 10:00'],
+        ]);
+
+        $carts = app(AdminDashboard::class)->carts();
+        $this->assertSame(2, $carts['customers']);
+        $this->assertSame(4, $carts['quantity']);
+        $this->assertSame(1800.0, $carts['value']);
+        $this->assertSame(1, $carts['stale']); // yalnız 1-ci müştəri 1 gündən çoxdur toxunmayıb
+        $this->assertSame(['Aventus', 'Viking'], array_column($carts['top'], 'name'));
+        $this->assertSame(2, $carts['top'][0]['customers']);
+        $this->assertSame('100 ml', $carts['top'][0]['size']);
+    }
+
+    private function grantCrm(): void
+    {
+        \Spatie\Permission\Models\Permission::create(['name' => 'crm', 'guard_name' => 'admin']);
+        Role::findByName('Admin', 'admin')->givePermissionTo('crm');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    public function test_orders_list_filters_by_status_source_and_search(): void
+    {
+        $this->grantCrm();
+        DB::table('customers')->insert(['id' => 7, 'name' => 'Aysel', 'surname' => 'Məmmədova', 'mobile' => '994501112233']);
+        $a = $this->order('2026-10-02 10:00', 100, 'sent');
+        $a->forceFill(['order_no' => 'PS-1001', 'customer_id' => 7, 'source' => 'operator'])->save();
+        $b = $this->order('2026-10-02 11:00', 60);
+        $b->forceFill(['order_no' => 'PS-1002', 'one_click' => true, 'guest_mobile' => '994559998877'])->save();
+        $c = $this->order('2026-09-30 10:00', 80, 'delivered');
+        $c->forceFill(['order_no' => 'PS-1003', 'customer_id' => 7, 'source' => 'customer'])->save();
+        $late = $this->order('2026-09-29 10:00', 90, 'courier_assigned');
+        $late->forceFill(['order_no' => 'PS-1004'])->saveQuietly();
+        DB::table('orders')->where('id', $late->id)->update(['updated_at' => '2026-09-30 10:00']);
+
+        $get = fn (array $q) => $this->actingAs($this->admin, 'admin')->get(route('admin.orders.index', $q))->assertOk()->getContent();
+
+        $all = $get([]);
+        foreach (['PS-1001', 'PS-1002', 'PS-1003', 'PS-1004', 'Aysel Məmmədova', '994559998877'] as $text) {
+            $this->assertStringContainsString($text, $all);
+        }
+        $active = $get(['status' => 'active']);
+        $this->assertStringContainsString('PS-1001', $active);
+        $this->assertStringNotContainsString('PS-1003', $active);
+        $this->assertStringContainsString('PS-1004', $get(['status' => 'courier_late']));
+        $this->assertStringNotContainsString('PS-1001', $get(['status' => 'courier_late']));
+        $oneClick = $get(['source' => 'one_click']);
+        $this->assertStringContainsString('PS-1002', $oneClick);
+        $this->assertStringNotContainsString('PS-1001', $oneClick);
+        $search = $get(['q' => '1112233']);
+        $this->assertStringContainsString('PS-1003', $search);
+        $this->assertStringNotContainsString('PS-1002', $search);
+    }
+
+    public function test_carts_page_customer_and_product_views(): void
+    {
+        $this->grantCrm();
+        DB::table('customers')->insert([['id' => 1, 'name' => 'Köhnə', 'mobile' => '994500000001'], ['id' => 2, 'name' => 'Təzə', 'mobile' => '994500000002']]);
+        DB::table('brands')->insert(['id' => 1, 'name' => 'Creed']);
+        DB::table('products')->insert(['id' => 1, 'name' => 'Aventus', 'brand_id' => 1]);
+        DB::table('product_variants')->insert(['id' => 10, 'product_id' => 1, 'price' => 500]);
+        DB::table('customer_cart_items')->insert([
+            ['customer_id' => 1, 'product_variant_id' => 10, 'quantity' => 1, 'created_at' => '2026-09-29 10:00', 'updated_at' => '2026-09-29 10:00'],
+            ['customer_id' => 2, 'product_variant_id' => 10, 'quantity' => 3, 'created_at' => '2026-10-02 10:00', 'updated_at' => '2026-10-02 10:00'],
+        ]);
+        $get = fn (array $q) => $this->actingAs($this->admin, 'admin')->get(route('admin.carts.index', $q))->assertOk()->getContent();
+
+        $html = $get([]);
+        $this->assertStringContainsString('Köhnə', $html);
+        $this->assertLessThan(strpos($html, 'Təzə'), strpos($html, 'Köhnə')); // ən çox gözləyən yuxarıda
+        $byValue = $get(['sort' => 'value']);
+        $this->assertLessThan(strpos($byValue, 'Köhnə'), strpos($byValue, 'Təzə')); // 1500 ₼ > 500 ₼
+        $stale = $get(['stale' => 1]);
+        $this->assertStringContainsString('Köhnə', $stale);
+        $this->assertStringNotContainsString('Təzə', $stale);
+        $products = $get(['view' => 'products']);
+        $this->assertStringContainsString('Aventus', $products);
+    }
+
     public function test_sales_series_and_active_statuses(): void
     {
         $this->order('2026-10-02 10:00', 100);
@@ -265,7 +355,7 @@ class AdminDashboardTest extends TestCase
         $html = $this->actingAs($this->admin, 'admin')->get(route('admin.main', ['period' => 'week']))
             ->assertOk()->getContent();
 
-        foreach (['Yeni müştərilər', 'Saytda axtarış', 'Onlayn ödənişlər', 'Sifariş mənbələri', 'Diqqət tələb edənlər', 'Ən çox satılanlar', 'Aktiv sifarişlər', 'Statistika', 'Bu həftə', 'Dövriyyə', 'Mənfəət', 'Qapıda nağd', 'dashRevenueChart', 'dashPaymentsChart'] as $text) {
+        foreach (['Səbətlərdə', 'Yeni müştərilər', 'Saytda axtarış', 'Onlayn ödənişlər', 'Sifariş mənbələri', 'Diqqət tələb edənlər', 'Ən çox satılanlar', 'Aktiv sifarişlər', 'Statistika', 'Bu həftə', 'Dövriyyə', 'Mənfəət', 'Qapıda nağd', 'dashRevenueChart', 'dashPaymentsChart'] as $text) {
             $this->assertStringContainsString($text, $html);
         }
         if ($dump = env('DASHBOARD_HTML_DUMP')) {

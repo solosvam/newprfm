@@ -4,6 +4,9 @@
 <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/checkout-success.css') }}">
 @endsection
 
+{{-- Sifarişdən sonra: statusu bildirişlə izləmək üçün icazə istənir (push.js) --}}
+@section('push-prompt', '1')
+
 @section('content')
     <main>
         <div class="order-success">

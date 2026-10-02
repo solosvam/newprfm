@@ -49,6 +49,9 @@ class AdminDashboard
         'at_address' => 'pin',
     ];
 
+    /** Kuryer mərhələləri ("kuryerdə ləngiyən" üçün) */
+    public const COURIER_STATUSES = ['courier_assigned', 'sent', 'at_address'];
+
     private const TTL = 300;
 
     public static function period(?string $period): string
@@ -228,7 +231,7 @@ class AdminDashboard
     {
         return Cache::remember('admin-dashboard:attention', 60, function () {
             $cancelled = OrderStatus::where('code', 'cancelled')->value('id');
-            $courier = OrderStatus::whereIn('code', ['courier_assigned', 'sent', 'at_address'])->pluck('id');
+            $courier = OrderStatus::whereIn('code', self::COURIER_STATUSES)->pluck('id');
 
             return [
                 // anbara sorğu göndərilib, 2 saatdır heç bir cavab yoxdur
@@ -418,6 +421,47 @@ class AdminDashboard
     }
 
     /**
+     * Səbətlərdə qalan məhsullar (indiki an, daxil olmuş müştərilərin bazadakı səbəti).
+     * Dəyər məhsulun hazırkı qiyməti ilə hesablanır (endirim/promo nəzərə alınmır — təxminidir).
+     *
+     * @return array{customers: int, quantity: int, value: float, stale: int, top: array}
+     */
+    public function carts(): array
+    {
+        return Cache::remember('admin-dashboard:carts', 60, function () {
+            $items = fn () => DB::table('customer_cart_items')
+                ->join('product_variants', 'product_variants.id', '=', 'customer_cart_items.product_variant_id');
+            $totals = $items()->selectRaw('COUNT(DISTINCT customer_cart_items.customer_id) as customers,
+                    COALESCE(SUM(customer_cart_items.quantity), 0) as qty,
+                    COALESCE(SUM(customer_cart_items.quantity * product_variants.price), 0) as value')->first();
+            // 1 gündən çoxdur səbətinə toxunmayan müştərilər (xatırlatma üçün namizəd)
+            $stale = DB::table('customer_cart_items')->groupBy('customer_id')
+                ->havingRaw('MAX(updated_at) < ?', [now()->subDay()])->select('customer_id')->get()->count();
+
+            $top = $items()
+                ->join('products', 'products.id', '=', 'product_variants.product_id')
+                ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
+                ->leftJoin('sizes', 'sizes.id', '=', 'product_variants.size_id')
+                ->groupBy('product_variants.id', 'products.id', 'products.name', 'brands.name', 'sizes.name_az', 'product_variants.price')
+                ->selectRaw('products.id, products.name, brands.name as brand, sizes.name_az as size, product_variants.price,
+                    SUM(customer_cart_items.quantity) as qty, COUNT(DISTINCT customer_cart_items.customer_id) as customers')
+                ->orderByDesc('customers')->orderByDesc('qty')->limit(5)->get()
+                ->map(fn ($r) => [
+                    'id' => (int) $r->id, 'name' => $r->name, 'brand' => $r->brand, 'size' => $r->size,
+                    'price' => round((float) $r->price, 2), 'quantity' => (int) $r->qty, 'customers' => (int) $r->customers,
+                ])->all();
+
+            return [
+                'customers' => (int) $totals->customers,
+                'quantity' => (int) $totals->qty,
+                'value' => round((float) $totals->value, 2),
+                'stale' => $stale,
+                'top' => $top,
+            ];
+        });
+    }
+
+    /**
      * Dizayna baxmaq üçün saxta göstəricilər (yalnız lokal mühitdə, /admin?demo=1).
      * Bazaya toxunmur; struktur stats()/paymentMethods()/sales() ilə eynidir.
      */
@@ -495,6 +539,13 @@ class AdminDashboard
                 'couriers' => [['id' => 0, 'name' => 'Fərid', 'balance' => 420.0], ['id' => 0, 'name' => 'Elvin', 'balance' => 200.0], ['id' => 0, 'name' => 'Rauf', 'balance' => -35.0]],
                 'warehouses_debt' => 3480.0, 'warehouses' => 4, 'bonus' => 9215.4,
             ],
+            'carts' => ['customers' => 37, 'quantity' => 52, 'value' => 14380.0, 'stale' => 21, 'top' => [
+                ['id' => 0, 'name' => 'Aventus', 'brand' => 'Creed', 'size' => '100 ml', 'price' => 520.0, 'quantity' => 6, 'customers' => 6],
+                ['id' => 0, 'name' => 'Sauvage Eau de Parfum', 'brand' => 'Dior', 'size' => '100 ml', 'price' => 285.0, 'quantity' => 6, 'customers' => 5],
+                ['id' => 0, 'name' => 'Lost Cherry', 'brand' => 'Tom Ford', 'size' => '50 ml', 'price' => 465.0, 'quantity' => 4, 'customers' => 4],
+                ['id' => 0, 'name' => 'Baccarat Rouge 540', 'brand' => 'Maison Francis Kurkdjian', 'size' => '70 ml', 'price' => 610.0, 'quantity' => 3, 'customers' => 3],
+                ['id' => 0, 'name' => 'Cedrat Boise', 'brand' => 'Mancera', 'size' => '120 ml', 'price' => 226.0, 'quantity' => 3, 'customers' => 2],
+            ]],
             'attention' => ['warehouse' => 3, 'easy_orders' => 2, 'credit' => 4, 'reviews' => 0, 'refunds' => 1, 'courier' => 0],
         ];
     }
