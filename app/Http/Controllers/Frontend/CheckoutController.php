@@ -14,6 +14,7 @@ use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use App\Services\BonusService;
+use App\Services\CartService;
 use App\Services\Payment\Birbank;
 use App\Services\PromoCodeService;
 use App\Services\ShopPricing;
@@ -282,12 +283,15 @@ class CheckoutController extends Controller
                 Mail::to($customer->email)->queue(new OrderCreatedMail($order, app()->getLocale()));
             }
 
+            app(CartService::class)->clear($customer);
+
             return response()->json([
                 'ok' => true, 'order_no' => $order->order_no,
                 'redirect' => $redirect,
                 // The order and its items are already saved, including for card payments.
                 // A failed card payment can be retried from the existing order.
                 'clear_cart' => true,
+                'cart' => [],
             ]);
         });
     }

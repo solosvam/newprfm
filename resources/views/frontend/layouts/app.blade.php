@@ -3,7 +3,7 @@
 <head>
     @include('frontend.partials.head')
 </head>
-<body data-auth="{{ auth()->check() ? 1 : 0 }}">
+<body data-auth="{{ auth()->check() ? 1 : 0 }}" data-customer-id="{{ auth()->id() }}">
 @include('frontend.partials.nav')
 
 <div class="wrap">
@@ -13,6 +13,11 @@
 @include('frontend.partials.footer')
 @php
     $appData = [
+        'cart' => [
+            'indexUrl' => route('cart.items'),
+            'mergeUrl' => route('cart.merge'),
+            'changeUrl' => route('cart.change'),
+        ],
         'flash' => [
             'success' => session('success') ?? session('review_success'),
             'error' => session('error') ?? ($errors->any() ? $errors->first() : null),

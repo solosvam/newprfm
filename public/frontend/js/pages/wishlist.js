@@ -4,29 +4,11 @@
     const grid = document.querySelector('.wishlist-grid');
     if (!grid) return;
 
-    const CART_KEY = 'parfumshop_cart';
     const addedLabel = grid.dataset.addedLabel;
     const addedMessage = grid.dataset.addedMessage;
 
     const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const money = value => formatter.format(Number(value) || 0).replace(/,/g, '\u00A0') + '\u00A0₼';
-
-    function readCart() {
-        try {
-            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-            return Array.isArray(cart) ? cart : [];
-        } catch {
-            return [];
-        }
-    }
-
-    function updateHeaderCount(cart) {
-        const badge = document.getElementById('headerCartCount');
-        if (!badge) return;
-        const count = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
-        badge.textContent = String(count);
-        badge.classList.toggle('is-empty', count === 0);
-    }
 
     function notify(message) {
         if (message && window.jQuery && typeof window.jQuery.notify === 'function') {
@@ -48,27 +30,24 @@
     });
 
     /* ---------- Səbətə əlavə ---------- */
-    grid.addEventListener('click', event => {
+    grid.addEventListener('click', async event => {
         const button = event.target.closest('[data-wishlist-add]');
-        if (!button || button.classList.contains('is-added')) return;
+        if (!button || button.disabled || button.classList.contains('is-added')) return;
 
         const variantId = Number(button.dataset.variantId);
         const productId = Number(button.dataset.productId);
         if (!variantId) return;
 
-        const cart = readCart();
-        const existing = cart.find(item => Number(item.variant_id) === variantId);
-
-        if (existing) {
-            existing.quantity = (Number(existing.quantity) || 1) + 1;
-        } else {
-            cart.push({ product_id: productId, variant_id: variantId, quantity: 1 });
+        button.disabled = true;
+        try {
+            await window.parfumshopCart.change(variantId, 'add', 1, productId);
+            notify(addedMessage);
+        } catch (error) {
+            window.parfumshopNotify?.(error.message, 'error');
+            return;
+        } finally {
+            button.disabled = false;
         }
-
-        localStorage.setItem(CART_KEY, JSON.stringify(cart));
-        window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', { detail: cart }));
-        updateHeaderCount(cart);
-        notify(addedMessage);
 
         // Qısa "Əlavə edildi ✓" vəziyyəti
         const label = button.querySelector('span') || button;

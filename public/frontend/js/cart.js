@@ -4,7 +4,6 @@
     const root = document.getElementById('cartPage');
     if (!root) return;
 
-    const CART_KEY = 'parfumshop_cart';
     const PRODUCT_CACHE_KEY = 'parfumshop_cart_products';
     const $ = id => document.getElementById(id);
     const els = {
@@ -82,18 +81,11 @@
     }
 
     function getCart() {
-        try {
-            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-            return Array.isArray(cart) ? cart : [];
-        } catch {
-            return [];
-        }
+        return window.parfumshopCart.get();
     }
 
-    function saveCart(cart) {
-        localStorage.setItem(CART_KEY, JSON.stringify(cart));
-        window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', { detail: cart }));
-        renderCart();
+    function cartError(error) {
+        window.parfumshopNotify?.(error.message, 'error');
     }
 
     function actionButton(label, action, id, ariaLabel) {
@@ -346,49 +338,46 @@
         toastTimer = setTimeout(hideToast, 5000);
     }
 
-    els.toastUndo.addEventListener('click', () => {
-        if (!undoEntry) return;
-        const cart = getCart();
-        const exists = cart.some(e => Number(e.variant_id) === Number(undoEntry.item.variant_id));
-        if (!exists) cart.splice(Math.min(undoEntry.index, cart.length), 0, undoEntry.item);
-        clearTimeout(toastTimer);
-        hideToast();
-        saveCart(cart);
+    els.toastUndo.addEventListener('click', async () => {
+        if (!undoEntry || els.toastUndo.disabled) return;
+        els.toastUndo.disabled = true;
+        try {
+            const entry = undoEntry;
+            await window.parfumshopCart.change(Number(entry.item.variant_id), 'add', Number(entry.item.quantity), entry.item.product_id);
+            clearTimeout(toastTimer);
+            hideToast();
+        } catch (error) {
+            cartError(error);
+        } finally {
+            els.toastUndo.disabled = false;
+        }
     });
 
     /* ---------- actions ---------- */
-    root.addEventListener('click', event => {
+    root.addEventListener('click', async event => {
         const button = event.target.closest('button[data-action]');
-        if (!button || !root.contains(button)) return;
-
-        const cart = getCart();
+        if (!button || !root.contains(button) || button.disabled) return;
+        const action = { plus: 'add', minus: 'decrease', remove: 'remove' }[button.dataset.action];
+        if (!action) return;
         const id = Number(button.dataset.id);
+        const cart = getCart();
         const index = cart.findIndex(entry => Number(entry.variant_id) === id);
         if (index === -1) return;
         const item = cart[index];
-
-        switch (button.dataset.action) {
-            case 'plus':
-                item.quantity = Math.max(1, Number(item.quantity) || 1) + 1;
-                break;
-            case 'minus':
-                item.quantity = Math.max(1, (Number(item.quantity) || 1) - 1);
-                break;
-            case 'remove': {
-                const [removed] = cart.splice(index, 1);
-                showUndo({ item: removed, index });
-                break;
-            }
-            default:
-                return;
+        button.disabled = true;
+        try {
+            await window.parfumshopCart.change(id, action);
+            if (action === 'remove') showUndo({ item, index });
+        } catch (error) {
+            cartError(error);
+        } finally {
+            button.disabled = false;
         }
-
-        saveCart(cart);
     });
 
     window.addEventListener('parfumshop:promo-updated', updateTotals);
-    window.addEventListener('storage', event => {
-        if (event.key === CART_KEY) renderCart();
+    window.addEventListener('parfumshop:cart-updated', () => {
+        window.parfumshopCart.ready.then(renderCart).catch(cartError);
     });
 
     // Mobil bar: səhifədəki əsas CTA görünəndə gizlənir
@@ -398,5 +387,8 @@
         }).observe(els.checkout);
     }
 
-    renderCart();
+    window.parfumshopCart.ready.then(renderCart).catch(error => {
+        root.classList.remove('is-loading');
+        cartError(error);
+    });
 })();

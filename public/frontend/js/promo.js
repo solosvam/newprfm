@@ -4,7 +4,6 @@
     const root = document.querySelector('[data-promo]');
     if (!root) return;
 
-    const CART_KEY = 'parfumshop_cart';
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const details = root.querySelector('.promo__details');
     const form = root.querySelector('.promo__form');
@@ -25,14 +24,7 @@
     const money = value => formatter.format(Number(value) || 0).replace(/,/g, '\u00A0') + '\u00A0₼';
 
     function cartItems() {
-        try {
-            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-            return Array.isArray(cart)
-                ? cart.map(i => ({ variant_id: Number(i.variant_id), quantity: Math.max(1, Number(i.quantity) || 1) }))
-                : [];
-        } catch {
-            return [];
-        }
+        return window.parfumshopCart.get().map(i => ({ variant_id: Number(i.variant_id), quantity: Number(i.quantity) }));
     }
 
     async function request(url, method, body) {
@@ -85,6 +77,8 @@
     async function apply(code) {
         if (state.locked) return;
         const current = ++version;
+        try { await window.parfumshopCart.ready; } catch (error) { showError(error.message); return; }
+        if (current !== version || state.locked) return;
         const items = cartItems();
 
         if (!items.length) {
@@ -169,7 +163,6 @@
         }
     });
     window.addEventListener('parfumshop:cart-updated', revalidate);
-    window.addEventListener('storage', e => { if (e.key === CART_KEY) revalidate(); });
 
     if (state.code) apply(state.code);
     else { render(); emit(); }

@@ -4,7 +4,9 @@
     const page = document.querySelector('.checkout-page');
     if (!page) return;
 
-    const CART_KEY = 'parfumshop_cart';
+    let displayedCart = [];
+    let loadVersion = 0;
+    let submitting = false;
     const BONUS = 'bonus_balance';
     const INSTALLMENT = 'installment';
     const BIRBANK_INSTALLMENT = 'birbank_installment';
@@ -62,14 +64,8 @@
     }
 
     function getCart() {
-        try {
-            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-            return Array.isArray(cart) ? cart : [];
-        } catch {
-            return [];
-        }
+        return window.parfumshopCart.get();
     }
-
 
     function showError(message) {
         const text = message || messages.error;
@@ -321,6 +317,8 @@
     }
 
     async function loadItems() {
+        const version = ++loadVersion;
+        els.placeOrder.disabled = true;
         const cart = getCart();
         if (!cart.length) {
             location.href = cartUrl;
@@ -334,6 +332,7 @@
             if (!response.ok) throw new Error('Cart products request failed');
 
             const products = await response.json();
+            if (version !== loadVersion || submitting) return;
             const productMap = new Map(products.map(p => [Number(p.variant_id), p]));
             const fragment = document.createDocumentFragment();
             let subtotal = 0;
@@ -351,7 +350,9 @@
                 return;
             }
 
+            displayedCart = cart;
             els.items.replaceChildren(fragment);
+            els.placeOrder.disabled = false;
             state.subtotal = round2(subtotal);
             updateTotals();
         } catch (error) {
@@ -396,6 +397,7 @@
         }
 
         button.disabled = true;
+        submitting = true;
         clearError();
 
         const isNew = !addressSelect || addressSelect.value === 'new';
@@ -403,7 +405,7 @@
         const isInstallment = selectedCode() === INSTALLMENT;
 
         const body = {
-            cart: getCart(),
+            cart: displayedCart,
             address_mode: isNew ? 'new' : 'existing',
             address_id: isNew ? null : Number(addressSelect.value),
             title: val('addressTitle'),
@@ -450,12 +452,12 @@
             }
 
             if (data.clear_cart) {
-                localStorage.removeItem(CART_KEY);
-                window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', { detail: [] }));
+                window.parfumshopCart.accept(data.cart || []);
             }
             location.href = data.redirect;
         } catch (error) {
             showError(error.message);
+            submitting = false;
             button.disabled = false;
         }
     });
@@ -484,5 +486,9 @@
        Init
        ========================================================= */
     syncPayment();
-    loadItems();
+    els.placeOrder.disabled = true;
+    window.parfumshopCart.ready.then(loadItems).catch(error => showError(error.message));
+    window.addEventListener('parfumshop:cart-updated', () => {
+        if (!submitting) window.parfumshopCart.ready.then(loadItems).catch(error => showError(error.message));
+    });
 })();

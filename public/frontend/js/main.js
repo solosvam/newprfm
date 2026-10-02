@@ -201,7 +201,7 @@
     }
 
     function updateCounts() {
-        const cart = readArray('parfumshop_cart');
+        const cart = window.parfumshopCart.get();
         const cartCount = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
         const cartBadge = document.getElementById('headerCartCount');
         if (cartBadge) {
@@ -451,22 +451,22 @@
         if (add) {
             const selected = document.querySelector('.size-pill.active-size-amount');
             if (!selected) return;
-            const cart = readArray('parfumshop_cart');
             const id = Number(selected.dataset.variantId);
             const quantity = Number(document.querySelector('[data-qty-value]')?.textContent || 1);
-            const item = cart.find(v => Number(v.variant_id) === id);
-            if (item) {
-                item.quantity = (Number(item.quantity) || 1) + quantity;
-                item.product_id = Number(add.dataset.productId || buybox?.dataset.productId);
+            if (add.disabled) return;
+            add.disabled = true;
+            try {
+                await window.parfumshopCart.change(id, 'add', quantity, Number(add.dataset.productId || buybox?.dataset.productId));
+                updateCounts();
+                notify(appData.messages?.cartAdded || 'Məhsul səbətə əlavə edildi');
+                const label = add.textContent;
+                add.textContent = 'Səbətə əlavə edildi ✓';
+                setTimeout(() => { add.textContent = label; }, 1600);
+            } catch (error) {
+                notify(error.message, 'error');
+            } finally {
+                add.disabled = false;
             }
-            else cart.push({product_id: Number(add.dataset.productId || buybox?.dataset.productId), variant_id:id, quantity});
-            localStorage.setItem('parfumshop_cart', JSON.stringify(cart));
-            window.dispatchEvent(new CustomEvent('parfumshop:cart-updated', {detail:cart}));
-            updateCounts();
-            notify(appData.messages?.cartAdded || 'Məhsul səbətə əlavə edildi');
-            const label = add.textContent;
-            add.textContent = 'Səbətə əlavə edildi ✓';
-            setTimeout(() => { add.textContent = label; }, 1600);
             return;
         }
 

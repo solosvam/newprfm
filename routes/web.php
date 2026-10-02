@@ -192,6 +192,9 @@ Route::controller(AuthController::class)->group(function () {
 */
 
 Route::middleware('auth')->group(function () {
+    Route::get('/cart/items', [\App\Http\Controllers\Frontend\CartController::class, 'index'])->name('cart.items');
+    Route::post('/cart/merge', [\App\Http\Controllers\Frontend\CartController::class, 'merge'])->middleware('throttle:30,1')->name('cart.merge');
+    Route::post('/cart/items', [\App\Http\Controllers\Frontend\CartController::class, 'change'])->middleware('throttle:120,1')->name('cart.change');
 
     Route::post('/payment/birbank/start/{order}', [BirbankPaymentController::class, 'start'])
         ->middleware('throttle:5,1')->name('payment.birbank.start');
