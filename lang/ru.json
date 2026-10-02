@@ -598,5 +598,11 @@
     "brands_count": "Брендов: :count",
     "brands_products": "Товаров: :count",
     "brands_empty": "Бренды не найдены.",
-    "brands_letters": "Буквы"
+    "brands_letters": "Буквы",
+    "push_ios_title": "Включите уведомления",
+    "push_ios_text": "На iPhone уведомления о скидках и снижении цен работают, только если сайт добавлен на экран «Домой».",
+    "push_ios_step1": "Нажмите в браузере кнопку «Поделиться»",
+    "push_ios_step2": "Выберите «На экран „Домой“»",
+    "push_ios_step3": "Откройте Parfumshop с экрана «Домой» и снова нажмите на сердечко",
+    "push_ios_close": "Закрыть"
 }

@@ -35,6 +35,14 @@
             'appId' => config('services.onesignal.app_id'),
             'customerId' => auth()->id(),
             'promptNow' => trim($__env->yieldContent('push-prompt')) === '1',
+            'ios' => [
+                'title' => __('push_ios_title'),
+                'text' => __('push_ios_text'),
+                'step1' => __('push_ios_step1'),
+                'step2' => __('push_ios_step2'),
+                'step3' => __('push_ios_step3'),
+                'close' => __('push_ios_close'),
+            ],
         ] : null,
         // hissə-hissə: ≤ limit məbləğdə yalnız bu aylar (CreditPeriod::availableFor ilə eyni)
         'creditRule' => \App\Models\Credit\CreditPeriod::amountRule(),

@@ -560,5 +560,11 @@
     "brands_count": ":count brend",
     "brands_products": ":count məhsul",
     "brands_empty": "Axtarışa uyğun brend tapılmadı.",
-    "brands_letters": "Hərflər"
+    "brands_letters": "Hərflər",
+    "push_ios_title": "Bildirişləri aktiv edin",
+    "push_ios_text": "iPhone-da endirim və qiymət düşüşü bildirişləri yalnız sayt ana ekrana əlavə olunanda işləyir.",
+    "push_ios_step1": "Brauzerdə Paylaş düyməsinə basın",
+    "push_ios_step2": "“Ana ekrana əlavə et” seçin",
+    "push_ios_step3": "Parfumshop-u ana ekrandan açın və ürəyə yenidən basın",
+    "push_ios_close": "Bağla"
 }

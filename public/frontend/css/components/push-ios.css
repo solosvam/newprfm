@@ -1,0 +1,43 @@
+/* iPhone/iPad: web push yalnız ana ekrana əlavə olunmuş saytda işləyir — təlimat paneli (push.js) */
+.push-ios {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 1100;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(26, 21, 32, .18);
+    padding: 16px 44px 16px 16px;
+    transform: translateY(calc(100% + 24px));
+    transition: transform .25s ease;
+}
+.push-ios.is-open { transform: translateY(0); }
+.push-ios__title { font-weight: 600; margin: 0 0 6px; }
+.push-ios__text { margin: 0 0 10px; color: var(--text-secondary); font-size: 14px; line-height: 1.45; }
+.push-ios__steps { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; }
+.push-ios__share {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    vertical-align: -4px;
+    color: var(--accent);
+}
+.push-ios__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+@media (min-width: 761px) {
+    .push-ios { left: auto; width: 380px; }
+}

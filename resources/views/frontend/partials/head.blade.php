@@ -5,6 +5,13 @@
 <link rel="icon" type="image/x-icon" href="{{ asset('frontend/images/favicon/favicon.ico') }}">
 <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('frontend/images/favicon/android-chrome-192x192.png') }}">
 <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('frontend/images/favicon/android-chrome-512x512.png') }}">
+{{-- Ana ekrana əlavə (PWA): iPhone-da web push yalnız bu rejimdə işləyir --}}
+<link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+<meta name="theme-color" content="#2b1f4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Parfumshop">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -49,6 +56,9 @@
 <link rel="stylesheet" href="{{ asset_v('frontend/css/main.css') }}">
 @yield('page-css')
 <link rel="stylesheet" href="{{ asset_v('frontend/css/responsive.css') }}">
+@if(config('services.onesignal.app_id'))
+<link rel="stylesheet" href="{{ asset_v('frontend/css/components/push-ios.css') }}">
+@endif
 <link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/select2.min.css') }}">
 <link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/select2-bootstrap4.min.css') }}">
 @yield('css')
