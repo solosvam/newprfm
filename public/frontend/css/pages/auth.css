@@ -10,6 +10,7 @@
 .auth-form .form-field { margin-bottom: 4px; }
 .auth-form .form-field label { display: block; margin-bottom: 6px; }
 .auth-card .invalid-feedback:empty { display: none; }
+.form-field__optional { font-weight: 400; font-size: 12px; color: var(--text-muted); }
 
 .auth-input { height: 46px; width: 100%; border: 1px solid var(--border); border-radius: var(--radius, 8px); background: var(--bg); color: var(--text); padding: 0 16px; font-size: 14px; }
 .auth-input:focus { outline: none; border-color: var(--accent); }
@@ -17,6 +18,17 @@
 .auth-otp-input { text-align: center; letter-spacing: 6px; font-size: 20px; font-weight: 600; }
 .auth-error { color: var(--danger); font-size: 13px; margin: 0; }
 .auth-submit { width: 100%; margin: 4px 0 0; }
+
+/* Qeydiyyat: üstünlüklər, ipucu, hüquqi qeyd, etibar sətri */
+.auth-benefits { list-style: none; margin: -8px 0 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); border-radius: var(--radius, 8px); }
+.auth-benefits li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text); }
+.auth-benefits svg { flex-shrink: 0; color: var(--accent); }
+.auth-field-hint { display: block; margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+.auth-legal { margin: 2px 0 0; font-size: 12px; line-height: 1.5; text-align: center; color: var(--text-muted); }
+.auth-legal a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+.auth-legal a:hover { color: var(--accent); }
+.auth-secure { margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.auth-secure svg { flex-shrink: 0; }
 
 .auth-register { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .auth-register-hint { font-size: 13px; color: var(--text-secondary); }

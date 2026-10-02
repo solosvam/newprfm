@@ -1,0 +1,18 @@
+/* Admin → Ayarlar (bütün bölmələr) */
+.settings-card-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    margin-bottom: 1.25rem;
+}
+.settings-divider { margin: 1.5rem 0; opacity: .08; }
+.settings-banner-table td { min-width: 130px; }
+.settings-banner-table tr:last-child > * { border-bottom: 0; }
+#settingsForm .form-switch .form-check-input { width: 2.25em; height: 1.2em; cursor: pointer; }
+.settings-og-preview { width: 160px; aspect-ratio: 1200 / 630; object-fit: cover; }
+.settings-terms { font-size: 13px; line-height: 1.55; resize: vertical; }
+.settings-banner-preview {
+    width: 75%;
+    border-radius: 8px;
+    border: 1px dashed var(--primary);
+    background: rgba(var(--primary-rgb), .08);
+}
+.settings-banner-preview.is-mobile { width: 35%; }

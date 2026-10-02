@@ -33,6 +33,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'old_customer_id',
         'source',
+        'referral_code',
         'name',
         'surname',
         'gender',
@@ -78,6 +79,18 @@ class Customer extends Authenticatable
     {
         return $this->belongsToMany(Product::class, 'product_favorites', 'customer_id', 'product_id')
             ->withPivot('created_at');
+    }
+
+    /** Bu müştərinin dəvət etdikləri */
+    public function referrals()
+    {
+        return $this->hasMany(CustomerReferral::class, 'referrer_id');
+    }
+
+    /** Bu müştəri kim tərəfindən dəvət olunub */
+    public function referredBy()
+    {
+        return $this->hasOne(CustomerReferral::class, 'invitee_id');
     }
 
     public function creditProfile()

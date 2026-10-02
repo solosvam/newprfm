@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
     <title>ParfumShop Sistem | {{$title}}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('backend/icon/favicon.ico') }}">
     <meta name="description" content="{{$description}}"/>
     @include('backend._layout.head')
 </head>

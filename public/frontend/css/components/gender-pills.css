@@ -1,0 +1,19 @@
+/* Gender selector — personal və register formları (account.css + auth.css səhifələri) */
+.gender-pills { display: flex; gap: 10px; }
+.gender-pill { position: relative; flex: 1; }
+.gender-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.gender-pill span {
+    display: flex; align-items: center; justify-content: center; height: 42px;
+    border: 1px solid var(--border); border-radius: var(--radius, 8px);
+    font-size: 14px; color: var(--text-secondary); cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.gender-pill input:checked + span,
+.gender-pill:has(input:checked) span {
+    border-color: var(--accent); color: var(--accent); font-weight: 600; background: var(--surface-2);
+}
+.gender-pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+    .gender-pill span { height: 46px; }
+}

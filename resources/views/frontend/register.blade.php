@@ -1,16 +1,36 @@
 @extends('frontend.layouts.app')
 
 @section('page-css')
-<link rel="stylesheet" href="{{ asset_v('frontend/css/pages/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('frontend/css/components/gender-pills.css') }}">
 @endsection
 
 @section('title', __('auth_register') . ' | parfumshop')
+
+{{-- Dəvət linki ilə gələndə (WhatsApp/Telegram önizləməsi üçün) --}}
+@if(request()->filled('ref') && ($referralSettings = app(\App\Services\Referral\ReferralSettings::class))->enabled())
+    @section('og_title', __('referral_og_title'))
+    @section('meta_description', $referralSettings->shareText(app()->getLocale()))
+    @section('meta_robots', 'noindex, follow')
+    @if($referralSettings->ogImageUrl())
+        @section('og_image', $referralSettings->ogImageUrl())
+    @endif
+@endif
 
 @section('content')
     <main>
         <div class="auth-page">
             <div class="auth-card">
                 <h1 class="auth-title">{{ __('auth_register') }}</h1>
+
+                <ul class="auth-benefits">
+                    @foreach(['auth_benefit_bonus', 'auth_benefit_orders', 'auth_benefit_price_alert'] as $benefit)
+                        <li>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                            <span>{{ __($benefit) }}</span>
+                        </li>
+                    @endforeach
+                </ul>
 
                 @if(session()->has('register.customer_id'))
                     <p class="auth-subtext"><a href="{{ route('front.register.verify') }}">{{ __('auth_verify_account') }}</a></p>
@@ -44,6 +64,7 @@
                     <div class="form-field">
                         <label>{{ __('profile_your_phone_number') }}</label>
                         <input type="tel" name="mobile" id="registerMobile" class="auth-input @error('mobile') is-invalid @enderror" value="{{ old('mobile') }}" placeholder="994 __ ___ __ __" inputmode="numeric" required>
+                        <small class="auth-field-hint">{{ __('auth_phone_sms_hint') }}</small>
                         <div class="invalid-feedback">{{ $errors->first('mobile') }}</div>
                     </div>
 
@@ -71,7 +92,30 @@
                         <input type="password" name="password_confirmation" class="auth-input" placeholder="{{ __('auth_confirm_password') }}" autocomplete="new-password" minlength="6" required>
                     </div>
 
+                    @if(app(\App\Services\Referral\ReferralSettings::class)->enabled())
+                        <div class="form-field">
+                            <label for="registerReferral">{{ __('auth_referral_code') }} <span class="form-field__optional">({{ __('auth_optional') }})</span></label>
+                            <input type="text" name="referral_code" id="registerReferral" class="auth-input @error('referral_code') is-invalid @enderror" value="{{ old('referral_code', request('ref', request()->cookie('referral_code'))) }}" placeholder="{{ __('auth_referral_code_placeholder') }}" autocomplete="off" autocapitalize="characters" maxlength="20">
+                            <div class="invalid-feedback">{{ $errors->first('referral_code') }}</div>
+                        </div>
+                    @endif
+
                     <button type="submit" class="btn btn-dark auth-submit">{{ __('auth_register') }}</button>
+
+                    @php
+                        $termsUrl = Route::has('front.page.terms') ? route('front.page.terms') : '#';
+                        $privacyUrl = Route::has('front.page.privacy') ? route('front.page.privacy') : '#';
+                    @endphp
+                    <p class="auth-legal">
+                        {!! __('auth_register_legal', [
+                            'terms' => '<a href="'.e($termsUrl).'" target="_blank" rel="noopener">'.e(__('auth_terms_of_use')).'</a>',
+                            'privacy' => '<a href="'.e($privacyUrl).'" target="_blank" rel="noopener">'.e(__('auth_privacy_policy')).'</a>',
+                        ]) !!}
+                    </p>
+                    <p class="auth-secure">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                        <span>{{ __('auth_data_secure') }}</span>
+                    </p>
                 </form>
 
                 <div class="auth-register">

@@ -7,9 +7,11 @@ use App\Models\Customer\Customer;
 use App\Mail\WelcomeMail;
 use App\Services\SmsService;
 use App\Services\RegistrationOtpService;
+use App\Services\Referral\ReferralService;
 use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
@@ -23,8 +25,11 @@ class RegisterController extends Controller
         return view('frontend.register');
     }
 
-    public function store(Request $request, SmsService $sms)
+    public function store(Request $request, SmsService $sms, ReferralService $referrals)
     {
+        $referralOn = $referrals->settings()->enabled();
+        $request->merge(['referral_code' => $referralOn ? $referrals->normalize($request->input('referral_code')) : null]);
+
         $mobile = $this->normalizeMobile($request->input('mobile'));
         $request->merge(['mobile' => $mobile]);
 
@@ -35,6 +40,11 @@ class RegisterController extends Controller
             'mobile' => ['required', 'regex:/^994\\d{9}$/', Rule::unique('customers', 'mobile')],
             'gender' => ['required', Rule::in(['0', '1'])],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'referral_code' => ['nullable', 'string', 'max:12', function ($attribute, $value, $fail) use ($referrals) {
+                if (!$referrals->isUsableCode($value)) {
+                    $fail(__('referral_code_invalid'));
+                }
+            }],
         ], LocalizedValidation::messages(), LocalizedValidation::attributes());
 
         $customer = Customer::create([
@@ -47,6 +57,11 @@ class RegisterController extends Controller
             'active' => false,
             'source' => 'website',
         ]);
+
+        if ($referralOn && !empty($data['referral_code'])) {
+            $referrals->attach($customer, $data['referral_code']);
+            Cookie::queue(Cookie::forget(ReferralService::COOKIE));
+        }
 
         $request->session()->put('register.customer_id', $customer->id);
         app(RegistrationOtpService::class)->send($customer, $sms);

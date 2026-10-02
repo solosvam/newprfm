@@ -31,16 +31,6 @@
 .account-card-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--on-accent-bg); opacity: 0.9; }
 .account-card-link:hover { opacity: 1; }
 
-.account-card-birkart { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.account-card-birkart-info h3 { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; color: var(--text); margin: 0 0 6px; }
-.account-card-birkart-info span { font-size: 13px; color: var(--text-secondary); }
-.account-card-birkart img { width: 72px; flex-shrink: 0; border-radius: 8px; }
-
-.account-card-invite { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.account-card-invite-text h3 { font-size: 18px; font-weight: 700; color: var(--text); margin: 0 0 14px; max-width: 320px; }
-.account-card-invite-btn { width: auto; padding: 0 28px; margin: 0; }
-.account-card-invite img { width: 100px; flex-shrink: 0; }
-
 .account-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
 .account-panel-title { font-size: 20px; font-weight: 700; color: var(--text); margin: 0 0 20px; }
 .account-panel-desc { font-size: 14px; color: var(--text-secondary); margin: -8px 0 24px; }
@@ -86,22 +76,6 @@
 }
 .account-password[open] .account-password__toggle::after { transform: rotate(-135deg); }
 .account-password__body { padding: 0 16px 16px; }
-
-/* Gender selector (personal / register forms) */
-.gender-pills { display: flex; gap: 10px; }
-.gender-pill { position: relative; flex: 1; }
-.gender-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.gender-pill span {
-    display: flex; align-items: center; justify-content: center; height: 42px;
-    border: 1px solid var(--border); border-radius: var(--radius, 8px);
-    font-size: 14px; color: var(--text-secondary); cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-.gender-pill input:checked + span,
-.gender-pill:has(input:checked) span {
-    border-color: var(--accent); color: var(--accent); font-weight: 600; background: var(--surface-2);
-}
-.gender-pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Credit profile form */
 .credit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -410,7 +384,6 @@
     }
     .form-field label,
     .form-field__label { font-size: 13px; }
-    .gender-pill span { height: 46px; }
 
     .account-form-submit { width: 100%; }
 }

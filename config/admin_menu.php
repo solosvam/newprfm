@@ -43,8 +43,14 @@ return [
             ],
             [
                 'title'      => 'Ayarlar',
-                'route'      => 'admin.settings.index',
+                'id'         => 'settings_menu',
                 'permission' => 'system.settings',
+                'children'   => [
+                    ['title' => 'Bonuslar', 'route' => 'admin.settings.bonuses'],
+                    ['title' => 'Referal', 'route' => 'admin.settings.referral'],
+                    ['title' => 'Sifariş və çatdırılma', 'route' => 'admin.settings.orders'],
+                    ['title' => 'Bannerlər', 'route' => 'admin.settings.banners'],
+                ],
             ],
             [
                 'title'      => 'Kredit',

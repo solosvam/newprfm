@@ -34,6 +34,10 @@
             <span id="cabinetWishlistCount" class="account-nav-count">{{ auth()->user()->favoriteProducts()->count() }}</span>
         </a>
         <a href="{{ route('profile.reviews') }}" class="{{ request()->routeIs('profile.reviews') ? 'active' : '' }}">{{ __('reviews_my_reviews') }}</a>
+        {{-- Proqram dayandırılsa da köhnə dəvətləri olan müştəri bölməni görür --}}
+        @if(app(\App\Services\Referral\ReferralSettings::class)->enabled() || auth()->user()->referrals()->exists())
+            <a href="{{ route('profile.referral') }}" class="{{ request()->routeIs('profile.referral') ? 'active' : '' }}">{{ __('referral_title') }}</a>
+        @endif
     </nav>
 
     <form method="POST" action="{{ route('front.logout') }}" class="cabinet-logout-form">

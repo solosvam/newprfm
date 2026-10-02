@@ -264,7 +264,11 @@ Route::prefix('admin')
                 ->name('settings.')
                 ->group(function () {
                     Route::get('/', 'index')->name('index');
-                    Route::post('/', 'update')->name('update');
+                    // Bölmələr: admin.settings.{bonuses|referral|orders|banners}[.update]
+                    foreach (array_keys(SettingsController::SECTIONS) as $section) {
+                        Route::get('/'.$section, 'show')->defaults('section', $section)->name($section);
+                        Route::post('/'.$section, 'update')->defaults('section', $section)->name($section.'.update');
+                    }
                 });
 
             // Satış: ümumi sifariş siyahısı və səbətdəki mallar

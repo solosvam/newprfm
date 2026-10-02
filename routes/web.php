@@ -171,6 +171,12 @@ Route::middleware(['web', 'guest', 'throttle:10,1'])
         Route::post('/register/resend', 'resend')->name('front.register.resend');
     });
 
+// Dostunu dəvət et: qısa dəvət linki /r/{code}
+Route::get('/r/{code}', [\App\Http\Controllers\Frontend\ReferralController::class, 'track'])
+    ->where('code', '[A-Za-z0-9]{4,12}')
+    ->middleware('throttle:30,1')
+    ->name('referral.track');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -218,6 +224,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/reviews', 'reviews')->name('profile.reviews');
         Route::delete('/profile/reviews/{review}', 'destroyReview')->name('profile.reviews.destroy');
     });
+
+    Route::get('/profile/referral', [\App\Http\Controllers\Frontend\ReferralController::class, 'index'])->name('profile.referral');
 
     // Orders
 

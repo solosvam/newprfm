@@ -35,16 +35,16 @@
                             <p>Bu qısayollar sistemin istənilən səhifəsində işləyir.</p>
                             <br>
                             <p>
-                                <kbd>s</kbd> düyməsi axtarış qutusunu açır.
+                                <kbd>s</kbd> düyməsi axtarış qutusunu açır. 'Search'
                             </p>
                             <p>
-                                <kbd>a</kbd> düyməsi sağdakı ayarlar panelini açır, təkrar basıldıqda isə bağlanır.
+                                <kbd>p</kbd> düyməsi sağdakı ayarlar panelini açır, təkrar basıldıqda isə bağlanır. 'Panel'
                             </p>
                             <p>
-                                <kbd>l</kbd> düyməsi ilə sayt qaranlıq və işıqlı rejimə keçir. Light Mode
+                                <kbd>l</kbd> düyməsi ilə sayt qaranlıq və işıqlı rejimə keçir. 'Light'
                             </p>
                             <p>
-                                <kbd>c</kbd> düyməsi "CRM" səhifəsini açır.
+                                <kbd>c</kbd> düyməsi "CRM" səhifəsini açır. 'CRM'
                             </p>
                         </div>
                     </div>

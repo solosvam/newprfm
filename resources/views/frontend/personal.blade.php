@@ -2,6 +2,7 @@
 
 @section('page-css')
     <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/account.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('frontend/css/components/gender-pills.css') }}">
 @endsection
 
 @section('content')

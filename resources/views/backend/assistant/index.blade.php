@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Parfumshop Assistant</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('backend/icon/favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset_v('frontend/css/vendor/cropper.min.css') }}">
     <link rel="stylesheet" href="{{ asset_v('backend/css/crm-credit-profile.css') }}">
     <link rel="stylesheet" href="{{ asset_v('backend/css/assistant.css') }}">

@@ -31,7 +31,7 @@ class Shortcuts {
         const settingsElement = document.getElementById('settings');
         const settingsModal = new bootstrap.Modal(settingsElement);
 
-        Mousetrap.bind('a', function () {
+        Mousetrap.bind('p', function () {
             if (settingsElement.classList.contains('show')) {
                 settingsModal.hide();
             } else {

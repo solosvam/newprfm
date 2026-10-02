@@ -150,8 +150,6 @@ html, body { overflow-x: hidden; }
 
 @media (max-width: 600px) {
     .account-cards { grid-template-columns: 1fr; }
-    .account-card-birkart,
-    .account-card-invite { grid-column: span 1; flex-direction: column; text-align: center; }
 }
 
 @media (max-width: 760px) {
