@@ -34,6 +34,9 @@
                                     'earn'  => __('orders_bonus_earned'),
                                     'spend' => __('bonus_bonus_spent'),
                                     'register' => __('bonus_registration'),
+                                    'expire' => __('bonus_expired'),
+                                    'refund' => __('bonus_refund'),
+                                    'referral' => __('bonus_referral'),
                                     default => $transaction->note ?: __('bonus_bonus_transaction'),
                                 };
                             @endphp
@@ -47,6 +50,9 @@
                                             <a href="{{ route('order.details', $transaction->order) }}">№ {{ $transaction->order->order_no }}</a>
                                         @endif
                                         <time datetime="{{ $transaction->created_at->toIso8601String() }}">{{ $transaction->created_at->format('d.m.Y, H:i') }}</time>
+                                        @if($transaction->expires_at && !$transaction->expired_at && $transaction->expires_at->isFuture())
+                                            <span class="bonus-row__expiry">{{ __('bonus_valid_until', ['date' => $transaction->expires_at->format('d.m.Y')]) }}</span>
+                                        @endif
                                     </div>
                                 </div>
 

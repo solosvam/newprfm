@@ -69,6 +69,25 @@ class RegisterController extends Controller
         return redirect()->route('front.register.verify');
     }
 
+    /**
+     * Qeydiyyat formu: nömrə yazılan kimi yoxlanılır — hesab varsa (məs. köhnə bazadan köçürülüb)
+     * müştəri formu doldurmadan giriş səhifəsinə yönləndirilir. SMS göndərmir.
+     */
+    public function checkMobile(Request $request)
+    {
+        $mobile = $this->normalizeMobile($request->input('mobile'));
+        if (!preg_match('/^994\\d{9}$/', $mobile)) {
+            return response()->json(['exists' => false]);
+        }
+
+        $exists = Customer::where('mobile', $mobile)->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'loginUrl' => $exists ? route('front.login', ['mobile' => $mobile]) : null,
+        ]);
+    }
+
     public function showVerify(Request $request)
     {
         $customer = $this->pendingCustomer($request);

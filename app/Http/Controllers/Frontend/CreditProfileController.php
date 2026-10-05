@@ -90,6 +90,7 @@ class CreditProfileController extends Controller
 
         return response()->json([
             'message' => __('credit_saved'),
+            'complete' => (bool) $profile?->isComplete(),
             'images' => [
                 'id_card_front' => $profile?->id_card_front
                     ? asset(self::UPLOAD_PATH . basename($profile->id_card_front))

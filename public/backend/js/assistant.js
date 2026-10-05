@@ -18,6 +18,8 @@
         img: document.querySelector('[data-poster-img]'),
         copy: document.querySelector('[data-poster-copy]'),
         download: document.querySelector('[data-poster-download]'),
+        caption: document.querySelector('[data-poster-caption]'),
+        copyText: document.querySelector('[data-poster-copy-text]'),
         current: null,
         url: null,
         busy: false,
@@ -331,7 +333,7 @@
     }
 
     function copyResult(ok) {
-        posterStatus(ok ? 'Kopyalandı — WhatsApp-da söhbətə Ctrl+V / Cmd+V vurun.'
+        posterStatus(ok ? 'Kopyalandı — WhatsApp-da söhbətə Ctrl+V / Cmd+V vurun, sonra "Mətni kopyala" ilə qiyməti şəklin altına yapışdırın.'
             : 'Avtomatik kopyalanmadı — "Kopyala" basın və ya PNG-ni endirin.', ok ? 'ok' : 'bad');
     }
 
@@ -343,6 +345,8 @@
         poster.copy.disabled = true;
         poster.img.hidden = true;
         poster.download.hidden = true;
+        poster.caption.hidden = true;
+        poster.copyText.hidden = true;
         poster.box.hidden = false;
         posterStatus(`${product.brand ? product.brand + ' ' : ''}${product.name} — poster hazırlanır…`);
         poster.box.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -369,6 +373,9 @@
             poster.download.download = result.filename;
             poster.download.hidden = false;
             poster.copy.disabled = false;
+            poster.caption.textContent = result.caption;
+            poster.caption.hidden = !result.caption;
+            poster.copyText.hidden = !result.caption;
             copyResult(await copied);
         }).catch((error) => {
             posterStatus(error.message || 'Poster hazırlamaq mümkün olmadı.', 'bad');
@@ -383,6 +390,11 @@
         poster.copy.disabled = true;
         copyResult(await window.ProductPoster.copy(Promise.resolve(poster.current.blob)));
         poster.copy.disabled = false;
+    });
+    poster.copyText.addEventListener('click', async () => {
+        if (!poster.current) return;
+        const ok = await window.ProductPoster.copyText(poster.current.caption);
+        posterStatus(ok ? 'Mətn kopyalandı — şəklin altındakı yazıya və ya söhbətə yapışdırın.' : 'Mətn kopyalanmadı — aşağıdakı mətni seçib kopyalayın.', ok ? 'ok' : 'bad');
     });
     document.querySelector('[data-poster-close]').addEventListener('click', () => { poster.box.hidden = true; });
 

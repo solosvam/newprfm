@@ -166,6 +166,7 @@ Route::middleware(['web', 'guest', 'throttle:10,1'])
     ->group(function () {
         Route::get('/register', 'create')->name('front.register');
         Route::post('/register', 'store')->name('front.register.store');
+        Route::post('/register/check-mobile', 'checkMobile')->withoutMiddleware('throttle:10,1')->middleware('throttle:30,1')->name('front.register.check-mobile');
         Route::get('/register/verify', 'showVerify')->name('front.register.verify');
         Route::post('/register/verify', 'verify')->name('front.register.verify.store');
         Route::post('/register/resend', 'resend')->name('front.register.resend');

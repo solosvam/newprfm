@@ -1,7 +1,3 @@
-{{--
-  Brendlər (A–Z): axtarış, hərf zolağı, hərflərə görə brend kartları (loqo, ad, məhsul sayı).
-  Loqo məntiqi ana səhifədəki brend zolağı ilə eynidir (BrandLogoService). JS: frontend/js/pages/brands.js
---}}
 @extends('frontend.layouts.app')
 
 @section('page-css')

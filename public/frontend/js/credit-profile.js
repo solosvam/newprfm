@@ -48,6 +48,22 @@ $(function () {
         }
     }
 
+    // Saytın ümumi bildirişi (main.js → window.parfumshopNotify); yoxdursa köhnə $.notify
+    const notify = function (message, type) {
+        if (typeof window.parfumshopNotify === 'function') window.parfumshopNotify(message, type);
+        else if ($.notify) $.notify(message, type);
+    };
+
+    // Yadda saxlandıqdan sonra vəziyyət: səhifədəki blok + sidebar-dakı "(Tamamlanmayıb)"
+    function applyStatus(complete) {
+        const status = $('#creditStatus');
+        status.toggleClass('is-complete', complete).toggleClass('is-incomplete', !complete)
+            .removeClass('is-just-saved');
+        void status[0]?.offsetWidth; // animasiyanı yenidən başlat
+        status.addClass('is-just-saved');
+        $('#creditSidebarNote').prop('hidden', complete);
+    }
+
     const changeLabel = form.data('change-label');
     const genericError = form.data('error-message');
 
@@ -211,7 +227,8 @@ $(function () {
                     card.find('.credit-change').text(changeLabel);
                 });
 
-                $.notify(response.message, 'success');
+                notify(response.message, 'success');
+                if (typeof response.complete === 'boolean') applyStatus(response.complete);
                 if (form.data('return-url')) window.location.assign(form.data('return-url'));
             },
             error: function (xhr) {
@@ -227,11 +244,11 @@ $(function () {
                     const firstInvalid = form.find('.is-invalid').first();
                     const select2Box = firstInvalid.next('.select2-container').find('.select2-selection');
                     (select2Box.length ? select2Box : firstInvalid).trigger('focus');
-                    $.notify(Object.values(errors)[0][0], 'error');
+                    notify(Object.values(errors)[0][0], 'error');
                     return;
                 }
 
-                $.notify(genericError, 'error');
+                notify(genericError, 'error');
             },
             complete: function () {
                 button.prop('disabled', false);

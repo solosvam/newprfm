@@ -8,10 +8,13 @@
         accent: '#000',                                // brend adı
         text: '#1a1520', secondary: '#5f586b', muted: '#8a8198',
         border: '#ddd5ea', strong: '#cfc4e2',
-        card: '#2b1f4a', cardSize: '#FFFFFF', cardPrice: '#ffffff', // ölçü kartları
+        card: '#fbf9f6', cardBorder: '#e6dfd4', cardSize: '#2a2433', cardPrice: '#1a1530', // qiymət sətirləri (açıq krem)
+        icon: '#b8a07e', divider: '#e2d9cc',
         shadow: 'rgba(43,31,74,.16)',
     };
     const font = '"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
+    const priceFont = 'Georgia, "Times New Roman", serif';
+    const priceRow = 132, priceGap = 18;
 
     function loadImage(url) {
         return new Promise((resolve, reject) => {
@@ -69,6 +72,31 @@
         }
     }
 
+    // Flakon ikonu (qiymət sətrində ölçünün yanında): qapaq, boyun, gövdə
+    function bottleIcon(ctx, x, y, size) {
+        const u = size / 10;
+        ctx.save();
+        ctx.strokeStyle = colors.icon;
+        ctx.lineWidth = Math.max(2, u * 0.7);
+        ctx.lineJoin = 'round';
+        ctx.strokeRect(x + 3.5 * u, y, 3 * u, 1.6 * u);
+        ctx.beginPath();
+        ctx.moveTo(x + 4.2 * u, y + 1.6 * u);
+        ctx.lineTo(x + 4.2 * u, y + 2.8 * u);
+        ctx.moveTo(x + 5.8 * u, y + 1.6 * u);
+        ctx.lineTo(x + 5.8 * u, y + 2.8 * u);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.roundRect(x + 1.5 * u, y + 2.8 * u, 7 * u, 7.2 * u, 1.6 * u);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // Qiymət: 989 → "989.00 ₼"
+    function priceLabel(value) {
+        return `${value} ₼`;
+    }
+
     function nameLines(ctx, name) {
         ctx.font = `700 42px ${font}`;
         const lines = [];
@@ -87,7 +115,7 @@
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('Şəkil hazırlamaq mümkün olmadı.');
-        const rows = Math.ceil(product.variants.length / 3);
+        const rows = product.variants.length;
         const lines = nameLines(ctx, product.name);
         // Hündürlük məzmuna görə (əvvəl ən az 1350 idi): şəkil 440, boşluqlar kiçik
         const imageSize = 440;
@@ -95,7 +123,7 @@
         const brandY = imageY + imageSize + 30;
         const nameY = brandY + 40;
         const subtitleY = nameY + lines.length * 51 + 10;
-        const pricesHeight = rows * 105 + (rows - 1) * 20;
+        const pricesHeight = rows * priceRow + (rows - 1) * priceGap;
         const pricesY = subtitleY + 28 + 36;
         canvas.width = 1080;
         const footer = 72;
@@ -128,14 +156,39 @@
         lines.forEach((line, index) => text(ctx, line, nameY + index * 51, 42, 700, colors.text));
         text(ctx, product.subtitle, subtitleY, 28, 400, colors.secondary, 900, 1);
 
-        const columns = Math.min(3, product.variants.length);
-        const cardWidth = (900 - (columns - 1) * 20) / columns;
+        // Qiymətlər: hər ölçü ayrıca enli sətirdə, alt-alta — solda flakon + ölçü, sağda iri qiymət
+        const rowX = 60, rowWidth = 960, dividerX = rowX + Math.round(rowWidth * 0.44);
         product.variants.forEach((variant, index) => {
-            const x = 90 + (index % columns) * (cardWidth + 20);
-            const y = pricesY + Math.floor(index / columns) * 125;
-            box(ctx, x, y, cardWidth, 105, 16, colors.card, colors.card);
-            text(ctx, variant.size, y + 20, 22, 600, colors.cardSize, cardWidth - 30, 0, x + cardWidth / 2);
-            text(ctx, `${variant.price} ₼`, y + 56, 32, 800, colors.cardPrice, cardWidth - 30, 0, x + cardWidth / 2);
+            const y = pricesY + index * (priceRow + priceGap);
+            box(ctx, rowX, y, rowWidth, priceRow, 22, colors.card, colors.cardBorder, 18);
+
+            ctx.font = `500 40px ${font}`;
+            const sizeWidth = ctx.measureText(variant.size).width;
+            const iconSize = 50, iconGap = 34;
+            const groupLeft = rowX + (dividerX - rowX) / 2 - (iconSize + iconGap + sizeWidth) / 2;
+            bottleIcon(ctx, groupLeft, y + priceRow / 2 - iconSize / 2, iconSize);
+            ctx.fillStyle = colors.cardSize;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(variant.size, groupLeft + iconSize + iconGap, y + priceRow / 2 + 2);
+
+            ctx.strokeStyle = colors.divider;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(dividerX, y + 28);
+            ctx.lineTo(dividerX, y + priceRow - 28);
+            ctx.stroke();
+
+            const right = rowX + rowWidth;
+            let priceSize = 76;
+            ctx.font = `700 ${priceSize}px ${priceFont}`;
+            while (priceSize > 40 && ctx.measureText(priceLabel(variant.price)).width > right - dividerX - 60) {
+                priceSize -= 2;
+                ctx.font = `700 ${priceSize}px ${priceFont}`;
+            }
+            ctx.fillStyle = colors.cardPrice;
+            ctx.textAlign = 'center';
+            ctx.fillText(priceLabel(variant.price), dividerX + (right - dividerX) / 2, y + priceRow / 2 + 4);
         });
         // Aşağı zolaq
         ctx.fillStyle = colors.band;
@@ -143,7 +196,7 @@
         text(ctx, 'www.ParfumShop.az • Orijinal Ətirlər', height - footer + 24, 22, 600, colors.bandText, 960, 1);
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
         if (!blob) throw new Error('PNG hazırlamaq mümkün olmadı.');
-        return { blob, filename: product.filename };
+        return { blob, filename: product.filename, caption: product.caption || '' };
     }
 
     function clipboardWrite(blobPromise) {
@@ -156,8 +209,30 @@
         } catch (error) { return Promise.resolve(false); }
     }
 
+    // Posterin yanında göndərilən qiymət mətni (müştəri şəkildəki yazını oxumadan soruşmasın)
+    async function copyText(value) {
+        if (!value) return false;
+        try {
+            if (window.isSecureContext && navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(value);
+                return true;
+            }
+        } catch (error) { /* köhnə üsula keç */ }
+        const area = document.createElement('textarea');
+        area.value = value;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.append(area);
+        area.select();
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch (error) { ok = false; }
+        area.remove();
+        return ok;
+    }
+
     // Operator paneli (backend/assistant) də eyni posteri çəkir
-    window.ProductPoster = { render: renderPoster, copy: clipboardWrite };
+    window.ProductPoster = { render: renderPoster, copy: clipboardWrite, copyText };
 
     document.addEventListener('DOMContentLoaded', function () {
         const element = document.getElementById('productPosterModal');
@@ -167,13 +242,15 @@
         const preview = element.querySelector('[data-poster-preview]');
         const copy = element.querySelector('[data-poster-copy]');
         const download = element.querySelector('[data-poster-download]');
+        const caption = element.querySelector('[data-poster-caption]');
+        const copyCaption = element.querySelector('[data-poster-copy-text]');
         let current = null, previewUrl = null, busy = false;
         function message(content, kind) {
             status.textContent = content;
             status.className = `alert alert-${kind} text-start`;
         }
         function copyResult(ok) {
-            message(ok ? 'Şəkil kopyalandı. WhatsApp-da müştərinin söhbətini açıb Ctrl+V / Cmd+V vurun.'
+            message(ok ? 'Şəkil kopyalandı. WhatsApp-da müştərinin söhbətini açıb Ctrl+V / Cmd+V vurun, sonra “Qiymət mətnini kopyala” basıb şəklin altındakı yazıya yapışdırın.'
                 : 'Avtomatik kopyalama alınmadı. “Şəkli kopyala” düyməsini basın və ya PNG-ni endirib WhatsApp-a əlavə edin.', ok ? 'success' : 'warning');
         }
         document.addEventListener('click', async function (event) {
@@ -187,6 +264,8 @@
             copy.disabled = true;
             preview.hidden = true;
             download.hidden = true;
+            caption.hidden = true;
+            copyCaption.hidden = true;
             message('Poster hazırlanır...', 'info');
             modal.show();
             // Fresh saved product data is fetched on every click.
@@ -210,6 +289,10 @@
                 download.download = current.filename;
                 download.hidden = false;
                 copy.disabled = false;
+                caption.value = current.caption;
+                caption.rows = Math.max(2, current.caption.split('\n').length);
+                caption.hidden = !current.caption;
+                copyCaption.hidden = !current.caption;
                 copyResult(await copied);
             } catch (error) {
                 message(error.message || 'Poster hazırlamaq mümkün olmadı.', 'danger');
@@ -220,6 +303,12 @@
             copy.disabled = true;
             copyResult(await clipboardWrite(Promise.resolve(current.blob)));
             copy.disabled = false;
+        });
+        copyCaption.addEventListener('click', async function () {
+            if (!current) return;
+            const ok = await copyText(current.caption);
+            message(ok ? 'Qiymət mətni kopyalandı — WhatsApp-da şəklin altındakı yazı sahəsinə və ya söhbətə yapışdırın.'
+                : 'Mətn kopyalanmadı — aşağıdakı mətni seçib əl ilə kopyalayın.', ok ? 'success' : 'warning');
         });
         window.addEventListener('pagehide', () => { if (previewUrl) URL.revokeObjectURL(previewUrl); });
     });

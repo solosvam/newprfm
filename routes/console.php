@@ -6,3 +6,6 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
+
+// Bonusun istifadə müddəti: vaxtı çatan bonuslar silinir (BonusService::expireDue)
+\Illuminate\Support\Facades\Schedule::command('bonus:expire')->hourly()->withoutOverlapping();

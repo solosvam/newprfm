@@ -23,7 +23,7 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $transaction->created_at?->format('d.m.Y H:i') }}</td>
-                    <td>{{ ['earn' => 'Qazanıldı', 'spend' => 'Xərcləndi', 'register' => 'Qeydiyyat', 'adjustment' => 'Düzəliş'][$transaction->type] ?? $transaction->type }}</td>
+                    <td>{{ ['earn' => 'Qazanıldı', 'spend' => 'Xərcləndi', 'register' => 'Qeydiyyat', 'adjustment' => 'Düzəliş', 'expire' => 'Müddəti bitdi', 'refund' => 'Geri qaytarma', 'referral' => 'Referal'][$transaction->type] ?? $transaction->type }}</td>
 
                     <td class="{{ $transaction->amount >= 0 ? 'text-success' : 'text-danger' }} fw-bold">
                         {{ $transaction->amount >= 0 ? '+' : '' }}{{ $transaction->amount }}

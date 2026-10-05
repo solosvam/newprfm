@@ -46,6 +46,21 @@
                 <h1 class="account-panel-title">{{ __('credit_title') }}</h1>
                 <p class="account-panel-desc">{{ __('credit_description') }}</p>
 
+                @php $creditComplete = (bool) auth()->user()->creditProfile?->isComplete(); @endphp
+                {{-- Vəziyyət: yadda saxlayanda JS yeniləyir (credit-profile.js) --}}
+                <div id="creditStatus" class="credit-status {{ $creditComplete ? 'is-complete' : 'is-incomplete' }}" role="status" aria-live="polite">
+                    <span class="account-status account-status--ok credit-status__ok">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                        {{ __('profile_credit_complete') }}
+                    </span>
+                    <span class="account-status account-status--warn credit-status__warn">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 7v6M12 17h.01"/></svg>
+                        {{ __('profile_credit_incomplete') }}
+                    </span>
+                    <span class="credit-status__text credit-status__ok">{{ __('profile_credit_complete_hint') }}</span>
+                    <span class="credit-status__text credit-status__warn">{{ __('profile_credit_incomplete_hint') }}</span>
+                </div>
+
                 <form id="creditProfileForm" class="credit-form" novalidate
                       method="POST" action="{{ route('profile.credit.update') }}" enctype="multipart/form-data"
                       data-return-url="{{ $returnUrl ?? '' }}"

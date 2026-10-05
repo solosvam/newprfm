@@ -45,9 +45,10 @@ class ProductPosterTest extends TestCase
 
     private function admin(bool $allowed = true): User
     {
-        $user = (new User())->forceFill(['id' => 10, 'name' => 'Operator']);
+        $user = (new User)->forceFill(['id' => 10, 'name' => 'Operator']);
         $user->setRelation('permissions', $allowed ? Permission::all() : collect());
         $user->setRelation('roles', collect());
+
         return $user;
     }
 
@@ -71,6 +72,14 @@ class ProductPosterTest extends TestCase
             ->assertJsonPath('variants.0.price', '194.00')->assertJsonPath('variants.2.price', '299.00');
         DB::table('product_variants')->where('size_id', 1)->update(['price' => 199.50]);
         $this->getJson(route('admin.product.poster', 1))->assertJsonPath('variants.0.price', '199.50');
+    }
+
+    public function test_caption_lists_every_active_size_with_price(): void
+    {
+        DB::table('product_variants')->where('size_id', 2)->update(['price' => 233.50]);
+
+        $this->actingAs($this->admin(), 'admin')->getJson(route('admin.product.poster', 1))->assertOk()
+            ->assertJsonPath('caption', "Burberry Her Intense 2024\nQadın üçün | Eau de Parfum\n30 ml — 194 ₼\n50 ml — 233.50 ₼\n100 ml — 299 ₼");
     }
 
     public function test_missing_image_or_active_sizes_cannot_create_poster(): void

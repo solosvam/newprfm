@@ -86,6 +86,8 @@ body {
 .as-poster-img { display: block; width: 100%; border-radius: 8px; border: 1px solid var(--as-border); }
 .as-poster-img[hidden] { display: none; }
 .as-poster-actions { display: flex; gap: 6px; margin-top: 8px; }
+.as-poster-caption { margin: 8px 0 0; padding: 8px 10px; border: 1px solid var(--as-border); border-radius: 8px; background: var(--as-bg); font: inherit; font-size: 13px; white-space: pre-wrap; user-select: all; }
+.as-poster-caption[hidden] { display: none; }
 .as-poster-actions [hidden] { display: none; }
 
 /* Yeni müştəri forması */

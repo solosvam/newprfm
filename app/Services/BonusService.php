@@ -15,6 +15,68 @@ class BonusService {
   return $key ? max(1, (int) Setting::valueOf($key, $type === 'earn' ? 365 : 90)) : null;
  }
 
+ /** Yeni qazanılan bonusun bitmə vaxtı (indi + müddət); null — müddətsiz */
+ public function expiresAt(string $type): ?\Illuminate\Support\Carbon {
+  $days = $this->expiryDays($type);
+  return $days ? now()->addDays($days) : null;
+ }
+
+ /**
+  * Vaxtı çatmış bonusların silinməsi (bonus:expire, hər saat).
+  *
+  * Qayda: xərclənəndə əvvəlcə vaxtı ən tez bitən bonus istifadə olunur. Ona görə vaxtı bitən bonusdan qalan məbləğ:
+  *   silinən = min(bonusun məbləği, balans − ondan SONRA bitən (və ya müddətsiz) bonusların cəmi), 0-dan az deyil.
+  * Nümunə: A 20 ₼ (30.09), B 20 ₼ (15.10), 20 ₼ xərclənib, balans 20 → 30.09-da 20 − 20 = 0, heç nə silinmir.
+  * Ləğv olunan sifarişdən qaytarma (refund) balansı artırır — xərclənmiş bonus öz köhnə tarixinə qayıdır.
+  *
+  * Qaytarır: emal olunan bonus paketlərinin sayı.
+  */
+ public function expireDue(): int {
+  $now = now();
+  $customerIds = \App\Models\Customer\CustomerBonusTransaction::lots()
+   ->whereNotNull('expires_at')->where('expires_at', '<=', $now)->whereNull('expired_at')
+   ->distinct()->pluck('customer_id');
+
+  $processed = 0;
+  foreach ($customerIds as $customerId) {
+   $processed += \Illuminate\Support\Facades\DB::transaction(function () use ($customerId, $now) {
+    $customer = Customer::whereKey($customerId)->lockForUpdate()->first();
+    if (!$customer) return 0;
+
+    $due = $customer->bonusTransactions()->lots()
+     ->whereNotNull('expires_at')->where('expires_at', '<=', $now)->whereNull('expired_at')
+     ->orderBy('expires_at')->orderBy('id')->lockForUpdate()->get();
+
+    foreach ($due as $lot) {
+     $balance = (float) \Illuminate\Support\Facades\DB::table('customers')->where('id', $customerId)->value('bonus_balance');
+
+     // Bu bonusdan sonra bitən (və ya müddətsiz) hələ aktiv bonuslar
+     $later = (float) $customer->bonusTransactions()->lots()
+      ->whereNull('expired_at')->where('id', '!=', $lot->id)
+      ->where(fn ($q) => $q->whereNull('expires_at')
+       ->orWhere('expires_at', '>', $lot->expires_at)
+       ->orWhere(fn ($q) => $q->where('expires_at', $lot->expires_at)->where('id', '>', $lot->id)))
+      ->sum('amount');
+
+     $amount = round(max(0, min((float) $lot->amount, $balance - $later)), 2);
+
+     if ($amount > 0) {
+      \Illuminate\Support\Facades\DB::table('customers')->where('id', $customerId)->decrement('bonus_balance', $amount);
+      $customer->bonusTransactions()->create([
+       'type' => 'expire', 'amount' => -$amount,
+       'note' => 'Bonusun müddəti bitdi ('.$lot->created_at->format('d.m.Y').' tarixli '.number_format((float) $lot->amount, 2).' ₼)',
+      ]);
+     }
+     $lot->update(['expired_at' => $now]);
+    }
+
+    return $due->count();
+   });
+  }
+
+  return $processed;
+ }
+
  /** Bonus şərtlərinin standart mətni (Ayarlar → Bonuslar → "Bonus şərtləri"); :percent, :registration əvəz olunur */
  public const TERMS_DEFAULTS = [
   'az' => "Bonus nədir?\nBonus Parfumshop.az-da alış-veriş edən müştərilərə verilən hədiyyə balansıdır. 1 bonus = 1 ₼.\n\nBonus necə qazanılır?\n• Hər sifarişdən məhsulların dəyərinin :percent%-i bonus olaraq hesabınıza yazılır (çatdırılma haqqı nəzərə alınmır).\n• Saytda qeydiyyatdan keçən yeni müştərilərə :registration ₼ qeydiyyat bonusu verilir.\n• Dostunuzu dəvət etdikdə, onun ilk sifarişi təhvil verildikdən sonra referal bonusu qazanırsınız.\n\nBonus necə istifadə olunur?\n• Sifariş zamanı ödəniş üsulu olaraq bonus balansını seçin.\n• Bonusla sifarişin müəyyən hissəsini ödəmək mümkündür; həddi sifariş səhifəsində göstərilir.\n\nVacib məlumat\n• Sifariş ləğv edildikdə və ya qaytarıldıqda həmin sifarişdən qazanılan bonus balansdan çıxılır.\n• Bonus nağd pula çevrilmir və başqa hesaba köçürülmür.\n• Parfumshop.az bonus şərtlərini dəyişmək hüququnu özündə saxlayır.",
@@ -53,7 +115,7 @@ class BonusService {
   $bonus=$this->amountForOrder($order);
   if($bonus<=0)return 0;
   $customer->increment('bonus_balance',$bonus);
-  $customer->bonusTransactions()->create(['order_id'=>$order->id,'type'=>'earn','amount'=>$bonus,'note'=>'Sifariş bonusu']);
+  $customer->bonusTransactions()->create(['order_id'=>$order->id,'type'=>'earn','amount'=>$bonus,'note'=>'Sifariş bonusu','expires_at'=>$this->expiresAt('earn')]);
   $order->update(['bonus_earned'=>$bonus]);
   return $bonus;
  }
@@ -72,7 +134,7 @@ class BonusService {
    \Illuminate\Support\Facades\DB::table('customers')->where('id', $customer->id)->lockForUpdate()->first();
    if ($customer->bonusTransactions()->where('type', 'register')->exists()) return 0;
    $customer->increment('bonus_balance', $amount);
-   $customer->bonusTransactions()->create(['type' => 'register', 'amount' => $amount, 'note' => 'Qeydiyyat bonusu']);
+   $customer->bonusTransactions()->create(['type' => 'register', 'amount' => $amount, 'note' => 'Qeydiyyat bonusu', 'expires_at' => $this->expiresAt('register')]);
    return $amount;
   });
  }

@@ -95,6 +95,8 @@
             'resendUrl' => route('front.login.otp.resend'),
             'setPasswordUrl' => route('front.login.set-password'),
             'registerUrl' => '#',
+            // Qeydiyyat formundan yönləndirmə: nömrə hazır gəlir
+            'prefillMobile' => preg_match('/^994\\d{9}$/', (string) request('mobile')) ? request('mobile') : null,
             'messages' => [
                 'resend' => __('auth_resend_code'),
                 'inactiveHint' => __('auth_an_otp_was_sent_to_mobile'),

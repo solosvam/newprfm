@@ -54,3 +54,31 @@
 
 /* Kodu yenidən göndər (register-verify) */
 .auth-resend-form { margin-top: 14px; }
+
+/* Qeydiyyat: nömrə ilə hesab artıq var */
+.auth-account-exists {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
+    margin: 8px 0 0; padding: 10px 12px; border-radius: var(--radius, 8px);
+    font-size: 13px; line-height: 1.4; color: var(--text);
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+}
+.auth-account-exists[hidden] { display: none; }
+.auth-account-exists a { color: var(--accent); font-weight: 700; }
+
+/* Qeydiyyat — kompüterdə iki sütun (mobildə əvvəlki kimi bir sütun) */
+@media (min-width: 761px) {
+    .auth-card--wide { max-width: 760px; }
+    .auth-form--grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 16px;
+        row-gap: 14px;
+        align-items: start;
+    }
+    .auth-form--grid .auth-submit,
+    .auth-form--grid .auth-legal,
+    .auth-form--grid .auth-secure { grid-column: 1 / -1; }
+    .auth-form--grid .auth-submit { margin-top: 8px; }
+
+    .auth-card--wide .auth-benefits { flex-direction: row; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+}

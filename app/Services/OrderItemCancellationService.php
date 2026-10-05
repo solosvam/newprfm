@@ -176,8 +176,9 @@ class OrderItemCancellationService
             if ($result['refund'] === OrderItemCancellation::REFUND_BONUS && $order->customer) {
                 DB::table('customers')->where('id', $order->customer_id)->increment('bonus_balance', $result['amount']);
                 $order->customer->bonusTransactions()->create([
-                    'order_id' => $order->id, 'type' => 'adjustment', 'amount' => $result['amount'],
-                    'note' => 'Sifariş ləğvi — qaytarma: '.$order->order_no.' · '.$productName, 'created_by' => $actor,
+                    // refund — yeni bonus paketi deyil: xərclənmiş bonus öz köhnə bitmə tarixinə qayıdır
+                    'order_id' => $order->id, 'type' => 'refund', 'amount' => $result['amount'],
+                    'note' => 'Ləğv olunan sifarişdən geri qaytarma: '.$order->order_no.' · '.$productName, 'created_by' => $actor,
                 ]);
             }
 

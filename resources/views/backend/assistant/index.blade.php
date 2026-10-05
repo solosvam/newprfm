@@ -96,8 +96,10 @@
         </div>
         <p class="as-muted as-poster-status" data-poster-status></p>
         <img class="as-poster-img" alt="" data-poster-img hidden>
+        <pre class="as-poster-caption" data-poster-caption hidden></pre>
         <div class="as-poster-actions">
             <button type="button" class="as-btn" data-poster-copy disabled>Kopyala</button>
+            <button type="button" class="as-btn as-btn-light" data-poster-copy-text hidden>Mətni kopyala</button>
             <a class="as-btn as-btn-light" data-poster-download hidden>PNG endir</a>
         </div>
     </section>

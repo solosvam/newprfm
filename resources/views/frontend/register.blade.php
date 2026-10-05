@@ -5,9 +5,8 @@
     <link rel="stylesheet" href="{{ asset_v('frontend/css/components/gender-pills.css') }}">
 @endsection
 
-@section('title', __('auth_register') . ' | parfumshop')
+@section('title', __('auth_register') . ' | ParfumSHop')
 
-{{-- Dəvət linki ilə gələndə (WhatsApp/Telegram önizləməsi üçün) --}}
 @if(request()->filled('ref') && ($referralSettings = app(\App\Services\Referral\ReferralSettings::class))->enabled())
     @section('og_title', __('referral_og_title'))
     @section('meta_description', $referralSettings->shareText(app()->getLocale()))
@@ -20,7 +19,7 @@
 @section('content')
     <main>
         <div class="auth-page">
-            <div class="auth-card">
+            <div class="auth-card auth-card--wide">
                 <h1 class="auth-title">{{ __('auth_register') }}</h1>
 
                 <ul class="auth-benefits">
@@ -40,8 +39,25 @@
                     <p class="auth-error">{{ $errors->first('otp') }}</p>
                 @endif
 
-                <form method="POST" action="{{ route('front.register.store') }}" class="auth-form">
+                <form method="POST" action="{{ route('front.register.store') }}" class="auth-form auth-form--grid">
                     @csrf
+
+                    <div class="form-field">
+                        <label>{{ __('profile_your_phone_number') }}</label>
+                        <input type="tel" name="mobile" id="registerMobile" class="auth-input @error('mobile') is-invalid @enderror" value="{{ old('mobile') }}" placeholder="994 __ ___ __ __" inputmode="numeric" required>
+                        <p class="auth-account-exists" id="registerMobileExists" hidden role="status">
+                            <span>{{ __('auth_mobile_already_registered') }}</span>
+                            <a href="{{ route('front.login') }}" id="registerLoginLink">{{ __('auth_sign_in') }}</a>
+                        </p>
+                        <small class="auth-field-hint">{{ __('auth_phone_sms_hint') }}</small>
+                        <div class="invalid-feedback">{{ $errors->first('mobile') }}</div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>{{ __('profile_your_email') }}</label>
+                        <input type="email" name="email" class="auth-input @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="{{ __('profile_your_email') }}" required>
+                        <div class="invalid-feedback">{{ $errors->first('email') }}</div>
+                    </div>
 
                     <div class="form-field">
                         <label>{{ __('profile_first_name') }}</label>
@@ -56,16 +72,14 @@
                     </div>
 
                     <div class="form-field">
-                        <label>{{ __('profile_your_email') }}</label>
-                        <input type="email" name="email" class="auth-input @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="{{ __('profile_your_email') }}" required>
-                        <div class="invalid-feedback">{{ $errors->first('email') }}</div>
+                        <label>{{ __('auth_password') }}</label>
+                        <input type="password" name="password" class="auth-input @error('password') is-invalid @enderror" placeholder="{{ __('auth_password') }}" autocomplete="new-password" minlength="6" required>
+                        <div class="invalid-feedback">{{ $errors->first('password') }}</div>
                     </div>
 
                     <div class="form-field">
-                        <label>{{ __('profile_your_phone_number') }}</label>
-                        <input type="tel" name="mobile" id="registerMobile" class="auth-input @error('mobile') is-invalid @enderror" value="{{ old('mobile') }}" placeholder="994 __ ___ __ __" inputmode="numeric" required>
-                        <small class="auth-field-hint">{{ __('auth_phone_sms_hint') }}</small>
-                        <div class="invalid-feedback">{{ $errors->first('mobile') }}</div>
+                        <label>{{ __('auth_confirm_password') }}</label>
+                        <input type="password" name="password_confirmation" class="auth-input" placeholder="{{ __('auth_confirm_password') }}" autocomplete="new-password" minlength="6" required>
                     </div>
 
                     <div class="form-field">
@@ -79,17 +93,6 @@
                             @endforeach
                         </div>
                         <div class="invalid-feedback">{{ $errors->first('gender') }}</div>
-                    </div>
-
-                    <div class="form-field">
-                        <label>{{ __('auth_password') }}</label>
-                        <input type="password" name="password" class="auth-input @error('password') is-invalid @enderror" placeholder="{{ __('auth_password') }}" autocomplete="new-password" minlength="6" required>
-                        <div class="invalid-feedback">{{ $errors->first('password') }}</div>
-                    </div>
-
-                    <div class="form-field">
-                        <label>{{ __('auth_confirm_password') }}</label>
-                        <input type="password" name="password_confirmation" class="auth-input" placeholder="{{ __('auth_confirm_password') }}" autocomplete="new-password" minlength="6" required>
                     </div>
 
                     @if(app(\App\Services\Referral\ReferralSettings::class)->enabled())
@@ -129,5 +132,6 @@
 
 @section('page-scripts')
     <script src="{{ asset_v('frontend/js/vendor/jquery.inputmask.min.js') }}" defer></script>
+    <script type="application/json" id="register-config">@json(['checkUrl' => route('front.register.check-mobile')])</script>
     <script src="{{ asset_v('frontend/js/pages/register.js') }}" defer></script>
 @endsection

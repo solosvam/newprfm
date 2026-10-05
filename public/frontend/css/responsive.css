@@ -297,3 +297,14 @@ html, body { overflow-x: hidden; }
     .od-card__head { padding: 14px 16px 4px; }
     .od-card__body { padding: 12px 16px 16px; }
 }
+
+/* iOS Safari: font-size 16px-dən kiçik inputa fokus olanda ekran avtomatik yaxınlaşır.
+   Toxunma ekranlarında bütün yazı sahələri ən azı 16px — axtarış, login, qeydiyyat, checkout, profil.
+   !important: səhifə CSS-lərindəki daha spesifik seçiciləri (.form-field input, .auth-input, …) üstələmək üçün. */
+@media (hover: none) and (pointer: coarse) {
+    :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]), select, textarea) {
+        font-size: 16px !important;
+    }
+    /* 16px-dən böyük olanlar öz ölçüsündə qalsın */
+    .auth-otp-input { font-size: 20px !important; }
+}

@@ -101,6 +101,13 @@ document.addEventListener('DOMContentLoaded', function () {
         mobile.inputmask.opts.oncomplete = checkMobileAutomatically;
     }
 
+    // Qeydiyyat formundan ?mobile=994... ilə gələndə nömrə doldurulur və yoxlanılır
+    if (auth.prefillMobile) {
+        if (mobile.inputmask) mobile.inputmask.setValue(auth.prefillMobile);
+        else mobile.value = auth.prefillMobile;
+        setTimeout(checkMobileAutomatically, 0);
+    }
+
     async function checkMobileAutomatically() {
         if (mode === 'password' || checkingMobile) return;
 

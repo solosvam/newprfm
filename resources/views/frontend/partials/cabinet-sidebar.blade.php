@@ -24,7 +24,7 @@
         <a href="{{ route('profile.credit') }}" class="{{ request()->routeIs('profile.credit*') ? 'active' : '' }}">
             {{ __('credit_title') }}
             @if(!auth()->user()->creditProfile?->isComplete())
-                <small class="account-nav-note">({{ __('credit_sidebar_incomplete') }})</small>
+                <small class="account-nav-note" id="creditSidebarNote">({{ __('credit_sidebar_incomplete') }})</small>
             @endif
         </a>
         <a href="{{ route('orders') }}" class="{{ request()->routeIs('orders') ? 'active' : '' }}">{{ __('orders_history') }}</a>

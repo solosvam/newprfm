@@ -184,7 +184,18 @@ class AuthController extends Controller
 
     public function profile()
     {
-        return view('frontend.profile');
+        $customer = auth()->user();
+        $with = ['status', 'items.product.images'];
+
+        $latestOrder = $customer->orders()->with($with)->latest()->first();
+
+        // Aktiv: təhvil verilməyib və ləğv edilməyib
+        $activeQuery = $customer->orders()
+            ->whereHas('status', fn ($q) => $q->whereNotIn('code', ['delivered', 'cancelled']));
+        $activeCount = (clone $activeQuery)->count();
+        $activeOrder = $activeCount ? (clone $activeQuery)->with('status')->latest()->first() : null;
+
+        return view('frontend.profile', compact('latestOrder', 'activeOrder', 'activeCount'));
     }
 
     public function personal()
