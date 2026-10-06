@@ -106,6 +106,58 @@ class Order extends Model {
     {
         return $this->hasOne(CreditApplication::class);
     }
+    /**
+     * Ləğvlərdən əvvəlki yekun: hər ləğv (məhsul, çatdırılma, qablaşdırma) yekundan öz məbləğini çıxır,
+     * ona görə ilkin yekun = indiki yekun + ləğv olunanların cəmi. Tam ləğv olunan sifariş 0 yox, ilkin məbləği göstərsin.
+     * Siyahılarda withSum('itemCancellations as cancelled_amount', 'amount') ilə — hər sifariş üçün ayrıca sorğu olmasın.
+     */
+    public function cancelledAmount(): float
+    {
+        return round((float) ($this->cancelled_amount ?? $this->itemCancellations()->sum('amount')), 2);
+    }
+
+    public function originalTotal(): float
+    {
+        return round((float) $this->total + $this->cancelledAmount(), 2);
+    }
+
+    /** Tam ləğv olunub (yekun ləğvlərlə sıfırlanıb) — siyahılarda ilkin məbləğ göstərilir */
+    public function isFullyCancelled(): bool
+    {
+        return $this->isCancelled() && $this->cancelledAmount() > 0;
+    }
+
+    /**
+     * Sifarişin hesabı (müştəri, ödəniş linki, CRM): Məhsullar − Endirim + Çatdırılma + Qablaşdırma − Ləğv olunan = Yekun.
+     * Ləğv yoxdursa — bazadakı məbləğlər (promo və referal endirimi ayrıca).
+     * Ləğv varsa — məhsullar bütün sifariş olunan miqdarla, endirim ilkin (promo, referal, operator birlikdə; ləğvdən sonra
+     * hissələri ayırmaq olmur), "Ləğv olunan" — ləğvlərin cəmi, yekun — indiki (tam ləğvdə 0).
+     *
+     * @return array{goods: float, discount: float, referral: float, cancelled: float, total: float}
+     */
+    public function totalsBreakdown(): array
+    {
+        $cancelled = $this->cancelledAmount();
+        if ($cancelled <= 0) {
+            return [
+                'goods' => (float) $this->subtotal,
+                'discount' => max(0.0, round((float) $this->discount - (float) $this->referral_discount, 2)),
+                'referral' => (float) $this->referral_discount,
+                'cancelled' => 0.0,
+                'total' => (float) $this->total,
+            ];
+        }
+        $goods = round($this->items->sum(fn ($item) => (float) ($item->list_price ?? $item->unit_price) * (int) $item->quantity), 2);
+
+        return [
+            'goods' => $goods,
+            'discount' => max(0.0, round($goods + (float) $this->delivery_fee + (float) $this->gift_wrap_fee - $this->originalTotal(), 2)),
+            'referral' => 0.0,
+            'cancelled' => $cancelled,
+            'total' => (float) $this->total,
+        ];
+    }
+
     public function itemCancellations()
     {
         return $this->hasMany(OrderItemCancellation::class)->orderBy('id');

@@ -7,7 +7,6 @@ use App\Mail\OrderCreatedMail;
 use App\Models\Order\Order;
 use App\Models\Payment\Payment;
 use App\Models\PromoCode;
-use App\Services\BonusService;
 use App\Services\Payment\Birbank;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +50,6 @@ class BirbankPaymentController extends Controller
             if ($payment->status === Payment::PAID && $order->payment_status !== 'paid') {
                 $order->update(['payment_status' => 'paid']);
                 if ($order->promo_code_id) PromoCode::whereKey($order->promo_code_id)->increment('used_count');
-                app(BonusService::class)->earnForOrder($order->customer, $order, (float) $order->total);
                 // Kassa: Müştəri → Onlayn ödənişlər (xəta ödənişi pozmasın)
                 rescue(fn () => app(\App\Services\FinanceService::class)->recordOnlinePayment($payment));
                 if (filter_var($order->customer->email, FILTER_VALIDATE_EMAIL)) {

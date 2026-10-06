@@ -215,27 +215,18 @@
                                     </div>
                                 @endif
 
-                                <div class="od-totals">
-                                    <div class="od-row"><span>{{ __('orders_subtotal') }}</span><span>{{ number_format($order->subtotal, 2) }} ₼</span></div>
-                                    @if($order->discount - $order->referral_discount > 0)
-                                        <div class="od-row od-row--discount"><span>{{ __('orders_discount') }}</span><span>−{{ number_format((float) $order->discount - (float) $order->referral_discount, 2) }} ₼</span></div>
-                                    @endif
-                                    @if($order->referral_discount > 0)
-                                        <div class="od-row od-row--discount"><span>{{ __('cart_referral_discount') }}</span><span>−{{ number_format((float) $order->referral_discount, 2) }} ₼</span></div>
-                                    @endif
-                                    @if((float) $order->delivery_fee > 0)
-                                        <div class="od-row"><span>{{ __('orders_delivery') }}</span><span>{{ number_format((float) $order->delivery_fee, 2) }} ₼</span></div>
-                                    @endif
-                                    @if($order->bonus_used > 0)
-                                        <div class="od-row od-row--discount"><span>{{ __('orders_paid_with_bonuses') }}</span><span>−{{ number_format($order->bonus_used, 2) }} ₼</span></div>
-                                    @endif
-                                    <div class="od-row od-row--total"><span>{{ __('orders_total') }}</span><span>{{ number_format($order->total, 2) }} ₼</span></div>
-                                </div>
+                                @include('frontend.partials.order-totals', ['order' => $order])
 
-                                @if($order->bonus_earned > 0)
+                                {{-- bonus təhvildə yazılır: yazılıbsa — "qazandınız", yoxsa — təhvil veriləndə qazanacağı --}}
+                                @php $pendingBonus = (float) $order->bonus_earned > 0 ? 0 : app(\App\Services\BonusService::class)->pendingFor($order); @endphp
+                                @if($order->bonus_earned > 0 || $pendingBonus > 0)
                                     <div class="od-bonus">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
-                                        +{{ number_format($order->bonus_earned, 2) }} ₼ {{ __('orders_bonus_earned_note') }}
+                                        @if($order->bonus_earned > 0)
+                                            +{{ number_format($order->bonus_earned, 2) }} ₼ {{ __('orders_bonus_earned_note') }}
+                                        @else
+                                            {{ __('orders_bonus_on_delivery', ['amount' => number_format($pendingBonus, 2)]) }}
+                                        @endif
                                     </div>
                                 @endif
                             </div>

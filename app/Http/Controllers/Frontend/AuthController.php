@@ -187,7 +187,7 @@ class AuthController extends Controller
         $customer = auth()->user();
         $with = ['status', 'items.product.images'];
 
-        $latestOrder = $customer->orders()->with($with)->latest()->first();
+        $latestOrder = $customer->orders()->with($with)->withSum('itemCancellations as cancelled_amount', 'amount')->latest()->first();
 
         // Aktiv: təhvil verilməyib və ləğv edilməyib
         $activeQuery = $customer->orders()

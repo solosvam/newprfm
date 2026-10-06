@@ -13,7 +13,6 @@ use App\Models\Order\OrderStatus;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
-use App\Services\BonusService;
 use App\Services\CartService;
 use App\Services\Payment\Birbank;
 use App\Services\PromoCodeService;
@@ -258,9 +257,7 @@ class CheckoutController extends Controller
                     'credit_status_id' => CreditStatus::where('code', 'pending')->firstOrFail()->id,
                 ]);
             }
-            if ($paymentMethod->code === 'cash') {
-                app(BonusService::class)->earnForOrder($customer, $order, (float) $order->total);
-            }
+            // Sifariş bonusu təhvildə yazılır (BonusService::earnOnDelivery)
 
             // Onlayn kartda istifadə limiti yalnız bank ödənişi təsdiqləyəndə tutulur.
             if ($promo && !in_array($paymentMethod->code, ['card_online', 'birbank_installment'], true)) {

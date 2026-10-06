@@ -19,7 +19,7 @@
                         <strong>{{ number_format((float)$item->total, 2) }} ₼</strong>
                     </div>
                 @endforeach
-                <div class="d-flex justify-content-between mt-3"><strong>Ara cəm</strong><strong>{{ number_format((float)$order->subtotal, 2) }} ₼</strong></div>
+                <div class="d-flex justify-content-between mt-3"><strong>Məhsullar</strong><strong>{{ number_format((float)$order->subtotal, 2) }} ₼</strong></div>
                 <p class="small text-muted mt-3">Müştəri ilə əlaqə saxlanılana qədər sifariş profilində görünmür.</p>
             </div></div>
         </div>

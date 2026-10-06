@@ -301,16 +301,17 @@
                     </tbody>
                 </table></div>
                 <div class="od-summary mt-3">
-                    <div><span>Ara cəm</span><span>{{ number_format((float) $order->subtotal, 2) }} AZN</span></div>
-                    @if((float) $order->discount > 0)<div><span>Endirim</span><span class="text-success">−{{ number_format((float) $order->discount, 2) }} AZN</span></div>@endif
-                    @if((float) $order->referral_discount > 0)<div><span class="text-muted ps-2">o cümlədən dəvət endirimi</span><span class="text-muted">−{{ number_format((float) $order->referral_discount, 2) }} AZN</span></div>@endif
+                    {{-- Məhsullar − Endirim + Çatdırılma + Qablaşdırma − Ləğv olunan = Yekun (Order::totalsBreakdown) --}}
+                    @php $sum = $order->totalsBreakdown(); @endphp
+                    <div><span>Məhsullar</span><span>{{ number_format($sum['goods'], 2) }} AZN</span></div>
+                    @if($sum['discount'] > 0)<div><span>Endirim</span><span class="text-success">−{{ number_format($sum['discount'], 2) }} AZN</span></div>@endif
+                    @if($sum['referral'] > 0)<div><span>Dəvət endirimi</span><span class="text-success">−{{ number_format($sum['referral'], 2) }} AZN</span></div>@endif
                     <div><span>Çatdırılma</span><span>{{ (float) $order->delivery_fee > 0 ? number_format((float) $order->delivery_fee, 2).' AZN' : 'Pulsuz' }}</span></div>
                     @if($order->gift_wrap)<div><span>Hədiyyəlik qablaşdırma</span><span>{{ (float) $order->gift_wrap_fee > 0 ? number_format((float) $order->gift_wrap_fee, 2).' AZN' : 'Pulsuz' }}</span></div>@endif
+                    @if($sum['cancelled'] > 0)<div><span>Ləğv olunan</span><span class="text-danger">−{{ number_format($sum['cancelled'], 2) }} AZN</span></div>@endif
                     <div class="od-summary__grand"><span>Yekun</span><span>{{ number_format((float) $order->total, 2) }} AZN</span></div>
-                    @if((float) $order->bonus_earned > 0)<div><span>Qazandığı bonus</span><span class="text-success">+{{ number_format((float) $order->bonus_earned, 2) }} AZN</span></div>@endif
-                    @if($order->itemCancellations->isNotEmpty())
-                        <div><span>Ləğv edilib</span><span class="text-danger">{{ number_format((float) $order->itemCancellations->sum('amount'), 2) }} AZN</span></div>
-                    @endif
+                    @if((float) $order->bonus_earned > 0)<div><span>Qazandığı bonus</span><span class="text-success">+{{ number_format((float) $order->bonus_earned, 2) }} AZN</span></div>
+                    @elseif(($pendingBonus = app(\App\Services\BonusService::class)->pendingFor($order)) > 0)<div><span>Təhvil veriləndə bonus</span><span class="text-muted">+{{ number_format($pendingBonus, 2) }} AZN</span></div>@endif
                     @if($pendingRefund > 0)
                         <div><span>Karta qaytarılacaq</span><a href="#payments" data-order-tab-link class="text-warning">{{ number_format($pendingRefund, 2) }} AZN · gözləyir</a></div>
                     @endif

@@ -43,10 +43,11 @@ class PayLinkController extends Controller
             default => 'unavailable',
         };
 
-        // Bonus: ödənilibsə yazılan, ödənilməyibsə ödənişdən sonra qazanacağı
+        // Bonus təhvildə yazılır: yazılıbsa — yazılan, yoxsa — təhvil veriləndə qazanacağı
         $bonus = match ($state) {
-            'paid' => (float) $order->bonus_earned,
-            'pay', 'failed', 'checking' => app(BonusService::class)->amountForOrder($order),
+            'paid', 'pay', 'failed', 'checking' => (float) $order->bonus_earned > 0
+                ? (float) $order->bonus_earned
+                : app(BonusService::class)->pendingFor($order),
             default => 0.0,
         };
 

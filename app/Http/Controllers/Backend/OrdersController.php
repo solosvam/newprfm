@@ -27,6 +27,7 @@ class OrdersController extends Controller
         $search = trim((string) $request->query('q', ''));
 
         $orders = Order::with(['status', 'customer', 'paymentMethod'])
+            ->withSum('itemCancellations as cancelled_amount', 'amount')
             ->when($status === 'active', fn ($q) => $q->whereIn('order_status_id',
                 $statuses->whereIn('code', array_keys(AdminDashboard::ACTIVE_STATUSES))->pluck('id')))
             ->when($status === 'courier_late', fn ($q) => $q

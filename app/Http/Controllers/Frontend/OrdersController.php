@@ -17,6 +17,7 @@ class OrdersController extends Controller
             'status',
         ])
             ->withCount('payments')
+            ->withSum('itemCancellations as cancelled_amount', 'amount')
             ->where('customer_id', auth()->id())
             ->latest()
             ->paginate(10);

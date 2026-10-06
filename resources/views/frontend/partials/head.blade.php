@@ -26,6 +26,10 @@
 @hasSection('og_image')
 <meta property="og:image" content="@yield('og_image')">
 <meta property="og:image:alt" content="@yield('og_title', 'Parfumshop.az')">
+@hasSection('og_image_width')
+<meta property="og:image:width" content="@yield('og_image_width')">
+<meta property="og:image:height" content="@yield('og_image_height')">
+@endif
 <meta name="twitter:image" content="@yield('og_image')">
 @endif
 @hasSection('og_image')

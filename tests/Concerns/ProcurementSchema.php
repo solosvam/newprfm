@@ -23,6 +23,10 @@ trait ProcurementSchema
             $t->string('code');
             $t->string('name_az')->nullable();
         });
+        // CRM sifariş səhifəsi "Təhvil veriləndə bonus"u ayarlardan (order_bonus_percent) hesablayır
+        Schema::create('settings', function (Blueprint $t) {
+            $t->id(); $t->string('key'); $t->text('value')->nullable(); $t->timestamps();
+        });
         Schema::create('orders', function (Blueprint $t) {
             $t->id();
             $t->integer('customer_id');

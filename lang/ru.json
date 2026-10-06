@@ -286,7 +286,7 @@
     "orders_apartment": "Квартира:",
     "orders_note": "Примечание:",
     "orders_payment_details": "Данные оплаты",
-    "orders_subtotal": "Промежуточный итог",
+    "orders_subtotal": "Товары",
     "orders_discount": "Скидка",
     "orders_paid_with_bonuses": "Оплачено бонусами",
     "orders_bonus_earned": "Начисленный бонус",
@@ -603,7 +603,6 @@
     "paylink_gift_wrap": "Подарочная упаковка",
     "paylink_address": "Адрес доставки",
     "paylink_refresh": "Обновить страницу",
-    "paylink_bonus_expected": "После оплаты вы получите +:amount ₼ бонусов",
     "orders_item_cancelled": "Отменено: :count шт.",
     "bonus_registration": "Бонус за регистрацию",
     "brands_search_placeholder": "Поиск бренда…",
@@ -695,5 +694,8 @@
     "cart_referral_discount": "Скидка по приглашению",
     "referral_discount_note_min": "Скидка по приглашению (:amount ₼) действует для заказов от :min ₼.",
     "referral_discount_note_promo": "Скидка по приглашению не суммируется с промокодом. Удалите промокод, чтобы получить скидку по приглашению.",
-    "referral_discount_note_installment": "Скидка по приглашению не действует при оплате в рассрочку."
+    "referral_discount_note_installment": "Скидка по приглашению не действует при оплате в рассрочку.",
+    "orders_cancelled_amount": "Отменено",
+    "orders_bonus_on_delivery": "При доставке заказа вы получите +:amount ₼ бонусов",
+    "home_popular": "Популярные"
 }

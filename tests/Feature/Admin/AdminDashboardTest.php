@@ -47,7 +47,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('product_reviews', fn (Blueprint $t) => [$t->id(), $t->boolean('active')->default(false)]);
         Schema::create('product_search_logs', fn (Blueprint $t) => [$t->id(), $t->string('query'), $t->string('normalized_query'), $t->unsignedSmallInteger('result_count')->default(0), $t->timestamp('searched_at')]);
         Schema::create('payments', fn (Blueprint $t) => [$t->id(), $t->decimal('amount', 12, 2), $t->string('status'), $t->timestamps()]);
-        Schema::create('order_item_cancellations', fn (Blueprint $t) => [$t->id(), $t->string('refund_status')->nullable()]);
+        Schema::create('order_item_cancellations', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id')->nullable(), $t->decimal('amount', 12, 2)->default(0), $t->string('refund_status')->nullable()]);
         Schema::create('order_item_allocations', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_item_id'), $t->unsignedBigInteger('warehouse_id')->nullable(), $t->integer('quantity'), $t->decimal('unit_cost', 12, 2), $t->string('status')]);
         Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->string('mobile')->nullable(), $t->integer('old_customer_id')->nullable(), $t->string('source', 20)->nullable(), $t->boolean('active')->default(true), $t->decimal('bonus_balance', 12, 2)->default(0), $t->timestamps()]);
         Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);

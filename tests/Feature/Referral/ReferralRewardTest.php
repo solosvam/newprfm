@@ -46,13 +46,14 @@ class ReferralRewardTest extends TestCase
         Schema::create('orders', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->unsignedBigInteger('payment_method_id')->nullable();
-            foreach (['subtotal', 'discount', 'referral_discount', 'total'] as $c) $t->decimal($c, 12, 2)->default(0);
+            foreach (['subtotal', 'discount', 'referral_discount', 'total', 'bonus_earned'] as $c) $t->decimal($c, 12, 2)->default(0);
             $t->timestamps();
         });
         $this->orderStatusFixtures();
         DB::table('payment_methods')->insert([['id' => 1, 'code' => 'cash'], ['id' => 2, 'code' => 'installment'], ['id' => 3, 'code' => 'birbank_installment']]);
 
-        $this->settings(['referral_enabled' => 1]);
+        // sifariş bonusu (təhvildə, BonusService::earnOnDelivery) referal hesabına qarışmasın
+        $this->settings(['referral_enabled' => 1, 'order_bonus_percent' => 0]);
         $this->referrer = Customer::forceCreate(['name' => 'Dəvət edən']);
         $this->invitee = Customer::forceCreate(['name' => 'Dost', 'surname' => 'Əliyev']);
         CustomerReferral::create(['referrer_id' => $this->referrer->id, 'invitee_id' => $this->invitee->id]);

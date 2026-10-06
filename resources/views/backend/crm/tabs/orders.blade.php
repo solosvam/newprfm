@@ -53,9 +53,20 @@
                         <td><span class="badge {{ $orderStatusBadge }}">{{ $order->status?->name_az ?? '—' }}</span></td>
                         <td>{{ $source }}</td>
                         <td class="text-end text-nowrap">
-                            <div class="fw-semibold">{{ number_format((float)$order->total, 2) }} ₼</div>
+                            @if($order->isCancelled() && $order->cancelledAmount() > 0)
+                                {{-- tam ləğv: yekun 0-dır — sifarişin ilkin məbləği göstərilir (ləğv statusu öz sütunundadır) --}}
+                                <div class="fw-semibold">{{ number_format($order->originalTotal(), 2) }} ₼</div>
+                            @else
+                                <div class="fw-semibold">{{ number_format((float)$order->total, 2) }} ₼</div>
+                                @if($order->cancelledAmount() > 0)
+                                    <small class="text-muted d-block">ilkin {{ number_format($order->originalTotal(), 2) }} ₼</small>
+                                @endif
+                            @endif
                             @if((float)$order->bonus_earned > 0)
                                 <small class="text-success">+{{ number_format((float)$order->bonus_earned, 2) }} ₼ bonus</small>
+                            @elseif(($pendingBonus = app(\App\Services\BonusService::class)->pendingFor($order)) > 0)
+                                {{-- bonus təhvildə yazılır --}}
+                                <small class="text-muted" title="Sifariş təhvil veriləndə yazılacaq">+{{ number_format($pendingBonus, 2) }} ₼ bonus · təhvildə</small>
                             @endif
                         </td>
                         <td class="text-end">

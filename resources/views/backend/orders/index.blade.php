@@ -109,7 +109,17 @@
                                         <span class="badge bg-outline-success ms-1">Ödənilib</span>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">{{ number_format((float) $order->total, 2, '.', ' ') }} ₼</td>
+                                <td class="text-end text-nowrap">
+                                    @if($order->isCancelled() && $order->cancelledAmount() > 0)
+                                        {{-- tam ləğv: yekun 0-dır — sifarişin ilkin məbləği göstərilir --}}
+                                        {{ number_format($order->originalTotal(), 2, '.', ' ') }} ₼
+                                    @else
+                                        {{ number_format((float) $order->total, 2, '.', ' ') }} ₼
+                                        @if($order->cancelledAmount() > 0)
+                                            <div class="text-small text-muted">ilkin {{ number_format($order->originalTotal(), 2, '.', ' ') }} ₼</div>
+                                        @endif
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="badge bg-outline-{{ $statusColor[$order->status?->code] ?? 'secondary' }}">{{ $order->status?->name_az ?? '—' }}</span>
                                 </td>

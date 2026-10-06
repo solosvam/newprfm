@@ -23,6 +23,8 @@ use App\Http\Controllers\Backend\CrmController;
 use App\Http\Controllers\Backend\EasyOrdersController;
 use App\Http\Controllers\Backend\OrdersController;
 use App\Http\Controllers\Backend\CartsController;
+use App\Http\Controllers\Backend\FeaturedProductsController;
+use App\Http\Controllers\Backend\ReferralsController;
 use App\Http\Controllers\Backend\PromoCodesController;
 use App\Http\Controllers\Backend\RefundController;
 
@@ -275,6 +277,7 @@ Route::prefix('admin')
             Route::middleware('can:crm')->group(function () {
                 Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
                 Route::get('/carts', [CartsController::class, 'index'])->name('carts.index');
+                Route::get('/referrals', [ReferralsController::class, 'index'])->name('referrals.index');
             });
 
             Route::prefix('easy-orders')->name('easy-orders.')->controller(EasyOrdersController::class)->middleware('can:crm')->group(function () {
@@ -458,6 +461,19 @@ Route::prefix('admin')
             | Banners
             |--------------------------------------------------------------------------
             */
+
+            // Ana səhifənin vitrini ("Populyar")
+            Route::controller(FeaturedProductsController::class)
+                ->middleware('can:site.featured')
+                ->prefix('featured')
+                ->name('featured.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/', 'store')->name('store');
+                    Route::post('/reorder', 'reorder')->name('reorder');
+                    Route::get('/search', 'search')->middleware('throttle:120,1')->name('search');
+                    Route::delete('/{featured}', 'destroy')->name('destroy');
+                });
 
             Route::controller(BannersController::class)
                 ->middleware('can:site.banners')

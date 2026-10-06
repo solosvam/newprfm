@@ -80,7 +80,8 @@
                             </div>
 
                             <div class="order-card__side">
-                                <span class="order-card__total">{{ number_format($order->total, 2) }} ₼</span>
+                                {{-- ləğv olunan sifariş də öz məbləğini göstərir (ləğvlər yekunu sıfırlayır) --}}
+                                <span class="order-card__total">{{ number_format($order->isFullyCancelled() ? $order->originalTotal() : (float) $order->total, 2) }} ₼</span>
                                 @if($order->isAwaitingPayment())
                                     {{-- Kartın üstündəki link bütün kartı örtür; form ondan yuxarıda qalır --}}
                                     <form method="POST" action="{{ route('payment.birbank.start', $order) }}" class="order-card__pay">

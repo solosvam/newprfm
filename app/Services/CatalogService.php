@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Banners;
 use App\Models\Product\Brand;
 use App\Models\Product\Gender;
+use App\Models\Product\FeaturedProduct;
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
 use App\Models\Product\Size;
@@ -67,9 +68,23 @@ class CatalogService
         return $query;
     }
 
-    public function applySort(Builder $query, ?string $sort): Builder
+    /** $popular — "Populyar" (vitrin) sıralamasına icazə: yalnız ana səhifə */
+    public function applySort(Builder $query, ?string $sort, bool $popular = false): Builder
     {
+        if ($sort === 'popular' && !$popular) {
+            $sort = 'newest';
+        }
+
         switch ($sort) {
+            // Ana səhifə (standart): vitrin ətirləri admin-in ardıcıllığı ilə öndə, qalanı — ən yenidən
+            case 'popular':
+                $position = FeaturedProduct::query()->select('position')->whereColumn('featured_products.product_id', 'products.id');
+
+                return $query
+                    ->orderByRaw('('.$position->toSql().') IS NULL')
+                    ->orderBy($position)
+                    ->orderByDesc('products.id');
+
             case 'oldest':
                 return $query->orderBy('products.id');
 

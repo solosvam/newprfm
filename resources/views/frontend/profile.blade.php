@@ -77,7 +77,7 @@
                                 @endif
                             </div>
                             <div class="account-order-mini__side">
-                                <strong>{{ number_format($latestOrder->total, 2) }} ₼</strong>
+                                <strong>{{ number_format($latestOrder->isFullyCancelled() ? $latestOrder->originalTotal() : (float) $latestOrder->total, 2) }} ₼</strong>
                                 <time datetime="{{ $latestOrder->created_at->toIso8601String() }}">{{ $latestOrder->created_at->format('d.m.Y') }}</time>
                             </div>
                         </div>

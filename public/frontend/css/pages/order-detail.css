@@ -87,6 +87,7 @@
 }
 .od-row span:last-child { color: var(--text); }
 .od-row--discount span:last-child { color: var(--success); }
+.od-row--cancelled span:last-child { color: var(--danger); }
 .od-row--total { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 17px; font-weight: 700; color: var(--text); }
 
 .od-bonus {

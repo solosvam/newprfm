@@ -13,6 +13,9 @@
     @section('meta_robots', 'noindex, follow')
     @if($referralSettings->ogImageUrl())
         @section('og_image', $referralSettings->ogImageUrl())
+        {{-- şəkil yüklənəndə 1200×630-a kəsilir (ReferralOgImage) --}}
+        @section('og_image_width', (string) \App\Services\Referral\ReferralOgImage::WIDTH)
+        @section('og_image_height', (string) \App\Services\Referral\ReferralOgImage::HEIGHT)
     @endif
 @endif
 

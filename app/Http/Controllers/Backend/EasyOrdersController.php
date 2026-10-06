@@ -132,10 +132,7 @@ class EasyOrdersController extends Controller
                 'delivery_fee' => $delivery,
                 'total' => round((float) $locked->subtotal - (float) $locked->discount + $delivery + (float) $locked->gift_wrap_fee, 2),
             ]);
-            // Same order must not earn bonus twice if an operator retries.
-            if ($method->code === 'cash' && !$customer->bonusTransactions()->where('order_id', $locked->id)->where('type', 'earn')->exists()) {
-                app(BonusService::class)->earnForOrder($customer, $locked, (float) $locked->total);
-            }
+            // Sifariş bonusu təhvildə yazılır (BonusService::earnOnDelivery)
             return $customer;
         });
 

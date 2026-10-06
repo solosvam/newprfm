@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\BonusService;
+use App\Services\Referral\ReferralOgImage;
 use App\Services\Referral\ReferralSettings;
-use Illuminate\Support\Str;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -54,13 +54,15 @@ class SettingsController extends Controller
         }
 
         if ($section === 'referral') {
+            // 1200×630-a kəsilir, ≤300 KB JPEG (ReferralOgImage); köhnə fayl silinir
+            $og = app(ReferralOgImage::class);
+            $previous = (string) Setting::valueOf('referral_og_image', '');
             if ($request->hasFile('referral_og_image_file')) {
-                $file = $request->file('referral_og_image_file');
-                $name = 'referral-'.Str::lower(Str::random(10)).'.'.$file->extension();
-                $file->move(public_path(ReferralSettings::OG_IMAGE_DIR), $name);
-                Setting::set('referral_og_image', $name);
+                Setting::set('referral_og_image', $og->store($request->file('referral_og_image_file')->getRealPath()));
+                $og->delete($previous);
             } elseif ($request->boolean('referral_og_image_remove')) {
                 Setting::set('referral_og_image', '');
+                $og->delete($previous);
             }
         }
 

@@ -79,9 +79,9 @@ class BonusService {
 
  /** Bonus şərtlərinin standart mətni (Ayarlar → Bonuslar → "Bonus şərtləri"); :percent, :registration əvəz olunur */
  public const TERMS_DEFAULTS = [
-  'az' => "Bonus nədir?\nBonus Parfumshop.az-da alış-veriş edən müştərilərə verilən hədiyyə balansıdır. 1 bonus = 1 ₼.\n\nBonus necə qazanılır?\n• Hər sifarişdən məhsulların dəyərinin :percent%-i bonus olaraq hesabınıza yazılır (çatdırılma haqqı nəzərə alınmır).\n• Saytda qeydiyyatdan keçən yeni müştərilərə :registration ₼ qeydiyyat bonusu verilir.\n• Dostunuzu dəvət etdikdə, onun ilk sifarişi təhvil verildikdən sonra referal bonusu qazanırsınız.\n\nBonus necə istifadə olunur?\n• Sifariş zamanı ödəniş üsulu olaraq bonus balansını seçin.\n• Bonus balansı sifarişin yekun məbləğini tam ödəməlidir.\n\nVacib məlumat\n• Sifariş ləğv edildikdə və ya qaytarıldıqda həmin sifarişdən qazanılan bonus balansdan çıxılır.\n• Bonus nağd pula çevrilmir və başqa hesaba köçürülmür.\n• Parfumshop.az bonus şərtlərini dəyişmək hüququnu özündə saxlayır.",
-  'en' => "What is a bonus?\nBonus is a reward balance for customers shopping at Parfumshop.az. 1 bonus = 1 ₼.\n\nHow to earn bonuses?\n• :percent% of the product value of every order is credited to your account as bonus (delivery fee excluded).\n• New customers who sign up on the website receive a :registration ₼ welcome bonus.\n• When you invite a friend, you earn a referral bonus after their first order is delivered.\n\nHow to use bonuses?\n• Choose bonus balance as the payment method when placing an order.\n• Your bonus balance must cover the full order total.\n\nImportant\n• If an order is cancelled or returned, the bonus earned from it is deducted from your balance.\n• Bonuses cannot be exchanged for cash or transferred to another account.\n• Parfumshop.az reserves the right to change the bonus terms.",
-  'ru' => "Что такое бонус?\nБонус — это подарочный баланс для покупателей Parfumshop.az. 1 бонус = 1 ₼.\n\nКак получить бонусы?\n• С каждого заказа на ваш счёт начисляется :percent% от стоимости товаров (без учёта доставки).\n• Новые покупатели при регистрации на сайте получают :registration ₼ приветственного бонуса.\n• Пригласив друга, вы получаете реферальный бонус после доставки его первого заказа.\n\nКак использовать бонусы?\n• При оформлении заказа выберите оплату бонусным балансом.\n• Бонусного баланса должно хватать на всю сумму заказа.\n\nВажно\n• При отмене или возврате заказа начисленный за него бонус списывается с баланса.\n• Бонусы не обмениваются на деньги и не переводятся на другой счёт.\n• Parfumshop.az оставляет за собой право изменять условия бонусной программы.",
+  'az' => "Bonus nədir?\nBonus Parfumshop.az-da alış-veriş edən müştərilərə verilən hədiyyə balansıdır. 1 bonus = 1 ₼.\n\nBonus necə qazanılır?\n• Hər sifarişdən məhsulların dəyərinin :percent%-i bonus olaraq hesabınıza yazılır (çatdırılma haqqı nəzərə alınmır).\n• Saytda qeydiyyatdan keçən yeni müştərilərə :registration ₼ qeydiyyat bonusu verilir.\n• Dostunuzu dəvət etdikdə, onun ilk sifarişi təhvil verildikdən sonra referal bonusu qazanırsınız.\n\nBonus necə istifadə olunur?\n• Sifariş zamanı ödəniş üsulu olaraq bonus balansını seçin.\n• Bonus balansı sifarişin yekun məbləğini tam ödəməlidir.\n\nVacib məlumat\n• Sifariş bonusu sifariş təhvil verildikdən sonra hesabınıza yazılır. Bonus balansı və ya hissə-hissə ödənişlə alınan sifarişlərə bonus verilmir.\n• Bonus nağd pula çevrilmir və başqa hesaba köçürülmür.\n• Parfumshop.az bonus şərtlərini dəyişmək hüququnu özündə saxlayır.",
+  'en' => "What is a bonus?\nBonus is a reward balance for customers shopping at Parfumshop.az. 1 bonus = 1 ₼.\n\nHow to earn bonuses?\n• :percent% of the product value of every order is credited to your account as bonus (delivery fee excluded).\n• New customers who sign up on the website receive a :registration ₼ welcome bonus.\n• When you invite a friend, you earn a referral bonus after their first order is delivered.\n\nHow to use bonuses?\n• Choose bonus balance as the payment method when placing an order.\n• Your bonus balance must cover the full order total.\n\nImportant\n• The order bonus is credited to your account after the order is delivered. Orders paid with bonus balance or in installments do not earn bonus.\n• Bonuses cannot be exchanged for cash or transferred to another account.\n• Parfumshop.az reserves the right to change the bonus terms.",
+  'ru' => "Что такое бонус?\nБонус — это подарочный баланс для покупателей Parfumshop.az. 1 бонус = 1 ₼.\n\nКак получить бонусы?\n• С каждого заказа на ваш счёт начисляется :percent% от стоимости товаров (без учёта доставки).\n• Новые покупатели при регистрации на сайте получают :registration ₼ приветственного бонуса.\n• Пригласив друга, вы получаете реферальный бонус после доставки его первого заказа.\n\nКак использовать бонусы?\n• При оформлении заказа выберите оплату бонусным балансом.\n• Бонусного баланса должно хватать на всю сумму заказа.\n\nВажно\n• Бонус за заказ начисляется после его доставки. За заказы, оплаченные бонусным балансом или в рассрочку, бонус не начисляется.\n• Бонусы не обмениваются на деньги и не переводятся на другой счёт.\n• Parfumshop.az оставляет за собой право изменять условия бонусной программы.",
  ];
 
  /** Müştəriyə göstəriləcək bonus şərtləri (dəyərlər hazırkı ayarlarla əvəz olunur) */
@@ -100,6 +100,29 @@ class BonusService {
   $percent=(float) Setting::valueOf('order_bonus_percent',5);
   $eligibleAmount = max(0, (float)$order->subtotal - (float)$order->discount);
   return round($eligibleAmount*($percent/100),2);
+ }
+
+ /** Bonus qazandırmayan ödəniş üsulları: bonusla alınan maldan bonus yoxdur, kredit sifarişi də bonus vermir */
+ public const NO_EARN_METHODS = ['bonus_balance', 'installment'];
+
+ /**
+  * Sifariş bonusu yalnız "Təhvil verildi"-də yazılır (OrderStatusService::set), ödəniş üsulundan asılı olmayaraq —
+  * NO_EARN_METHODS istisnadır. Köhnə qaydada (sifariş/ödəniş anında) artıq yazılıbsa, təkrar yazılmır.
+  */
+ public function earnOnDelivery(Order $order): float {
+  if (!$this->earnsBonus($order) || (float) $order->bonus_earned > 0 || $this->amountForOrder($order) <= 0 || !$order->customer) return 0;
+  if ($order->customer->bonusTransactions()->where('order_id', $order->id)->where('type', 'earn')->exists()) return 0;
+  return $this->earnForOrder($order->customer, $order, (float) $order->total);
+ }
+
+ /** Təhvil veriləndə yazılacaq bonus (səhifələrdə "Təhvil veriləndə +X ₼"): təhvil verilməyib, ləğv olunmayıb, hələ yazılmayıb */
+ public function pendingFor(Order $order): float {
+  if (!$this->earnsBonus($order) || (float) $order->bonus_earned > 0 || in_array($order->status?->code, ['delivered', 'cancelled'], true)) return 0;
+  return $this->amountForOrder($order);
+ }
+
+ public function earnsBonus(Order $order): bool {
+  return !in_array($order->paymentMethod?->code, self::NO_EARN_METHODS, true);
  }
 
  public function earnForOrder(Customer $customer, Order $order, float $paidAmount): float {

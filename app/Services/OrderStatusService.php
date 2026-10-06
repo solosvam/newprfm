@@ -44,6 +44,7 @@ class OrderStatusService
             'note' => $note, 'created_at' => now(), 'updated_at' => now(),
         ]);
         if ($code === 'delivered') {
+            app(BonusService::class)->earnOnDelivery($order); // sifariş bonusu — yalnız təhvildə
             app(ReferralService::class)->rewardForDeliveredOrder($order); // dəvət olunanın ilk sifarişi → referal bonusları
         }
 

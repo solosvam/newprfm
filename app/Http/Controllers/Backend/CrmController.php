@@ -16,7 +16,6 @@ use App\Models\Order\OrderStatus;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Procurement\OrderItemAllocation;
 use App\Models\Product\ProductVariant;
-use App\Services\BonusService;
 use App\Services\Crm\CreditProfileUpdater;
 use App\Services\IdCard\IdCardStorage;
 use App\Services\Crm\CustomerRegistration;
@@ -84,6 +83,7 @@ class CrmController extends Controller
                 'orders' => $customer->orders()
                     ->where('payment_method_id', '!=', 4)
                     ->with(['status', 'paymentMethod'])
+                    ->withSum('itemCancellations as cancelled_amount', 'amount')
                     ->latest()
                     ->paginate(10),
             ]),
@@ -483,10 +483,7 @@ class CrmController extends Controller
                     'credit_status_id' => CreditStatus::where('code', 'pending')->firstOrFail()->id,
                 ]);
             }
-            // Kart / Birbank: bonus ödəniş təsdiqlənəndə (BirbankPaymentController) yazılır
-            if ($code === 'cash') {
-                app(BonusService::class)->earnForOrder($customer, $order, (float) $order->total);
-            }
+            // Sifariş bonusu təhvildə yazılır (BonusService::earnOnDelivery)
 
             DB::table('order_status_logs')->insert([
                 'order_id' => $order->id,

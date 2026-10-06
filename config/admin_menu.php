@@ -78,6 +78,11 @@ return [
                         'permission' => 'site.banners',
                     ],
                     [
+                        'title'      => 'Vitrin (Populyar)',
+                        'route'      => 'admin.featured.index',
+                        'permission' => 'site.featured',
+                    ],
+                    [
                         'title'      => 'FAQ',
                         'route'      => 'admin.faq.list',
                         'permission' => 'site.faq',
@@ -158,6 +163,11 @@ return [
             [
                 'title'      => 'Səbətdəki mallar',
                 'route'      => 'admin.carts.index',
+                'permission' => 'crm',
+            ],
+            [
+                'title'      => 'Dəvətlər (referal)',
+                'route'      => 'admin.referrals.index',
                 'permission' => 'crm',
             ],
         ],

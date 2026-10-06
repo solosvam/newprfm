@@ -248,7 +248,7 @@
     "orders_apartment": "Mənzil:",
     "orders_note": "Qeyd:",
     "orders_payment_details": "Ödəniş məlumatları",
-    "orders_subtotal": "Ara cəm",
+    "orders_subtotal": "Məhsullar",
     "orders_discount": "Endirim",
     "orders_paid_with_bonuses": "Bonusla ödənilib",
     "orders_bonus_earned": "Qazanılan bonus",
@@ -565,7 +565,6 @@
     "paylink_gift_wrap": "Hədiyyəlik bükmə",
     "paylink_address": "Çatdırılma ünvanı",
     "paylink_refresh": "Səhifəni yenilə",
-    "paylink_bonus_expected": "Ödənişdən sonra +:amount ₼ bonus qazanacaqsınız",
     "orders_item_cancelled": ":count ədəd ləğv edildi",
     "bonus_registration": "Qeydiyyat bonusu",
     "brands_search_placeholder": "Brend axtar…",
@@ -657,5 +656,8 @@
     "cart_referral_discount": "Dəvət endirimi",
     "referral_discount_note_min": "Dəvət endirimi (:amount ₼) :min ₼ və daha çox məbləğli sifarişə tətbiq olunur.",
     "referral_discount_note_promo": "Dəvət endirimi promo kodla birlikdə işləmir. Promo kodu silsəniz, dəvət endirimi tətbiq olunacaq.",
-    "referral_discount_note_installment": "Dəvət endirimi hissə-hissə ödənişə tətbiq olunmur."
+    "referral_discount_note_installment": "Dəvət endirimi hissə-hissə ödənişə tətbiq olunmur.",
+    "orders_cancelled_amount": "Ləğv olunan",
+    "orders_bonus_on_delivery": "Sifariş təhvil veriləndə +:amount ₼ bonus qazanacaqsınız",
+    "home_popular": "Populyar"
 }

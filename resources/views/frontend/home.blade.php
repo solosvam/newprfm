@@ -14,7 +14,7 @@
         @include('frontend.includes.catalog-sidebar')
 
         <div>
-            @include('frontend.includes.catalog-toolbar')
+            @include('frontend.includes.catalog-toolbar', ['popularSort' => true])
             <div class="grid">
                 @foreach ($products ?? [] as $product)
                     @include('frontend.includes.product-card', ['product' => $product])
