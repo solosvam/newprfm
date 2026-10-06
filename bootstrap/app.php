@@ -39,5 +39,13 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Saytın 404 səhifəsi; admin, anbar portalı (/w/...), JSON və GET olmayan sorğular standart cavabı alır
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
+            if ($request->expectsJson() || !$request->isMethod('GET')
+                || $request->is('admin', 'admin/*', 'w/*', 'warehouse-portal/*')) {
+                return null;
+            }
+
+            return response()->view('frontend.404', [], 404);
+        });
     })->create();

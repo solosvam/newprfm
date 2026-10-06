@@ -138,9 +138,14 @@ class BrandLogoService
         if ($ratio >= 1) {
             return $image;
         }
-        $scaled = imagescale($image, max(1, (int) round($w * $ratio)), max(1, (int) round($h * $ratio)), IMG_BICUBIC);
+        // imagescale(…, IMG_BICUBIC) bəzi GD qurğularında səssizcə false qaytarır (şəkil kiçilmirdi) — resampled
+        $newW = max(1, (int) round($w * $ratio));
+        $newH = max(1, (int) round($h * $ratio));
+        $scaled = imagecreatetruecolor($newW, $newH);
+        imagefill($scaled, 0, 0, imagecolorallocate($scaled, 255, 255, 255));
+        imagecopyresampled($scaled, $image, 0, 0, 0, 0, $newW, $newH, $w, $h);
 
-        return $scaled ?: $image;
+        return $scaled;
     }
 
     /** Künc pikselinin rəngini fon sayıb, loqonun ətrafındakı boşluğu kəsir (kiçik haşiyə saxlayır) */

@@ -191,14 +191,17 @@
 
                                 <div class="row g-2">
                                     @foreach([
-                                            ['Şəxsiyyət vəsiqəsi — ön', $creditProfile?->id_card_front],
-                                            ['Şəxsiyyət vəsiqəsi — arxa', $creditProfile?->id_card_back],
-                                    ] as [$label, $image])
+                                            ['Şəxsiyyət vəsiqəsi — ön', $creditProfile?->id_card_front, 'front'],
+                                            ['Şəxsiyyət vəsiqəsi — arxa', $creditProfile?->id_card_back, 'back'],
+                                    ] as [$label, $image, $side])
                                         <div class="col-12">
                                             <div class="text-muted mb-1" style="font-size:11px;">{{ $label }}</div>
-                                            @if($image)
-                                                <a href="{{ asset('frontend/uploads/customers/' . ltrim($image, '/')) }}" target="_blank">
-                                                    <img src="{{ asset('frontend/uploads/customers/' . ltrim($image, '/')) }}" alt="{{ $label }}" class="img-fluid rounded border w-100">
+                                            @if($image && auth('admin')->user()?->cannot('crm.id_card'))
+                                                @include('backend.crm.partials.id-card-locked')
+                                            @elseif($image)
+                                                @php $imageUrl = route('admin.crm.id-card', ['customer' => $customer, 'side' => $side, 'v' => \App\Services\IdCard\IdCardStorage::version($image)]); @endphp
+                                                <a href="{{ $imageUrl }}" target="_blank">
+                                                    <img src="{{ $imageUrl }}" alt="{{ $label }}" class="img-fluid rounded border w-100">
                                                 </a>
                                             @else
                                                 <div class="text-muted">-</div>

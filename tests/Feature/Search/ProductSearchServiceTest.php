@@ -410,4 +410,19 @@ class ProductSearchServiceTest extends TestCase
         $this->assertSame([], $this->ids('nina ricci ov'));                       // qısa söz bütöv olmalıdır ("Love" içində yox)
         $this->assertSame([92], $this->ids('212 vip'));
     }
+
+    public function test_shortcut_searches_brand_first_then_model(): void
+    {
+        $search = app(ProductSearchService::class);
+        // boşluq var: əvvəl brend, sonra ətirin adı (hissə kimi; ən yenisi birinci)
+        $this->assertSame([71, 50, 42, 26], $search->shortcutIds('chr sau'));
+        $this->assertSame([71], $search->shortcutIds('dio sauvage eli'));
+        $this->assertSame([], $search->shortcutIds('sau chr'), 'sıra vacibdir: əvvəl brend');
+        // boşluq yoxdur: həm brenddə, həm adda
+        $this->assertSame([90], $search->shortcutIds('cre'));
+        $this->assertSame([93], $search->shortcutIds('lay'));
+        $this->assertSame([], $search->shortcutIds('  '));
+        // LIKE simvolları adi simvoldur
+        $this->assertSame([], $search->shortcutIds('%'));
+    }
 }

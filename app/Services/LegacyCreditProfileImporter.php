@@ -200,8 +200,7 @@ class LegacyCreditProfileImporter
                 }
                 $data = $changes;
                 if ($images) {
-                    $directory = public_path('frontend/uploads/customers');
-                    if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) throw new RuntimeException('Şəkil qovluğu yaradıla bilmədi.');
+                    $directory = \App\Services\IdCard\IdCardStorage::ensureDirectory();
                     foreach ($images as $field => $image) {
                         $name = Str::uuid().'.'.$image['extension'];
                         $path = $directory.'/'.$name;

@@ -16,6 +16,12 @@ class OrderItemCancellation extends Model
         'other' => 'Digər',
     ];
 
+    /** Sifarişin tam ləğvində məhsuldan başqa ləğv olunan haqlar (order_item_id boşdur) */
+    public const FEE_LABELS = [
+        'delivery' => 'Çatdırılma',
+        'gift_wrap' => 'Hədiyyəlik qablaşdırma',
+    ];
+
     public const REFUND_PENDING = 'pending';       // karta qaytarılmalıdır
     public const REFUND_PROCESSING = 'processing'; // bankdan cavab gəlmədi — yoxlanılmalıdır
     public const REFUND_DONE = 'refunded';         // karta qaytarıldı
@@ -28,7 +34,7 @@ class OrderItemCancellation extends Model
         self::REFUND_BONUS => 'Bonusa qaytarıldı',
     ];
 
-    protected $fillable = ['order_id', 'order_item_id', 'quantity', 'amount', 'reason', 'note', 'customer_agreed', 'bonus_adjustment', 'refund_status', 'payment_operation_id', 'refunded_at', 'created_by'];
+    protected $fillable = ['order_id', 'order_item_id', 'fee_type', 'quantity', 'amount', 'reason', 'note', 'customer_agreed', 'bonus_adjustment', 'refund_status', 'payment_operation_id', 'refunded_at', 'created_by'];
 
     protected function casts(): array
     {
@@ -38,6 +44,12 @@ class OrderItemCancellation extends Model
     public function order(): BelongsTo { return $this->belongsTo(Order::class); }
     public function orderItem(): BelongsTo { return $this->belongsTo(OrderItem::class); }
     public function user(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
+
+    /** Nə ləğv olunub: məhsulun adı və ya haqqın adı */
+    public function subjectLabel(): string
+    {
+        return $this->fee_type ? (self::FEE_LABELS[$this->fee_type] ?? $this->fee_type) : ($this->orderItem?->product?->name ?? 'Məhsul');
+    }
 
     public function reasonLabel(): string
     {

@@ -131,7 +131,7 @@ class ProcurementService
     public function markReturned(Order $order, int $allocationId, int $actor): OrderItemAllocation
     {
         return DB::transaction(function () use ($order, $allocationId, $actor) {
-            $this->lockOrder($order, ['sent', 'at_address', 'delivered']); // yoldan sonra (təhvildən sonra da)
+            $this->lockOrder($order, ['courier_assigned', 'sent', 'at_address', 'delivered', 'cancelled']); // qapıda imtina və ya sifarişin ləğvi: götürülmüş mal anbara qaytarılır
             $allocation = OrderItemAllocation::with(['warehouse', 'orderItem.product'])
                 ->whereIn('order_item_id', $order->items()->select('id'))->lockForUpdate()->findOrFail($allocationId);
             if ($allocation->status === OrderItemAllocation::RETURNED) {

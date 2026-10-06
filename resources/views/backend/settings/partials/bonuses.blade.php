@@ -52,30 +52,6 @@
 
                 <hr class="settings-divider">
 
-                {{-- Bonusla ödəniş həddi: sifarişin ən çox neçə faizi bonusla ödənə bilər (bütün bonuslar) --}}
-                <div>
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <label for="bonus_pay_percent" class="form-label mb-0">Bonusla ödəniş həddi</label>
-                        <div class="form-check form-switch mb-0">
-                            <input type="hidden" name="bonus_pay_limit_enabled" value="0">
-                            <input id="bonus_pay_limit_enabled" name="bonus_pay_limit_enabled" value="1" type="checkbox" role="switch"
-                                   class="form-check-input" aria-label="Bonusla ödəniş həddi aktivdir"
-                                   data-settings-toggle="payLimit" @checked((string) old('bonus_pay_limit_enabled', (int) $bonusPayLimitEnabled) === '1')>
-                        </div>
-                    </div>
-                    <div class="input-group has-validation" data-settings-target="payLimit">
-                        <span class="input-group-text">ən çox</span>
-                        <input id="bonus_pay_percent" name="bonus_pay_percent" type="number" min="1" max="100" step="1"
-                               value="{{ old('bonus_pay_percent', $bonusPayPercent) }}"
-                               @class(['form-control', 'is-invalid' => $errors->has('bonus_pay_percent')])>
-                        <span class="input-group-text">%</span>
-                        @error('bonus_pay_percent')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="form-text">Məsələn 30%: 90 ₼-lıq səbətin ən çox 27 ₼-u bonusla ödənir. Söndürülübsə, bonus balansı imkan verdikcə tam ödəmək olar.</div>
-                </div>
-
-                <hr class="settings-divider">
-
                 {{-- Bonusun istifadə müddəti: müddət ərzində xərclənməyən bonus balansdan silinir (referal bonusunun müddəti Referal bölməsindədir) --}}
                 <div>
                     <div class="d-flex align-items-center justify-content-between mb-2">

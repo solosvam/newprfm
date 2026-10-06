@@ -17,6 +17,7 @@ use App\Services\BonusService;
 use App\Services\CartService;
 use App\Services\Payment\Birbank;
 use App\Services\PromoCodeService;
+use App\Services\Referral\ReferralService;
 use App\Services\ShopPricing;
 use App\Support\LocalizedValidation;
 use Illuminate\Http\Request;
@@ -188,13 +189,17 @@ class CheckoutController extends Controller
             $subtotal = round($subtotal, 2);
             $discount = 0;
             $promo = null;
-            if ($code = session('promo_code')) {
+            // Promo kod daxili kreditə (installment) tətbiq olunmur — checkout səhifəsi də onu bağlayır (promo-lock)
+            if (($code = session('promo_code')) && $paymentMethod->code !== 'installment') {
                 try {
                     ['promo' => $promo, 'discount' => $discount] = app(PromoCodeService::class)->resolve($code, $subtotal, true);
                 } catch (PromoCodeException) {
                     session()->forget('promo_code');
                 }
             }
+            // Dəvət olunanın ilk sifariş endirimi (referal) — orders.discount-a daxildir, ayrıca referral_discount-da da saxlanır
+            $referralDiscount = app(ReferralService::class)->discountFor($customer, $subtotal, (float) $discount, $paymentMethod->code);
+            $discount = round($discount + $referralDiscount, 2);
             $goods = round($subtotal - $discount, 2);
             $delivery = app(ShopPricing::class)->deliveryFee($goods);
             $giftWrapFee = app(ShopPricing::class)->giftWrapFee((bool)($data['gift_wrap'] ?? false));
@@ -222,6 +227,7 @@ class CheckoutController extends Controller
                 'customer_note' => $data['customer_note'] ?? null,
                 'subtotal' => $subtotal,
                 'discount' => $discount,
+                'referral_discount' => $referralDiscount,
                 'delivery_fee' => $delivery,
                 'gift_wrap_fee' => $giftWrapFee,
                 'promo_code_id' => $promo?->id,

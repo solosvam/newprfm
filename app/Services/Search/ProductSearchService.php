@@ -199,6 +199,39 @@ class ProductSearchService
         return array_values($alternatives);
     }
 
+    /**
+     * Qısaltma ilə axtarış (ps-side panelində operatorların köhnə saytdan vərdişi), lüğətsiz:
+     *   "dol int" — boşluqdan əvvəlki hissə brend adında, sonrakı hissə ətirin adında (hissə kimi): Dolce & Gabbana … Intense;
+     *   "dol"     — boşluq yoxdursa, həm brend adında, həm ətirin adında.
+     * Sıra vacibdir: əvvəl brend, sonra model. Nəticə — məhsul id-ləri (ən yenisi birinci).
+     *
+     * @return int[]
+     */
+    public function shortcutIds(string $query, int $limit = 8): array
+    {
+        $parts = array_values(array_filter(explode(' ', trim($query)), 'strlen'));
+        if ($parts === []) {
+            return [];
+        }
+        $like = fn (string $text) => '%'.addcslashes($text, '%_\\').'%';
+
+        return Product::query()
+            ->where('products.active', 1)
+            ->when(count($parts) > 1,
+                fn (Builder $query) => $query
+                    ->whereHas('brand', fn (Builder $brand) => $brand->where('name', 'like', $like($parts[0])))
+                    ->where('products.name', 'like', $like(implode(' ', array_slice($parts, 1)))),
+                fn (Builder $query) => $query->where(fn (Builder $any) => $any
+                    ->where('products.name', 'like', $like($parts[0]))
+                    ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', 'like', $like($parts[0]))))
+            )
+            ->orderByDesc('products.id')
+            ->limit($limit)
+            ->pluck('products.id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     private function find(array $brandIds, array $words, int $limit, array $alternatives = []): Collection
     {
         $escape = fn (string $word) => addcslashes($word, '%_\\');

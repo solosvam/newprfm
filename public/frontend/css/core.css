@@ -295,3 +295,18 @@ footer .logo--svg { color: var(--on-accent-bg); }
 .btn:disabled, .btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
 /* İkonlu düymə: ikon + mətn mərkəzdə */
 .btn--with-icon .btn__icon { flex-shrink: 0; width: 18px; height: 24px; }
+
+/* Şifrə inputu + göz düyməsi (main.js input[type=password]-i .pw-field-ə bükür) */
+.pw-field { position: relative; display: block; width: 100%; }
+.pw-field > input { width: 100%; padding-right: 48px !important; }
+.pw-toggle {
+    position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+    display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+    padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-muted); cursor: pointer;
+}
+.pw-toggle:hover { color: var(--text); }
+.pw-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pw-toggle .pw-toggle__closed, .pw-toggle.is-visible .pw-toggle__open { display: none; }
+.pw-toggle.is-visible .pw-toggle__closed { display: inline; }
+/* Edge/IE-nin öz göz düyməsi ikiləşməsin */
+.pw-field > input::-ms-reveal, .pw-field > input::-ms-clear { display: none; }

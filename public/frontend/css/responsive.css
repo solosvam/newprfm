@@ -222,6 +222,7 @@ html, body { overflow-x: hidden; }
 @media (max-width: 600px) {
     .error-page { margin: 32px auto; padding: 36px 22px; }
     .error-page__actions { flex-direction: column; }
+    .error-page__btn { flex: none; } /* sütunda flex: 1 (basis 0) hündürlüyü sıxırdı */
     .error-page__code { font-size: 52px; }
 }
 

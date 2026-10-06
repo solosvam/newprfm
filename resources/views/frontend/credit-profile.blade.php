@@ -95,7 +95,7 @@
 
                                     <div class="credit-photo" data-photo="{{ $field }}">
                                         <img class="credit-preview"
-                                             src="{{ $hasImage ? asset('frontend/uploads/customers/' . basename($profile->{$field})) : '' }}"
+                                             src="{{ $hasImage ? route('profile.credit.image', ['side' => str_replace('id_card_', '', $field), 'v' => \App\Services\IdCard\IdCardStorage::version($profile->{$field})]) : '' }}"
                                              alt="{{ $label }}"
                                              @if (!$hasImage) hidden @endif>
 

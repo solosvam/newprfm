@@ -4,21 +4,19 @@
 <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/error.css') }}">
 @endsection
 
-@section('title', '404 — Səhifə tapılmadı | parfumshop')
+@section('title', '404 — ' . __('error_404_title') . ' | parfumshop')
 
 @section('content')
     <main>
         <div class="wrap">
             <div class="error-page">
                 <p class="error-page__code">404</p>
-                <h1 class="error-page__title">Səhifə tapılmadı</h1>
-                <p class="error-page__text">
-                    Axtardığınız səhifə silinmiş, adı dəyişdirilmiş və ya heç vaxt mövcud olmayıb.
-                </p>
+                <h1 class="error-page__title">{{ __('error_404_title') }}</h1>
+                <p class="error-page__text">{{ __('error_404_text') }}</p>
 
                 <div class="error-page__actions">
-                    <a href="{{ route('home') }}" class="btn btn-dark error-page__btn">Ana səhifəyə qayıt</a>
-                    <a href="{{ route('brands') }}" class="btn btn-outline error-page__btn">Brendlərə bax</a>
+                    <a href="{{ route('home') }}" class="btn btn-dark error-page__btn">{{ __('error_404_home') }}</a>
+                    <a href="{{ route('brands') }}" class="btn btn-outline error-page__btn">{{ __('error_404_brands') }}</a>
                 </div>
 
                 <div class="error-page__icon">

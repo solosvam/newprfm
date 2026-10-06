@@ -116,7 +116,7 @@ class CustomerCartTest extends TestCase
             $t->integer('payment_method_id'); $t->integer('birbank_installment_months')->nullable();
             $t->string('payment_status'); $t->string('source'); $t->integer('order_status_id');
             $t->boolean('gift_wrap'); $t->text('customer_note')->nullable();
-            foreach (['subtotal', 'discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $column) $t->decimal($column, 12, 2)->default(0);
+            foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $column) $t->decimal($column, 12, 2)->default(0);
             $t->integer('promo_code_id')->nullable(); $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
@@ -128,7 +128,7 @@ class CustomerCartTest extends TestCase
         });
         Schema::create('customer_bonus_transactions', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->integer('order_id'); $t->string('type');
-            $t->decimal('amount', 12, 2); $t->string('note'); $t->timestamps();
+            $t->decimal('amount', 12, 2); $t->string('note'); $t->timestamp('expires_at')->nullable(); $t->timestamp('expired_at')->nullable(); $t->timestamps();
         });
         DB::table('payment_methods')->insert(['id' => 1, 'code' => 'cash', 'active' => 1]);
         DB::table('order_statuses')->insert(['id' => 1, 'code' => 'new', 'active' => 1]);

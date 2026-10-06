@@ -108,6 +108,95 @@ class OrderItemCancellationService
         ];
     }
 
+    /** Sifarişin tam ləğvi mümkün deyilsə səbəbi */
+    public function orderBlockReason(Order $order): ?string
+    {
+        $order->loadMissing(['status', 'paymentMethod']);
+
+        return match (true) {
+            $order->isCancelled() => 'Sifariş artıq ləğv edilib.',
+            $order->status?->code === 'delivered' => 'Təhvil verilmiş sifariş ləğv edilmir.',
+            $order->paymentMethod?->code === 'installment' => 'Hissə-hissə (kredit) sifarişinin ləğvi hələ dəstəklənmir.',
+            $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
+            default => null,
+        };
+    }
+
+    /**
+     * Sifarişin tam ləğvinin nəticəsi (bazaya yazmadan) — təsdiq pəncərəsi üçün.
+     *
+     * @return array{items: float, fees: float, total: float, refund: ?string, bonus: float, returning: int, notify: int}
+     */
+    public function orderPreview(Order $order): array
+    {
+        $order->loadMissing(['items.allocations', 'paymentMethod']);
+        $fees = round((float) $order->delivery_fee + (float) $order->gift_wrap_fee, 2);
+        $allocations = $order->items->flatMap->allocations;
+
+        return [
+            'items' => max(0, round((float) $order->total - $fees, 2)),
+            'fees' => min($fees, (float) $order->total),
+            'total' => (float) $order->total,
+            'refund' => $this->refundStatus($order),
+            'bonus' => (float) $order->bonus_earned,
+            'returning' => (int) $allocations->where('status', OrderItemAllocation::PICKED)->sum('quantity'),
+            'notify' => $allocations->whereIn('status', [OrderItemAllocation::NOTIFIED, OrderItemAllocation::RESERVED])->count(),
+        ];
+    }
+
+    /**
+     * Sifarişin tam ləğvi (bir sifarişin detal səhifəsindən):
+     *  - qalan bütün məhsullar ləğv olunur (məhsul ləğvi ilə eyni hesab: bonus fərqi, bonusa/karta qaytarma);
+     *  - ödənilibsə çatdırılma və qablaşdırma haqqı da ayrıca qaytarılır;
+     *  - anbar seçimləri bağlanır (xəbərdar edilmiş/ayrılmış anbarlara SMS), kuryerin götürdüyü mal "Anbara qaytarılır" olur;
+     *  - status "Ləğv edildi", səbəb tarixçəyə yazılır (müştəri də görür).
+     *
+     * @return array{cancellations: list<OrderItemCancellation>, notify: list<int>}
+     */
+    public function cancelOrder(Order $order, string $reason, ?string $note, int $actor): array
+    {
+        return DB::transaction(function () use ($order, $reason, $note, $actor) {
+            $order = Order::with(['items.product', 'status', 'paymentMethod', 'customer'])->lockForUpdate()->findOrFail($order->id);
+
+            $this->ensure(($block = $this->orderBlockReason($order)) === null, (string) $block);
+            $this->ensure(isset(OrderItemCancellation::REASONS[$reason]) && $reason !== 'door_refused', 'Səbəbi seçin.');
+
+            // Status əvvəlcə: anbar seçimləri bağlananda təminat statusu (Anbarlara sorğu…) yenidən hesablanmasın
+            app(OrderStatusService::class)->set($order, 'cancelled', $actor,
+                OrderItemCancellation::REASONS[$reason].($note ? ': '.$note : ''));
+
+            $cancellations = [];
+            $notify = [];
+            foreach ($order->items as $item) {
+                if ($item->activeQuantity() > 0) {
+                    $cancellations[] = $this->applyLocked($order, $item, $item->activeQuantity(), $reason, $note, $actor, 'order', $notify);
+                }
+            }
+
+            // Ödənilib: çatdırılma / qablaşdırma da qaytarılır (karta — ödənişin həmin sətrinə, bonusla — balansa)
+            $refund = $this->refundStatus($order);
+            if ($refund !== null) {
+                foreach (['delivery' => 'delivery_fee', 'gift_wrap' => 'gift_wrap_fee'] as $type => $column) {
+                    $amount = min(round((float) $order->{$column}, 2), round((float) $order->total, 2));
+                    if ($amount <= 0) {
+                        continue;
+                    }
+                    if ($refund === OrderItemCancellation::REFUND_BONUS && $order->customer) {
+                        $this->refundToBonus($order, $amount, OrderItemCancellation::FEE_LABELS[$type], $actor);
+                    }
+                    $cancellations[] = OrderItemCancellation::create([
+                        'order_id' => $order->id, 'order_item_id' => null, 'fee_type' => $type, 'quantity' => 1,
+                        'amount' => $amount, 'reason' => $reason, 'note' => $note, 'customer_agreed' => true,
+                        'refund_status' => $refund, 'created_by' => $actor,
+                    ]);
+                    $order->update(['total' => max(0, round((float) $order->total - $amount, 2))]);
+                }
+            }
+
+            return ['cancellations' => $cancellations, 'notify' => $notify];
+        });
+    }
+
     public function cancel(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor): OrderItemCancellation
     {
         return $this->apply($order, $item, $quantity, $reason, $note, $actor, false);
@@ -132,83 +221,97 @@ class OrderItemCancellationService
             $remaining = $order->items->sum(fn ($i) => $i->activeQuantity()) - $quantity;
             $this->ensure($remaining > 0, $door
                 ? 'Müştəri bütün məhsullardan imtina edirsə, "Problem" bildirin — operator sifarişi ləğv edəcək.'
-                : 'Sifarişdə ən azı bir məhsul qalmalıdır. Hamısı ləğv olunursa, sifarişi ləğv edin.');
+                : 'Sifarişdə ən azı bir məhsul qalmalıdır. Hamısı ləğv olunursa, "Sifarişi ləğv et" düyməsindən istifadə edin.');
 
-            $result = $this->preview($order, $item, $quantity);
-
-            if ($door) {
-                $this->returnPicked($item, $quantity, $note, $actor);
-            } else {
-                // Artıq qalan anbar seçimləri: ən yenisindən bağlanır
-                $keep = $item->activeQuantity() - $quantity;
-                $allocations = OrderItemAllocation::where('order_item_id', $item->id)->where('status', '!=', 'cancelled')->orderByDesc('id')->get();
-                $selected = (int) $allocations->sum('quantity');
-                foreach ($allocations as $allocation) {
-                    if ($selected <= $keep) break;
-                    $this->procurement->cancelAllocation($order, $allocation->id, 'Məhsul ləğv edildi: '.$quantity.' ədəd', $actor);
-                    $selected -= (int) $allocation->quantity;
-                }
-            }
-
-            $item->update([
-                'cancelled_quantity' => (int) $item->cancelled_quantity + $quantity,
-                'total' => round((float) $item->unit_price * ($item->activeQuantity() - $quantity), 2),
-            ]);
-            $order->update([
-                'subtotal' => $result['subtotal'],
-                'discount' => $result['discount'],
-                'total' => $result['total'],
-            ]);
-
-            $productName = ($item->product?->name ?? 'Məhsul').' ×'.$quantity;
-
-            // Qazanılmış bonusun fərqi geri alınır
-            if ($result['bonus'] > 0 && $order->customer) {
-                DB::table('customers')->where('id', $order->customer_id)->decrement('bonus_balance', $result['bonus']);
-                $order->customer->bonusTransactions()->create([
-                    'order_id' => $order->id, 'type' => 'adjustment', 'amount' => -$result['bonus'],
-                    'note' => 'Sifariş ləğvi: '.$order->order_no.' · '.$productName, 'created_by' => $actor,
-                ]);
-                $order->update(['bonus_earned' => max(0, round((float) $order->bonus_earned - $result['bonus'], 2))]);
-            }
-
-            // Bonusla ödənilib: ləğv olunan məbləğ bonus balansına qayıdır
-            if ($result['refund'] === OrderItemCancellation::REFUND_BONUS && $order->customer) {
-                DB::table('customers')->where('id', $order->customer_id)->increment('bonus_balance', $result['amount']);
-                $order->customer->bonusTransactions()->create([
-                    // refund — yeni bonus paketi deyil: xərclənmiş bonus öz köhnə bitmə tarixinə qayıdır
-                    'order_id' => $order->id, 'type' => 'refund', 'amount' => $result['amount'],
-                    'note' => 'Ləğv olunan sifarişdən geri qaytarma: '.$order->order_no.' · '.$productName, 'created_by' => $actor,
-                ]);
-            }
-
-            $cancellation = OrderItemCancellation::create([
-                'order_id' => $order->id,
-                'order_item_id' => $item->id,
-                'quantity' => $quantity,
-                'amount' => $result['amount'],
-                'reason' => $reason,
-                'note' => $note,
-                'customer_agreed' => true,
-                'bonus_adjustment' => $result['bonus'],
-                'refund_status' => $result['refund'],
-                'created_by' => $actor,
-            ]);
-            if ($door) {
-                // Sifariş səhifəsində "Kuryer bildirişləri"ndə görünür
-                DB::table('order_status_logs')->insert([
-                    'order_id' => $order->id, 'status_id' => $order->order_status_id, 'user_id' => $actor, 'kind' => 'door_refusal',
-                    'note' => 'Qapıda imtina: '.$productName.' — '.number_format($result['amount'], 2).' AZN. Yeni yekun: '
-                        .number_format($result['total'], 2).' AZN.'.($note ? ' '.$note : ''),
-                    'created_at' => now(), 'updated_at' => now(),
-                ]);
-            } else {
-                // Qalan miqdarın hamısı seçilibsə "Anbarlar təyin olundu"
-                app(OrderStatusService::class)->syncSupply($order, $actor);
-            }
-
-            return $cancellation;
+            return $this->applyLocked($order, $item, $quantity, $reason, $note, $actor, $door ? 'door' : 'item');
         });
+    }
+
+    /**
+     * Ləğvin özü (sifariş artıq kilidlənib, yoxlamalar edilib).
+     * $mode: item — operator ləğvi (artıq qalan anbar seçimləri bağlanır); door — qapıda imtina
+     * (götürülmüş hissə anbara qaytarılır); order — sifarişin tam ləğvi (götürülən qaytarılır, qalanı bağlanır).
+     *
+     * @param  list<int>  $notify  anbara "rezerv lazım deyil" SMS-i göndəriləcək seçimlər (order rejimi)
+     */
+    private function applyLocked(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor, string $mode, array &$notify = []): OrderItemCancellation
+    {
+        $result = $this->preview($order, $item, $quantity);
+
+        if ($mode === 'door') {
+            $this->returnPicked($item, $quantity, $note, $actor);
+        } elseif ($mode === 'order') {
+            $this->releaseAllAllocations($item, $actor, $notify);
+        } else {
+            // Artıq qalan anbar seçimləri: ən yenisindən bağlanır
+            $keep = $item->activeQuantity() - $quantity;
+            $allocations = OrderItemAllocation::where('order_item_id', $item->id)->where('status', '!=', 'cancelled')->orderByDesc('id')->get();
+            $selected = (int) $allocations->sum('quantity');
+            foreach ($allocations as $allocation) {
+                if ($selected <= $keep) break;
+                $this->procurement->cancelAllocation($order, $allocation->id, 'Məhsul ləğv edildi: '.$quantity.' ədəd', $actor);
+                $selected -= (int) $allocation->quantity;
+            }
+        }
+
+        $item->update([
+            'cancelled_quantity' => (int) $item->cancelled_quantity + $quantity,
+            'total' => round((float) $item->unit_price * ($item->activeQuantity() - $quantity), 2),
+        ]);
+        $order->update([
+            'subtotal' => $result['subtotal'],
+            'discount' => $result['discount'],
+            // referal endirimi discount-un hissəsidir — onunla eyni nisbətdə azalır (sayt sifarişlərində operator endirimi yoxdur)
+            'referral_discount' => (float) $order->discount > 0
+                ? round(min((float) $order->referral_discount * $result['discount'] / (float) $order->discount, $result['discount']), 2)
+                : 0,
+            'total' => $result['total'],
+        ]);
+
+        $productName = ($item->product?->name ?? 'Məhsul').' ×'.$quantity;
+
+        // Qazanılmış bonusun fərqi geri alınır
+        if ($result['bonus'] > 0 && $order->customer) {
+            DB::table('customers')->where('id', $order->customer_id)->decrement('bonus_balance', $result['bonus']);
+            $order->customer->bonusTransactions()->create([
+                'order_id' => $order->id, 'type' => 'adjustment', 'amount' => -$result['bonus'],
+                // sifariş nömrəsi order_id ilə ayrıca göstərilir — qeyddə təkrarlanmır
+                'note' => 'Sifariş ləğvi: '.$productName, 'created_by' => $actor,
+            ]);
+            $order->update(['bonus_earned' => max(0, round((float) $order->bonus_earned - $result['bonus'], 2))]);
+        }
+
+        // Bonusla ödənilib: ləğv olunan məbləğ bonus balansına qayıdır
+        if ($result['refund'] === OrderItemCancellation::REFUND_BONUS && $order->customer) {
+            $this->refundToBonus($order, $result['amount'], $productName, $actor);
+        }
+
+        $cancellation = OrderItemCancellation::create([
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'quantity' => $quantity,
+            'amount' => $result['amount'],
+            'reason' => $reason,
+            'note' => $note,
+            'customer_agreed' => true,
+            'bonus_adjustment' => $result['bonus'],
+            'refund_status' => $result['refund'],
+            'created_by' => $actor,
+        ]);
+        if ($mode === 'door') {
+            // Sifariş səhifəsində "Kuryer bildirişləri"ndə görünür
+            DB::table('order_status_logs')->insert([
+                'order_id' => $order->id, 'status_id' => $order->order_status_id, 'user_id' => $actor, 'kind' => 'door_refusal',
+                'note' => 'Qapıda imtina: '.$productName.' — '.number_format($result['amount'], 2).' AZN. Yeni yekun: '
+                    .number_format($result['total'], 2).' AZN.'.($note ? ' '.$note : ''),
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        } elseif ($mode === 'item') {
+            // Qalan miqdarın hamısı seçilibsə "Anbarlar təyin olundu"
+            app(OrderStatusService::class)->syncSupply($order, $actor);
+        }
+
+        return $cancellation;
     }
 
     /**
@@ -241,6 +344,51 @@ class OrderItemCancellationService
             ]);
             $left -= $take;
         }
+    }
+
+    /**
+     * Tam ləğvdə məhsulun bütün anbar hissələri: kuryerin götürdüyü — "Anbara qaytarılır" (kuryer sonra "Qaytardım"),
+     * hələ götürülməyən — bağlanır; xəbərdar edilmiş/ayrılmış anbarlar SMS üçün siyahıya düşür.
+     *
+     * @param  list<int>  $notify
+     */
+    private function releaseAllAllocations(OrderItem $item, int $actor, array &$notify): void
+    {
+        $parts = OrderItemAllocation::where('order_item_id', $item->id)
+            ->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)->lockForUpdate()->orderBy('id')->get();
+
+        foreach ($parts as $part) {
+            if ($part->status === OrderItemAllocation::PICKED) {
+                $part->update(['status' => OrderItemAllocation::RETURNING]);
+                AllocationStatusLog::create([
+                    'order_item_allocation_id' => $part->id, 'from_status' => OrderItemAllocation::PICKED,
+                    'to_status' => OrderItemAllocation::RETURNING, 'user_id' => $actor,
+                    'note' => 'Sifariş ləğv edildi: '.$part->quantity.' ədəd anbara qaytarılır', 'created_at' => now(),
+                ]);
+
+                continue;
+            }
+            if (in_array($part->status, [OrderItemAllocation::NOTIFIED, OrderItemAllocation::RESERVED], true)) {
+                $notify[] = $part->id;
+            }
+            // ProcurementService::cancelAllocation təminat mərhələsini tələb edir — tam ləğvdə birbaşa bağlanır
+            $from = $part->status;
+            $part->update(['status' => OrderItemAllocation::CANCELLED, 'problem_type' => null]);
+            AllocationStatusLog::create([
+                'order_item_allocation_id' => $part->id, 'from_status' => $from,
+                'to_status' => OrderItemAllocation::CANCELLED, 'user_id' => $actor, 'note' => 'Sifariş ləğv edildi', 'created_at' => now(),
+            ]);
+        }
+    }
+
+    private function refundToBonus(Order $order, float $amount, string $subject, int $actor): void
+    {
+        DB::table('customers')->where('id', $order->customer_id)->increment('bonus_balance', $amount);
+        $order->customer->bonusTransactions()->create([
+            // refund — yeni bonus paketi deyil: xərclənmiş bonus öz köhnə bitmə tarixinə qayıdır
+            'order_id' => $order->id, 'type' => 'refund', 'amount' => $amount,
+            'note' => 'Ləğv olunan sifarişdən geri qaytarma: '.$subject, 'created_by' => $actor,
+        ]);
     }
 
     /** Pul artıq alınıbsa necə qaytarılacaq; alınmayıbsa (nağd, ödənilməmiş onlayn) null */

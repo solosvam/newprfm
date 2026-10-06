@@ -250,15 +250,25 @@
 }
 .order-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
+/* order_statuses.code dəyərləri + profile.blade-dəki ümumi adlar (received/processing/shipped) */
 .order-status--received,
+.order-status--new,
 .order-status--pending    { --status: var(--warning); }
-.order-status--processing { --status: var(--info); }
-.order-status--shipped    { --status: #6b46c1; }
+.order-status--processing,
+.order-status--preparing,
+.order-status--confirmed,
+.order-status--warehouse_requested,
+.order-status--warehouses_assigned,
+.order-status--courier_assigned { --status: var(--info); }
+.order-status--shipped,
+.order-status--sent,
+.order-status--courier,
+.order-status--at_address { --status: #6b46c1; }
 .order-status--delivered  { --status: var(--success); }
 .order-status--cancelled  { --status: var(--danger); }
 .order-status--awaiting-payment { --status: var(--warning); }
 
-[data-theme="dark"] .order-status--shipped    { --status: #a88bfa; }
+[data-theme="dark"] :is(.order-status--shipped, .order-status--sent, .order-status--courier, .order-status--at_address) { --status: #a88bfa; }
 
 /* Products */
 .order-card__products { display: flex; align-items: center; gap: 6px; }

@@ -38,7 +38,7 @@ class OrderItemCancellationTest extends TestCase
         Schema::create('orders', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->unsignedBigInteger('payment_method_id'); $t->string('payment_status')->default('pending');
-            foreach (['subtotal', 'discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $c) $t->decimal($c, 12, 2)->default(0);
+            foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $c) $t->decimal($c, 12, 2)->default(0);
             $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
@@ -52,6 +52,7 @@ class OrderItemCancellationTest extends TestCase
         });
         (require database_path('migrations/2026_09_29_150000_create_procurement_tables.php'))->up();
         (require database_path('migrations/2026_09_29_160000_create_order_item_cancellations_table.php'))->up();
+        (require database_path('migrations/2026_10_06_203155_add_fee_type_to_order_item_cancellations.php'))->up();
         (require database_path('migrations/2026_09_29_190000_add_supply_flow_to_order_item_allocations.php'))->up();
 
         DB::table('order_statuses')->insert(['id' => 2, 'code' => 'courier']);
@@ -233,5 +234,77 @@ class OrderItemCancellationTest extends TestCase
         DB::table('payments')->insert(['customer_id' => 1, 'order_id' => $order->id, 'provider' => 'birbank', 'amount' => 395, 'status' => 'pending']);
         $this->assertNotNull($service->blockReason($order->fresh()));
         $this->assertNull($service->blockReason($this->order()));
+    }
+
+    public function test_whole_order_cancel_refunds_items_and_delivery_and_reverses_bonus(): void
+    {
+        $order = $this->order();
+        $service = app(OrderItemCancellationService::class);
+
+        $result = $service->cancelOrder($order, 'customer_refused', 'fikrini dəyişdi', 7);
+
+        $order->refresh();
+        $this->assertSame('cancelled', $this->statusCode($order));
+        $this->assertTrue($order->items()->get()->every(fn ($item) => $item->activeQuantity() === 0));
+        $this->assertEquals(0, $order->total);
+
+        // Karta qaytarılacaq: məhsullar (390) + çatdırılma (5) — çatdırılma ödənişin öz sətrinə bağlanacaq
+        $rows = collect($result['cancellations']);
+        $this->assertEquals(395, $rows->sum('amount'));
+        $this->assertTrue($rows->every(fn ($c) => $c->refund_status === OrderItemCancellation::REFUND_PENDING));
+        $fee = $rows->firstWhere('fee_type', 'delivery');
+        $this->assertEquals(5, $fee->amount);
+        $this->assertNull($fee->order_item_id);
+        $this->assertSame('Çatdırılma', $fee->subjectLabel());
+
+        // Qazanılmış bonus tam geri alınır
+        $this->assertEquals(0, $order->bonus_earned);
+        $this->assertEquals(80.50, DB::table('customers')->value('bonus_balance'));
+
+        $log = DB::table('order_status_logs')->where('order_id', $order->id)->latest('id')->first();
+        $this->assertSame('Müştəri imtina etdi: fikrini dəyişdi', $log->note);
+    }
+
+    public function test_whole_order_cancel_returns_picked_goods_and_releases_reservations(): void
+    {
+        [$order, $parts] = $this->atDoor();
+        // İkinci məhsulun hissəsi hələ götürülməyib — anbar ayırıb
+        $parts[1]->update(['status' => OrderItemAllocation::RESERVED]);
+
+        $result = app(OrderItemCancellationService::class)->cancelOrder($order, 'other', 'ünvanda yox idi', 9);
+
+        $this->assertSame('returning', $parts[0]->fresh()->status);   // kuryer anbara qaytarmalıdır
+        $this->assertSame('cancelled', $parts[1]->fresh()->status);
+        $this->assertSame([$parts[1]->id], $result['notify']);         // anbara "rezerv lazım deyil"
+        $this->assertTrue(collect($result['cancellations'])->every(fn ($c) => $c->refund_status === null)); // nağd — qaytarma yox
+        $this->assertSame('cancelled', $this->statusCode($order));
+
+        // Kuryer ləğv edilmiş sifarişdə də malı anbara qaytara bilir
+        app(ProcurementService::class)->markReturned($order->fresh(), $parts[0]->id, 9);
+        $this->assertSame('returned', $parts[0]->fresh()->status);
+    }
+
+    public function test_bonus_paid_order_cancel_returns_everything_to_bonus_balance(): void
+    {
+        $order = $this->order(['payment_method_id' => 3, 'bonus_earned' => 0]);
+
+        app(OrderItemCancellationService::class)->cancelOrder($order, 'not_in_stock', null, 7);
+
+        $this->assertEquals(495, DB::table('customers')->value('bonus_balance')); // 100 + 395
+        $this->assertSame(3, DB::table('customer_bonus_transactions')->where('type', 'refund')->count());
+    }
+
+    public function test_whole_order_cancel_rules(): void
+    {
+        $service = app(OrderItemCancellationService::class);
+        $this->assertNull($service->orderBlockReason($this->order(['order_status_id' => 15]))); // yolda da olar
+        $this->assertNotNull($service->orderBlockReason($this->order(['order_status_id' => 17]))); // təhvil verilib
+        $this->assertNotNull($service->orderBlockReason($this->order(['order_status_id' => 18]))); // artıq ləğv
+        $this->assertNotNull($service->orderBlockReason($this->order(['payment_method_id' => 4]))); // kredit
+
+        $order = $this->order();
+        $service->cancelOrder($order, 'not_in_stock', null, 7);
+        $this->expectException(ValidationException::class);
+        $service->cancelOrder($order->fresh(), 'not_in_stock', null, 7);
     }
 }

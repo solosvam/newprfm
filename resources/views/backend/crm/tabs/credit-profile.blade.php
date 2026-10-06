@@ -35,13 +35,20 @@
             <div class="col-12"><p class="text-muted mb-0">{{ __('credit_section_documents_hint') }}</p></div>
             @php $needsBack = \App\Models\Customer\CustomerCreditProfile::needsBackSide($series); @endphp
             @foreach(['id_card_front' => 'Şəxsiyyət vəsiqəsi — ön', 'id_card_back' => 'Şəxsiyyət vəsiqəsi — arxa (yalnız AZE üçün)'] as $field => $label)
-                @php $hasImage = (bool) $profile?->{$field}; $isBack = $field === 'id_card_back'; @endphp
+                @php
+                    $hasImage = (bool) $profile?->{$field};
+                    $canView = $hasImage && auth('admin')->user()?->can('crm.id_card'); // şəkil var, amma icazəsiz göstərilmir
+                    $isBack = $field === 'id_card_back';
+                @endphp
                 <div class="col-md-6" @if($isBack) data-back-side @if(!$needsBack) hidden @endif @endif>
                     <label class="form-label" for="crm-{{ $field }}">{{ $label }} *</label>
                     <div data-photo="{{ $field }}">
-                        <img src="{{ $hasImage ? asset('frontend/uploads/customers/' . basename($profile->{$field})) : '' }}"
+                        <img src="{{ $canView ? route('admin.crm.id-card', ['customer' => $customer, 'side' => str_replace('id_card_', '', $field), 'v' => \App\Services\IdCard\IdCardStorage::version($profile->{$field})]) : '' }}"
                              class="crm-credit-preview img-fluid rounded border d-block mb-2" alt="{{ $label }}"
-                             @if(!$hasImage) hidden @endif>
+                             @if(!$canView) hidden @endif>
+                        @if($hasImage && !$canView)
+                            @include('backend.crm.partials.id-card-locked')
+                        @endif
                         <input @class(['form-control', 'is-invalid' => $errors->has($field)]) id="crm-{{ $field }}"
                                type="file" name="{{ $field }}" accept="image/jpeg,image/png,image/webp"
                                @required(!$hasImage && (!$isBack || $needsBack))>

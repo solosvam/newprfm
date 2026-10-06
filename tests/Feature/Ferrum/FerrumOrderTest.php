@@ -45,8 +45,7 @@ class FerrumOrderTest extends TestCase
         DB::table('payment_methods')->insert(['id' => 1, 'code' => 'installment', 'name_az' => 'Hissə-hissə']);
         DB::table('customers')->insert(['id' => 5, 'name' => 'Aysel', 'surname' => 'Məmmədova', 'mobile' => '994501234567']);
         $this->card = 'test-'.uniqid().'.webp';
-        @mkdir(public_path('frontend/uploads/customers'), 0755, true);
-        file_put_contents(public_path('frontend/uploads/customers/'.$this->card), 'IMG');
+        file_put_contents(\App\Services\IdCard\IdCardStorage::ensureDirectory().'/'.$this->card, 'IMG');
         DB::table('customer_credit_profiles')->insert(['customer_id' => 5, 'father_name' => 'Elçin', 'fin' => '5abc12d', 'relative_1_name' => 'Anar', 'relative_1_phone' => '0551112233',
             'id_card_front' => $this->card, 'workplace_name' => 'ABC MMC', 'salary' => 1200, 'id_card_series' => 'AZE', 'id_card_number' => '12345678']);
         DB::table('customer_addresses')->insert(['id' => 3, 'customer_id' => 5, 'city' => 'Bakı', 'address' => 'Nizami küç. 10', 'apartment' => '12']);
@@ -63,7 +62,7 @@ class FerrumOrderTest extends TestCase
 
     protected function tearDown(): void
     {
-        @unlink(public_path('frontend/uploads/customers/'.$this->card));
+        @unlink(\App\Services\IdCard\IdCardStorage::directory().'/'.$this->card);
         parent::tearDown();
     }
 

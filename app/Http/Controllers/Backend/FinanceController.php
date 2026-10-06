@@ -86,8 +86,14 @@ class FinanceController extends Controller
         ]);
 
         $from = FinanceAccount::findOrFail($data['from_account_id']);
-        // Təminat hissəsinə ödəniş: alan hesab həmin anbardır (formadan gəlmir)
-        if (!empty($data['order_item_allocation_id'])) {
+        // Anbar pulu qaytardı: göndərən həmin anbardır, from_account_id isə pulu alan hesabdır (kuryer / kassa / bank)
+        if ($data['kind'] === 'warehouse_refund') {
+            abort_if(empty($data['order_item_allocation_id']), 422, 'Təminat hissəsi seçilməyib.');
+            $allocation = \App\Models\Procurement\OrderItemAllocation::with('warehouse')->findOrFail($data['order_item_allocation_id']);
+            $to = $from;
+            $from = $finance->warehouseAccount($allocation->warehouse);
+        } elseif (!empty($data['order_item_allocation_id'])) {
+            // Təminat hissəsinə ödəniş: alan hesab həmin anbardır (formadan gəlmir)
             $allocation = \App\Models\Procurement\OrderItemAllocation::with('warehouse')->findOrFail($data['order_item_allocation_id']);
             $to = $finance->warehouseAccount($allocation->warehouse);
         } else {

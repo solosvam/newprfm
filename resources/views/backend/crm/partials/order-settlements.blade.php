@@ -9,7 +9,8 @@
     $cost = fn ($a) => (int) round($a->quantity * (float) $a->unit_cost * 100);
     $money = fn ($cents) => number_format($cents / 100, 2).' AZN';
     $pickedCost = $parts->filter(fn ($r) => in_array($r['a']->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true))->sum(fn ($r) => $cost($r['a'])); // götürülüb + hələ qaytarılmayıb
-    $allCost = $parts->filter(fn ($r) => $r['a']->status !== 'cancelled')->sum(fn ($r) => $cost($r['a']));
+    // Ləğv olunan və anbara qaytarılan hissələr alış dəyərinə daxil deyil
+    $allCost = $parts->filter(fn ($r) => !in_array($r['a']->status, \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE, true))->sum(fn ($r) => $cost($r['a']));
     $paidTotal = $parts->sum(fn ($r) => $settlement['paid'][$r['a']->id] ?? 0);
     $goods = (int) round(((float) $order->subtotal - (float) $order->discount) * 100);
 @endphp
@@ -31,20 +32,26 @@
         @foreach($parts as ['item' => $item, 'a' => $a])
             @php
                 $paid = $settlement['paid'][$a->id] ?? 0;
-                $left = $a->status === 'cancelled' ? -$paid : $cost($a) - $paid;
+                // Ləğv olunub / anbara qaytarılıb: ödənilən pul anbardan geri alınmalıdır (mənfi qalıq)
+                $back = in_array($a->status, \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE, true);
+                $left = $back ? -$paid : $cost($a) - $paid;
             @endphp
             <tr>
                 <td>{{ $item->product?->name ?? 'Məhsul' }}<span class="od-sub">{{ $item->variant?->size?->name_az }}</span></td>
                 <td>{{ $a->warehouse->name_az }}</td>
                 <td class="od-num">{{ $a->quantity }} × {{ number_format((float) $a->unit_cost, 2) }}</td>
-                <td>{{ $a->label() }}@if($a->status === 'returned')<span class="od-sub">anbara qaytarılıb — borc yoxdur</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) && $a->status !== 'cancelled')<span class="od-sub">borc götürüləndə yaranır</span>@endif</td>
+                <td>{{ $a->label() }}@if($a->status === 'returned')<span class="od-sub">anbara qaytarılıb{{ $paid > 0 ? '' : ' — borc yoxdur' }}</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) && $a->status !== 'cancelled')<span class="od-sub">borc götürüləndə yaranır</span>@endif</td>
                 <td class="od-num">{{ $money($cost($a)) }}</td>
                 <td class="od-num text-success">{{ $paid ? $money($paid) : '—' }}</td>
                 <td class="od-num {{ $left > 0 && in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) ? 'text-danger fw-bold' : ($left < 0 ? 'text-warning' : '') }}">
                     {{ $left === 0 ? 'Ödənilib' : $money(abs($left)) }}@if($left < 0)<span class="od-sub">anbardan geri alınmalıdır</span>@endif
                 </td>
                 <td class="text-end">
-                    @if($a->status !== 'cancelled' && $left > 0)
+                    @if($back && $left < 0)
+                        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#warehouseRefundModal"
+                                data-allocation="{{ $a->id }}" data-left="{{ number_format(-$left / 100, 2, '.', '') }}"
+                                data-title="{{ $a->warehouse->name_az }} · {{ $item->product?->name }} × {{ $a->quantity }} — geri alınacaq {{ $money(-$left) }}">Geri aldım</button>
+                    @elseif(!$back && $left > 0)
                         <button type="button" class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#warehousePayModal"
                                 data-allocation="{{ $a->id }}" data-left="{{ number_format($left / 100, 2, '.', '') }}"
                                 data-title="{{ $a->warehouse->name_az }} · {{ $item->product?->name }} × {{ $a->quantity }} — qalıq {{ $money($left) }}">Ödəniş</button>
@@ -104,6 +111,30 @@
             <label class="form-label" for="payNote">Qeyd</label>
             <textarea id="payNote" name="note" rows="2" maxlength="2000" class="form-control" placeholder="Məs.: qəbz №"></textarea>
             <div class="form-text mt-2">"Sonra hesablaşarıq" — heç nə qeyd etməyin, borc qalır.</div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Qeydə al</button></div>
+    </form></div>
+</div>
+{{-- Anbar pulu qaytardı (mal qaytarılıb / seçim ləğv olunub): göndərən serverdə həmin anbardır --}}
+<div class="modal modal-right fade" id="warehouseRefundModal" tabindex="-1" aria-labelledby="warehouseRefundTitle" aria-hidden="true">
+    <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.finance.store') }}" data-movement-form>
+        @csrf
+        <input type="hidden" name="kind" value="warehouse_refund">
+        <input type="hidden" name="order_item_allocation_id" value="">
+        <div class="modal-header"><h5 class="modal-title" id="warehouseRefundTitle">Anbar pulu qaytardı</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+        <div class="modal-body">
+            <div class="fw-bold mb-3" data-pay-title></div>
+            <div class="mb-3"><label class="form-label" for="refundTo">Pulu kim aldı</label>
+                <select id="refundTo" name="from_account_id" class="form-select" required>
+                    <option value="">Seçin</option>
+                    @foreach($settlement['accounts'] as $acc)<option value="{{ $acc->id }}">{{ $acc->name }} · {{ $acc->typeLabel() }}</option>@endforeach
+                </select>
+                <div class="form-text">Kuryer alıbsa — kuryerin qalığı artır (şirkətə təhvil verməlidir).</div>
+            </div>
+            <div class="mb-3"><label class="form-label" for="refundAmount">Məbləğ, AZN</label><input id="refundAmount" type="number" name="amount" min="0.01" step="0.01" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label" for="refundAt">Real tarix <small class="text-muted">(boş — indi)</small></label><input id="refundAt" type="datetime-local" name="occurred_at" class="form-control"></div>
+            <label class="form-label" for="refundNote">Qeyd</label>
+            <textarea id="refundNote" name="note" rows="2" maxlength="2000" class="form-control"></textarea>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Qeydə al</button></div>
     </form></div>

@@ -21,7 +21,8 @@
             const back = form.find('[data-back-side]');
             const needed = doubleSide.includes(series.val());
             back.prop('hidden', !needed);
-            back.find('[type="file"]').prop('required', needed && back.find('.crm-credit-preview').prop('hidden'));
+            // icazəsiz admində şəkil gizlidir, amma yüklənib (.crm-idcard-locked) — yenidən tələb olunmur
+            back.find('[type="file"]').prop('required', needed && back.find('.crm-credit-preview').prop('hidden') && !back.find('.crm-idcard-locked').length);
             if (!needed) {
                 back.find('.is-invalid').removeClass('is-invalid');
                 back.find('[data-error]').text('');
@@ -56,6 +57,7 @@
                 if (previous) URL.revokeObjectURL(previous);
                 const url = URL.createObjectURL(file);
                 preview.attr('src', url).data('objectUrl', url).prop('hidden', false);
+                $(input).siblings('.crm-idcard-locked').prop('hidden', true);
                 $(input).removeClass('is-invalid');
                 form.find('[data-error="' + input.name + '"]').text('');
                 toggleBackSide();

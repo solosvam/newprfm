@@ -14,6 +14,8 @@
         discountRow: $('cartDiscountRow'),
         discount: $('cartDiscount'),
         discountCode: $('cartDiscountCode'),
+        referralRow: $('cartReferralRow'),
+        referral: $('cartReferral'),
         delivery: $('cartDelivery'),
         total: $('cartTotal'),
         mobileTotal: $('cartMobileTotal'),
@@ -204,7 +206,9 @@
     function updateTotals() {
         const promo = window.ParfumPromo || {};
         const discount = Math.min(Number(promo.discount) || 0, state.subtotal);
-        const goods = round2(state.subtotal - discount);
+        // Səbətdə ödəniş üsulu hələ seçilmir — hissə-hissə şərti checkout-da yoxlanır
+        const referral = window.ParfumReferral ? window.ParfumReferral.discount(state.subtotal, discount, false) : 0;
+        const goods = round2(state.subtotal - discount - referral);
         const reachedFree = config.freeFrom > 0 && goods >= config.freeFrom;
         const delivery = reachedFree ? 0 : config.deliveryFee;
         const total = round2(goods + delivery);
@@ -216,6 +220,10 @@
         els.discountRow.hidden = discount <= 0;
         els.discount.textContent = '−' + money(discount);
         els.discountCode.textContent = promo.code || '';
+        if (els.referralRow) {
+            els.referralRow.hidden = referral <= 0;
+            els.referral.textContent = '−' + money(referral);
+        }
 
         els.delivery.textContent = delivery > 0 ? money(delivery) : t.free;
         els.delivery.classList.toggle('is-free', delivery === 0);

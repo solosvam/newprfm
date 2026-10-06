@@ -49,13 +49,13 @@ class ReferralSettingsTest extends TestCase
     {
         $s = app(ReferralSettings::class);
         $this->assertFalse($s->enabled());
-        $this->assertSame(10.0, $s->referrerAmount());
-        $this->assertSame(17.0, $s->inviteeAmount());
+        $this->assertSame(17.0, $s->referrerAmount()); // dəvət edənə 17 ₼
+        $this->assertSame(10.0, $s->inviteeAmount());  // dəvət olunana 10 ₼
         $this->assertSame(ReferralSettings::MODE_DISCOUNT, $s->inviteeMode());
         $this->assertNull($s->minOrderAmount());
         $this->assertNull($s->inviteLimit());
         $this->assertNull($s->referrerExpiryDays());
-        $this->assertStringContainsString('17 ₼', $s->shareText('az'));
+        $this->assertStringContainsString('10 ₼', $s->shareText('az')); // paylaşma mətnində dəvət olunanın məbləği
     }
 
     public function test_page_shows_referral_section(): void
@@ -133,29 +133,26 @@ class ReferralSettingsTest extends TestCase
         Setting::set('delivery_mode', 'paid');
         $this->actingAs($this->admin, 'admin')->post(route('admin.settings.bonuses.update'), [
             'order_bonus_percent' => 4, 'registration_bonus_enabled' => 0,
-            'bonus_pay_limit_enabled' => 1, 'bonus_pay_percent' => 30,
             'bonus_expiry_enabled' => 1, 'bonus_order_expiry_days' => 180, 'bonus_registration_expiry_days' => 60,
             'bonus_terms_az' => 'Hər sifarişdən :percent% bonus, qeydiyyatda :registration ₼.',
         ])->assertRedirect(route('admin.settings.bonuses'))->assertSessionHasNoErrors();
 
         $this->assertSame('4', (string) Setting::valueOf('order_bonus_percent'));
         $this->assertSame('paid', Setting::valueOf('delivery_mode')); // başqa bölmə toxunulmadı
-        $this->assertSame(30.0, app(\App\Services\BonusService::class)->payLimitPercent());
         $this->assertSame(180, app(\App\Services\BonusService::class)->expiryDays('earn'));
         $this->assertSame(60, app(\App\Services\BonusService::class)->expiryDays('register'));
         $this->assertSame('Hər sifarişdən 4% bonus, qeydiyyatda 10 ₼.', app(\App\Services\BonusService::class)->terms('az'));
         $this->assertStringContainsString('4% of the product value', app(\App\Services\BonusService::class)->terms('en')); // boş — standart mətn
 
         $this->post(route('admin.settings.bonuses.update'), [
-            'order_bonus_percent' => 4, 'registration_bonus_enabled' => 0, 'bonus_pay_limit_enabled' => 1, 'bonus_pay_percent' => 150,
+            'order_bonus_percent' => 4, 'registration_bonus_enabled' => 0,
             'bonus_expiry_enabled' => 1, 'bonus_order_expiry_days' => '',
-        ])->assertSessionHasErrors(['bonus_pay_percent', 'bonus_terms_az', 'bonus_order_expiry_days']);
+        ])->assertSessionHasErrors(['bonus_terms_az', 'bonus_order_expiry_days']);
 
         $this->post(route('admin.settings.bonuses.update'), [
-            'order_bonus_percent' => 4, 'registration_bonus_enabled' => 0, 'bonus_pay_limit_enabled' => 0, 'bonus_terms_az' => 'x',
+            'order_bonus_percent' => 4, 'registration_bonus_enabled' => 0, 'bonus_terms_az' => 'x',
             'bonus_expiry_enabled' => 0,
         ])->assertSessionHasNoErrors();
         $this->assertNull(app(\App\Services\BonusService::class)->expiryDays('earn'));
-        $this->assertNull(app(\App\Services\BonusService::class)->payLimitPercent());
     }
 }

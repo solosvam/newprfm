@@ -192,6 +192,10 @@
                             <span>{{ __('cart_discount') }}</span>
                             <strong id="checkoutDiscount">0.00 ₼</strong>
                         </div>
+                        <div id="checkoutReferralRow" class="cart-summary__row cart-summary__row--discount" hidden>
+                            <span>{{ __('cart_referral_discount') }}</span>
+                            <strong id="checkoutReferral">0.00 ₼</strong>
+                        </div>
                         <div class="cart-summary__row">
                             <span>{{ __('cart_delivery') }}</span>
                             <strong id="checkoutDelivery">0.00 ₼</strong>

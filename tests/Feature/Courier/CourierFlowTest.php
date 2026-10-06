@@ -32,7 +32,7 @@ class CourierFlowTest extends TestCase
         Schema::create('orders', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->string('payment_status')->default('cod'); $t->unsignedBigInteger('courier_id')->nullable();
-            foreach (['discount', 'delivery_fee', 'gift_wrap_fee', 'total'] as $c) $t->decimal($c, 12, 2)->default(0);
+            foreach (['discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total'] as $c) $t->decimal($c, 12, 2)->default(0);
             $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
@@ -41,6 +41,8 @@ class CourierFlowTest extends TestCase
             $t->integer('quantity'); $t->integer('cancelled_quantity')->default(0); $t->decimal('total', 12, 2)->default(0); $t->timestamps();
         });
         Schema::create('products', function (Blueprint $t) { $t->id(); $t->string('name'); });
+        // "Təhvil verildi" referal bonusunu yoxlayır (ReferralSettings) — proqram söndürülüdür
+        Schema::create('settings', function (Blueprint $t) { $t->id(); $t->string('key'); $t->text('value')->nullable(); $t->timestamps(); });
         Schema::create('payments', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->unsignedBigInteger('order_id'); $t->string('provider');
             $t->string('provider_order_id')->nullable(); $t->decimal('amount', 12, 2); $t->string('status'); $t->timestamps();
@@ -117,6 +119,36 @@ class CourierFlowTest extends TestCase
         $this->assertSame(8000, $f->warehouseDebts()[$wh->id]);
         $part->fresh()->update(['status' => 'returned']);    // anbara qaytarıldı
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
+    }
+
+    public function test_warehouse_refund_after_return_restores_courier_balance(): void
+    {
+        $courier = User::forceCreate(['name' => 'Fərid']);
+        [$order, $part, $wh] = $this->assigned($courier);
+        $f = app(FinanceService::class);
+        app(ProcurementService::class)->transition($order, $part->id, 'picked', [], $courier->id);
+        $f->record($f->courierAccount($courier), $f->warehouseAccount($wh), 80, 'warehouse_payment', ['order_item_allocation_id' => $part->id], $courier->id);
+        $this->assertSame(-8000, $f->balances()[$f->courierAccount($courier)->id]); // şirkət kuryerə borcludur
+
+        // Mal qaytarılmayıbsa anbardan pul geri alınmır
+        try {
+            $f->record($f->warehouseAccount($wh), $f->courierAccount($courier), 80, 'warehouse_refund', ['order_item_allocation_id' => $part->id], $courier->id);
+            $this->fail('Qaytarılmamış mala görə geri ödəniş olmamalı idi');
+        } catch (ValidationException) {
+        }
+
+        $part->fresh()->update(['status' => 'returned']);
+        // Qaytarıldı, pul hələ alınmayıb: anbar şirkətə 80 borcludur
+        $this->assertSame(-8000, $f->warehouseDebts()[$wh->id]);
+
+        $f->record($f->warehouseAccount($wh), $f->courierAccount($courier), 80, 'warehouse_refund', ['order_item_allocation_id' => $part->id], $courier->id);
+
+        $this->assertSame(0, $f->balances()[$f->courierAccount($courier)->id]);
+        $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
+        $this->assertSame(0, $f->allocationPaid([$part->id])[$part->id]);
+        // Ödənilən qədərdən çox geri alınmır
+        $this->expectException(ValidationException::class);
+        $f->record($f->warehouseAccount($wh), $f->courierAccount($courier), 1, 'warehouse_refund', ['order_item_allocation_id' => $part->id], $courier->id);
     }
 
     public function test_courier_can_transfer_order_before_picking(): void

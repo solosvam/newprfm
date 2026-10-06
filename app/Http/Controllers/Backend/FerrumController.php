@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
+use App\Services\IdCard\IdCardStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +17,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class FerrumController extends Controller
 {
-    /** Vəsiqə şəkilləri (CreditProfileController::UPLOAD_PATH ilə eyni qovluq) */
-    private const ID_CARD_PATH = 'frontend/uploads/customers/';
-
     /** {ref} — sifariş nömrəsi (PS260930000123) və ya id */
     public function order(Request $request, string $ref): JsonResponse
     {
@@ -123,8 +121,8 @@ class FerrumController extends Controller
         abort_unless(in_array($side, ['front', 'back'], true), 404);
         abort_unless($order->paymentMethod?->code === 'installment', 422, 'Ferrum yalnız taksit sifarişləri üçündür.');
         $file = $order->customer?->creditProfile?->{'id_card_'.$side};
-        $path = $file ? public_path(self::ID_CARD_PATH.basename($file)) : null;
-        abort_unless($path && is_file($path), 404, 'Vəsiqə şəkli tapılmadı.');
+        $path = IdCardStorage::path($file);
+        abort_unless($path, 404, 'Vəsiqə şəkli tapılmadı.');
         $this->logAccess($request, 'ferrum_id_card_'.$side, $order->id);
 
         return response()->file($path, ['Cache-Control' => 'no-store']);

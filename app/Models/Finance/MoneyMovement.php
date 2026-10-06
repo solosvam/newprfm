@@ -15,6 +15,8 @@ class MoneyMovement extends Model
     /** Növlər və icazəli hesab tipləri [from => [...], to => [...]] */
     public const KINDS = [
         'warehouse_payment' => ['Anbara ödəniş', ['courier', 'cash', 'bank', 'owner'], ['warehouse']],
+        // Mal anbara qaytarılıb (qapıda imtina / sifariş ləğvi) — anbar ödənilən pulu geri verdi
+        'warehouse_refund' => ['Anbar pulu qaytardı', ['warehouse'], ['courier', 'cash', 'bank', 'owner']],
         'courier_handover' => ['Kuryer pulu təhvil verdi', ['courier'], ['cash']], // kuryer yalnız nağd verir
         'courier_advance' => ['Kuryerə avans / qaytarma', ['cash', 'bank'], ['courier']],
         'expense' => ['Xərc', ['cash', 'bank', 'owner', 'courier'], ['expense']],
@@ -31,7 +33,7 @@ class MoneyMovement extends Model
     public const MANUAL = ['courier_advance', 'expense', 'transfer', 'owner_contribution', 'owner_repayment'];
 
     /** Hesab səhifəsindən edilənlər: anbara ödəniş (anbar), pulu təhvil al (kuryer) */
-    public const FROM_ACCOUNT_PAGE = ['warehouse_payment', 'courier_handover'];
+    public const FROM_ACCOUNT_PAGE = ['warehouse_payment', 'courier_handover', 'warehouse_refund'];
 
     /** Real tarix (occurred_at) qeydə alınma anından (created_at) 1 saatdan çox əvvəldirsə — sonradan yazılıb */
     public function isBackdated(): bool

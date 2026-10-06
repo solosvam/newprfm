@@ -14,6 +14,27 @@
     const removeBtn = root.querySelector('.promo__remove');
     const errorEl = root.querySelector('.promo__error');
     const lockedEl = root.querySelector('.promo__locked');
+    const referralNote = root.querySelector('.promo__referral');
+
+    // Dəvət olunanın ilk sifariş endirimi (partials/promo-code: data-referral). Server checkout-da eyni şərtləri yoxlayır.
+    let referral = null;
+    try { referral = JSON.parse(root.dataset.referral || 'null'); } catch (e) {}
+    window.ParfumReferral = referral && {
+        /** Endirim məbləği; tətbiq olunmursa səbəbi formanın altında göstərir */
+        discount(subtotal, promoDiscount, installment) {
+            let reason = '';
+            if (referral.min !== null && subtotal < referral.min) reason = 'min';
+            else if (promoDiscount > 0 && !referral.with_promo) reason = 'promo';
+            else if (installment && !referral.installment) reason = 'installment';
+
+            if (referralNote) {
+                referralNote.textContent = reason ? referral.notes[reason] : '';
+                referralNote.hidden = !reason || subtotal <= 0;
+            }
+            if (reason || subtotal <= 0) return 0;
+            return Math.round(Math.min(referral.amount, Math.max(0, subtotal - promoDiscount)) * 100) / 100;
+        },
+    };
 
 
     const state = { code: root.dataset.code || null, discount: 0 };

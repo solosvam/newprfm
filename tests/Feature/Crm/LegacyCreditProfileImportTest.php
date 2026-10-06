@@ -101,7 +101,7 @@ class LegacyCreditProfileImportTest extends TestCase
         $this->assertSame('0501112233', $profile->relative_1_phone);
         $this->assertSame($before, $customer->fresh()->getAttributes());
         foreach (['id_card_front', 'id_card_back'] as $field) {
-            $this->assertSame($this->png, file_get_contents(public_path('frontend/uploads/customers/'.$profile->{$field})));
+            $this->assertSame($this->png, file_get_contents(\App\Services\IdCard\IdCardStorage::directory().'/'.$profile->{$field}));
         }
         $this->assertSame('complete', (new LegacyCreditProfileImporter())->import($this->group(), true)['status']);
         Http::assertSentCount(2);
@@ -202,7 +202,7 @@ class LegacyCreditProfileImportTest extends TestCase
         $this->assertSame('would_update', $result['status']);
         $this->assertSame([], $result['missing']);
         $this->assertSame(0, CustomerCreditProfile::count());
-        $this->assertDirectoryDoesNotExist(public_path('frontend/uploads/customers'));
+        $this->assertDirectoryDoesNotExist(\App\Services\IdCard\IdCardStorage::directory());
         $this->assertSame($before, $customer->fresh()->getAttributes());
     }
 
@@ -285,7 +285,7 @@ class LegacyCreditProfileImportTest extends TestCase
             $this->fail('Expected profile save failure.');
         } catch (\RuntimeException $e) {
             $this->assertSame(0, CustomerCreditProfile::count());
-            $this->assertSame([], glob(public_path('frontend/uploads/customers/*')));
+            $this->assertSame([], glob(\App\Services\IdCard\IdCardStorage::directory().'/*'));
         }
     }
 
@@ -302,7 +302,7 @@ class LegacyCreditProfileImportTest extends TestCase
         } catch (\RuntimeException $e) {
             $this->assertSame('Operator edit', $customer->fresh()->name);
             $this->assertSame(0, CustomerCreditProfile::count());
-            $this->assertDirectoryDoesNotExist(public_path('frontend/uploads/customers'));
+            $this->assertDirectoryDoesNotExist(\App\Services\IdCard\IdCardStorage::directory());
         }
     }
 }

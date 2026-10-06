@@ -36,9 +36,11 @@ class OrderRefundService
                 ->where('status', Payment::PAID)->latest('id')->first();
             $this->ensure($payment !== null, 'Sifarişin təsdiqlənmiş Birbank ödənişi tapılmadı.');
 
-            $line = PaymentItem::where('payment_id', $payment->id)->where('type', 'item')
-                ->where('order_item_id', $locked->order_item_id)->first();
-            $this->ensure($line !== null, 'Bu məhsul ödənişin tərkibində tapılmadı.');
+            // Məhsul — öz sətri; çatdırılma/qablaşdırma (sifarişin tam ləğvi) — həmin növ sətir
+            $line = $locked->fee_type
+                ? PaymentItem::where('payment_id', $payment->id)->where('type', $locked->fee_type)->first()
+                : PaymentItem::where('payment_id', $payment->id)->where('type', 'item')->where('order_item_id', $locked->order_item_id)->first();
+            $this->ensure($line !== null, ($locked->fee_type ? 'Bu haqq' : 'Bu məhsul').' ödənişin tərkibində tapılmadı.');
 
             $amount = round((float) $locked->amount, 2);
             $refundable = round((float) $line->amount - $line->refundedAmount(), 2);

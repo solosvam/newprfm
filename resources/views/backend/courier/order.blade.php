@@ -19,6 +19,7 @@
         $a?->floor ? 'Mərtəbə '.$a->floor : null, $a?->apartment ? 'Mənzil '.$a->apartment : null,
     ])->filter()->implode(' · ');
     $phone = $order->customer?->mobile;
+    $cancelled = $code === 'cancelled';
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
@@ -34,23 +35,46 @@
     </div>
     @include('backend.procurement.feedback')
 
-    <ol class="courier-steps mb-4" aria-label="Mərhələlər">
-        @foreach($steps as $stepCode => $label)
-            <li class="{{ $reached !== false && $loop->index <= $reached ? 'is-done' : '' }} {{ $stepCode === $code ? 'is-current' : '' }}">{{ $label }}</li>
-        @endforeach
-    </ol>
+    @if($cancelled)
+        {{-- Ləğv edilmiş sifariş: kuryerə yalnız anbara qaytarılacaq mallar lazımdır --}}
+        <div class="courier-cancelled mb-4">
+            <b>Sifariş ləğv edilib.</b>
+            {{ $returning->isNotEmpty() ? 'Götürdüyünüz məhsulları aşağıdakı anbara qaytarın və "Qaytardım" basın.' : 'Sizdən heç nə tələb olunmur.' }}
+        </div>
+    @else
+        <ol class="courier-steps mb-4" aria-label="Mərhələlər">
+            @foreach($steps as $stepCode => $label)
+                <li class="{{ $reached !== false && $loop->index <= $reached ? 'is-done' : '' }} {{ $stepCode === $code ? 'is-current' : '' }}">{{ $label }}</li>
+            @endforeach
+        </ol>
+    @endif
 
     {{-- 1. Anbarlardan götürmə — yola çıxandan sonra gizlənir --}}
     @if($code === 'courier_assigned')
     <h2 class="small-title">Anbarlardan götürmə</h2>
-    @foreach($byWarehouse as $rows)
-        @php $w = $rows->first()['a']->warehouse; @endphp
+    @php
+        // Anbardan hər şey götürülüb və ödənilibsə anbar məlumatı göstərilmir — yalnız "götürüldü" sətri
+        $doneGroups = $byWarehouse->filter(fn ($rows) => $rows->every(fn ($r) => $r['a']->status === Part::PICKED
+            && (int) round($r['a']->quantity * (float) $r['a']->unit_cost * 100) <= ($paid[$r['a']->id] ?? 0)));
+        $pickedCount = $doneGroups->flatten(1)->sum(fn ($r) => $r['a']->quantity);
+    @endphp
+    @if($pickedCount)
+        <div class="courier-picked mb-3">✓ Götürüldü: {{ $pickedCount }} ədəd</div>
+    @endif
+    @foreach($byWarehouse->diffKeys($doneGroups) as $rows)
+        @php
+            $w = $rows->first()['a']->warehouse;
+            $allPicked = $rows->every(fn ($r) => $r['a']->status === Part::PICKED);
+        @endphp
         <div class="card mb-3 courier-wh"><div class="card-body">
             <div class="courier-wh__head">
                 <div>
                     <div class="courier-wh__name">{{ $w->name_az }}</div>
-                    @if($w->address)<a class="courier-wh__addr" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($w->address) }}" target="_blank" rel="noopener">{{ $w->address }}</a>@endif
-                    @if($w->contact_name)<div class="text-muted small">{{ $w->contact_name }}</div>@endif
+                    {{-- Mal götürüləndən sonra ünvan/əlaqə lazım deyil — yalnız ödəniş qalıb --}}
+                    @unless($allPicked)
+                        @if($w->address)<a class="courier-wh__addr" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($w->address) }}" target="_blank" rel="noopener">{{ $w->address }}</a>@endif
+                        @if($w->contact_name)<div class="text-muted small">{{ $w->contact_name }}</div>@endif
+                    @endunless
                 </div>
             </div>
 
@@ -158,8 +182,18 @@
                             </div>
                             <div class="courier-part__qty">× {{ $part->quantity }}</div>
                         </div>
+                        @php $paidBack = $paid[$part->id] ?? 0; @endphp
                         <form method="POST" action="{{ route('admin.courier.returned', [$order, $part->id]) }}" data-once class="mt-2">
-                            @csrf<button class="btn btn-warning w-100">Qaytardım</button>
+                            @csrf
+                            @if($paidBack > 0)
+                                {{-- Bu mala anbara pul ödənilib: anbar pulu qaytardısa kuryerin hesabına geri yazılır --}}
+                                <label class="form-check courier-refund mb-2">
+                                    <input class="form-check-input" type="checkbox" name="refunded" value="1" checked>
+                                    <span class="form-check-label">Anbar <b>{{ $money($paidBack) }}</b> pulu mənə qaytardı</span>
+                                </label>
+                            @endif
+                            <button class="btn btn-warning w-100">Qaytardım</button>
+                            @if($paidBack > 0)<div class="text-muted small mt-1">Pulu qaytarmayıbsa işarəni götürün — operator anbarla sonra hesablaşacaq.</div>@endif
                         </form>
                     </div>
                 @endforeach
@@ -167,7 +201,8 @@
         @endforeach
     @endif
 
-    @if($order->gift_wrap)
+    @if(!$cancelled)
+    @if($order->gift_wrap && $code !== 'delivered')
         <div class="alert alert-info">🎁 <strong>Hədiyyəlik qablaşdırma:</strong> məhsulları bükün və loqolu çantaya qoyun.</div>
     @endif
 
@@ -251,6 +286,7 @@
             <div class="alert alert-success text-center mb-0">Sifariş təhvil verilib.</div>
         @endif
     </div>
+    @endif
 </div>
 @endsection
 

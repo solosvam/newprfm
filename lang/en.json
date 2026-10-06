@@ -685,5 +685,15 @@
     "bonus_refund": "Refund from cancelled order",
     "bonus_referral": "Referral bonus",
     "bonus_valid_until": "Valid until :date",
-    "auth_mobile_already_registered": "You already have an account with this number. Redirecting to sign in…"
+    "auth_mobile_already_registered": "You already have an account with this number. Redirecting to sign in…",
+    "error_404_title": "Page not found",
+    "error_404_text": "The page you are looking for has been removed, renamed or never existed.",
+    "error_404_home": "Back to home",
+    "error_404_brands": "Browse brands",
+    "auth_password_show": "Show password",
+    "auth_password_hide": "Hide password",
+    "cart_referral_discount": "Invite discount",
+    "referral_discount_note_min": "The invite discount (:amount ₼) applies to orders of :min ₼ or more.",
+    "referral_discount_note_promo": "The invite discount cannot be combined with a promo code. Remove the promo code to use the invite discount.",
+    "referral_discount_note_installment": "The invite discount does not apply to installment payments."
 }

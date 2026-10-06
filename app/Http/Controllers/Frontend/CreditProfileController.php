@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Customer\CustomerCreditProfile;
 use App\Services\IdCard\IdCardReader;
+use App\Services\IdCard\IdCardStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CreditProfileController extends Controller
 {
-    private const UPLOAD_PATH = 'frontend/uploads/customers/';
-
     public function edit(Request $request)
     {
         $return = $request->query('return');
@@ -71,7 +70,7 @@ class CreditProfileController extends Controller
             );
         } catch (\Throwable $e) {
             foreach ($images as $filename) {
-                @unlink(public_path(self::UPLOAD_PATH . $filename));
+                IdCardStorage::delete($filename);
             }
 
             throw $e;
@@ -92,13 +91,8 @@ class CreditProfileController extends Controller
             'message' => __('credit_saved'),
             'complete' => (bool) $profile?->isComplete(),
             'images' => [
-                'id_card_front' => $profile?->id_card_front
-                    ? asset(self::UPLOAD_PATH . basename($profile->id_card_front))
-                    : null,
-
-                'id_card_back' => $profile?->id_card_back
-                    ? asset(self::UPLOAD_PATH . basename($profile->id_card_back))
-                    : null,
+                'id_card_front' => $this->imageUrl($profile, 'front'),
+                'id_card_back' => $this->imageUrl($profile, 'back'),
             ],
         ]);
     }
@@ -228,13 +222,9 @@ class CreditProfileController extends Controller
 
     private function saveImage($file): string
     {
-        $directory = public_path(self::UPLOAD_PATH);
-
-        if (
-            !is_dir($directory) &&
-            !mkdir($directory, 0755, true) &&
-            !is_dir($directory)
-        ) {
+        try {
+            $directory = IdCardStorage::ensureDirectory();
+        } catch (\RuntimeException) {
             throw new \RuntimeException(
                 __('credit_directory_error')
             );
@@ -247,7 +237,7 @@ class CreditProfileController extends Controller
         }
 
         $filename = Str::uuid() . '.webp';
-        $absolutePath = $directory . $filename;
+        $absolutePath = $directory . '/' . $filename;
 
         try {
             $source = @imagecreatefromstring(
@@ -332,25 +322,24 @@ class CreditProfileController extends Controller
         return $filename;
     }
 
-    private function resolveImagePath(string $filename): ?string
+    /** Vəsiqə şəkli — yalnız profilin sahibi görür (şəkillər public qovluqda deyil) */
+    public function image(Request $request, string $side)
     {
-        $filename = basename(str_replace('\\\\', '/', $filename));
+        $path = IdCardStorage::path($request->user()->creditProfile?->{'id_card_' . $side});
+        abort_unless($path, 404);
 
-        if (!preg_match(
-            '/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.webp$/i',
-            $filename
-        )) {
-            return null;
-        }
-        return public_path(self::UPLOAD_PATH . $filename);
+        return response()->file($path, ['Cache-Control' => 'private, no-store']);
+    }
+
+    private function imageUrl(?CustomerCreditProfile $profile, string $side): ?string
+    {
+        $file = $profile?->{'id_card_' . $side};
+
+        return $file ? route('profile.credit.image', ['side' => $side, 'v' => IdCardStorage::version($file)]) : null;
     }
 
     private function deleteImage(string $filename): void
     {
-        $file = $this->resolveImagePath($filename);
-
-        if ($file && is_file($file)) {
-            @unlink($file);
-        }
+        IdCardStorage::delete($filename);
     }
 }

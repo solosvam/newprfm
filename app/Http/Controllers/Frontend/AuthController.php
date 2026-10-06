@@ -233,7 +233,7 @@ class AuthController extends Controller
     public function bonus()
     {
         $transactions = auth()->user()->bonusTransactions()
-            ->with('order')
+            ->with('order.customer')
             ->latest()
             ->paginate(20);
 

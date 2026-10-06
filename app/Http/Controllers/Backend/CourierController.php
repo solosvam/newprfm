@@ -13,6 +13,7 @@ use App\Services\OrderStatusService;
 use App\Services\ProcurementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -36,7 +37,7 @@ class CourierController extends Controller
             'order' => $order,
             'byWarehouse' => $parts->groupBy(fn ($row) => $row['a']->warehouse_id),
             'returning' => $returning->groupBy(fn ($row) => $row['a']->warehouse_id),
-            'paid' => $finance->allocationPaid($parts->pluck('a.id')->all()),
+            'paid' => $finance->allocationPaid($parts->merge($returning)->pluck('a.id')->all()),
             'collect' => $statuses->collectAmount($order),
             'deliveryBlock' => $statuses->deliveryBlock($order),
             'transferBlock' => $statuses->transferBlock($order),
@@ -129,12 +130,27 @@ class CourierController extends Controller
     }
 
     /** "Qaytardım": qapıda imtina edilən məhsul anbara təhvil verildi */
-    public function returned(Order $order, int $allocation, ProcurementService $procurement): RedirectResponse
+    public function returned(Request $request, Order $order, int $allocation, ProcurementService $procurement, FinanceService $finance): RedirectResponse
     {
         $this->authorizeCourier($order);
-        $part = $procurement->markReturned($order, $allocation, $this->me());
+        $refunded = $request->boolean('refunded');
 
-        return back()->with('success', 'Anbara qaytarıldı: '.($part->warehouse?->name_az ?? 'anbar').'.');
+        // Mal anbara qaytarıldı; anbara pul ödənilmişdisə və anbar pulu kuryerə qaytardısa — kuryerin hesabına geri yazılır
+        [$part, $amount] = DB::transaction(function () use ($order, $allocation, $procurement, $finance, $refunded) {
+            $part = $procurement->markReturned($order, $allocation, $this->me());
+            $paid = $finance->allocationPaid([$part->id])[$part->id] ?? 0;
+            if (!$refunded || $paid <= 0) {
+                return [$part, 0];
+            }
+            $finance->record($finance->warehouseAccount($part->warehouse), $finance->courierAccount(auth('admin')->user()), $paid / 100, 'warehouse_refund', [
+                'order_item_allocation_id' => $part->id, 'note' => 'Mal anbara qaytarıldı, anbar pulu kuryerə verdi',
+            ], $this->me());
+
+            return [$part, $paid];
+        });
+
+        return back()->with('success', 'Anbara qaytarıldı: '.($part->warehouse?->name_az ?? 'anbar').'.'
+            .($amount > 0 ? ' Anbardan geri aldığınız '.number_format($amount / 100, 2).' AZN hesabınıza yazıldı.' : ''));
     }
 
     /** Sifarişi başqa kuryerə ötür (toplamadan əvvəl) */

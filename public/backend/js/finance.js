@@ -41,11 +41,12 @@
         expense();
     });
 
-    // Anbara ödəniş (sifariş → Hesablaşmalar): hissə və qalan borc düymədən
-    const payModal = document.getElementById('warehousePayModal');
-    if (payModal) {
-        const form = payModal.querySelector('form');
-        payModal.addEventListener('show.bs.modal', event => {
+    // Anbara ödəniş və anbardan geri alma (sifariş → Hesablaşmalar): hissə və məbləğ düymədən
+    ['warehousePayModal', 'warehouseRefundModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        const form = modal.querySelector('form');
+        modal.addEventListener('show.bs.modal', event => {
             const btn = event.relatedTarget;
             if (!btn) return;
             form.reset();
@@ -54,10 +55,10 @@
             amount.value = btn.dataset.left || '';
             // Ümumi ödənişdə (hissəyə bağlı deyil) yuxarı hədd yoxdur
             if (btn.dataset.left) amount.max = btn.dataset.left; else amount.removeAttribute('max');
-            payModal.querySelector('[data-pay-title]').textContent = btn.dataset.title;
+            modal.querySelector('[data-pay-title]').textContent = btn.dataset.title;
             form.querySelector('button.btn-primary').disabled = false;
         });
-    }
+    });
 
     const reverseModal = document.getElementById('reverseMovement');
     if (reverseModal) {

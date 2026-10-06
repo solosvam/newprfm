@@ -307,6 +307,7 @@ Route::prefix('admin')
                     Route::get('/customer/{customer}/order/{order}', 'order')->name('order');
                     Route::post('/customer/{customer}/order/{order}/confirm', 'confirmOneClick')->name('one-click.confirm');
                     Route::post('/customer/{customer}/order/{order}/item/{item}/cancel', 'cancelItem')->name('order.item.cancel');
+                    Route::post('/customer/{customer}/order/{order}/cancel', 'cancelOrder')->name('order.cancel');
                     Route::post('/customer/{customer}/order/{order}/item/{item}/refuse', 'refuseItem')->name('order.item.refuse');
                     Route::post('/customer/{customer}/order/{order}/start', 'startOrder')->name('order.start');
                     Route::post('/customer/{customer}/order/{order}/courier', 'assignCourier')->name('order.courier');
@@ -316,6 +317,7 @@ Route::prefix('admin')
                     Route::post('/customer/{customer}', 'update')->name('update');
                     Route::post('/customer/{customer}/credit-profile/ocr', 'creditProfileOcr')->middleware('throttle:10,1')->name('credit-profile.ocr');
                     Route::post('/customer/{customer}/credit-profile', 'updateCreditProfile')->name('credit-profile.update');
+                    Route::get('/customer/{customer}/id-card/{side}', 'idCardImage')->whereIn('side', ['front', 'back'])->middleware('can:crm.id_card')->name('id-card');
                     Route::post('/customer/{customer}/reset-password', 'resetPassword')->name('reset-password');
                     Route::get('/customer/{customer}/sms', 'sms')->name('sms');
                     Route::post('{id}/reset-password', 'resetPassword')->name('reset.password');

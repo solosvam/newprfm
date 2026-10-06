@@ -28,7 +28,14 @@
                     <td class="{{ $transaction->amount >= 0 ? 'text-success' : 'text-danger' }} fw-bold">
                         {{ $transaction->amount >= 0 ? '+' : '' }}{{ $transaction->amount }}
                     </td>
-                    <td>{{ $transaction->order?->order_no ?? '—' }}</td>
+                    <td>
+                        @if($transaction->order)
+                            {{-- dəvət bonusunda sifariş dəvət olunan dostundur — link onun kartına aparır --}}
+                            <a href="{{ route('admin.crm.order', [$transaction->order->customer_id, $transaction->order]) }}">{{ $transaction->order->order_no }}</a>
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td>{{ $transaction->note ?: '—' }}</td>
                 </tr>
             @endforeach

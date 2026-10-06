@@ -37,7 +37,7 @@
     }
     foreach ($order->itemCancellations as $c) {
         $events->push(['at' => $c->created_at, 'item' => $c->order_item_id, 'tone' => 'danger', 'icon' => 'close',
-            'text' => $c->quantity.' ədəd ləğv edildi · '.$c->reasonLabel().' · '.number_format((float) $c->amount, 2).' AZN'
+            'text' => ($c->fee_type ? $c->subjectLabel().' ləğv edildi' : $c->quantity.' ədəd ləğv edildi').' · '.$c->reasonLabel().' · '.number_format((float) $c->amount, 2).' AZN'
                 .((float) $c->bonus_adjustment > 0 ? ' · bonus −'.number_format((float) $c->bonus_adjustment, 2) : '')
                 .($c->customer_agreed ? ' · müştəri razıdır' : ''),
             'by' => $who($c->created_by), 'note' => $c->note]);

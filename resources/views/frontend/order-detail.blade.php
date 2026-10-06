@@ -217,8 +217,11 @@
 
                                 <div class="od-totals">
                                     <div class="od-row"><span>{{ __('orders_subtotal') }}</span><span>{{ number_format($order->subtotal, 2) }} ₼</span></div>
-                                    @if($order->discount > 0)
-                                        <div class="od-row od-row--discount"><span>{{ __('orders_discount') }}</span><span>−{{ number_format($order->discount, 2) }} ₼</span></div>
+                                    @if($order->discount - $order->referral_discount > 0)
+                                        <div class="od-row od-row--discount"><span>{{ __('orders_discount') }}</span><span>−{{ number_format((float) $order->discount - (float) $order->referral_discount, 2) }} ₼</span></div>
+                                    @endif
+                                    @if($order->referral_discount > 0)
+                                        <div class="od-row od-row--discount"><span>{{ __('cart_referral_discount') }}</span><span>−{{ number_format((float) $order->referral_discount, 2) }} ₼</span></div>
                                     @endif
                                     @if((float) $order->delivery_fee > 0)
                                         <div class="od-row"><span>{{ __('orders_delivery') }}</span><span>{{ number_format((float) $order->delivery_fee, 2) }} ₼</span></div>

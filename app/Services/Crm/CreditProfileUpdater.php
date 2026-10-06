@@ -4,6 +4,7 @@ namespace App\Services\Crm;
 
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCreditProfile;
+use App\Services\IdCard\IdCardStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -41,11 +42,9 @@ class CreditProfileUpdater
             if ($request->hasFile($field)) {
                 $file = $request->file($field);
                 $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
-                $file->move(public_path('frontend/uploads/customers'), $filename);
+                $file->move(IdCardStorage::ensureDirectory(), $filename);
                 $data[$field] = $filename;
-                if ($profile?->{$field}) {
-                    @unlink(public_path('frontend/uploads/customers/'.basename($profile->{$field})));
-                }
+                IdCardStorage::delete($profile?->{$field});
             }
         }
 

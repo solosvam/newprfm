@@ -43,7 +43,7 @@ class OrderRefundTest extends TestCase
         Schema::create('orders', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->unsignedBigInteger('payment_method_id'); $t->string('payment_status')->default('pending');
-            foreach (['subtotal', 'discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $c) $t->decimal($c, 12, 2)->default(0);
+            foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $c) $t->decimal($c, 12, 2)->default(0);
             $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
@@ -60,6 +60,7 @@ class OrderRefundTest extends TestCase
             '2026_09_29_150000_create_procurement_tables.php',
             '2026_09_29_150000_create_payment_items_table.php',
             '2026_09_29_160000_create_order_item_cancellations_table.php',
+            '2026_10_06_203155_add_fee_type_to_order_item_cancellations.php',
             '2026_09_29_170000_create_payment_refund_items_table.php',
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
         ] as $file) {
@@ -116,6 +117,21 @@ class OrderRefundTest extends TestCase
         $this->assertSame($c->order_item_id, $link->paymentItem->order_item_id);
         $this->assertEquals(146.25, $link->paymentItem->refundedAmount());
         $this->assertEquals(146.25, PaymentOperation::first()->amount);
+    }
+
+    public function test_delivery_fee_of_cancelled_order_is_refunded_to_its_own_payment_line(): void
+    {
+        $c = $this->cancelled();
+        $order = Order::find($c->order_id);
+        $result = app(OrderItemCancellationService::class)->cancelOrder($order, 'customer_refused', null, 7);
+        $fee = collect($result['cancellations'])->firstWhere('fee_type', 'delivery');
+
+        $fee = app(OrderRefundService::class)->refundCancellation($fee);
+
+        $this->assertSame(OrderItemCancellation::REFUND_DONE, $fee->refund_status);
+        $link = PaymentRefundItem::where('order_item_cancellation_id', $fee->id)->sole();
+        $this->assertSame('delivery', $link->paymentItem->type);
+        $this->assertEquals(5, $link->amount);
     }
 
     public function test_second_click_does_not_refund_twice(): void

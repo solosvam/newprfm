@@ -15,6 +15,10 @@
     $needTotal = (int) $order->items->sum(fn ($item) => $item->activeQuantity());
     $cancelPreviews = $cancelPreviews ?? [];
     $cancelBlock = $cancelBlock ?? null;
+    // Sifarişin tam ləğvi: önizləmə verilməyibsə düymə göstərilmir
+    $orderCancelPreview = $orderCancelPreview ?? null;
+    $orderCancelBlock = $orderCancelBlock ?? null;
+    $canCancelOrder = $orderCancelPreview !== null && !$order->isCancelled() && $order->status?->code !== 'delivered';
     $cancellations = $order->itemCancellations->groupBy('order_item_id');
     $pendingRefund = (float) $order->itemCancellations->whereIn('refund_status', [\App\Models\Order\OrderItemCancellation::REFUND_PENDING, \App\Models\Order\OrderItemCancellation::REFUND_PROCESSING])->sum('amount');
     $refundedToCard = (float) $order->itemCancellations->where('refund_status', \App\Models\Order\OrderItemCancellation::REFUND_DONE)->sum('amount');
@@ -64,6 +68,18 @@
                 <a class="btn btn-outline-primary btn-icon btn-icon-start" href="{{ route('admin.crm.customer', $customer) }}"><i data-acorn-icon="user" data-acorn-size="16"></i><span>Müştəri</span></a>
                 @if($payLinkUrl)
                     <a class="btn btn-outline-primary btn-icon btn-icon-start" href="#payments" data-order-tab-link><i data-acorn-icon="link" data-acorn-size="16"></i><span>Ödəniş linki</span></a>
+                @endif
+                {{-- Sifarişin tam ləğvi (ləğv edilmiş / təhvil verilmiş sifarişdə görünmür) --}}
+                @if($canCancelOrder)
+                    @if($orderCancelBlock)
+                        <span class="d-inline-block" tabindex="0" title="{{ $orderCancelBlock }}" data-bs-toggle="tooltip">
+                            <button type="button" class="btn btn-outline-danger" disabled>Sifarişi ləğv et</button>
+                        </span>
+                    @else
+                        <button type="button" class="btn btn-outline-danger btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                            <i data-acorn-icon="close" data-acorn-size="16"></i><span>Sifarişi ləğv et</span>
+                        </button>
+                    @endif
                 @endif
                 {{-- Növbəti addım: İcraya götür → (anbarlar) → Kuryer təyin et --}}
                 @if($order->status?->code === 'new')
@@ -287,12 +303,13 @@
                 <div class="od-summary mt-3">
                     <div><span>Ara cəm</span><span>{{ number_format((float) $order->subtotal, 2) }} AZN</span></div>
                     @if((float) $order->discount > 0)<div><span>Endirim</span><span class="text-success">−{{ number_format((float) $order->discount, 2) }} AZN</span></div>@endif
+                    @if((float) $order->referral_discount > 0)<div><span class="text-muted ps-2">o cümlədən dəvət endirimi</span><span class="text-muted">−{{ number_format((float) $order->referral_discount, 2) }} AZN</span></div>@endif
                     <div><span>Çatdırılma</span><span>{{ (float) $order->delivery_fee > 0 ? number_format((float) $order->delivery_fee, 2).' AZN' : 'Pulsuz' }}</span></div>
                     @if($order->gift_wrap)<div><span>Hədiyyəlik qablaşdırma</span><span>{{ (float) $order->gift_wrap_fee > 0 ? number_format((float) $order->gift_wrap_fee, 2).' AZN' : 'Pulsuz' }}</span></div>@endif
                     <div class="od-summary__grand"><span>Yekun</span><span>{{ number_format((float) $order->total, 2) }} AZN</span></div>
                     @if((float) $order->bonus_earned > 0)<div><span>Qazandığı bonus</span><span class="text-success">+{{ number_format((float) $order->bonus_earned, 2) }} AZN</span></div>@endif
                     @if($order->itemCancellations->isNotEmpty())
-                        <div><span>Ləğv edilən məhsullar</span><span class="text-danger">{{ number_format((float) $order->itemCancellations->sum('amount'), 2) }} AZN</span></div>
+                        <div><span>Ləğv edilib</span><span class="text-danger">{{ number_format((float) $order->itemCancellations->sum('amount'), 2) }} AZN</span></div>
                     @endif
                     @if($pendingRefund > 0)
                         <div><span>Karta qaytarılacaq</span><a href="#payments" data-order-tab-link class="text-warning">{{ number_format($pendingRefund, 2) }} AZN · gözləyir</a></div>
@@ -334,6 +351,41 @@
                     <div class="form-text mt-3">Sifarişin əvvəlindən sonuna eyni kuryer işləyir. Kuryer məhsul götürəndən sonra dəyişmək olmaz.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary" @disabled(empty($couriers) || $couriers->isEmpty())>Təyin et</button></div>
+            </form></div>
+        </div>
+    @endif
+
+    @if($canCancelOrder && !$orderCancelBlock)
+        {{-- Sifarişin tam ləğvi: nəticə serverdə hesablanıb (orderPreview) --}}
+        @php
+            $op = $orderCancelPreview;
+            $refundLabel = [\App\Models\Order\OrderItemCancellation::REFUND_PENDING => 'Müştərinin kartına qaytarılmalıdır', \App\Models\Order\OrderItemCancellation::REFUND_BONUS => 'Bonus balansına qaytarılır'][$op['refund']] ?? null;
+        @endphp
+        <div class="modal modal-right fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderTitle" aria-hidden="true">
+            <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.crm.order.cancel', [$customer, $order]) }}" data-once>
+                @csrf
+                <div class="modal-header"><h5 class="modal-title" id="cancelOrderTitle">Sifarişi ləğv et — {{ $order->order_no }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label" for="cancelOrderReason">Səbəb</label>
+                        <select id="cancelOrderReason" name="reason" class="form-select" required>
+                            @foreach(\App\Models\Order\OrderItemCancellation::REASONS as $value => $label)@continue($value === 'door_refused')<option value="{{ $value }}" @selected(old('reason') === $value)>{{ $label }}</option>@endforeach
+                        </select></div>
+                    <div class="mb-3"><label class="form-label" for="cancelOrderNote">Qeyd</label><textarea id="cancelOrderNote" name="note" rows="2" maxlength="2000" class="form-control" placeholder="Müştəri ilə nə razılaşdırıldı (müştəri sifarişin tarixçəsində görür)">{{ old('note') }}</textarea></div>
+                    <label class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="customer_agreed" value="1" required>
+                        <span class="form-check-label">Müştəri ilə danışılıb, razıdır</span>
+                    </label>
+                    <div class="od-cancel-result">
+                        <div><span>Məhsullar</span><b>{{ number_format($op['items'], 2) }} AZN</b></div>
+                        @if($op['fees'] > 0)<div><span>Çatdırılma / qablaşdırma</span><b>{{ number_format($op['fees'], 2) }} AZN</b></div>@endif
+                        @if($refundLabel)<div><span>{{ $refundLabel }}</span><b>{{ number_format($op['total'], 2) }} AZN</b></div>@endif
+                        @if($op['bonus'] > 0)<div><span>Qazanılmış bonus geri alınır</span><b>{{ number_format($op['bonus'], 2) }} AZN</b></div>@endif
+                        @if($op['returning'] > 0)<div><span>Kuryerdən anbara qaytarılır</span><b>{{ $op['returning'] }} ədəd</b></div>@endif
+                        @if($op['notify'] > 0)<div><span>Anbarlara "rezerv lazım deyil" SMS-i</span><b>{{ $op['notify'] }}</b></div>@endif
+                    </div>
+                    <div class="form-text mt-2">Məhsullar sifarişdən silinmir — tarixçədə qalır. Anbar seçimləri bağlanır, status "Ləğv edildi" olur. Bu əməliyyat geri qaytarılmır.</div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-danger">Sifarişi ləğv et</button></div>
             </form></div>
         </div>
     @endif

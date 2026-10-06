@@ -130,7 +130,7 @@ class AssistantCustomerTest extends TestCase
 
     public function test_panel_saves_credit_profile_with_id_card(): void
     {
-        $uploads = public_path('frontend/uploads/customers');
+        $uploads = \App\Services\IdCard\IdCardStorage::directory();
         $before = is_dir($uploads) ? scandir($uploads) : [];
 
         $r = $this->post('/admin/assistant/customer/5/credit-profile', $this->creditFields([
@@ -139,7 +139,7 @@ class AssistantCustomerTest extends TestCase
 
         $this->assertTrue($r['complete']);
         $this->assertSame('5XYZ12A', $r['credit']['fin']);
-        $this->assertStringContainsString('/frontend/uploads/customers/', $r['credit']['id_card_front']);
+        $this->assertStringContainsString('/admin/crm/customer/5/id-card/front', $r['credit']['id_card_front']);
         $this->getJson('/admin/assistant/customer?phone=994603831010')->assertJsonPath('customer.credit_ready', true)
             ->assertJsonPath('customer.credit.relative_1_name', 'Nigar');
 

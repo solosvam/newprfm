@@ -14,9 +14,11 @@ use App\Models\Order\OrderItem;
 use App\Models\Order\OrderItemCancellation;
 use App\Models\Order\OrderStatus;
 use App\Models\Payment\PaymentMethod;
+use App\Models\Procurement\OrderItemAllocation;
 use App\Models\Product\ProductVariant;
 use App\Services\BonusService;
 use App\Services\Crm\CreditProfileUpdater;
+use App\Services\IdCard\IdCardStorage;
 use App\Services\Crm\CustomerRegistration;
 use App\Services\OrderItemCancellationService;
 use App\Services\OrderPayLinkService;
@@ -24,6 +26,7 @@ use App\Services\OrderStatusService;
 use App\Services\OrderRefundService;
 use App\Services\ShopPricing;
 use App\Services\SmsService;
+use App\Services\WarehouseNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -150,6 +153,22 @@ class CrmController extends Controller
         $updater->update($customer, $request);
 
         return redirect()->route('admin.crm.customer', $customer->id)->with('success', 'Kredit profili yeniləndi.');
+    }
+
+    /** Vəsiqə şəkli (public qovluqda deyil) — hər baxış sensitive_access_logs-a yazılır */
+    public function idCardImage(Customer $customer, string $side, Request $request)
+    {
+        $path = IdCardStorage::path($customer->creditProfile?->{'id_card_'.$side});
+        abort_unless($path, 404);
+
+        DB::table('sensitive_access_logs')->insert([
+            'user_id' => (int) auth('admin')->id(), 'action' => 'crm_id_card_'.$side,
+            'subject_type' => 'customer', 'subject_id' => $customer->id,
+            'ip' => $request->ip(), 'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
+            'created_at' => now(),
+        ]);
+
+        return response()->file($path, ['Cache-Control' => 'private, no-store']);
     }
 
     /**
@@ -289,6 +308,8 @@ class CrmController extends Controller
             'settlement' => $settlement,
             'cancelBlock' => $cancelBlock,
             'doorBlock' => $cancellation->doorBlockReason($order),
+            'orderCancelBlock' => $cancellation->orderBlockReason($order),
+            'orderCancelPreview' => $cancellation->orderPreview($order),
             'cancelPreviews' => $cancelPreviews,
             // Tarixçə: aktiv statuslar + bu sifarişdə keçilmiş köhnələr
             'timelineStatuses' => OrderStatus::where(fn ($q) => $q->where('active', 1)->orWhereIn('id', $order->statusLogs->pluck('status_id')))
@@ -526,6 +547,40 @@ class CrmController extends Controller
         };
 
         return back()->with('success', $message);
+    }
+
+    /** Sifariş detalı → "Sifarişi ləğv et": bu sifarişin qalan bütün məhsulları ləğv olunur, status "Ləğv edildi" */
+    public function cancelOrder(Request $request, Customer $customer, Order $order, OrderItemCancellationService $service, WarehouseNotifier $notifier): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+
+        $data = $request->validate([
+            'reason' => ['required', Rule::in(array_diff(array_keys(OrderItemCancellation::REASONS), ['door_refused']))],
+            'note' => ['nullable', 'required_if:reason,other', 'string', 'max:2000'],
+            'customer_agreed' => ['accepted'],
+        ], [
+            'reason.required' => 'Səbəbi seçin.',
+            'note.required_if' => '"Digər" səbəbdə qeyd yazın.',
+            'customer_agreed.accepted' => 'Müştəri ilə razılaşdırıldığını təsdiqləyin.',
+        ]);
+
+        $actor = (int) auth('admin')->id();
+        $result = $service->cancelOrder($order, $data['reason'], $data['note'] ?? null, $actor);
+
+        // Xəbərdar edilmiş / mal ayırmış anbarlara: "rezerv lazım deyil"
+        $sms = OrderItemAllocation::with('warehouse')->whereIn('id', $result['notify'])->get()
+            ->mapWithKeys(fn ($allocation) => [$allocation->warehouse->name_az => rescue(fn () => $notifier->notifyCancelled($allocation, $actor), null)]);
+
+        $cancellations = collect($result['cancellations']);
+        $refund = $cancellations->whereIn('refund_status', [OrderItemCancellation::REFUND_PENDING])->sum('amount');
+        $bonus = $cancellations->where('refund_status', OrderItemCancellation::REFUND_BONUS)->sum('amount');
+
+        $message = 'Sifariş ləğv edildi.';
+        $message .= $refund > 0 ? ' '.number_format($refund, 2).' AZN müştərinin kartına qaytarılmalıdır ("Ödənişlər" bölməsi).' : '';
+        $message .= $bonus > 0 ? ' '.number_format($bonus, 2).' AZN bonus balansına qaytarıldı.' : '';
+        $message .= $sms->isNotEmpty() ? ' '.WarehouseNotifier::summary($sms) : '';
+
+        return back()->with('success', trim($message));
     }
 
     /** "İcraya götür": Sifariş verildi → Hazırlanır. Bundan sonra anbar sorğusu göndərmək olar. */

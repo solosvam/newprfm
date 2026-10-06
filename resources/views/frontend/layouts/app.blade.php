@@ -29,6 +29,8 @@
             'favoriteAdded' => __('notification_added_to_favorites'),
             'favoriteRemoved' => __('notification_removed_from_favorites'),
             'selectBrand' => __('home_select_brand'),
+            'passwordShow' => __('auth_password_show'),
+            'passwordHide' => __('auth_password_hide'),
         ],
         // Web push (OneSignal): promptNow — səhifə özü icazə istəməyi tələb edir (məs. sifariş tamamlandı)
         'push' => config('services.onesignal.app_id') ? [

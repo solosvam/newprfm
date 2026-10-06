@@ -17,7 +17,8 @@ use Illuminate\Validation\ValidationException;
  * Kassa və hesablaşma. Hər hərəkət from → to; qalıq = daxil olan − çıxan.
  *  - Kuryer: + → kuryer şirkətə təhvil verməlidir, − → şirkət kuryerə borcludur.
  *  - Sahibkar: − → şirkət sahibkara borcludur.
- *  - Anbar: borc = götürülmüş (picked) hissələrin alış dəyəri − anbara ödənilən.
+ *  - Anbar: borc = götürülmüş (picked) hissələrin alış dəyəri − anbara ödənilən (+ anbarın geri qaytardığı).
+ *    Mal anbara qaytarılıb pul alınmayıbsa borc mənfi olur — anbar şirkətə borcludur.
  * Qeydlər silinmir: səhv əks əməliyyatla düzəldilir (reverse).
  */
 class FinanceService
@@ -99,10 +100,19 @@ class FinanceService
             // Anbara ödəniş təminat hissəsinə bağlıdırsa: həmin anbar və dəyərdən çox ödənilə bilməz
             if (!empty($attrs['order_item_allocation_id'])) {
                 $allocation = OrderItemAllocation::with('orderItem')->lockForUpdate()->findOrFail($attrs['order_item_allocation_id']);
-                $this->ensure($kind === 'warehouse_payment' && (int) $allocation->warehouse_id === (int) $to->warehouse_id, 'Ödəniş bu anbarın təminatına aid deyil.');
-                $this->ensure($allocation->status !== OrderItemAllocation::CANCELLED, 'Ləğv edilmiş seçimə ödəniş edilmir.');
-                $left = (int) round($allocation->quantity * (float) $allocation->unit_cost * 100) - ($this->allocationPaid([$allocation->id])[$allocation->id] ?? 0);
-                $this->ensure($cents <= $left, 'Bu hissə üzrə qalan borc '.number_format($left / 100, 2).' AZN-dir.');
+                $paid = $this->allocationPaid([$allocation->id])[$allocation->id] ?? 0;
+                if ($kind === 'warehouse_refund') {
+                    // Anbar yalnız bu hissəyə ödənilən qədər qaytara bilər (mal qaytarılıb və ya seçim ləğv olunub)
+                    $this->ensure((int) $allocation->warehouse_id === (int) $from->warehouse_id, 'Qaytarma bu anbarın təminatına aid deyil.');
+                    $this->ensure(in_array($allocation->status, [OrderItemAllocation::RETURNED, OrderItemAllocation::RETURNING, OrderItemAllocation::CANCELLED], true),
+                        'Mal anbara qaytarılmayıb — pul geri alınmır.');
+                    $this->ensure($cents <= $paid, 'Bu hissə üzrə anbardan geri alınacaq '.number_format(max(0, $paid) / 100, 2).' AZN-dir.');
+                } else {
+                    $this->ensure($kind === 'warehouse_payment' && (int) $allocation->warehouse_id === (int) $to->warehouse_id, 'Ödəniş bu anbarın təminatına aid deyil.');
+                    $this->ensure($allocation->status !== OrderItemAllocation::CANCELLED, 'Ləğv edilmiş seçimə ödəniş edilmir.');
+                    $left = (int) round($allocation->quantity * (float) $allocation->unit_cost * 100) - $paid;
+                    $this->ensure($cents <= $left, 'Bu hissə üzrə qalan borc '.number_format($left / 100, 2).' AZN-dir.');
+                }
                 $attrs['order_id'] ??= $allocation->orderItem?->order_id;
             }
 

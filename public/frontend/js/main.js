@@ -826,6 +826,38 @@
         }
     })();
 
+    // Şifrə inputları: göz düyməsi ilə şifrəni göstər/gizlət (saytdakı bütün type="password" sahələri)
+    (() => {
+        const labels = { show: appData.messages?.passwordShow || 'Show password', hide: appData.messages?.passwordHide || 'Hide password' };
+        const eye = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<g class="pw-toggle__open"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></g>' +
+            '<g class="pw-toggle__closed"><path d="M10.7 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.2 3.2"/><path d="M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></g></svg>';
+
+        document.querySelectorAll('input[type="password"]').forEach(input => {
+            if (input.closest('.pw-field')) return;
+            const wrap = document.createElement('span');
+            wrap.className = 'pw-field';
+            input.parentNode.insertBefore(wrap, input);
+            wrap.appendChild(input);
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'pw-toggle';
+            button.innerHTML = eye;
+            button.setAttribute('aria-label', labels.show);
+            if (input.id) button.setAttribute('aria-controls', input.id);
+            wrap.appendChild(button);
+
+            button.addEventListener('click', () => {
+                const visible = input.type === 'password';
+                input.type = visible ? 'text' : 'password';
+                button.classList.toggle('is-visible', visible);
+                button.setAttribute('aria-label', visible ? labels.hide : labels.show);
+                input.focus({ preventScroll: true });
+            });
+        });
+    })();
+
     // Filtr: ölçü siyahısında axtarış
     document.addEventListener('input', event => {
         if (!event.target.matches('[data-filter-size-search]')) return;

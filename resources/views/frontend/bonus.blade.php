@@ -46,8 +46,11 @@
                                 <div class="bonus-row__info">
                                     <div class="bonus-row__title">{{ $title }}</div>
                                     <div class="bonus-row__meta">
-                                        @if($transaction->order)
+                                        @if($transaction->order && $transaction->order->customer_id === $transaction->customer_id)
                                             <a href="{{ route('order.details', $transaction->order) }}">№ {{ $transaction->order->order_no }}</a>
+                                        @elseif($transaction->order)
+                                            {{-- Dəvət bonusu: sifariş dəvət olunan dostundur — nömrə yox, dostun adı --}}
+                                            <span>{{ $transaction->order->customer?->full_name }}</span>
                                         @endif
                                         <time datetime="{{ $transaction->created_at->toIso8601String() }}">{{ $transaction->created_at->format('d.m.Y, H:i') }}</time>
                                         @if($transaction->expires_at && !$transaction->expired_at && $transaction->expires_at->isFuture())

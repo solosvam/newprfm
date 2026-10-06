@@ -6,6 +6,7 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderStatus;
 use App\Models\Procurement\OrderItemAllocation;
 use App\Models\User;
+use App\Services\Referral\ReferralService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -42,6 +43,9 @@ class OrderStatusService
             'order_id' => $order->id, 'status_id' => $status->id, 'user_id' => $actor,
             'note' => $note, 'created_at' => now(), 'updated_at' => now(),
         ]);
+        if ($code === 'delivered') {
+            app(ReferralService::class)->rewardForDeliveredOrder($order); // dəvət olunanın ilk sifarişi → referal bonusları
+        }
 
         return true;
     }

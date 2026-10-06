@@ -26,7 +26,8 @@ class RegistrationBonusTest extends TestCase
         });
         Schema::create('customer_bonus_transactions', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->unsignedBigInteger('order_id')->nullable(); $t->string('type');
-            $t->decimal('amount', 12, 2); $t->string('note')->nullable(); $t->unsignedBigInteger('created_by')->nullable(); $t->timestamps();
+            $t->decimal('amount', 12, 2); $t->string('note')->nullable(); $t->unsignedBigInteger('created_by')->nullable();
+            $t->timestamp('expires_at')->nullable(); $t->timestamp('expired_at')->nullable(); $t->timestamps();
         });
         Schema::create('settings', function (Blueprint $t) { $t->id(); $t->string('key'); $t->text('value')->nullable(); $t->timestamps(); });
         DB::table('settings')->insert([['key' => 'registration_bonus_enabled', 'value' => '1'], ['key' => 'registration_bonus_amount', 'value' => '10']]);

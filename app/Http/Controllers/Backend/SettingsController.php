@@ -74,8 +74,6 @@ class SettingsController extends Controller
                 'bonusPercent' => Setting::valueOf('order_bonus_percent', 5),
                 'registrationBonusEnabled' => (bool) Setting::valueOf('registration_bonus_enabled', 1),
                 'registrationBonusAmount' => Setting::valueOf('registration_bonus_amount', 10),
-                'bonusPayLimitEnabled' => (bool) Setting::valueOf('bonus_pay_limit_enabled', 0),
-                'bonusPayPercent' => Setting::valueOf('bonus_pay_percent', 30),
                 'bonusExpiryEnabled' => (bool) Setting::valueOf('bonus_expiry_enabled', 0),
                 'bonusOrderExpiryDays' => Setting::valueOf('bonus_order_expiry_days', 365),
                 'bonusRegistrationExpiryDays' => Setting::valueOf('bonus_registration_expiry_days', 90),
@@ -109,9 +107,6 @@ class SettingsController extends Controller
                 'order_bonus_percent' => ['required', 'numeric', 'min:0', 'max:100'],
                 'registration_bonus_enabled' => ['required', 'boolean'],
                 'registration_bonus_amount' => ['required_if:registration_bonus_enabled,1', 'nullable', 'numeric', 'min:0', 'max:10000'],
-                // Sifarişin ən çox neçə faizi bonusla ödənə bilər (bütün bonuslara aiddir)
-                'bonus_pay_limit_enabled' => ['required', 'boolean'],
-                'bonus_pay_percent' => ['required_if:bonus_pay_limit_enabled,1', 'nullable', 'numeric', 'min:1', 'max:100'],
                 // Qazanılan bonusun istifadə müddəti (gün); söndürülübsə müddətsiz
                 'bonus_expiry_enabled' => ['required', 'boolean'],
                 'bonus_order_expiry_days' => ['required_if:bonus_expiry_enabled,1', 'nullable', 'integer', 'min:1', 'max:3650'],

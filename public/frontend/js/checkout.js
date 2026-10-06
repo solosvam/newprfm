@@ -23,6 +23,8 @@
         items: $('checkoutItems'),
         discount: $('checkoutDiscount'),
         discountRow: $('checkoutDiscountRow'),
+        referralRow: $('checkoutReferralRow'),
+        referral: $('checkoutReferral'),
         delivery: $('checkoutDelivery'),
         giftWrapRow: $('checkoutGiftWrapRow'),
         giftWrapFee: $('checkoutGiftWrapFee'),
@@ -248,7 +250,10 @@
     function updateTotals() {
         const promo = window.ParfumPromo || {};
         const discount = promo.locked ? 0 : Math.min(state.subtotal, Number(promo.discount) || 0);
-        const goods = Math.max(0, round2(state.subtotal - discount));
+        const referral = window.ParfumReferral
+            ? window.ParfumReferral.discount(state.subtotal, discount, selectedCode() === INSTALLMENT)
+            : 0;
+        const goods = Math.max(0, round2(state.subtotal - discount - referral));
 
         const delivery = config.delivery || {};
         const freeFrom = Number(delivery.free_from) || 0;
@@ -267,6 +272,10 @@
 
         els.discountRow.hidden = discount <= 0;
         els.discount.textContent = '−' + money(discount);
+        if (els.referralRow) {
+            els.referralRow.hidden = referral <= 0;
+            els.referral.textContent = '−' + money(referral);
+        }
         els.delivery.textContent = fee > 0 ? money(fee) : (t.free || '0.00 ₼');
         els.delivery.classList.toggle('is-free', fee === 0);
         els.delivery.style.color = fee === 0 ? '#16803c' : '';

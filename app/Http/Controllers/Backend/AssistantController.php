@@ -80,7 +80,10 @@ class AssistantController extends Controller
         }
 
         $found = $search->search($query, 8);
-        $ids = array_column($found['results'], 'id');
+        // Qısaltma ("dol int" — brend, sonra model) əvvəldə, ardınca lüğət axtarışı; ölçü ("100") qısaltmaya düşmür
+        $shortcutQuery = implode(' ', array_filter(explode(' ', $query), fn (string $word) => $word !== '' && $word !== $size));
+        $shortcut = $search->shortcutIds($shortcutQuery, 8);
+        $ids = array_slice(array_values(array_unique([...$shortcut, ...array_column($found['results'], 'id')])), 0, 8);
 
         // operatorların axtarışları da "Nəticəsiz axtarışlar"a düşsün — lüğət buradan böyüyür
         $logger->record($query, $query, 'admin:'.auth('admin')->id(), null, $ids);
@@ -159,7 +162,10 @@ class AssistantController extends Controller
     private function creditData(Customer $customer): array
     {
         $profile = $customer->creditProfile;
-        $image = fn (?string $file) => $file ? asset('frontend/uploads/customers/'.basename($file)) : null;
+        $canView = auth('admin')->user()?->can('crm.id_card');
+        $image = fn (?string $file, string $side) => $file && $canView
+            ? route('admin.crm.id-card', ['customer' => $customer, 'side' => $side, 'v' => \App\Services\IdCard\IdCardStorage::version($file)])
+            : null;
 
         return [
             'father_name' => $profile?->father_name,
@@ -172,8 +178,8 @@ class AssistantController extends Controller
             'relative_2_phone' => $profile?->relative_2_phone,
             'workplace_name' => $profile?->workplace_name,
             'salary' => $profile?->salary !== null ? (string) $profile->salary : null,
-            'id_card_front' => $image($profile?->id_card_front),
-            'id_card_back' => $image($profile?->id_card_back),
+            'id_card_front' => $image($profile?->id_card_front, 'front'),
+            'id_card_back' => $image($profile?->id_card_back, 'back'),
         ];
     }
 

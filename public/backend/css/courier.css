@@ -57,5 +57,8 @@
 
 /* Qapıda imtina → anbara qaytarılacaq */
 .courier-wh--return { border: 1px solid var(--warning); }
-.courier-part--returning { border-left: 3px solid var(--warning); }
+.courier-part--returning { padding-left: 12px; border-left: 3px solid var(--warning); border-top-color: transparent; }
+.courier-cancelled { padding: 14px 16px; border-radius: var(--border-radius-md); background: rgba(var(--danger-rgb, 207, 45, 45), .08); color: var(--danger); }
+.courier-picked { padding: 12px 16px; border-radius: var(--border-radius-md); background: rgba(var(--success-rgb, 57, 148, 46), .1); color: var(--success); font-weight: 600; }
 .courier-refuse + .courier-refuse { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--separator); }
+.courier-refund { padding: 10px 12px; border-radius: var(--border-radius-md); background: var(--background); }

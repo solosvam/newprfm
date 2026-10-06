@@ -248,6 +248,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/credit', 'edit')->name('profile.credit');
         Route::post('/profile/credit', 'update')->name('profile.credit.update');
         Route::post('/profile/credit/ocr', 'ocr')->middleware('throttle:10,1')->name('profile.credit.ocr');
+        Route::get('/profile/credit/image/{side}', 'image')->whereIn('side', ['front', 'back'])->name('profile.credit.image');
 
     });
 
@@ -320,3 +321,6 @@ Route::get('/index.php', function (Request $request)
 Route::controller(ProductController::class)->group(function () {
     Route::get('/{slug}', 'product')->name('product');
 });
+
+// Uyğun route tapılmayan URL-lər də web middleware-dən (sessiya, dil) keçsin ki, 404 səhifəsi saytın layout-u ilə açılsın
+Route::fallback(fn () => abort(404));

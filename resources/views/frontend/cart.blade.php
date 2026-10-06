@@ -75,6 +75,10 @@
                             <span>{{ __('cart_discount') }} <em id="cartDiscountCode" class="cart-summary__code"></em></span>
                             <strong id="cartDiscount"></strong>
                         </div>
+                        <div id="cartReferralRow" class="cart-summary__row cart-summary__row--discount" hidden>
+                            <span>{{ __('cart_referral_discount') }}</span>
+                            <strong id="cartReferral"></strong>
+                        </div>
                         <div class="cart-summary__row">
                             <span>{{ __('cart_delivery') }}</span>
                             <strong id="cartDelivery"></strong>

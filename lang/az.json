@@ -647,5 +647,15 @@
     "bonus_refund": "Ləğv olunan sifarişdən geri qaytarma",
     "bonus_referral": "Dəvət bonusu",
     "bonus_valid_until": ":date-dək keçərlidir",
-    "auth_mobile_already_registered": "Bu nömrə ilə hesabınız artıq var. Giriş səhifəsinə yönləndirilirsiniz…"
+    "auth_mobile_already_registered": "Bu nömrə ilə hesabınız artıq var. Giriş səhifəsinə yönləndirilirsiniz…",
+    "error_404_title": "Səhifə tapılmadı",
+    "error_404_text": "Axtardığınız səhifə silinmiş, adı dəyişdirilmiş və ya heç vaxt mövcud olmayıb.",
+    "error_404_home": "Ana səhifəyə qayıt",
+    "error_404_brands": "Brendlərə bax",
+    "auth_password_show": "Şifrəni göstər",
+    "auth_password_hide": "Şifrəni gizlət",
+    "cart_referral_discount": "Dəvət endirimi",
+    "referral_discount_note_min": "Dəvət endirimi (:amount ₼) :min ₼ və daha çox məbləğli sifarişə tətbiq olunur.",
+    "referral_discount_note_promo": "Dəvət endirimi promo kodla birlikdə işləmir. Promo kodu silsəniz, dəvət endirimi tətbiq olunacaq.",
+    "referral_discount_note_installment": "Dəvət endirimi hissə-hissə ödənişə tətbiq olunmur."
 }

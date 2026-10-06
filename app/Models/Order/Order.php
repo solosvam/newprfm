@@ -15,6 +15,7 @@ class Order extends Model {
             'gift_wrap'=>'boolean',
             'subtotal'=>'decimal:2',
             'discount'=>'decimal:2',
+            'referral_discount'=>'decimal:2',
             'total'=>'decimal:2'
         ];
     }

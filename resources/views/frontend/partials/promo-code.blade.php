@@ -1,6 +1,19 @@
-@php($promoCode = session('promo_code'))
+@php
+    $promoCode = session('promo_code');
+    // Dəvət olunanın ilk sifariş endirimi — məbləğ və şərtlər; hesabı promo.js aparır (ParfumReferral), server checkout-da təkrar yoxlayır
+    $referralOffer = app(\App\Services\Referral\ReferralService::class)->discountOffer(auth()->user());
+    if ($referralOffer) {
+        $num = fn ($v) => rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');
+        $referralOffer['notes'] = [
+            'min' => __('referral_discount_note_min', ['amount' => $num($referralOffer['amount']), 'min' => $num($referralOffer['min'])]),
+            'promo' => __('referral_discount_note_promo'),
+            'installment' => __('referral_discount_note_installment'),
+        ];
+    }
+@endphp
 <div class="promo"
      data-promo
+     @if($referralOffer) data-referral="{{ json_encode($referralOffer, JSON_UNESCAPED_UNICODE) }}" @endif
      data-apply-url="{{ route('promo.apply') }}"
      data-remove-url="{{ route('promo.remove') }}"
      data-code="{{ $promoCode }}">
@@ -23,4 +36,5 @@
     </div>
     <p class="promo__locked" hidden>{{ __('checkout_promo_not_for_installment') }}</p>
     <p class="promo__error" role="alert" hidden></p>
+    <p class="promo__referral" hidden></p>
 </div>

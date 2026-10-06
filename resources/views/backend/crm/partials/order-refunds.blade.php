@@ -18,7 +18,7 @@
             @foreach($refundRows as $c)
                 <tr>
                     <td>{{ $c->created_at->format('d.m.Y H:i') }}<span class="od-sub">{{ $c->reasonLabel() }}</span></td>
-                    <td>{{ $c->orderItem?->product?->name ?? 'Məhsul' }}</td>
+                    <td>{{ $c->subjectLabel() }}</td>
                     <td class="od-num">{{ $c->quantity }}</td>
                     <td class="od-num">{{ number_format((float) $c->amount, 2) }} AZN</td>
                     <td>
@@ -31,7 +31,7 @@
                             @can('refund')
                                 <button type="button" class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#refundConfirmModal"
                                         data-action="{{ route('admin.crm.order.cancellation.refund', [$customer, $order, $c]) }}"
-                                        data-text="{{ ($c->orderItem?->product?->name ?? 'Məhsul').' × '.$c->quantity.' — '.number_format((float) $c->amount, 2).' AZN' }}">Karta qaytar</button>
+                                        data-text="{{ $c->subjectLabel().' × '.$c->quantity.' — '.number_format((float) $c->amount, 2).' AZN' }}">Karta qaytar</button>
                             @else
                                 <span class="text-muted small">Qaytarma icazəsi yoxdur</span>
                             @endcan
