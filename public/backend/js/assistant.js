@@ -272,7 +272,12 @@
         const info = el('div', 'as-info');
         const title = link(product.url, product.brand ? `${product.brand} ${product.name}` : product.name, 'as-title');
         info.append(title);
-        if (product.type) info.append(el('div', 'as-muted', product.type));
+        // tip + nəticənin mənbəyi: qısaltma ("dol int" — brend, sonra model), adi (lüğət) axtarış və ya hər ikisi
+        const meta = el('div', 'as-meta');
+        if (product.type) meta.append(el('span', 'as-muted', product.type));
+        const sources = { shortcut: 'qısaltma', smart: 'adi', both: 'hər ikisi' };
+        if (sources[product.source]) meta.append(el('span', `as-source is-${product.source}`, sources[product.source]));
+        info.append(meta);
 
         const chips = el('div', 'as-chips');
         product.variants.forEach((variant) => {

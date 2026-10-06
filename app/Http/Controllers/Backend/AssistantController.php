@@ -83,7 +83,8 @@ class AssistantController extends Controller
         // Qısaltma ("dol int" — brend, sonra model) əvvəldə, ardınca lüğət axtarışı; ölçü ("100") qısaltmaya düşmür
         $shortcutQuery = implode(' ', array_filter(explode(' ', $query), fn (string $word) => $word !== '' && $word !== $size));
         $shortcut = $search->shortcutIds($shortcutQuery, 8);
-        $ids = array_slice(array_values(array_unique([...$shortcut, ...array_column($found['results'], 'id')])), 0, 8);
+        $smart = array_column($found['results'], 'id');
+        $ids = array_slice(array_values(array_unique([...$shortcut, ...$smart])), 0, 8);
 
         // operatorların axtarışları da "Nəticəsiz axtarışlar"a düşsün — lüğət buradan böyüyür
         $logger->record($query, $query, 'admin:'.auth('admin')->id(), null, $ids);
@@ -111,6 +112,12 @@ class AssistantController extends Controller
                 'type' => $product->type?->name_az,
                 'image' => ($image = $product->images->first()) ? asset('frontend/uploads/products/'.$image->image) : null,
                 'url' => route('product', $product->slug),
+                // nəticənin mənbəyi (paneldə nişan): shortcut — qısaltma ("dol int"), smart — lüğət axtarışı, both — hər ikisi
+                'source' => match (true) {
+                    in_array($product->id, $shortcut, true) && in_array($product->id, $smart, true) => 'both',
+                    in_array($product->id, $shortcut, true) => 'shortcut',
+                    default => 'smart',
+                },
                 'variants' => $product->variants->map(fn ($variant) => [
                     'id' => $variant->id,
                     'size' => $variant->size?->name_az ?? '—',

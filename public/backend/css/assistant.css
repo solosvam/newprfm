@@ -66,6 +66,14 @@ body {
 .as-info { min-width: 0; flex: 1; }
 .as-title { display: block; color: var(--as-text); font-weight: 600; text-decoration: none; line-height: 1.25; }
 .as-title:hover { color: var(--as-accent); }
+/* Ətir axtarışı: tip + nəticənin mənbəyi (qısaltma / adi / hər ikisi) */
+.as-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.as-source {
+    display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1.5;
+    color: var(--as-muted); background: color-mix(in srgb, var(--as-muted) 12%, transparent);
+}
+.as-source.is-shortcut { color: var(--as-accent); background: color-mix(in srgb, var(--as-accent) 14%, transparent); }
+.as-source.is-both { color: #1f7a4a; background: color-mix(in srgb, #1f7a4a 12%, transparent); }
 .as-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .as-chip {
     display: inline-flex; gap: 4px; padding: 2px 6px; border-radius: 6px; font-size: 12px;
