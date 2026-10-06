@@ -40,7 +40,7 @@
             ] as [$label, $value, $hint])
                 <div class="col-6 col-md">
                     <div class="card h-100"><div class="card-body py-3">
-                        <div class="text-small text-muted">{{ $label }}@if($hint) <span class="text-muted">· {{ $hint }}</span>@endif</div>
+                        <div class="text-muted">{{ $label }}@if($hint) <span class="text-muted">· {{ $hint }}</span>@endif</div>
                         <div class="cta-3 text-primary">{{ $value }}</div>
                     </div></div>
                 </div>
@@ -91,7 +91,7 @@
                                 <tr>
                                     <td>
                                         <a href="{{ route('admin.crm.customer', $row->id) }}" class="body-link fw-bold">{{ $person($row) }}</a>
-                                        <div class="text-small text-muted">{{ $row->mobile }}</div>
+                                        <div class="text-muted">{{ $row->mobile }}</div>
                                     </td>
                                     <td class="text-end fw-bold">
                                         <a href="{{ route('admin.referrals.index', ['q' => $row->mobile ?: $person($row)]) }}" class="body-link" title="Dəvətlərini göstər">{{ $row->invites }}</a>
@@ -126,25 +126,25 @@
                                     <td>
                                         @if($referral->referrer)
                                             <a href="{{ route('admin.crm.customer', $referral->referrer_id) }}" class="body-link">{{ $person($referral->referrer) }}</a>
-                                            <div class="text-small text-muted">{{ $referral->referrer->mobile }}</div>
+                                            <div class="text-muted">{{ $referral->referrer->mobile }}</div>
                                         @else — @endif
                                     </td>
                                     <td>
                                         @if($referral->invitee)
                                             <a href="{{ route('admin.crm.customer', $referral->invitee_id) }}" class="body-link">{{ $person($referral->invitee) }}</a>
-                                            <div class="text-small text-muted">{{ $referral->invitee->mobile }}</div>
+                                            <div class="text-muted">{{ $referral->invitee->mobile }}</div>
                                         @else — @endif
                                     </td>
                                     <td>
                                         <span class="badge {{ $statusClass }}" @if($statusHint) title="{{ $statusHint }}" @endif>{{ $statusLabel }}</span>
                                         @unless($referral->referrer_rewardable)
-                                            <div class="text-small text-muted mt-1" title="Dəvət olunanda dəvət edənin limiti dolmuşdu">limit dolub — dəvət edənə bonus yoxdur</div>
+                                            <div class="text-muted mt-1" title="Dəvət olunanda dəvət edənin limiti dolmuşdu">limit dolub — dəvət edənə bonus yoxdur</div>
                                         @endunless
                                     </td>
                                     <td class="text-nowrap">
                                         @if($referral->order)
                                             <a href="{{ route('admin.crm.order', [$referral->order->customer_id, $referral->order]) }}" class="body-link">{{ $referral->order->order_no }}</a>
-                                            <div class="text-small text-muted">{{ $referral->rewarded_at?->format('d.m.Y') }}</div>
+                                            <div class="text-muted">{{ $referral->rewarded_at?->format('d.m.Y') }}</div>
                                         @else — @endif
                                     </td>
                                     <td class="text-end text-nowrap">{{ $referral->referrer_amount !== null ? $money($referral->referrer_amount).' ₼' : '—' }}</td>
@@ -152,7 +152,7 @@
                                         @if($referral->invitee_amount !== null)
                                             {{ $money($referral->invitee_amount) }} ₼
                                             {{-- endirim rejimində dəvət olunan məbləği checkout-da endirim kimi alıb --}}
-                                            <div class="text-small text-muted">{{ (float) $referral->order?->referral_discount > 0 ? 'endirim' : 'bonus' }}</div>
+                                            <div class="text-muted">{{ (float) $referral->order?->referral_discount > 0 ? 'endirim' : 'bonus' }}</div>
                                         @else — @endif
                                     </td>
                                 </tr>

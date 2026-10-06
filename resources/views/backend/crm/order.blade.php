@@ -166,6 +166,9 @@
                     <dl class="od-facts">
                         <div><dt>Müştəri</dt><dd><a href="{{ route('admin.crm.customer', $customer) }}">#{{ $customer->id }} {{ $customer->name }} {{ $customer->surname }}</a></dd></div>
                         <div><dt>Telefon</dt><dd>@if($customer->mobile)<a href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile) }}">{{ $customer->mobile }}</a>@else — @endif</dd></div>
+                        @if($customer->mobile_2)
+                            <div><dt>Ehtiyat telefon</dt><dd><a href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile_2) }}">{{ $customer->mobile_2 }}</a></dd></div>
+                        @endif
                         <div class="od-facts__wide"><dt>Ünvan</dt><dd>{{ $order->address?->label ?: 'Ünvan dəqiqləşdirilməyib' }}</dd></div>
                         <div><dt>Qablaşdırma</dt><dd>@if($order->gift_wrap)<span class="badge bg-outline-primary">Hədiyyəlik</span>@else Standart @endif</dd></div>
                         <div><dt>Kuryer</dt><dd>

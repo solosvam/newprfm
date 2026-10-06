@@ -37,6 +37,7 @@ class DeliveryBonusTest extends TestCase
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->unsignedBigInteger('payment_method_id')->nullable();
             foreach (['subtotal', 'discount', 'referral_discount', 'total', 'bonus_earned'] as $c) $t->decimal($c, 12, 2)->default(0);
+            $t->decimal('bonus_percent', 5, 2)->nullable();
             $t->timestamps();
         });
         $this->orderStatusFixtures();
@@ -98,4 +99,29 @@ class DeliveryBonusTest extends TestCase
         app(OrderStatusService::class)->set($order, 'cancelled', null);
         $this->assertEquals(0, app(BonusService::class)->pendingFor($order->fresh()->load('status')));
     }
+
+    public function test_order_bonus_percent_overrides_setting_crm_manual_price(): void
+    {
+        // CRM: operator qiyməti əl ilə dəyişib, 2% seçib → (200 − 20) × 2% = 3.60; 0% — bonus yoxdur
+        $two = $this->order(1, ['bonus_percent' => 2]);
+        $zero = $this->order(1, ['bonus_percent' => 0]);
+        $this->assertEquals(3.6, app(BonusService::class)->pendingFor($two));
+        $this->assertEquals(0, app(BonusService::class)->pendingFor($zero));
+
+        $this->deliver($two);
+        $this->deliver($zero);
+        $this->assertEquals(3.6, $this->customer->fresh()->bonus_balance);
+        $this->assertSame(1, DB::table('customer_bonus_transactions')->where('type', 'earn')->count());
+    }
+
+    public function test_setting_change_after_order_does_not_affect_its_bonus(): void
+    {
+        // sifariş 5% ilə verilib (bonus_percent sabitlənib), sonra admin faizi 10% edilib
+        $order = $this->order(1, ['bonus_percent' => 5]);
+        DB::table('settings')->where('key', 'order_bonus_percent')->update(['value' => '10']);
+
+        $this->deliver($order);
+        $this->assertEquals(9, $this->customer->fresh()->bonus_balance, '(200 − 20) × 5%, 10% yox');
+    }
 }
+

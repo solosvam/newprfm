@@ -265,7 +265,12 @@
         validate();
     }
 
-    // Qazanılacaq bonus: məhsulların məbləği × faiz (BonusService ilə eyni)
+    // Qazanılacaq bonus: məhsulların məbləği × faiz (BonusService ilə eyni).
+    // Operator qiyməti əl ilə endiribsə — bonus ləğv olunur, faizi operator seçir: 0..admin ayarı (standart 0)
+    const maxBonusPercent = Math.round(bonusRate * 100);
+    let manualBonusPercent = 0;
+    const priceChanged = () => cart.some(i => i.price < i.basePrice - 0.004);
+
     function updateBonus() {
         const goods = subtotal();
         els.bonus.hidden = !goods;
@@ -273,10 +278,24 @@
         const code = selectedCode();
         const off = NO_BONUS.includes(code);
         els.bonus.classList.toggle('is-off', off);
-        els.bonus.innerHTML = off
-            ? 'Bu ödəniş üsulunda bonus hesablanmır'
-            : `<span>Qazanacağı bonus</span><strong>+${money(goods * bonusRate)}</strong>`;
+        els.bonus.classList.toggle('is-manual', !off && priceChanged());
+        if (off) {
+            els.bonus.textContent = 'Bu ödəniş üsulunda bonus hesablanmır';
+        } else if (priceChanged()) {
+            const options = Array.from({ length: maxBonusPercent + 1 }, (_, p) =>
+                `<option value="${p}" ${p === manualBonusPercent ? 'selected' : ''}>${p}%</option>`).join('');
+            els.bonus.innerHTML = `<span>Qiymət dəyişdirildi — bonus faizi</span>
+                <select class="form-select form-select-sm crm-order__bonus-select" data-bonus-percent aria-label="Bonus faizi">${options}</select>
+                <strong>+${money(goods * manualBonusPercent / 100)}</strong>`;
+        } else {
+            els.bonus.innerHTML = `<span>Qazanacağı bonus</span><strong>+${money(goods * bonusRate)}</strong>`;
+        }
     }
+    els.bonus.addEventListener('change', (event) => {
+        if (!event.target.matches('[data-bonus-percent]')) return;
+        manualBonusPercent = Number(event.target.value) || 0;
+        updateBonus();
+    });
 
     // ---------- Ünvan ----------
     els.address.addEventListener('change', () => {
@@ -404,6 +423,8 @@
             credit_period_id: code === 'installment'
                 ? Number(root.querySelector('input[name="crm_credit_period"]:checked')?.value) || null : null,
             gift_wrap: els.giftWrap.checked,
+            // qiymət əl ilə dəyişibsə — seçilən bonus faizi (server də yoxlayır)
+            bonus_percent: priceChanged() ? manualBonusPercent : null,
         };
 
         const label = els.submit.textContent;

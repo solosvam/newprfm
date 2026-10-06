@@ -117,6 +117,7 @@ class CreditApplicationController extends Controller
             $status = OrderStatus::where('code', 'new')->where('active', 1)->firstOrFail();
             $creditStatus = CreditStatus::where('code', 'pending')->firstOrFail();
             $order = Order::create([
+                'bonus_percent' => app(\App\Services\BonusService::class)->currentPercent(), // sifariş anındakı faiz sabitlənir
                 'order_no' => 'TMP'.\Illuminate\Support\Str::random(20),
                 'customer_id' => $customer->id,
                 'customer_address_id' => $address->id,

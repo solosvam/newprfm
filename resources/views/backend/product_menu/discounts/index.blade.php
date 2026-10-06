@@ -72,17 +72,17 @@
                                         <span class="discount-thumb" @if($image($product)) style="background-image: url('{{ $image($product) }}')" @endif></span>
                                         <div>
                                             <a href="{{ route('admin.product.edit', $discount->product_id) }}#product-discount" class="body-link fw-bold">{{ $product?->name }}</a>
-                                            <div class="text-small text-muted">{{ $product?->brand?->name }}</div>
+                                            <div class="text-muted">{{ $product?->brand?->name }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="fw-bold text-primary">−{{ $discount->percentLabel() }}%</td>
-                                <td class="text-small text-nowrap">
+                                <td class="text-nowrap">
                                     @if($cheapest)
                                         <s class="text-muted">{{ number_format((float) $cheapest->price, 2) }}</s> {{ number_format($discount->apply((float) $cheapest->price), 2) }} ₼-dən
                                     @else — @endif
                                 </td>
-                                <td class="text-small text-nowrap">{{ $discount->starts_at->format('d.m.Y H:i') }} — {{ $discount->ends_at->format('d.m.Y H:i') }}</td>
+                                <td class="text-nowrap">{{ $discount->starts_at->format('d.m.Y H:i') }} — {{ $discount->ends_at->format('d.m.Y H:i') }}</td>
                                 <td class="text-end discount-left">
                                     @if($status === 'ended')
                                         <span class="text-muted">{{ $discount->ends_at->format('d.m.Y') }}</span>
@@ -95,7 +95,7 @@
                         @empty
                             <tr><td colspan="6" class="text-center text-muted py-5">
                                 {{ ['active' => 'Hazırda endirimdə məhsul yoxdur', 'scheduled' => 'Planlaşdırılmış endirim yoxdur', 'ended' => 'Bitmiş endirim yoxdur'][$status] }}
-                                <div class="text-small mt-1">Endirim məhsulun redaktə səhifəsində "Endirim" tabından əlavə olunur.</div>
+                                <div class="mt-1">Endirim məhsulun redaktə səhifəsində"Endirim" tabından əlavə olunur.</div>
                             </td></tr>
                         @endforelse
                         </tbody>

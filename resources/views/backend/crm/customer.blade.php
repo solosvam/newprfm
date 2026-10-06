@@ -120,6 +120,12 @@
                                     <i data-acorn-icon="mobile" data-acorn-size="16" class="me-1"></i>
                                     <span class="align-middle">{{ $customer->mobile }}</span>
                                 </div>
+                                @if($customer->mobile_2)
+                                    <div class="text-muted" title="Ehtiyat telefon">
+                                        <i data-acorn-icon="phone" data-acorn-size="16" class="me-1"></i>
+                                        <span class="align-middle">{{ $customer->mobile_2 }} <span class="small">(ehtiyat)</span></span>
+                                    </div>
+                                @endif
                                 @if($customer->sourceLabel())
                                     <div class="text-small text-muted mt-1" title="Müştəri haradan yaranıb">
                                         {{ $customer->sourceLabel() }} · {{ $customer->created_at?->format('d.m.Y') }}
@@ -178,7 +184,6 @@
                                                 ['Qohum mobil', $creditProfile?->relative_2_phone],
                                                 ['İş yeri', $creditProfile?->workplace_name],
                                                 ['Əmək haqqı', $creditProfile?->salary],
-                                                ['Vəzifə', $creditProfile?->position],
                                         ] as [$label, $value])
                                             <tr>
                                                 <td class="text-muted ps-0" style="width:45%;">{{ $label }}</td>

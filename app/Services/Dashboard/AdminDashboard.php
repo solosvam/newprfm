@@ -253,8 +253,25 @@ class AdminDashboard
                     ->whereIn('refund_status', [OrderItemCancellation::REFUND_PENDING, OrderItemCancellation::REFUND_PROCESSING])->count(),
                 // kuryer mərhələsində 1 gündən çox dəyişməyən sifarişlər
                 'courier' => Order::whereIn('order_status_id', $courier)->where('updated_at', '<', now()->subDay())->count(),
+                // "Qiymət enəndə xəbər ver" — hələ xəbər verilməmiş müştərilər
+                'price_alerts' => DB::table('price_alerts')->whereNull('notified_at')->distinct()->count('customer_id'),
+                // 1 gündən çoxdur səbətinə toxunmayan müştərilər (zəng / xatırlatma üçün)
+                'carts' => DB::table('customer_cart_items')->groupBy('customer_id')
+                    ->havingRaw('MAX(updated_at) < ?', [now()->subDay()])->select('customer_id')->get()->count(),
             ];
         });
+    }
+
+    /**
+     * Son daxil olan sifarişlər (dashboard lenti, keşsiz).
+     *
+     * @return \Illuminate\Support\Collection<int, Order>
+     */
+    public function recentOrders(int $limit = 8)
+    {
+        return Order::with(['status', 'customer', 'paymentMethod'])
+            ->withSum('itemCancellations as cancelled_amount', 'amount')
+            ->latest('id')->limit($limit)->get();
     }
 
     /**
@@ -465,7 +482,7 @@ class AdminDashboard
      * Dizayna baxmaq üçün saxta göstəricilər (yalnız lokal mühitdə, /admin?demo=1).
      * Bazaya toxunmur; struktur stats()/paymentMethods()/sales() ilə eynidir.
      */
-    public function demo(string $period): array
+    public function demo(string $period, int $days = 7): array
     {
         $period = self::period($period);
         $scale = ['today' => 1, 'week' => 5, 'month' => 21][$period];
@@ -473,9 +490,14 @@ class AdminDashboard
 
         $sales = ['labels' => [], 'dates' => [], 'revenue' => [], 'orders' => []];
         $weekdays = ['B.', 'B.e.', 'Ç.a.', 'Ç.', 'C.a.', 'C.', 'Ş.'];
-        $daily = [[9, 2665], [12, 2836], [8, 1324], [15, 4223], [11, 2176], [17, 5546], [10, 5183]];
+        $pattern = [[9, 2665], [12, 2836], [8, 1324], [15, 4223], [11, 2176], [17, 5546], [10, 5183]];
+        $daily = [];
+        for ($i = 0; $i < $days; $i++) {
+            [$o, $r] = $pattern[($i + 7 - $days % 7) % 7];
+            $daily[] = [$o + ($i * 3) % 5, $r + ($i * 377) % 900];
+        }
         foreach ($daily as $i => [$orders, $revenue]) {
-            $day = CarbonImmutable::today()->subDays(6 - $i);
+            $day = CarbonImmutable::today()->subDays($days - 1 - $i);
             $sales['labels'][] = $day->isToday() ? 'Bu gün' : $weekdays[$day->dayOfWeek].' '.$day->format('d.m');
             $sales['dates'][] = $day->toDateString();
             $sales['revenue'][] = (float) $revenue;
@@ -546,7 +568,7 @@ class AdminDashboard
                 ['id' => 0, 'name' => 'Baccarat Rouge 540', 'brand' => 'Maison Francis Kurkdjian', 'size' => '70 ml', 'price' => 610.0, 'quantity' => 3, 'customers' => 3],
                 ['id' => 0, 'name' => 'Cedrat Boise', 'brand' => 'Mancera', 'size' => '120 ml', 'price' => 226.0, 'quantity' => 3, 'customers' => 2],
             ]],
-            'attention' => ['warehouse' => 3, 'easy_orders' => 2, 'credit' => 4, 'reviews' => 0, 'refunds' => 1, 'courier' => 0],
+            'attention' => ['warehouse' => 3, 'easy_orders' => 2, 'credit' => 4, 'reviews' => 0, 'refunds' => 1, 'courier' => 0, 'price_alerts' => 14, 'carts' => 21],
         ];
     }
 

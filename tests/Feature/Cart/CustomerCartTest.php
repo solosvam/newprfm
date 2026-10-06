@@ -145,6 +145,7 @@ class CustomerCartTest extends TestCase
             $t->string('payment_status'); $t->string('source'); $t->integer('order_status_id');
             $t->boolean('gift_wrap'); $t->text('customer_note')->nullable();
             foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $column) $t->decimal($column, 12, 2)->default(0);
+            $t->decimal('bonus_percent', 5, 2)->nullable();
             $t->integer('promo_code_id')->nullable(); $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
@@ -178,5 +179,6 @@ class CustomerCartTest extends TestCase
         $item = DB::table('order_items')->first();
         $this->assertEquals([20.0, 3.0, 17.0], [(float) $order->subtotal, (float) $order->discount, (float) $order->total]);
         $this->assertEquals([8.5, 10.0, 17.0], [(float) $item->unit_price, (float) $item->list_price, (float) $item->total]);
+        $this->assertEquals(5.0, (float) $order->bonus_percent, 'sifariş anındakı admin faizi sabitlənir');
     }
 }

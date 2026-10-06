@@ -23,6 +23,8 @@ use App\Http\Controllers\Backend\CrmController;
 use App\Http\Controllers\Backend\EasyOrdersController;
 use App\Http\Controllers\Backend\OrdersController;
 use App\Http\Controllers\Backend\CartsController;
+use App\Http\Controllers\Backend\PriceAlertsController;
+use App\Http\Controllers\Backend\StatisticsController;
 use App\Http\Controllers\Backend\FeaturedProductsController;
 use App\Http\Controllers\Backend\ReferralsController;
 use App\Http\Controllers\Backend\PromoCodesController;
@@ -160,6 +162,10 @@ Route::prefix('admin')
             Route::get('/main', [MainController::class, 'index'])
                 ->name('main');
 
+            Route::get('/statistics', [StatisticsController::class, 'index'])
+                ->middleware('can:statistics')
+                ->name('statistics');
+
             Route::get('/logout', [AuthController::class, 'logout'])
                 ->name('logout');
 
@@ -278,6 +284,7 @@ Route::prefix('admin')
             Route::middleware('can:crm')->group(function () {
                 Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
                 Route::get('/carts', [CartsController::class, 'index'])->name('carts.index');
+                Route::get('/price-alerts', [PriceAlertsController::class, 'index'])->name('price-alerts.index');
                 Route::get('/referrals', [ReferralsController::class, 'index'])->name('referrals.index');
             });
 
@@ -319,6 +326,7 @@ Route::prefix('admin')
                         ->middleware(['can:refund', 'throttle:10,1'])->name('order.cancellation.refund');
                     Route::post('/customer/{customer}/order/{order}/pay-link', 'sendPayLink')->middleware('throttle:10,1')->name('order.pay-link');
                     Route::post('/customer/{customer}', 'update')->name('update');
+                    Route::post('/customer/{customer}/address/{address}', 'updateAddress')->whereNumber('address')->name('address.update');
                     Route::post('/customer/{customer}/credit-profile/ocr', 'creditProfileOcr')->middleware('throttle:10,1')->name('credit-profile.ocr');
                     Route::post('/customer/{customer}/credit-profile', 'updateCreditProfile')->name('credit-profile.update');
                     Route::get('/customer/{customer}/id-card/{side}', 'idCardImage')->whereIn('side', ['front', 'back'])->middleware('can:crm.id_card')->name('id-card');

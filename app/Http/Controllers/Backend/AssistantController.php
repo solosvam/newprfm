@@ -37,7 +37,9 @@ class AssistantController extends Controller
         }
         $mobile = '994'.$m[1];
 
-        $customer = Customer::with('creditProfile')->where('mobile', $mobile)->first();
+        // WhatsApp nömrəsi əsas nömrədirsə — o; yoxdursa ehtiyat nömrə kimi qeyd olunan müştəri
+        $customer = Customer::with('creditProfile')->where('mobile', $mobile)->first()
+            ?? Customer::with('creditProfile')->where('mobile_2', $mobile)->first();
         if (!$customer) {
             // CRM-də "Yeni müştəri" modalı nömrə yazılmış halda açılır (crm.js: ?new_customer=)
             return response()->json(['valid' => true, 'mobile' => $mobile, 'customer' => null, 'crm_url' => route('admin.crm.index', ['new_customer' => $mobile])]);

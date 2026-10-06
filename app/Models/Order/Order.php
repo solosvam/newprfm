@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model {
     protected $guarded=[];
+
     protected function casts():array
     {
         return [
@@ -16,6 +17,7 @@ class Order extends Model {
             'subtotal'=>'decimal:2',
             'discount'=>'decimal:2',
             'referral_discount'=>'decimal:2',
+            'bonus_percent'=>'decimal:2',
             'total'=>'decimal:2'
         ];
     }

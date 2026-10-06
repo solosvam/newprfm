@@ -10,11 +10,18 @@
     $discountErrors = $errors->getBag('discount');
     $minPrice = (float) $product->variants->where('active', 1)->min('price');
 @endphp
+<style>
+    /* Endirim tabının bölmələri: aydın sərhəd, tabın altından boşluq */
+    #product-discount { padding-top: 20px; }
+    #product-discount .discount-panel { border: 1px solid var(--separator); border-radius: var(--border-radius-lg, 12px); padding: 20px; background: var(--foreground); height: calc(100% - 34px); }
+    #product-discount .small-title { margin-bottom: 10px; }
+</style>
 <div class="tab-pane fade" id="product-discount" role="tabpanel">
     <div class="row g-4">
         <div class="col-12 col-lg-5">
             <h2 class="small-title">Yeni endirim</h2>
-            <div class="card"><div class="card-body">
+            {{-- məhsul səhifəsinin kartının içindədir — ikinci kart yox, görünən sərhədli bölmə --}}
+            <div class="discount-panel">
                 <div class="mb-3">
                     <label class="form-label" for="discount-percent">Endirim faizi *</label>
                     <div class="input-group">
@@ -40,17 +47,18 @@
                         @error('ends_at', 'discount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                 </div>
-                <p class="text-small text-muted mb-3">Endirimli məhsula promo kod tətbiq olunmur. "Qiymət enəndə xəbər ver" abunəçilərinə endirim başlayanda bildiriş gedir.</p>
+                <p class="text-muted mb-3">Endirimli məhsula promo kod tətbiq olunmur."Qiymət enəndə xəbər ver" abunəçilərinə endirim başlayanda bildiriş gedir.</p>
                 <button type="submit" form="productDiscountForm" class="btn btn-primary" @disabled($current && $current->status() === 'active')>Endirimi əlavə et</button>
                 @if($current && $current->status() === 'active')
                     <div class="form-text text-warning">Məhsulun aktiv endirimi var — yenisini əlavə etmək üçün əvvəlcə onu bitirin.</div>
                 @endif
-            </div></div>
+            </div>
         </div>
 
         <div class="col-12 col-lg-7">
             <h2 class="small-title">Endirimlər</h2>
-            <div class="card"><div class="card-body">
+            {{-- məhsul səhifəsinin kartının içindədir — ikinci kart yox, görünən sərhədli bölmə --}}
+            <div class="discount-panel">
                 @if($discounts->isEmpty())
                     <div class="text-muted text-center py-4">Bu məhsulun endirimi olmayıb</div>
                 @else
@@ -67,7 +75,7 @@
                                 @php [$label, $class] = $statusLabels[$discount->status()]; @endphp
                                 <tr>
                                     <td class="fw-bold">−{{ $discount->percentLabel() }}%</td>
-                                    <td class="text-small text-nowrap">{{ $discount->starts_at->format('d.m.Y H:i') }}<br>{{ $discount->ends_at->format('d.m.Y H:i') }}</td>
+                                    <td class="text-nowrap">{{ $discount->starts_at->format('d.m.Y H:i') }}<br>{{ $discount->ends_at->format('d.m.Y H:i') }}</td>
                                     <td><span class="badge {{ $class }}">{{ $label }}</span></td>
                                     <td class="text-end">
                                         @if($discount->status() === 'active')
@@ -82,7 +90,7 @@
                         </table>
                     </div>
                 @endif
-            </div></div>
+            </div>
         </div>
     </div>
 </div>
@@ -102,16 +110,12 @@
         input.addEventListener('input', render);
         render();
     })();
-    // Endirim tabında məhsulun "Yadda saxla" / "Məhsulu sil" düymələri gizlənir (endirimin öz düymələri var)
-    document.addEventListener('shown.bs.tab', (event) => {
-        const actions = document.querySelector('[data-product-actions]');
-        if (actions) actions.hidden = event.target.getAttribute('href') === '#product-discount';
-    });
     // #product-discount ilə açılanda (əlavə/xəta sonrası) — Endirim tabı açıq gəlsin
     document.addEventListener('DOMContentLoaded', () => {
         if (location.hash === '#product-discount' || {{ $discountErrors->any() ? 'true' : 'false' }}) {
             const tab = document.querySelector('a[href="#product-discount"]');
-            if (tab && window.bootstrap) bootstrap.Tab.getOrCreateInstance(tab).show();
+            // admin-də Bootstrap 5.0.1 — getOrCreateInstance yoxdur
+            if (tab && window.bootstrap) (bootstrap.Tab.getInstance(tab) || new bootstrap.Tab(tab)).show();
         }
     });
 </script>

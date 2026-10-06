@@ -46,7 +46,6 @@
 @endsection
 
 @section('js_page')
-    <script src="{{ asset_v('backend/js/product-poster.js') }}"></script>
     <script src="{{ asset('backend/js/vendor/select2.full.min.js') }}"></script>
     <script src="{{ asset('backend/js/forms/controls.select2.js') }}"></script>
 
@@ -408,7 +407,6 @@
 @endsection
 
 @section('content')
-    @include('backend.product_menu.product.partials.poster-modal')
     <div class="container">
         <div class="page-title-container">
             <div class="row">
@@ -416,11 +414,11 @@
                     <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
                     @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
                 </div>
-                <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
-                    <button type="button" class="btn btn-outline-primary w-100 w-sm-auto"
-                            data-product-poster-url="{{ route('admin.product.poster', $product) }}">
-                        Poster paylaş
-                    </button>
+                {{-- Əsas əməliyyatlar yuxarıda — hansı tab açıq olsa da görünür; form="…" ilə formalara bağlıdır --}}
+                <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end gap-2">
+                    <button type="submit" form="productForm" class="btn btn-primary">Yadda saxla</button>
+                    <button type="submit" form="delete-product-form" class="btn btn-outline-danger"
+                            onclick="return confirm('Məhsul tamamilə silinəcək. Davam edək?')">Məhsulu sil</button>
                 </div>
             </div>
         </div>
@@ -693,15 +691,6 @@
                                     @endcan
                                 </div>
 
-                                <div class="mt-4 d-flex gap-2" data-product-actions>
-                                    <button type="submit" class="btn btn-primary">Yadda saxla</button>
-                                    <button type="submit"
-                                            form="delete-product-form"
-                                            class="btn btn-danger"
-                                            onclick="return confirm('Məhsul tamamilə silinəcək. Davam edək?')">
-                                        Məhsulu sil
-                                    </button>
-                                </div>
                             </form>
 
                             <form id="delete-product-form" method="POST" action="{{ route('admin.product.destroy', $product->id) }}">

@@ -56,7 +56,7 @@
                         </select>
                     </div>
                     <div class="col-6 col-md-4 col-xl-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Süz</button>
+                        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
                         @if(array_filter($filters))
                             <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-muted btn-sm">Sıfırla</a>
                         @endif

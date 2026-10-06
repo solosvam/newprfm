@@ -9,6 +9,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\OrderStatusFixtures;
@@ -50,6 +51,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('order_item_cancellations', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id')->nullable(), $t->decimal('amount', 12, 2)->default(0), $t->string('refund_status')->nullable()]);
         Schema::create('order_item_allocations', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_item_id'), $t->unsignedBigInteger('warehouse_id')->nullable(), $t->integer('quantity'), $t->decimal('unit_cost', 12, 2), $t->string('status')]);
         Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->string('mobile')->nullable(), $t->integer('old_customer_id')->nullable(), $t->string('source', 20)->nullable(), $t->boolean('active')->default(true), $t->decimal('bonus_balance', 12, 2)->default(0), $t->timestamps()]);
+        Schema::create('price_alerts', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->integer('product_variant_id'), $t->decimal('price', 10, 2), $t->timestamp('notified_at')->nullable(), $t->timestamps()]);
         Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::table('permissions', fn (Blueprint $t) => $t->string('description')->nullable());
         (require database_path('migrations/2026_09_29_200000_create_finance_tables.php'))->up();
@@ -168,9 +170,18 @@ class AdminDashboardTest extends TestCase
         DB::table('credit_applications')->insert([['credit_status_id' => 1], ['credit_status_id' => 2]]);
         DB::table('product_reviews')->insert([['active' => false], ['active' => true]]);
         DB::table('order_item_cancellations')->insert([['refund_status' => 'pending'], ['refund_status' => 'refunded']]);
+        DB::table('price_alerts')->insert([
+            ['customer_id' => 1, 'product_variant_id' => 1, 'price' => 100, 'notified_at' => null],
+            ['customer_id' => 1, 'product_variant_id' => 2, 'price' => 100, 'notified_at' => null],
+            ['customer_id' => 2, 'product_variant_id' => 1, 'price' => 100, 'notified_at' => '2026-10-01 10:00'],
+        ]);
+        DB::table('customer_cart_items')->insert([
+            ['customer_id' => 5, 'product_variant_id' => 1, 'quantity' => 1, 'updated_at' => '2026-09-30 10:00'],
+            ['customer_id' => 6, 'product_variant_id' => 1, 'quantity' => 1, 'updated_at' => now()],
+        ]);
 
         $this->assertSame(
-            ['warehouse' => 1, 'easy_orders' => 1, 'credit' => 1, 'reviews' => 1, 'refunds' => 1, 'courier' => 1],
+            ['warehouse' => 1, 'easy_orders' => 1, 'credit' => 1, 'reviews' => 1, 'refunds' => 1, 'courier' => 1, 'price_alerts' => 1, 'carts' => 1],
             app(AdminDashboard::class)->attention()
         );
     }
@@ -351,13 +362,36 @@ class AdminDashboardTest extends TestCase
 
     public function test_main_page_renders_for_admin(): void
     {
-        $this->order('2026-10-02 10:00', 100);
-        $html = $this->actingAs($this->admin, 'admin')->get(route('admin.main', ['period' => 'week']))
+        $this->order('2026-10-02 10:00', 100)->forceFill(['order_no' => 'PS-5001'])->save();
+        $html = $this->actingAs($this->admin, 'admin')->get(route('admin.main'))
             ->assertOk()->getContent();
 
-        foreach (['Səbətlərdə', 'Yeni müştərilər', 'Saytda axtarış', 'Onlayn ödənişlər', 'Sifariş mənbələri', 'Diqqət tələb edənlər', 'Ən çox satılanlar', 'Aktiv sifarişlər', 'Statistika', 'Bu həftə', 'Dövriyyə', 'Mənfəət', 'Qapıda nağd', 'dashRevenueChart', 'dashPaymentsChart'] as $text) {
+        foreach (['Diqqət tələb edənlər', 'Aktiv sifarişlər', 'Son sifarişlər', 'Səbətlərdə', 'Endirim gözləyən', 'Səbətdə gözləyən', 'Bu günkü sifariş', 'PS-5001'] as $text) {
             $this->assertStringContainsString($text, $html);
         }
+        // analitika Statistika səhifəsindədir; icazəsiz istifadəçi dövriyyəni görmür
+        foreach (['Mənfəət', 'Ən çox satılanlar', 'Bu günkü dövriyyə'] as $text) {
+            $this->assertStringNotContainsString($text, $html);
+        }
+    }
+
+    public function test_statistics_page_requires_permission_and_renders(): void
+    {
+        $this->actingAs($this->admin, 'admin')->get(route('admin.statistics'))->assertForbidden();
+
+        Permission::create(['name' => 'statistics', 'guard_name' => 'admin']);
+        $this->admin->givePermissionTo('statistics');
+        $this->order('2026-10-02 10:00', 100);
+        $html = $this->actingAs($this->admin->fresh(), 'admin')->get(route('admin.statistics', ['period' => 'week']))
+            ->assertOk()->getContent();
+
+        foreach (['Saytda axtarış', 'Onlayn ödənişlər', 'Sifariş mənbələri', 'Yeni müştərilər', 'Ən çox satılanlar — top 10', 'Bu həftə', 'Dövriyyə', 'Mənfəət', 'Qapıda nağd', 'statSalesChart', 'statPaymentsChart'] as $text) {
+            $this->assertStringContainsString($text, $html);
+        }
+        $this->assertStringNotContainsString('Maliyyə — hazırkı vəziyyət', $html);
+
+        $main = $this->actingAs($this->admin->fresh(), 'admin')->get(route('admin.main'))->getContent();
+        $this->assertStringContainsString('Bu günkü dövriyyə', $main);
         if ($dump = env('DASHBOARD_HTML_DUMP')) {
             file_put_contents($dump, $html);
         }

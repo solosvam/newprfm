@@ -32,23 +32,23 @@ class MainController extends Controller
                 'history' => $this->courierHistory($account),
             ];
         } else {
-            $period = AdminDashboard::period($request->query('period'));
+            // Əməliyyat paneli: nəyə baxmaq lazımdır. Ətraflı analitika — Statistika səhifəsində (StatisticsController)
             // Dizayn yoxlaması: lokal mühitdə /admin?demo=1 — saxta rəqəmlər, bazaya toxunmur
             $demo = app()->environment('local') && $request->boolean('demo');
-            $dashboard = ['period' => $period, 'demo' => $demo] + ($demo ? $stats->demo($period) : [
-                'stats' => $stats->stats($period),
-                'payments' => $stats->paymentMethods($period),
-                'sales' => $stats->sales(7),
-                'active' => $stats->activeStatuses(),
-                'top' => $stats->topProducts($period),
+            $source = $demo ? $stats->demo('today') : [
                 'attention' => $stats->attention(),
-                'searches' => $stats->searches($period),
-                'online' => $stats->onlinePayments($period),
-                'sources' => $stats->sources($period),
-                'customerSources' => $stats->customerSources($period),
+                'active' => $stats->activeStatuses(),
                 'carts' => $stats->carts(),
-                'finance' => $user->can('finance') ? $stats->finance() : null,
-            ]);
+                'stats' => $stats->stats('today'),
+            ];
+            $dashboard = [
+                'demo' => $demo,
+                'attention' => $source['attention'],
+                'active' => $source['active'],
+                'carts' => $source['carts'],
+                'today' => $source['stats'],
+                'recent' => $stats->recentOrders(),
+            ];
         }
 
         return view('backend.pages.index', compact('courier', 'dashboard'));

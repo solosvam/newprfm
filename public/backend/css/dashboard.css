@@ -1,17 +1,94 @@
-/* Admin əsas səhifəsi (pages/dashboard/admin.blade.php) */
+/* Admin əsas səhifəsi (pages/dashboard/admin.blade.php) və Statistika (statistics/index.blade.php) */
 
-.dashboard-progress {
-    height: 4px;
+/* Kiçik izah mətnləri — oxunaqlı ölçü (text-small çox xırdadır) */
+.dash-label { font-size: 13px; line-height: 1.35; }
+.dash-date { font-size: 14px; margin-bottom: 2px; }
+.dash-link { font-size: 13px; }
+
+/* ---------- Bu gün ---------- */
+.dash-today-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(var(--primary-rgb), .1); color: var(--primary);
+}
+.dash-change {
+    font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+}
+.dash-change--up { color: var(--success); background: rgba(var(--success-rgb), .12); }
+.dash-change--down { color: var(--danger); background: rgba(var(--danger-rgb), .12); }
+
+/* ---------- Diqqət tələb edənlər ---------- */
+.dash-alert { --tone: var(--primary); --tone-rgb: var(--primary-rgb); transition: transform .15s ease, box-shadow .15s ease; overflow: hidden; }
+.dash-tone-warning { --tone: var(--warning); --tone-rgb: var(--warning-rgb); }
+.dash-tone-danger { --tone: var(--danger); --tone-rgb: var(--danger-rgb); }
+.dash-alert-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--tone-rgb), .12); color: var(--tone);
+}
+.dash-alert-count { font-size: 30px; font-weight: 600; line-height: 1; color: var(--tone); font-variant-numeric: tabular-nums; }
+.dash-alert--on { box-shadow: inset 4px 0 0 var(--tone); }
+.dash-alert--on:hover { transform: translateY(-2px); }
+.dash-alert--off .dash-alert-icon { background: rgba(var(--muted-rgb), .1); color: var(--muted); }
+.dash-alert--off .dash-alert-count { color: var(--muted); opacity: .6; }
+.dash-alert--off .heading { color: var(--alternate); }
+
+/* ---------- Aktiv sifarişlər: axın ---------- */
+.dash-flow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); position: relative; }
+.dash-flow-step { position: relative; text-align: center; padding: 0 6px; }
+/* mərhələləri birləşdirən xətt */
+.dash-flow-step:not(:last-child)::after {
+    content: ''; position: absolute; top: 22px; left: calc(50% + 28px); right: calc(-50% + 28px);
+    height: 2px; background: var(--separator);
+}
+.dash-flow-icon {
+    width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--separator); color: var(--muted); background: var(--foreground);
+}
+.dash-flow-count { font-size: 26px; font-weight: 600; line-height: 1.1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dash-flow-name { font-size: 13px; line-height: 1.3; color: var(--alternate); margin-top: 4px; }
+.dash-flow-step.is-on .dash-flow-icon { border-color: var(--primary); background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(var(--primary-rgb), .3); }
+.dash-flow-step.is-on .dash-flow-count { color: var(--primary); }
+.dash-flow-step.is-on .dash-flow-name { color: var(--body); }
+.dash-flow-step.is-on:hover .dash-flow-icon { transform: scale(1.08); }
+.dash-flow-icon { transition: transform .15s ease; }
+@media (max-width: 991.98px) {
+    .dash-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 24px; }
+    .dash-flow-step::after { display: none; }
+}
+@media (max-width: 575.98px) {
+    .dash-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* Aktiv sifariş mərhələləri: geniş ekranda 7 kart bir sırada */
-@media (min-width: 1400px) {
-    .dashboard-steps > * {
-        flex: 0 0 auto;
-        width: calc(100% / 7);
-    }
+/* ---------- Son sifarişlər ---------- */
+.dash-order { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+.dash-order-avatar {
+    width: 38px; height: 38px; flex: 0 0 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-weight: 600;
+    background: rgba(var(--primary-rgb), .1); color: var(--primary);
 }
+.dash-order:hover .fw-bold:first-child { color: var(--primary); }
+.dash-cart-stats > .col + .col { border-left: 1px solid var(--separator-light); }
 
-.dashboard-top-img {
-    object-fit: cover;
+/* ---------- Statistika ---------- */
+.dash-progress, .dashboard-progress { height: 6px; border-radius: 6px; }
+.stat-period .btn { min-width: 92px; }
+.stat-kpi { position: relative; overflow: hidden; }
+.stat-kpi-icon {
+    width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--primary-rgb), .1); color: var(--primary);
 }
+.stat-kpi-value { font-size: 28px; font-weight: 600; line-height: 1.1; color: var(--primary); font-variant-numeric: tabular-nums; }
+.stat-rank {
+    width: 28px; height: 28px; flex: 0 0 28px; border-radius: 8px; font-weight: 600; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--muted-rgb), .1); color: var(--alternate);
+}
+.stat-rank--1 { background: rgba(var(--primary-rgb), 1); color: #fff; }
+.stat-rank--2 { background: rgba(var(--primary-rgb), .7); color: #fff; }
+.stat-rank--3 { background: rgba(var(--primary-rgb), .45); color: #fff; }
+.stat-thumb { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 8px; border: 1px solid var(--separator-light); background: #fff center / contain no-repeat; }
+.stat-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+.stat-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 10px; }
+.stat-chart-tabs .btn { font-size: 13px; }

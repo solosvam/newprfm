@@ -11,23 +11,10 @@
 
 @endsection
 
-@section('js_vendor')
-    @if($dashboard ?? null)
-        <script src="{{ asset('backend/js/vendor/Chart.bundle.min.js') }}"></script>
-        <script src="{{ asset('backend/js/vendor/chartjs-plugin-datalabels.js') }}"></script>
-    @endif
-@endsection
-
-@section('js_page')
-    @if($dashboard ?? null)
-        <script src="{{ asset_v('backend/js/cs/charts.extend.js') }}"></script>
-        <script src="{{ asset_v('backend/js/dashboard.js') }}"></script>
-    @endif
-@endsection
 
 @section('content')
     <div class="container">
-        {{-- Başlıq yalnız kuryer səhifəsində; admin dashboard-u birbaşa göstəricilərlə başlayır --}}
+        {{-- Kuryer səhifəsinin başlığı; admin panelinin başlığı (salam + tarix) öz şablonundadır --}}
         @if($courier ?? null)
         <div class="page-title-container">
             <div class="row">

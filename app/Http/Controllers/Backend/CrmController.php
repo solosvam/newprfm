@@ -109,6 +109,7 @@ class CrmController extends Controller
             ]),
             'settings' => view('backend.crm.tabs.settings', [
                 'customer' => $customer->load('addresses'),
+                'cities' => \App\Models\City::forSelect()->get(['id', 'name']), // ünvan redaktəsi
             ]),
             'credit-profile' => view('backend.crm.tabs.credit-profile', [
                 'customer' => $customer->load('creditProfile'),
@@ -124,15 +125,21 @@ class CrmController extends Controller
             'name' => ['required', 'string', 'max:30'],
             'surname' => ['required', 'string', 'max:30'],
             'mobile' => ['required', 'digits:12', 'unique:customers,mobile,' . $customer->id],
+            // ehtiyat nömrə: könüllü, əsas nömrədən fərqli (unikal deyil — məs. ailə üzvü)
+            'mobile_2' => ['nullable', 'regex:/^994\d{9}$/', 'different:mobile'],
             'email' => ['nullable', 'email', 'max:50', 'unique:customers,email,' . $customer->id],
             'gender' => ['required', 'in:0,1'],
             'active' => ['nullable', 'boolean'],
+        ], [
+            'mobile_2.regex' => 'Ehtiyat telefonu 994XXXXXXXXX formatında yazın.',
+            'mobile_2.different' => 'Ehtiyat telefon əsas nömrədən fərqli olmalıdır.',
         ]);
 
         $customer->update([
             'name' => $data['name'],
             'surname' => $data['surname'],
             'mobile' => $data['mobile'],
+            'mobile_2' => $data['mobile_2'] ?? null,
             'email' => $data['email'] ?? null,
             'gender' => (int) $data['gender'],
             'active' => $request->boolean('active'),
@@ -141,6 +148,28 @@ class CrmController extends Controller
         return redirect()
             ->route('admin.crm.customer', $customer->id)
             ->with('success', 'Müştəri məlumatları yeniləndi.');
+    }
+
+    /** Tənzimləmələr → ünvanın redaktəsi (qələm → pəncərə, AJAX); "Əsas ünvan" seçilsə digərlərindən götürülür */
+    public function updateAddress(Customer $customer, CustomerAddress $address, Request $request): JsonResponse
+    {
+        abort_unless((int) $address->customer_id === (int) $customer->id, 404);
+
+        // ünvanın adı ("Ev", "İş") könüllüdür; şəhər və küçə məcburidir
+        $data = $request->validate(['title' => ['nullable', 'string', 'max:50']] + CustomerAddress::formRules() + ['is_default' => ['nullable', 'boolean']], [
+            'city_id.required' => 'Şəhəri seçin.',
+            'address.required' => 'Küçə və ünvanı yazın.',
+        ]);
+
+        DB::transaction(function () use ($customer, $address, $data, $request) {
+            $address->update(CustomerAddress::attributesFromForm($data, $data['title'] ?? null));
+            if ($request->boolean('is_default') && !$address->is_default) {
+                $customer->addresses()->whereKeyNot($address->id)->update(['is_default' => false]);
+                $address->update(['is_default' => true]);
+            }
+        });
+
+        return response()->json(['ok' => true, 'message' => 'Ünvan yeniləndi.']);
     }
 
     public function creditProfileOcr(Customer $customer, Request $request, \App\Services\IdCard\IdCardReader $reader): JsonResponse
@@ -358,6 +387,8 @@ class CrmController extends Controller
             'birbank_installment_months' => ['nullable', 'integer', Rule::in([2, 3, 6])],
             'credit_period_id' => ['nullable', 'integer'],
             'gift_wrap' => ['nullable', 'boolean'],
+            // Operator qiyməti əl ilə dəyişibsə — bonus faizi 0..admin ayarı (standart 0)
+            'bonus_percent' => ['nullable', 'integer', 'min:0', 'max:'.(int) floor((float) \App\Models\Setting::valueOf('order_bonus_percent', 5))],
         ], [
             'cart.required' => 'Səbət boşdur.',
             'address_id.required_if' => 'Ünvanı seçin.',
@@ -417,6 +448,7 @@ class CrmController extends Controller
             $subtotal = 0; // sayt qiymətləri ilə
             $discount = 0; // operatorun endirimi
             $items = [];
+            $manualPrice = false; // operator qiyməti əl ilə dəyişib (avtomatik məhsul endirimi sayılmır)
             foreach ($variants as $variant) {
                 $quantity = (int) $cart[$variant->id]['quantity'];
                 $listPrice = round((float) $variant->price, 2);
@@ -429,6 +461,10 @@ class CrmController extends Controller
                     $unitPrice = $listPrice;
                 }
                 abort_if($unitPrice > $listPrice, 422, 'Qiymət saytdakı qiymətdən yüksək ola bilməz.');
+                $defaultPrice = $code === 'installment' ? $listPrice : $sale;
+                if (abs($unitPrice - $defaultPrice) >= 0.005) {
+                    $manualPrice = true;
+                }
 
                 $subtotal += $listPrice * $quantity;
                 $discount += ($listPrice - $unitPrice) * $quantity;
@@ -463,6 +499,8 @@ class CrmController extends Controller
                 'created_by' => auth()->id(),
                 'order_status_id' => $initialStatus->id,
                 'gift_wrap' => $giftWrap,
+                // qiymət əl ilə dəyişibsə — operatorun seçdiyi faiz (standart 0); yoxdursa sifariş anındakı admin faizi (sabitlənir)
+                'bonus_percent' => $manualPrice ? (int) ($data['bonus_percent'] ?? 0) : app(\App\Services\BonusService::class)->currentPercent(),
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'delivery_fee' => $delivery,

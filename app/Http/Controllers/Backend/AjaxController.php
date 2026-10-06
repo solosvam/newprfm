@@ -41,7 +41,8 @@ class AjaxController extends Controller
             $kind = 'phone';
             $mobile = '994'.$m[1];
 
-            $customers = Customer::where('mobile', $mobile)
+            // əsas və ya ehtiyat nömrə
+            $customers = Customer::where(fn ($q) => $q->where('mobile', $mobile)->orWhere('mobile_2', $mobile))
                 ->limit(5)
                 ->get();
         }

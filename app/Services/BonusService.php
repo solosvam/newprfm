@@ -147,9 +147,17 @@ class BonusService {
   ]);
  }
 
- /** Sifarişə düşən bonus: (məhsullar − endirim) × faiz. Ödənişdən əvvəl göstərmək üçün də (SMS ödəniş linki) */
+ /** İndiki admin faizi — sifariş yarananda orders.bonus_percent-ə yazılır (ayar sonra dəyişsə köhnə sifarişlərə təsir etmir) */
+ public function currentPercent(): float {
+  return (float) Setting::valueOf('order_bonus_percent', 5);
+ }
+
+ /**
+  * Sifarişə düşən bonus: (məhsullar − endirim) × faiz. Ödənişdən əvvəl göstərmək üçün də (SMS ödəniş linki).
+  * Faiz — sifarişin öz faizi (CRM-də qiymət əl ilə dəyişəndə operatorun seçdiyi), yoxdursa admin ayarı.
+  */
  public function amountForOrder(Order $order): float {
-  $percent=(float) Setting::valueOf('order_bonus_percent',5);
+  $percent = $order->bonus_percent !== null ? (float) $order->bonus_percent : (float) Setting::valueOf('order_bonus_percent', 5);
   $eligibleAmount = max(0, (float)$order->subtotal - (float)$order->discount);
   return round($eligibleAmount*($percent/100),2);
  }

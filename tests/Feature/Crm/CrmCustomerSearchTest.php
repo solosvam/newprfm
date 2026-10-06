@@ -19,7 +19,7 @@ class CrmCustomerSearchTest extends TestCase
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:']);
         DB::purge('sqlite');
         Schema::create('permissions', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('guard_name'), $t->timestamps()]);
-        Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('surname')->nullable(), $t->string('mobile'),
+        Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('surname')->nullable(), $t->string('mobile'), $t->string('mobile_2', 12)->nullable(),
             $t->string('email')->nullable(), $t->integer('gender')->nullable(), $t->string('password')->nullable(), $t->boolean('active')->default(false), $t->string('source', 20)->nullable(), $t->timestamps()]);
         Schema::create('sms_templates', fn (Blueprint $t) => [$t->increments('id'), $t->string('code'), $t->string('name'), $t->text('template'), $t->boolean('active')->default(true)]);
         Schema::create('customer_credit_profiles', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->string('fin')->nullable(), $t->timestamps()]);
@@ -43,6 +43,12 @@ class CrmCustomerSearchTest extends TestCase
             $this->assertSame('phone', $r['kind'], $q);
             $this->assertSame([5], array_column($r['results'], 'id'), $q);
         }
+    }
+
+    public function test_backup_phone_finds_customer(): void
+    {
+        DB::table('customers')->where('id', 5)->update(['mobile_2' => '994771112233']);
+        $this->assertSame([5], array_column($this->search('077 111 22 33')['results'], 'id'));
     }
 
     public function test_not_found_tells_kind(): void
@@ -99,4 +105,30 @@ class CrmCustomerSearchTest extends TestCase
             ->assertSessionHasErrorsIn('createCustomer', ['mobile']);                                 // 994-dən sonra 0
         $this->assertSame(1, DB::table('customers')->count());
     }
+
+    public function test_address_is_edited_and_becomes_default(): void
+    {
+        Schema::create('cities', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->boolean('active')->default(true)]);
+        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->string('title')->nullable(),
+            $t->integer('city_id')->nullable(), $t->string('city')->nullable(), $t->string('address')->nullable(), $t->string('building')->nullable(),
+            $t->string('entrance')->nullable(), $t->string('floor')->nullable(), $t->string('apartment')->nullable(), $t->text('note')->nullable(),
+            $t->boolean('is_default')->default(false), $t->timestamps()]);
+        DB::table('cities')->insert([['id' => 1, 'name' => 'Bakı'], ['id' => 2, 'name' => 'Sumqayıt']]);
+        DB::table('customer_addresses')->insert([
+            ['id' => 10, 'customer_id' => 5, 'title' => 'Ev', 'city_id' => 1, 'city' => 'Bakı', 'address' => 'Nizami 1', 'is_default' => 1],
+            ['id' => 11, 'customer_id' => 5, 'title' => 'İş', 'city_id' => 1, 'city' => 'Bakı', 'address' => 'Füzuli 2', 'is_default' => 0],
+            ['id' => 12, 'customer_id' => 6, 'title' => 'Başqası', 'city_id' => 1, 'city' => 'Bakı', 'address' => 'X', 'is_default' => 1],
+        ]);
+
+        $this->postJson('/admin/crm/customer/5/address/11', ['title' => '', 'city_id' => 2, 'address' => 'Sülh 5', 'floor' => '3', 'is_default' => 1])
+            ->assertOk()->assertJsonPath('ok', true);
+        $edited = DB::table('customer_addresses')->find(11);
+        $this->assertSame(['Sumqayıt', 'Sülh 5', '3', 1], [$edited->city, $edited->address, $edited->floor, (int) $edited->is_default]);
+        $this->assertSame(0, (int) DB::table('customer_addresses')->where('id', 10)->value('is_default'), 'əvvəlki əsas ünvan');
+        $this->assertSame(1, (int) DB::table('customer_addresses')->where('id', 12)->value('is_default'), 'başqa müştəriyə toxunulmur');
+
+        $this->postJson('/admin/crm/customer/5/address/11', ['city_id' => 2, 'address' => ''])->assertStatus(422)->assertJsonValidationErrors('address');
+        $this->postJson('/admin/crm/customer/5/address/12', ['city_id' => 1, 'address' => 'Y'])->assertNotFound();
+    }
 }
+

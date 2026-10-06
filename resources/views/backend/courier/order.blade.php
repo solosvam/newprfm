@@ -19,6 +19,7 @@
         $a?->floor ? 'Mərtəbə '.$a->floor : null, $a?->apartment ? 'Mənzil '.$a->apartment : null,
     ])->filter()->implode(' · ');
     $phone = $order->customer?->mobile;
+    $phone2 = $order->customer?->mobile_2; // ehtiyat nömrə
     $cancelled = $code === 'cancelled';
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
@@ -217,7 +218,14 @@
                 @if($a?->address_note)<div class="small text-muted">{{ $a->address_note }}</div>@endif
                 @if($order->customer_note)<div class="small mt-1"><b>Qeyd:</b> {{ $order->customer_note }}</div>@endif
             </div>
-            @if($phone)<a href="tel:+{{ preg_replace('/\D+/', '', $phone) }}" class="btn btn-outline-primary btn-icon btn-icon-only" aria-label="Müştəriyə zəng"><i data-acorn-icon="phone" data-acorn-size="18"></i></a>@endif
+            <div class="d-flex flex-column gap-1 align-items-center">
+                @if($phone)<a href="tel:+{{ preg_replace('/\D+/', '', $phone) }}" class="btn btn-outline-primary btn-icon btn-icon-only" aria-label="Müştəriyə zəng"><i data-acorn-icon="phone" data-acorn-size="18"></i></a>@endif
+                @if($phone2)
+                    <a href="tel:+{{ preg_replace('/\D+/', '', $phone2) }}" class="btn btn-outline-secondary btn-sm" aria-label="Ehtiyat nömrəyə zəng" title="Ehtiyat nömrə: {{ $phone2 }}">
+                        <i data-acorn-icon="phone" data-acorn-size="14"></i> 2
+                    </a>
+                @endif
+            </div>
         </div>
         <div class="courier-collect {{ $collect > 0 ? 'is-cash' : 'is-paid' }}">
             @if($collect > 0)

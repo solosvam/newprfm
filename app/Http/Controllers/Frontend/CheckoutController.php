@@ -223,6 +223,7 @@ class CheckoutController extends Controller
 
             // Sifarişin yaradılması
             $order = Order ::create([
+                'bonus_percent' => app(\App\Services\BonusService::class)->currentPercent(), // sifariş anındakı faiz sabitlənir
                 'order_no' => $orderNo,
                 'customer_id' => $customer -> id,
                 'customer_address_id' => $address -> id,

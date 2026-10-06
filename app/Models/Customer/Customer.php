@@ -39,6 +39,7 @@ class Customer extends Authenticatable
         'gender',
         'email',
         'mobile',
+        'mobile_2', // ehtiyat nömrə
         'password',
         'active',
         'bonus_balance',

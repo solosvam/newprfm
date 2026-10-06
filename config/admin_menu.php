@@ -10,6 +10,11 @@ return [
         'permission' => 'admin.menu',
         'children'   => [
             [
+                'title'      => 'Statistika',
+                'route'      => 'admin.statistics',
+                'permission' => 'statistics',
+            ],
+            [
                 'title'      => 'Əməkdaşlar',
                 'route'      => 'admin.user.list',
                 'permission' => 'user.list',
@@ -163,6 +168,11 @@ return [
             [
                 'title'      => 'Səbətdəki mallar',
                 'route'      => 'admin.carts.index',
+                'permission' => 'crm',
+            ],
+            [
+                'title'      => 'Endirim gözləyənlər',
+                'route'      => 'admin.price-alerts.index',
                 'permission' => 'crm',
             ],
             [

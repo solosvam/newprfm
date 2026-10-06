@@ -49,6 +49,7 @@ class OneClickOrderController extends Controller
             $lineTotal = round($sale * $quantity, 2);
             // Address is deliberately unknown: the operator confirms the delivery fee later.
             $order = Order::create([
+                'bonus_percent' => app(\App\Services\BonusService::class)->currentPercent(), // sifariş anındakı faiz sabitlənir
                 'order_no' => 'TMP' . Str::random(20),
                 'customer_id' => null,
                 'customer_address_id' => null,

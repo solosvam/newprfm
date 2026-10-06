@@ -137,3 +137,8 @@
 .crm-search-results .search-item { cursor: pointer; }
 .crm-search-results .search-item:hover { background: var(--background, #f6f6f6); }
 .crm-search-empty { color: var(--muted, #6c757d); font-size: 14px; }
+/* Qiymət əl ilə dəyişdirilib: bonus faizi seçimi (0..admin ayarı) */
+.crm-order__bonus.is-manual { gap: 8px; }
+.crm-order__bonus .crm-order__bonus-select { width: auto; min-width: 72px; margin-left: auto; padding-top: 2px; padding-bottom: 2px; }
+.crm-order__bonus.is-manual strong { margin-left: 4px; }
+

@@ -50,7 +50,7 @@
                 info.append(name);
                 if (product.price) {
                     const price = document.createElement('div');
-                    price.className = 'text-small text-muted';
+                    price.className = 'text-muted';
                     price.textContent = `${product.price} ₼-dən`;
                     info.append(price);
                 }
@@ -113,7 +113,7 @@
                 onEnd: async () => {
                     renumber();
                     status.textContent = 'Saxlanılır…';
-                    status.className = 'text-small text-muted';
+                    status.className = 'text-muted';
                     try {
                         const response = await fetch(list.dataset.reorderUrl, {
                             method: 'POST',
@@ -125,10 +125,10 @@
                         });
                         if (!response.ok) throw new Error();
                         status.textContent = 'Ardıcıllıq yadda saxlanıldı';
-                        status.className = 'text-small text-success';
+                        status.className = 'text-success';
                     } catch (e) {
                         status.textContent = 'Saxlanılmadı — səhifəni yeniləyin';
-                        status.className = 'text-small text-danger';
+                        status.className = 'text-danger';
                     }
                 },
             });
@@ -159,11 +159,11 @@
                             <h2 class="small-title mb-0">Vitrindəki ətirlər</h2>
                             <span class="badge {{ $full ? 'bg-primary' : 'bg-outline-primary' }}">{{ $featured->count() }} / {{ $limit }}</span>
                         </div>
-                        <p class="text-small text-muted mb-3">
+                        <p class="text-muted mb-3">
                             Ana səhifədə "Populyar" sıralamasında birinci səhifədə bu ardıcıllıqla görünür.
                             {{ $limit }}-dən az seçilsə, boş yerləri ən yeni ətirlər tutur. Sırasını dəyişmək üçün ⋮⋮ işarəsindən tutub sürüşdürün.
                         </p>
-                        <div id="featuredOrderStatus" class="text-small text-muted mb-2"></div>
+                        <div id="featuredOrderStatus" class="text-muted mb-2"></div>
 
                         @if($featured->isEmpty())
                             <div class="text-center text-muted py-5">Vitrin boşdur — sağdakı axtarışla ətir əlavə edin.<br>Boş olanda ana səhifə ən yeni ətirləri göstərir.</div>
@@ -177,7 +177,7 @@
                                         <span class="featured-thumb" @if($image($product)) style="background-image: url('{{ $image($product) }}')" @endif></span>
                                         <div class="featured-item__info">
                                             <div class="fw-bold text-truncate">{{ $product?->brand?->name }} {{ $product?->name }}</div>
-                                            <div class="text-small text-muted">
+                                            <div class="text-muted">
                                                 @if($product?->variants->isNotEmpty())
                                                     {{ number_format((float) $product->variants->first()->price, 2) }} ₼-dən
                                                 @endif
@@ -205,16 +205,16 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h2 class="small-title mb-1">Ətir əlavə et</h2>
-                        <p class="text-small text-muted mb-3">Boşluqdan əvvəl brend, sonra ətirin adı: <strong>dol int</strong> → Dolce &amp; Gabbana … Intense. Boşluqsuz yazılan həm brenddə, həm adda axtarılır.</p>
+                        <p class="text-muted mb-3">Boşluqdan əvvəl brend, sonra ətirin adı: <strong>dol int</strong> → Dolce &amp; Gabbana … Intense. Boşluqsuz yazılan həm brenddə, həm adda axtarılır.</p>
                         <input type="search" id="featuredSearch" class="form-control mb-3" placeholder="Məs. dol int, chr sau" aria-label="Ətir axtar"
                                autocomplete="off" data-search-url="{{ route('admin.featured.search') }}" data-store-url="{{ route('admin.featured.store') }}"
                                @disabled($full)>
 
                         @if($full)
-                            <div class="alert alert-info text-small mb-3">Vitrin doludur ({{ $limit }}/{{ $limit }}). Yeni ətir əlavə etmək üçün əvvəlcə birini çıxarın.</div>
+                            <div class="alert alert-info mb-3">Vitrin doludur ({{ $limit }}/{{ $limit }}). Yeni ətir əlavə etmək üçün əvvəlcə birini çıxarın.</div>
                         @endif
 
-                        <div id="featuredSearchStatus" class="text-muted text-center text-small py-2" hidden></div>
+                        <div id="featuredSearchStatus" class="text-muted text-center py-2" hidden></div>
                         <div id="featuredSearchResults"></div>
                     </div>
                 </div>
