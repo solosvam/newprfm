@@ -5,6 +5,7 @@
 /public/frontend/uploads/customers
 /public/frontend/uploads/banners
 /public/frontend/uploads/products
+/public/frontend/uploads/popups
 /public/storage
 /storage/*.key
 /vendor
