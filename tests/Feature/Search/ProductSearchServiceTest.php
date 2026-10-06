@@ -32,6 +32,7 @@ class ProductSearchServiceTest extends TestCase
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->integer('size_id')->nullable(),
             $t->decimal('price', 10, 2), $t->boolean('active')->default(true)]);
         Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->string('image'), $t->integer('sort_order')->default(0)]);
+        (require database_path('migrations/2026_10_07_170000_create_product_discounts_table.php'))->up(); // məhsul endirimi (activeDiscount)
         (require database_path('migrations/2026_09_30_160000_create_search_aliases_table.php'))->up();
         (require database_path('migrations/2026_10_01_190000_add_match_type_to_search_aliases.php'))->up(); // artıq sözlər
         (require database_path('migrations/2026_10_01_200000_make_safe_extra_words_stems.php'))->up();

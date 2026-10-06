@@ -58,6 +58,8 @@ return [
     // Web push: https://onesignal.com — App ID hər domen üçün ayrıdır (test / canlı)
     'onesignal' => [
         'app_id' => env('ONESIGNAL_APP_ID'),
+        // Serverdən push göndərmək üçün (Dashboard → Settings → Keys & IDs → REST API Key)
+        'rest_api_key' => env('ONESIGNAL_REST_API_KEY'),
     ],
 
     'parfumshop_sms' => [

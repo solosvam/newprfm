@@ -117,7 +117,13 @@
 
         const existing = cart.find(i => i.variantId === variantId);
         if (existing) existing.qty = Math.min(99, existing.qty + qty);
-        else cart.push({ variantId, name: product.name, brand: product.brand || '', variant: variant.label, basePrice: Number(variant.price), price: Number(variant.price), qty });
+        else {
+            // salePrice — saytdakı (endirimli) qiymət, listPrice — adi; hissə-hissə ödənişdə endirim yoxdur → baza adi qiymət
+            const salePrice = Number(variant.price);
+            const listPrice = Number(variant.list_price ?? variant.price);
+            const base = selectedCode() === 'installment' ? listPrice : salePrice;
+            cart.push({ variantId, name: product.name, brand: product.brand || '', variant: variant.label, salePrice, listPrice, basePrice: base, price: base, qty });
+        }
 
         row.querySelector('[data-qty]').value = 1;
         renderCart();
@@ -284,6 +290,17 @@
 
     paymentRadios.forEach(r => r.addEventListener('change', () => {
         const code = selectedCode();
+        // Hissə-hissə (öz kreditimiz): məhsul endirimi tətbiq olunmur — baza adi qiymət; operatorun əl ilə endirimi qalır
+        let rebased = false;
+        cart.forEach((item) => {
+            const base = code === 'installment' ? item.listPrice : item.salePrice;
+            if (base === undefined || base === item.basePrice) return;
+            const untouched = item.price === item.basePrice;
+            item.basePrice = base;
+            if (untouched || item.price > base) item.price = base;
+            rebased = true;
+        });
+        if (rebased) renderCart();
         els.birbank.hidden = code !== 'birbank_installment';
         els.installment.hidden = code !== 'installment';
         const target = !els.birbank.hidden ? els.birbank : !els.installment.hidden ? els.installment : null;

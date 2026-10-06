@@ -15,8 +15,22 @@
                             ? ($product->type->{'name_' . $locale} ?? $product->type->name_az)
                             : null;
                     @endphp
-                    <div class="card" data-href="{{ route('product', $product->slug) }}">
+                    <div class="card {{ $product->visibleDiscount() ? 'card--sale' : '' }}" data-href="{{ route('product', $product->slug) }}">
+                        @include('frontend.partials.discount-badge', ['product' => $product])
                         <div class="thumb" @if($image && $hoverImage) data-hover-src="{{ route('product.image', ['size' => 400, 'image' => $hoverImage->image]) }}" @endif>
+                            {{-- Endirimin bitməsinə 7 gündən az qalıb: şəklin altında canlı geri sayım (main.js → [data-card-countdown]);
+                                 hover-də ölçülər siyahısı onun üstünü örtür --}}
+                            @if(($cardDiscount = $product->visibleDiscount()) && $cardDiscount->showsCardCountdown())
+                                <div class="card-countdown" data-card-countdown="{{ $cardDiscount->ends_at->getTimestampMs() }}">
+                                    {{-- nəyin sayıldığı aydın olsun --}}
+                                    <span class="card-countdown__caption">{{ __('discount_ends_in') }}</span>
+                                    <span class="card-countdown__cells">
+                                    @foreach(['d' => __('countdown_days'), 'h' => __('countdown_hours'), 'm' => __('countdown_minutes'), 's' => __('countdown_seconds')] as $unit => $label)
+                                        <span class="card-countdown__cell"><b data-unit="{{ $unit }}">00</b><small>{{ $label }}</small></span>
+                                    @endforeach
+                                    </span>
+                                </div>
+                            @endif
                             <div class="thumb-actions">
                                 @include('frontend.includes.favorite-button', ['product' => $product, 'selected' => false])
 
@@ -65,14 +79,14 @@
                         <p class="pname">{{ $product->name }}</p>
 
                         <div class="price-wrap">
-                            <p class="price">@if($firstVariant){{ $firstVariant->size?->{'name_' . $locale} ?? $firstVariant->size?->name_az }} / {{ number_format((float) $firstVariant->price, 2) }} ₼@endif</p>
+                            <p class="price">@if($firstVariant){{ $firstVariant->size?->{'name_' . $locale} ?? $firstVariant->size?->name_az }} / @include('frontend.partials.sale-price', ['variant' => $firstVariant])@endif</p>
 
                             @if($variants->count() > 1)
                                 <div class="price-all">
                                     @foreach($variants as $variant)
                                         <div class="price-all__row">
                                             <span>{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
-                                            <strong>{{ number_format((float) $variant->price, 2) }} ₼</strong>
+                                            <strong>@include('frontend.partials.sale-price', ['variant' => $variant])</strong>
                                         </div>
                                     @endforeach
                                 </div>

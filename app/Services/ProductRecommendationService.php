@@ -91,7 +91,7 @@ class ProductRecommendationService
             return collect();
         }
         $products = Product::query()
-            ->with(['brand', 'images', 'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'), 'variants.size'])
+            ->with(['brand', 'activeDiscount', 'images', 'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'), 'variants.size'])
             ->whereIn('id', $ids)->where('active', 1)
             ->get()->keyBy('id');
 

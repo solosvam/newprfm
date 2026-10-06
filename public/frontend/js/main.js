@@ -100,11 +100,20 @@
                 info.append(text('p', 'search-result-name', product.name));
                 info.append(text('div', 'search-result-meta', [product.type, product.gender].filter(Boolean).join(' · ')));
 
-                const price = [product.size, product.price ? product.price + ' ₼' : null]
+                const price = [product.size, product.price ? product.price + '\u00A0₼' : null]
                     .filter(Boolean)
                     .join(' / ');
 
-                link.append(thumb, info, text('span', 'search-result-price', price));
+                const priceBox = text('span', 'search-result-price', price);
+                // məhsul endirimi: faiz nişanı + köhnə qiymət üstündən xətt, yeni qiymət qırmızı
+                if (product.discount && Number(product.regular_price) > Number(product.price)) {
+                    priceBox.textContent = '';
+                    if (product.size) priceBox.append(product.size + ' / ');
+                    priceBox.append(text('s', 'price-old', product.regular_price), ' ', text('span', 'price-sale', product.price + '\u00A0₼'));
+                    info.prepend(text('span', 'search-result-discount', '−' + product.discount + '%'));
+                }
+
+                link.append(thumb, info, priceBox);
                 resultsBox.append(link);
             });
             show();
@@ -299,13 +308,22 @@
         if (!buybox || !installment) return;
         const variant = buybox.querySelector('.size-pill.active-size-amount');
         const price = Number(variant?.dataset.price || buybox.dataset.basePrice || 0);
-        const priceDisplay = buybox.querySelector('[data-price-display]');
-        if (priceDisplay) priceDisplay.textContent = price.toFixed(2) + ' ₼';
+        // endirim: köhnə qiymət üstündən xətt (data-regular-price), cari — endirimli
+        const current = buybox.querySelector('[data-price-current]');
+        if (current) current.textContent = price.toFixed(2) + ' ₼';
+        const old = buybox.querySelector('[data-price-old]');
+        const regular = Number(variant?.dataset.regularPrice || 0);
+        if (old) {
+            old.hidden = !(regular > price);
+            old.textContent = regular.toFixed(2) + ' ₼';
+        }
 
+        // hissə-hissə ödənişə məhsul endirimi tətbiq olunmur — adi qiymətlə
+        const creditPrice = Number(variant?.dataset.regularPrice || 0) || price;
         installment.querySelectorAll('tr[data-month]').forEach(row => {
             const months = Number(row.dataset.month);
             const rate = Number(row.dataset.rate || 0);
-            const total = price * (1 + rate / 100);
+            const total = creditPrice * (1 + rate / 100);
             const monthly = months > 0 ? total / months : 0;
             const monthlyCell = row.querySelector('[data-installment-monthly]');
             const totalCell = row.querySelector('[data-installment-total]');
@@ -318,7 +336,7 @@
             }
             // ≤ limit məbləğdə yalnız icazəli aylar (CreditPeriod::availableFor)
             const rule = appData.creditRule;
-            row.hidden = Boolean(rule) && price <= rule.limit && !rule.months.includes(months);
+            row.hidden = Boolean(rule) && creditPrice <= rule.limit && !rule.months.includes(months);
         });
         const checked = installment.querySelector('tr[data-month]:not([hidden]) input[name="installment"]:checked');
         if (!checked) {
@@ -437,6 +455,13 @@
             document.querySelectorAll('.size-pill').forEach(el => el.classList.remove('active-size-amount'));
             size.classList.add('active-size-amount');
             updateInstallments();
+            syncPriceAlert();
+            return;
+        }
+
+        const alertButton = event.target.closest('[data-price-alert]');
+        if (alertButton) {
+            togglePriceAlert(alertButton);
             return;
         }
 
@@ -824,6 +849,83 @@
         if (nav && active && nav.scrollWidth > nav.clientWidth) {
             nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
         }
+    })();
+
+    // "Qiymət enəndə xəbər ver": seçilmiş ölçüyə abunəlik; qonaq — xəbərdarlıq (girişə yönləndirilmir)
+    const priceAlert = document.querySelector('[data-price-alert]');
+    const alertSubscribed = new Set((() => { try { return JSON.parse(priceAlert?.dataset.subscribed || '[]'); } catch (e) { return []; } })());
+    const selectedVariantId = () => Number(document.querySelector('.size-pill.active-size-amount')?.dataset.variantId || 0);
+
+    function syncPriceAlert() {
+        if (!priceAlert) return;
+        const on = alertSubscribed.has(selectedVariantId());
+        priceAlert.classList.toggle('is-on', on);
+        priceAlert.setAttribute('aria-pressed', String(on));
+        priceAlert.querySelector('[data-price-alert-label]').textContent = on ? priceAlert.dataset.labelOn : priceAlert.dataset.labelOff;
+    }
+
+    async function togglePriceAlert(button) {
+        if (button.dataset.auth !== '1') {
+            notify(button.dataset.loginMessage, 'warning');
+            return;
+        }
+        const variantId = selectedVariantId();
+        if (!variantId || button.disabled) return;
+        button.disabled = true;
+        try {
+            const response = await fetch(button.dataset.url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: JSON.stringify({ variant_id: variantId }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || 'Error');
+            data.subscribed ? alertSubscribed.add(variantId) : alertSubscribed.delete(variantId);
+            syncPriceAlert();
+            notify(data.message, data.subscribed ? 'success' : 'info');
+            // bildiriş push ilə gedir — icazə hələ verilməyibsə indi istənir
+            if (data.subscribed) window.psPush?.prompt();
+        } catch (e) {
+            notify(e.message, 'error');
+        } finally {
+            button.disabled = false;
+        }
+    }
+    syncPriceAlert();
+
+    // Kartlarda geri sayım qutuları (gün / saat / dəq / san); bitəndə qutular gizlənir
+    (() => {
+        const boxes = [...document.querySelectorAll('[data-card-countdown]')];
+        if (!boxes.length) return;
+        const pad = (n) => String(n).padStart(2, '0');
+        const tick = () => boxes.forEach((box) => {
+            let s = Math.max(0, Math.floor((Number(box.dataset.cardCountdown) - Date.now()) / 1000));
+            if (s === 0) { box.hidden = true; return; }
+            const parts = { d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60 };
+            box.querySelectorAll('[data-unit]').forEach((cell) => { cell.textContent = pad(parts[cell.dataset.unit]); });
+        });
+        tick();
+        setInterval(tick, 1000);
+    })();
+
+    // Endirimin bitməsinə geri sayım ("2 gün 05:14:33"); bitəndə səhifə yenilənir — adi qiymət görünsün
+    (() => {
+        const timers = [...document.querySelectorAll('[data-countdown]')];
+        if (!timers.length) return;
+        const pad = (n) => String(n).padStart(2, '0');
+        let reloaded = false;
+        const tick = () => timers.forEach((el) => {
+            let s = Math.max(0, Math.floor((Number(el.dataset.countdown) - Date.now()) / 1000));
+            if (s === 0) {
+                if (!reloaded) { reloaded = true; setTimeout(() => location.reload(), 1500); }
+                return;
+            }
+            const d = Math.floor(s / 86400); s %= 86400;
+            el.textContent = (d ? d + ' ' + (el.dataset.daysLabel || 'd') + ' ' : '') + pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60);
+        });
+        tick();
+        setInterval(tick, 1000);
     })();
 
     // Şifrə inputları: göz düyməsi ilə şifrəni göstər/gizlət (saytdakı bütün type="password" sahələri)

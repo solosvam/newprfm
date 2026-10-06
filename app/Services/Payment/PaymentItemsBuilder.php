@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
  *
  * orders.discount iki mənbədən dolur:
  *  - checkout: promo kod endirimi (unit_price sayt qiymətidir) → məhsullara proporsional paylanır;
- *  - CRM: operator endirimi — artıq unit_price-dadır (list_price > unit_price) → ikinci dəfə çıxılmır.
+ *  - CRM: operator endirimi, sayt: məhsul endirimi (ProductDiscount) — artıq unit_price-dadır (list_price > unit_price) → ikinci dəfə çıxılmır.
  * Hesab qəpiklə (tam ədəd) aparılır; sətirlərin cəmi həmişə ödəniş məbləğinə bərabərdir.
  */
 class PaymentItemsBuilder

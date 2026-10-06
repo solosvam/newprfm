@@ -27,6 +27,7 @@ class ProductPosterTest extends TestCase
         }
         Schema::create('product_genders', fn (Blueprint $t) => [$t->unsignedBigInteger('product_id'), $t->unsignedBigInteger('gender_id')]);
         Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_id'), $t->string('image'), $t->integer('sort_order')]);
+        (require database_path('migrations/2026_10_07_170000_create_product_discounts_table.php'))->up(); // məhsul endirimi (posterdə)
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_id'), $t->unsignedBigInteger('size_id'), $t->decimal('price', 10, 2), $t->boolean('active')]);
         DB::table('brands')->insert(['id' => 1, 'name' => 'Burberry']);
         DB::table('types')->insert(['id' => 1, 'name_az' => 'Eau de Parfum']);
@@ -96,4 +97,18 @@ class ProductPosterTest extends TestCase
     {
         $this->actingAs($this->admin(), 'admin')->getJson(route('admin.product.poster', 999))->assertNotFound();
     }
+
+    public function test_discount_shows_old_and_new_prices_and_end_date(): void
+    {
+        \App\Models\Product\ProductDiscount::create(['product_id' => 1, 'percent' => 10,
+            'starts_at' => now()->subHour(), 'ends_at' => now()->setDate(2030, 1, 5)->setTime(18, 0)]);
+        $data = app(\App\Services\ProductPosterData::class)->for(\App\Models\Product\Product::find(1));
+
+        $this->assertSame(['percent' => '10', 'until' => 'Endirim 05.01.2030, 18:00-dək'], $data['discount']);
+        $first = $data['variants']->first();
+        $this->assertSame((float) $first['regular_price'] * 0.9, (float) $first['price']);
+        $this->assertStringContainsString('Endirim 05.01.2030-dək', $data['caption']);
+        $this->assertStringContainsString('~', $data['caption']);
+    }
 }
+

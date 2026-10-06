@@ -24,6 +24,7 @@
         discount: $('checkoutDiscount'),
         discountRow: $('checkoutDiscountRow'),
         referralRow: $('checkoutReferralRow'),
+        creditNote: $('checkoutCreditNote'),
         referral: $('checkoutReferral'),
         delivery: $('checkoutDelivery'),
         giftWrapRow: $('checkoutGiftWrapRow'),
@@ -248,12 +249,16 @@
        Totals
        ========================================================= */
     function updateTotals() {
+        // Hissə-hissə ödəniş: məhsul endirimi tətbiq olunmur — yekun adi qiymətlərlə (server də belə hesablayır)
+        const isCredit = selectedCode() === INSTALLMENT;
+        const base = isCredit && state.regularSubtotal > state.subtotal ? state.regularSubtotal : state.subtotal;
+        if (els.creditNote) els.creditNote.hidden = !(isCredit && state.regularSubtotal > state.subtotal);
         const promo = window.ParfumPromo || {};
-        const discount = promo.locked ? 0 : Math.min(state.subtotal, Number(promo.discount) || 0);
+        const discount = promo.locked ? 0 : Math.min(base, Number(promo.discount) || 0);
         const referral = window.ParfumReferral
-            ? window.ParfumReferral.discount(state.subtotal, discount, selectedCode() === INSTALLMENT)
+            ? window.ParfumReferral.discount(base, discount, selectedCode() === INSTALLMENT)
             : 0;
-        const goods = Math.max(0, round2(state.subtotal - discount - referral));
+        const goods = Math.max(0, round2(base - discount - referral));
 
         const delivery = config.delivery || {};
         const freeFrom = Number(delivery.free_from) || 0;
@@ -321,7 +326,14 @@
             .forEach(value => meta.appendChild(el('span', '', value)));
         info.append(el('div', 'checkout-item__name', product.name), meta);
 
-        row.append(image, info, el('strong', 'checkout-item__price', money(line)));
+        const priceCell = el('strong', 'checkout-item__price', money(line));
+        // endirimli məhsul: köhnə məbləğ üstündən xətt
+        const regular = (Number(product.regular_price) || 0) * quantity;
+        if (regular > line) {
+            priceCell.textContent = '';
+            priceCell.append(el('s', 'price-old', money(regular)), ' ', el('span', 'price-sale', money(line)));
+        }
+        row.append(image, info, priceCell);
         return { row, line };
     }
 
@@ -345,6 +357,7 @@
             const productMap = new Map(products.map(p => [Number(p.variant_id), p]));
             const fragment = document.createDocumentFragment();
             let subtotal = 0;
+            let regularSubtotal = 0; // hissə-hissə ödəniş — endirimsiz
 
             for (const item of cart) {
                 const product = productMap.get(Number(item.variant_id));
@@ -352,6 +365,7 @@
                 const { row, line } = buildItem(product, Math.max(1, Number(item.quantity) || 1));
                 fragment.appendChild(row);
                 subtotal += line;
+                regularSubtotal += (Number(product.regular_price) || Number(product.price) || 0) * Math.max(1, Number(item.quantity) || 1);
             }
 
             if (!fragment.childNodes.length) {
@@ -363,6 +377,7 @@
             els.items.replaceChildren(fragment);
             els.placeOrder.disabled = false;
             state.subtotal = round2(subtotal);
+            state.regularSubtotal = round2(regularSubtotal);
             updateTotals();
         } catch (error) {
             console.error('Checkout məhsulları yüklənmədi:', error);

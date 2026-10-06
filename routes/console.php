@@ -9,3 +9,6 @@ Artisan::command('inspire', function () {
 
 // Bonusun istifadə müddəti: vaxtı çatan bonuslar silinir (BonusService::expireDue)
 \Illuminate\Support\Facades\Schedule::command('bonus:expire')->hourly()->withoutOverlapping();
+
+// Bonusun müddəti bitməzdən 3 gün əvvəl SMS (BonusService::remindExpiring) — gündə bir dəfə, səhər (Bakı vaxtı)
+\Illuminate\Support\Facades\Schedule::command('bonus:remind-expiring')->dailyAt('11:00')->timezone('Asia/Baku')->withoutOverlapping();

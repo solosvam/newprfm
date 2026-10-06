@@ -10,6 +10,7 @@
         border: '#ddd5ea', strong: '#cfc4e2',
         card: '#fbf9f6', cardBorder: '#e6dfd4', cardSize: '#2a2433', cardPrice: '#1a1530', // qiymət sətirləri (açıq krem)
         icon: '#b8a07e', divider: '#e2d9cc',
+        sale: '#d6283b', saleText: '#fff', oldPrice: '#4a4356',  // məhsul endirimi: stiker, yeni qiymət, köhnə qiymət (tünd — oxunsun)
         shadow: 'rgba(43,31,74,.16)',
     };
     const font = '"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif';
@@ -93,6 +94,46 @@
     }
 
     // Qiymət: 989 → "989.00 ₼"
+    /** Dişli kənarlı qırmızı stiker (endirim): mərkəz (cx, cy), içində faiz və "ENDİRİM" */
+    function saleSticker(ctx, cx, cy, percent) {
+        const points = 22, outer = 122, inner = 106;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-12 * Math.PI / 180);
+        ctx.shadowColor = 'rgba(214,40,59,.35)';
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 8;
+        ctx.beginPath();
+        for (let i = 0; i < points * 2; i++) {
+            const radius = i % 2 === 0 ? outer : inner;
+            const angle = (Math.PI * i) / points;
+            ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        }
+        ctx.closePath();
+        ctx.fillStyle = colors.sale;
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+        // içəridə nazik ağ halqa
+        ctx.beginPath();
+        ctx.arc(0, 0, 90, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,.85)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = colors.saleText;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        let size = 78;
+        ctx.font = `800 ${size}px ${font}`;
+        while (size > 44 && ctx.measureText(`${percent}%`).width > 150) {
+            size -= 2;
+            ctx.font = `800 ${size}px ${font}`;
+        }
+        ctx.fillText(`${percent}%`, 0, -14);
+        ctx.font = `700 26px ${font}`;
+        ctx.fillText('ENDİRİM', 0, 44);
+        ctx.restore();
+    }
+
     function priceLabel(value) {
         return `${value} ₼`;
     }
@@ -124,7 +165,9 @@
         const nameY = brandY + 40;
         const subtitleY = nameY + lines.length * 51 + 10;
         const pricesHeight = rows * priceRow + (rows - 1) * priceGap;
-        const pricesY = subtitleY + 28 + 36;
+        // Endirim: altbaşlığın altında qırmızı "Endirim 08.10.2026, 01:20-dək" sətri
+        const untilY = subtitleY + 46;
+        const pricesY = (product.discount ? untilY + 10 : subtitleY) + 28 + 36;
         canvas.width = 1080;
         const footer = 72;
         canvas.height = pricesY + pricesHeight + 40 + footer;
@@ -156,6 +199,12 @@
         lines.forEach((line, index) => text(ctx, line, nameY + index * 51, 42, 700, colors.text));
         text(ctx, product.subtitle, subtitleY, 28, 400, colors.secondary, 900, 1);
 
+        if (product.discount) {
+            // şəklin solundakı boş yerdə dişli qırmızı stiker: "15%" + "ENDİRİM" (bir az əyilmiş)
+            saleSticker(ctx, (540 - imageSize / 2) / 2 + 6, imageY + imageSize / 2 - 30, product.discount.percent);
+            text(ctx, product.discount.until, untilY, 28, 700, colors.sale, 900, 1);
+        }
+
         // Qiymətlər: hər ölçü ayrıca enli sətirdə, alt-alta — solda flakon + ölçü, sağda iri qiymət
         const rowX = 60, rowWidth = 960, dividerX = rowX + Math.round(rowWidth * 0.44);
         product.variants.forEach((variant, index) => {
@@ -180,15 +229,33 @@
             ctx.stroke();
 
             const right = rowX + rowWidth;
-            let priceSize = 76;
+            const centerX = dividerX + (right - dividerX) / 2;
+            const sale = Boolean(variant.regular_price);
+            let priceSize = sale ? 58 : 76;
             ctx.font = `700 ${priceSize}px ${priceFont}`;
             while (priceSize > 40 && ctx.measureText(priceLabel(variant.price)).width > right - dividerX - 60) {
                 priceSize -= 2;
                 ctx.font = `700 ${priceSize}px ${priceFont}`;
             }
-            ctx.fillStyle = colors.cardPrice;
+            ctx.fillStyle = sale ? colors.sale : colors.cardPrice;
             ctx.textAlign = 'center';
-            ctx.fillText(priceLabel(variant.price), dividerX + (right - dividerX) / 2, y + priceRow / 2 + 4);
+            // endirimdə: üstdə köhnə qiymət (boz, üstündən xətt), altda yeni (qırmızı)
+            ctx.fillText(priceLabel(variant.price), centerX, y + priceRow / 2 + (sale ? 26 : 4));
+            if (sale) {
+                // köhnə qiymət: iri və tünd (oxunsun), üstündən nazik qırmızı maili xətt — rəqəmləri örtmür
+                ctx.font = `600 40px ${priceFont}`;
+                ctx.fillStyle = colors.oldPrice;
+                const oldY = y + priceRow / 2 - 30;
+                ctx.fillText(priceLabel(variant.regular_price), centerX, oldY);
+                const oldW = ctx.measureText(priceLabel(variant.regular_price)).width;
+                ctx.strokeStyle = colors.sale;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(centerX - oldW / 2 - 6, oldY + 10);
+                ctx.lineTo(centerX + oldW / 2 + 6, oldY - 10);
+                ctx.stroke();
+            }
         });
         // Aşağı zolaq
         ctx.fillStyle = colors.band;

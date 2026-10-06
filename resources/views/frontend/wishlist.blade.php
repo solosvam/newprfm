@@ -55,7 +55,7 @@
                                         @if($variants->count() > 1)
                                             <select class="wishlist-select" data-wishlist-size aria-label="{{ __('wishlist_choose_size') }}">
                                                 @foreach($variants as $variant)
-                                                    <option value="{{ $variant->id }}" data-price="{{ $variant->price }}">{{ $sizeName($variant) }}</option>
+                                                    <option value="{{ $variant->id }}" data-price="{{ $variant->salePrice() }}">{{ $sizeName($variant) }}</option>
                                                 @endforeach
                                             </select>
                                         @else
@@ -64,7 +64,7 @@
                                     </div>
 
                                     <div class="wishlist-buy">
-                                        <span class="wishlist-price" data-wishlist-price>{{ number_format((float) $firstVariant->price, 2) }} ₼</span>
+                                        <span class="wishlist-price" data-wishlist-price>{{ number_format($firstVariant->salePrice(), 2) }} ₼</span>
                                         <button type="button"
                                                 class="wishlist-add"
                                                 data-wishlist-add

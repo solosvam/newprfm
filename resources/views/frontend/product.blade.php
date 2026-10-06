@@ -40,10 +40,14 @@
         $genderName = $gender ? ($gender->{'name_' . $locale} ?? $gender->name_az) : null;
         $typeName = $product->type ? ($product->type->{'name_' . $locale} ?? $product->type->name_az) : null;
         $subtitle = collect([$genderName, $typeName])->filter()->implode(' · ');
-        $initialPrice = (float) ($firstVariant?->price ?? 0);
+        // Endirim bu ziyarətçiyə aiddirsə — endirimli qiymət (ProductVariant::salePrice); kredit cədvəli də bununla
+        $initialPrice = (float) ($firstVariant?->salePrice() ?? 0);
+        $initialRegular = (float) ($firstVariant?->price ?? 0);
+        $saleDiscount = $product->visibleDiscount();
         $firstPeriod = $creditPeriods->first();
-        // ≤ 200 AZN məbləğdə yalnız 3 və 6 ay (CreditPeriod::availableFor); variant dəyişəndə main.js yeniləyir
-        $firstAvailablePeriod = $creditPeriods->first(fn ($p) => $p->availableFor($initialPrice));
+        // ≤ 200 AZN məbləğdə yalnız 3 və 6 ay (CreditPeriod::availableFor); variant dəyişəndə main.js yeniləyir.
+        // Hissə-hissə ödənişə məhsul endirimi tətbiq olunmur — kredit cədvəli adi qiymətlə
+        $firstAvailablePeriod = $creditPeriods->first(fn ($p) => $p->availableFor($initialRegular));
     @endphp
 
     <p class="crumb">
@@ -100,7 +104,10 @@
             </div>
 
             <div class="price-qty-row">
-                <p class="price-row" data-price-display>{{ number_format($initialPrice, 2) }} ₼</p>
+                <p class="price-row" data-price-display>
+                    <s class="price-old" data-price-old @if($initialRegular <= $initialPrice) hidden @endif>{{ number_format($initialRegular, 2) }} ₼</s>
+                    <span data-price-current>{{ number_format($initialPrice, 2) }} ₼</span>
+                </p>
 
                 <div class="qty">
                     <button type="button" data-qty-action="minus">−</button>
@@ -109,13 +116,27 @@
                 </div>
             </div>
 
+            {{-- Endirim: faiz + bitməyə geri sayım (main.js → [data-countdown]) --}}
+            @if($saleDiscount)
+                <div class="sale-box">
+                    <span class="sale-box__badge">−{{ $saleDiscount->percentLabel() }}%</span>
+                    <span class="sale-box__label">{{ __('discount_ends_in') }}</span>
+                    <span class="sale-box__timer" data-countdown="{{ $saleDiscount->ends_at->getTimestampMs() }}" data-days-label="{{ __('discount_days') }}"></span>
+                </div>
+            @endif
+
             <div class="size-pills">
                 @foreach ($variants as $variant)
                     <span
                         class="size-pill {{ $loop->first ? 'active-size-amount' : '' }}"
                         data-variant-id="{{ $variant->id }}"
-                        data-price="{{ $variant->price }}"
-                    >{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
+                        data-price="{{ $variant->salePrice() }}"
+                        data-regular-price="{{ $variant->price }}"
+                    >
+                        {{-- bütün ölçülərin qiyməti bir baxışda (əvvəl hər ölçünü seçmək lazım idi) --}}
+                        <span class="size-pill__size">{{ $variant->size?->{'name_' . $locale} ?? $variant->size?->name_az }}</span>
+                        <span class="size-pill__price">@include('frontend.partials.sale-price', ['variant' => $variant])</span>
+                    </span>
                 @endforeach
             </div>
 
@@ -128,6 +149,16 @@
                     <path d="M5.5 11.2V4.9a1.25 1.25 0 0 1 2.5 0v5.3l4.6.85c1.7.45 2.7 2.1 2.25 3.7-.2.7-.75 2.15-1.2 3.3a3 3 0 0 1-2.3 1.9l-4 .7a2.8 2.8 0 0 1-2.5-.8c-.6-.62-1.3-1.4-1.8-2.2-.55-.8-.9-1.6-.9-2.25 0-.9.95-2.45 1.9-3.8"/>
                 </svg>
                 <span>{{ __('product_one_click_buy') }}</span>
+            </button>
+            {{-- "Qiymət enəndə xəbər ver": seçilmiş ölçüyə abunəlik, bildiriş — push (main.js) --}}
+            <button type="button" class="price-alert" data-price-alert data-url="{{ route('price-alert.toggle') }}"
+                    data-auth="{{ auth()->check() ? 1 : 0 }}" data-subscribed="{{ json_encode($priceAlertVariantIds ?? []) }}"
+                    data-label-off="{{ __('price_alert_button') }}" data-label-on="{{ __('price_alert_button_on') }}"
+                    data-login-message="{{ __('price_alert_login_required') }}" aria-pressed="false" @disabled(!$firstVariant)>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+                <span data-price-alert-label>{{ __('price_alert_button') }}</span>
             </button>
             @if($creditPeriods->isNotEmpty() && $variants->isNotEmpty())
                 @if(!auth()->check())
@@ -150,11 +181,11 @@
                 @foreach ($creditPeriods as $period)
                     @php
                         $rate = (float) $period->interest_rate;
-                        $installmentTotal = $initialPrice + (($initialPrice * $rate) / 100);
+                        $installmentTotal = $initialRegular + (($initialRegular * $rate) / 100);
                         $installmentMonthly = $installmentTotal / $period->month;
                     @endphp
                     @php $isFirstAvailable = $firstAvailablePeriod && $period->is($firstAvailablePeriod); @endphp
-                    <tr class="{{ $isFirstAvailable ? 'active' : '' }}" data-month="{{ $period->month }}" data-rate="{{ $rate }}" @if(!$period->availableFor($initialPrice)) hidden @endif>
+                    <tr class="{{ $isFirstAvailable ? 'active' : '' }}" data-month="{{ $period->month }}" data-rate="{{ $rate }}" @if(!$period->availableFor($initialRegular)) hidden @endif>
                         <td>
                             <input
                                 type="radio"
@@ -221,41 +252,9 @@
         <h2>{{ __('product_similar') }}</h2>
     </div>
     <div class="grid similar-products">
+        {{-- ana səhifədəki kart: hover-də bütün ölçülər, endirim nişanı, seçilmişlər --}}
         @foreach ($similarProducts ?? [] as $item)
-            <div class="card" data-href="{{ route('product', $item->slug) }}">
-                <div class="thumb">
-                    <div class="thumb-actions">
-                        {{-- DÜZƏLİŞ: $product əvəzinə $item --}}
-                        <button
-                            type="button"
-                            class="icon-btn fav-btn"
-                            data-product-id="{{ $item->id }}"
-                            aria-label="{{ __('common_favorite') }}"
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="icon-btn share-btn"
-                            data-url="{{ route('product', $item->slug) }}"
-                            data-title="{{ $item->name }}"
-                            aria-label="{{ __('common_share') }}"
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
-                        </button>
-                    </div>
-
-                    @if ($item->images->first())
-                        <img src="{{ asset('frontend/uploads/products/' . $item->images->first()->image) }}" alt="{{ $item->name }}" loading="lazy">
-                    @else
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="34" height="34"><path d="M9 3h6l1 4H8l1-4Z"/><path d="M8 7h8l1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L8 7Z"/></svg>
-                    @endif
-                </div>
-                <p class="brandname">{{ $item->brand?->name }}</p>
-                <p class="pname">{{ $item->name }}</p>
-                <p class="price">{{ number_format((float) ($item->variants->first()?->price ?? 0), 2) }} ₼</p>
-            </div>
+            @include('frontend.includes.product-card', ['product' => $item])
         @endforeach
     </div>
 

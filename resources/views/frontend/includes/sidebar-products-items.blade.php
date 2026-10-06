@@ -19,7 +19,7 @@
                 @if($item->brand)<span class="b">{{ $item->brand->name }}</span>@endif
                 <span class="n">{{ $item->name }}</span>
                 @if($itemVariant)
-                    <span class="p">{{ number_format((float) $itemVariant->price, 2) }} ₼@if($itemSize)<small>{{ $itemSize }}</small>@endif</span>
+                    <span class="p">@include('frontend.partials.sale-price', ['variant' => $itemVariant])@if($itemSize)<small>{{ $itemSize }}</small>@endif</span>
                 @endif
             </span>
         </a>

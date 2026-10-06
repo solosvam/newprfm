@@ -28,6 +28,14 @@ class ProductController extends Controller
             return redirect()->route('product', $product->slug, 301);
         }
 
+        // Deaktiv ətir: link (paylaşılan, seçilmişlər, köhnə sifariş) 404 vermir — "Satışda deyil" + oxşar ətirlər, noindex
+        if (!$product->active) {
+            return view('frontend.product-unavailable', [
+                'product' => $product,
+                'alternatives' => $details->alternatives($product),
+            ]);
+        }
+
         return view('frontend.product', $details->viewData($product));
     }
 
@@ -91,7 +99,7 @@ class ProductController extends Controller
         $variantIds = collect(explode(',', (string) $request->query('variants')))
             ->filter()->map(fn ($id) => (int) $id)->unique()->values();
 
-        return ProductVariant::with(['product.brand','product.images','product.genders','product.type','size'])
+        return ProductVariant::with(['product.brand','product.activeDiscount','product.images','product.genders','product.type','size'])
             ->whereIn('id', $variantIds)
             ->where('active', 1)
             ->get()
@@ -108,7 +116,9 @@ class ProductController extends Controller
                     'gender' => $gender ? ($gender->{'name_'.$locale} ?? $gender->name_az) : null,
                     'type' => $product?->type ? ($product->type->{'name_'.$locale} ?? $product->type->name_az) : null,
                     'size' => $variant->size ? ($variant->size->{'name_'.$locale} ?? $variant->size->name_az) : null,
-                    'price' => (float) $variant->price,
+                    // endirim bu müştəriyə aiddirsə — endirimli (checkout serverdə eyni qaydanı tətbiq edir)
+                    'price' => $variant->salePrice(),
+                    'regular_price' => (float) $variant->price,
                     'image' => $image ? asset('frontend/uploads/products/'.$image->image) : null,
                 ];
             })->values();

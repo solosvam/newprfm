@@ -166,6 +166,11 @@ return [
                 'permission' => 'crm',
             ],
             [
+                'title'      => 'Endirimdəki məhsullar',
+                'route'      => 'admin.product-discounts.index',
+                'permission' => 'product.discount',
+            ],
+            [
                 'title'      => 'Dəvətlər (referal)',
                 'route'      => 'admin.referrals.index',
                 'permission' => 'crm',

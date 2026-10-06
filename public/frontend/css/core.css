@@ -310,3 +310,41 @@ footer .logo--svg { color: var(--on-accent-bg); }
 .pw-toggle.is-visible .pw-toggle__closed { display: inline; }
 /* Edge/IE-nin öz göz düyməsi ikiləşməsin */
 .pw-field > input::-ms-reveal, .pw-field > input::-ms-clear { display: none; }
+
+/* Endirim (partials/sale-price, discount-badge): köhnə qiymət üstündən xətt, kartda faiz nişanı */
+.price-old { color: var(--text-muted); font-weight: 400; font-size: .85em; margin-right: 2px; }
+.price-sale { color: var(--danger); white-space: nowrap; }
+.price-old, .price-regular { white-space: nowrap; }
+/* Endirimdəki kart: sol yuxarı küncdə qırmızı lent ("20% endirim") və lentin rəngi ilə bütün kart boyu kontur.
+   Qalın çərçivə üçün padding 1px azalır. */
+/* .card.card--* — catalog.css-dəki .card { border } qaydası sonra yüklənir, spesifiklik ondan yüksək olmalıdır */
+.card.card--sale { border: 2px solid var(--danger); padding: 11px; }
+.card.card--sale:hover { border-color: var(--danger); }
+.card-ribbon {
+    position: absolute; top: -2px; left: -2px; z-index: 3; padding: 5px 12px;
+    border-radius: 14px 0 12px 0; background: var(--danger); color: #fff;
+    font-size: 12.5px; font-weight: 700; line-height: 1.3; white-space: nowrap;
+}
+.search-result-discount { display: inline-block; margin-bottom: 2px; padding: 0 6px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 700; line-height: 1.5; }
+
+.cart-row__total.price-sale, .checkout-item__price .price-sale { color: var(--danger); }
+
+/* Kartda geri sayım (bitməsinə < 7 gün): şəklin altında 4 qırmızı qutu; ölçülər siyahısı (z-index 10) üstünü örtür */
+.card-countdown {
+    position: absolute; left: 0; right: 0; bottom: 8px; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none;
+}
+/* "Endirimin bitməsinə:" — ağ fonda qırmızı, şəklin hansı rəngdə olmasından asılı olmayaraq oxunur */
+.card-countdown__caption {
+    padding: 2px 10px; border-radius: 999px; background: #fff; color: var(--danger);
+    font-size: 11px; font-weight: 700; line-height: 1.4; box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+.card-countdown__cells { display: flex; justify-content: center; gap: 6px; }
+.card-countdown__cell {
+    display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 38px; padding: 4px 4px 3px;
+    border-radius: 8px; background: var(--danger); color: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+/* rəqəm və vahid qutunun içində (ağ) — şəklin hansı rəngdə olmasından asılı olmayaraq oxunur */
+.card-countdown__cell b { font-size: 14px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.card-countdown__cell small { font-size: 9.5px; font-weight: 600; line-height: 1; opacity: .9; }
+

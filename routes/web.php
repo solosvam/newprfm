@@ -154,9 +154,11 @@ Route::middleware('guest')
         Route::post('/login/check', 'checkMobile')->name('front.login.check');
         Route::post('/login/inactive/verify', 'verifyInactive')->name('front.login.inactive.verify');
         Route::post('/login/inactive/resend', 'resendInactive')->name('front.login.inactive.resend');
-        Route::post('/login/password', 'passwordLogin')->name('front.login.password');
-        Route::post('/login/otp', 'verifyOtp')->name('front.login.otp');
-        Route::post('/login/otp/resend', 'resendOtp')->name('front.login.otp.resend');
+        // Şifrə və SMS kodu təxmin edilməsin
+        Route::post('/login/password', 'passwordLogin')->middleware('throttle:10,1')->name('front.login.password');
+        Route::post('/login/forgot', 'forgotPassword')->middleware('throttle:5,1')->name('front.login.forgot');
+        Route::post('/login/otp', 'verifyOtp')->middleware('throttle:10,1')->name('front.login.otp');
+        Route::post('/login/otp/resend', 'resendOtp')->middleware('throttle:5,1')->name('front.login.otp.resend');
         Route::post('/login/set-password', 'setPassword')->name('front.login.set-password');
     });
 
@@ -227,6 +229,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/profile/referral', [\App\Http\Controllers\Frontend\ReferralController::class, 'index'])->name('profile.referral');
+
+    // "Qiymət enəndə xəbər ver"
+    Route::post('/price-alerts/toggle', [\App\Http\Controllers\Frontend\PriceAlertController::class, 'toggle'])
+        ->middleware('throttle:30,1')->name('price-alert.toggle');
 
     // Orders
 

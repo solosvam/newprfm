@@ -171,7 +171,10 @@
         info.append(name, meta);
 
         const priceBox = el('div', 'cart-row__price');
-        priceBox.appendChild(el('div', 'cart-row__total', money(lineTotal)));
+        // endirimli məhsul: köhnə məbləğ üstündən xətt
+        const regular = Number(product.regular_price) || 0;
+        if (regular > price) priceBox.appendChild(el('s', 'price-old', money(regular * quantity)));
+        priceBox.appendChild(el('div', regular > price ? 'cart-row__total price-sale' : 'cart-row__total', money(lineTotal)));
         if (quantity > 1) priceBox.appendChild(el('div', 'cart-row__unit', `${quantity} × ${money(price)}`));
 
         const head = el('div', 'cart-row__head');
@@ -250,10 +253,12 @@
         els.bonusText.replaceChildren(fill(t.bonus, { amount: strong(money(bonus)) }));
 
         // Hissəli ödəniş
-        const canInstall = config.installmentMonths > 0 && total > 0 && total >= config.installmentMin;
+        // hissə-hissə ödənişə məhsul endirimi tətbiq olunmur — təklif adi qiymətlərlə
+        const creditTotal = round2((state.regularSubtotal || state.subtotal) + delivery);
+        const canInstall = config.installmentMonths > 0 && creditTotal > 0 && creditTotal >= config.installmentMin;
         els.installment.hidden = !canInstall;
         if (canInstall) {
-            const monthly = Math.ceil((total * (1 + config.installmentMarkup / 100) / config.installmentMonths) * 100) / 100;
+            const monthly = Math.ceil((creditTotal * (1 + config.installmentMarkup / 100) / config.installmentMonths) * 100) / 100;
             els.installmentText.replaceChildren(
                 fill(config.installmentMarkup === 0 ? t.installment : t.installmentWithInterest,
                     { amount: strong(money(monthly)), months: config.installmentMonths })
@@ -275,6 +280,7 @@
 
         const fragment = document.createDocumentFragment();
         let subtotal = 0;
+        let regularSubtotal = 0; // hissə-hissə ödəniş üçün — endirimsiz
         let count = 0;
 
         for (const item of cart) {
@@ -283,11 +289,13 @@
             const { row, lineTotal, quantity } = buildRow(item, product);
             fragment.appendChild(row);
             subtotal += lineTotal;
+            regularSubtotal += (Number(product.regular_price) || Number(product.price) || 0) * quantity;
             count += quantity;
         }
 
         els.items.replaceChildren(fragment);
         state.subtotal = round2(subtotal);
+        state.regularSubtotal = round2(regularSubtotal);
         state.count = count;
         updateTotals();
     }

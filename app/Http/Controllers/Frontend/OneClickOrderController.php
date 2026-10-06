@@ -35,14 +35,18 @@ class OneClickOrderController extends Controller
         }
 
         $order = DB::transaction(function () use ($data, $mobile) {
-            $variant = ProductVariant::with('product')->whereKey($data['variant_id'])
+            $variant = ProductVariant::with('product.activeDiscount')->whereKey($data['variant_id'])
                 ->where('active', 1)->firstOrFail();
             abort_unless($variant->product && (int) $variant->product->active === 1, 404);
 
             $cash = PaymentMethod::where('code', 'cash')->where('active', 1)->firstOrFail();
             $status = OrderStatus::where('code', 'new')->where('active', 1)->firstOrFail();
             $quantity = (int) $data['quantity'];
-            $subtotal = round((float) $variant->price * $quantity, 2);
+            // Məhsul endirimi: checkout kimi — unit_price endirimli, list_price adi, fərq discount-da
+            $regular = (float) $variant->price;
+            $sale = $variant->salePrice();
+            $subtotal = round($regular * $quantity, 2);
+            $lineTotal = round($sale * $quantity, 2);
             // Address is deliberately unknown: the operator confirms the delivery fee later.
             $order = Order::create([
                 'order_no' => 'TMP' . Str::random(20),
@@ -56,18 +60,19 @@ class OneClickOrderController extends Controller
                 'order_status_id' => $status->id,
                 'gift_wrap' => false,
                 'subtotal' => $subtotal,
-                'discount' => 0,
+                'discount' => round($subtotal - $lineTotal, 2),
                 'delivery_fee' => 0,
                 'gift_wrap_fee' => 0,
-                'total' => $subtotal,
+                'total' => $lineTotal,
             ]);
             $order->update(['order_no' => 'PS' . now()->format('ymd') . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT)]);
             $order->items()->create([
                 'product_id' => $variant->product_id,
                 'product_variant_id' => $variant->id,
                 'quantity' => $quantity,
-                'unit_price' => $variant->price,
-                'total' => $subtotal,
+                'unit_price' => $sale,
+                'list_price' => $sale < $regular ? $regular : null,
+                'total' => $lineTotal,
             ]);
             DB::table('order_status_logs')->insert([
                 'order_id' => $order->id, 'status_id' => $status->id,

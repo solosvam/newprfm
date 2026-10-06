@@ -20,6 +20,7 @@ class CustomerCartTest extends TestCase
         Schema::create('customers', function (Blueprint $t) { $t->integer('id')->primary(); $t->string('name'); $t->string('email')->nullable(); $t->decimal('bonus_balance', 12, 2)->default(0); $t->timestamps(); });
         Schema::create('products', function (Blueprint $t) { $t->id(); $t->boolean('active')->default(true); });
         Schema::create('product_variants', function (Blueprint $t) { $t->id(); $t->integer('product_id'); $t->decimal('price', 12, 2)->default(10); $t->boolean('active')->default(true); });
+        (require database_path('migrations/2026_10_07_170000_create_product_discounts_table.php'))->up(); // məhsul endirimi (activeDiscount)
         (require database_path('migrations/2026_10_02_110000_create_customer_cart_tables.php'))->up();
         DB::table('products')->insert([['id' => 1, 'active' => 1], ['id' => 2, 'active' => 0]]);
         DB::table('product_variants')->insert([
@@ -107,32 +108,7 @@ class CustomerCartTest extends TestCase
 
     public function test_checkout_creates_order_and_empties_database_cart(): void
     {
-        Schema::create('settings', function (Blueprint $t) { $t->id(); $t->string('key'); $t->text('value')->nullable(); $t->timestamps(); });
-        Schema::create('payment_methods', function (Blueprint $t) { $t->id(); $t->string('code'); $t->boolean('active'); });
-        Schema::create('order_statuses', function (Blueprint $t) { $t->id(); $t->string('code'); $t->boolean('active'); });
-        Schema::create('customer_addresses', function (Blueprint $t) { $t->id(); $t->integer('customer_id'); $t->timestamps(); });
-        Schema::create('orders', function (Blueprint $t) {
-            $t->id(); $t->string('order_no'); $t->integer('customer_id'); $t->integer('customer_address_id');
-            $t->integer('payment_method_id'); $t->integer('birbank_installment_months')->nullable();
-            $t->string('payment_status'); $t->string('source'); $t->integer('order_status_id');
-            $t->boolean('gift_wrap'); $t->text('customer_note')->nullable();
-            foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $column) $t->decimal($column, 12, 2)->default(0);
-            $t->integer('promo_code_id')->nullable(); $t->timestamps();
-        });
-        Schema::create('order_items', function (Blueprint $t) {
-            $t->id(); $t->integer('order_id'); $t->integer('product_id'); $t->integer('product_variant_id');
-            $t->integer('quantity'); $t->decimal('unit_price', 12, 2); $t->decimal('total', 12, 2); $t->timestamps();
-        });
-        Schema::create('order_status_logs', function (Blueprint $t) {
-            $t->id(); $t->integer('order_id'); $t->integer('status_id'); $t->timestamps();
-        });
-        Schema::create('customer_bonus_transactions', function (Blueprint $t) {
-            $t->id(); $t->integer('customer_id'); $t->integer('order_id'); $t->string('type');
-            $t->decimal('amount', 12, 2); $t->string('note'); $t->timestamp('expires_at')->nullable(); $t->timestamp('expired_at')->nullable(); $t->timestamps();
-        });
-        DB::table('payment_methods')->insert(['id' => 1, 'code' => 'cash', 'active' => 1]);
-        DB::table('order_statuses')->insert(['id' => 1, 'code' => 'new', 'active' => 1]);
-        DB::table('customer_addresses')->insert(['id' => 1, 'customer_id' => 1]);
+        $this->checkoutSchema();
         $service = app(CartService::class);
         $service->change($this->customer(), 1, 'add', 2);
         $service->change($this->customer(), 2, 'add');
@@ -154,5 +130,53 @@ class CustomerCartTest extends TestCase
         $this->assertSame(99, $service->change($customer, 1, 'add', 3)[0]['quantity']);
         $service->change($customer, 1, 'remove');
         $this->assertSame([], $service->change($customer, 1, 'remove'));
+    }
+
+    /** Checkout üçün cədvəllər (sifariş, ödəniş üsulu, status, ünvan, bonus) */
+    private function checkoutSchema(): void
+    {
+        Schema::create('settings', function (Blueprint $t) { $t->id(); $t->string('key'); $t->text('value')->nullable(); $t->timestamps(); });
+        Schema::create('payment_methods', function (Blueprint $t) { $t->id(); $t->string('code'); $t->boolean('active'); });
+        Schema::create('order_statuses', function (Blueprint $t) { $t->id(); $t->string('code'); $t->boolean('active'); });
+        Schema::create('customer_addresses', function (Blueprint $t) { $t->id(); $t->integer('customer_id'); $t->timestamps(); });
+        Schema::create('orders', function (Blueprint $t) {
+            $t->id(); $t->string('order_no'); $t->integer('customer_id'); $t->integer('customer_address_id');
+            $t->integer('payment_method_id'); $t->integer('birbank_installment_months')->nullable();
+            $t->string('payment_status'); $t->string('source'); $t->integer('order_status_id');
+            $t->boolean('gift_wrap'); $t->text('customer_note')->nullable();
+            foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $column) $t->decimal($column, 12, 2)->default(0);
+            $t->integer('promo_code_id')->nullable(); $t->timestamps();
+        });
+        Schema::create('order_items', function (Blueprint $t) {
+            $t->id(); $t->integer('order_id'); $t->integer('product_id'); $t->integer('product_variant_id');
+            $t->integer('quantity'); $t->decimal('unit_price', 12, 2); $t->decimal('list_price', 12, 2)->nullable(); $t->decimal('total', 12, 2); $t->timestamps();
+        });
+        Schema::create('order_status_logs', function (Blueprint $t) {
+            $t->id(); $t->integer('order_id'); $t->integer('status_id'); $t->timestamps();
+        });
+        Schema::create('customer_bonus_transactions', function (Blueprint $t) {
+            $t->id(); $t->integer('customer_id'); $t->integer('order_id'); $t->string('type');
+            $t->decimal('amount', 12, 2); $t->string('note'); $t->timestamp('expires_at')->nullable(); $t->timestamp('expired_at')->nullable(); $t->timestamps();
+        });
+        DB::table('payment_methods')->insert(['id' => 1, 'code' => 'cash', 'active' => 1]);
+        DB::table('order_statuses')->insert(['id' => 1, 'code' => 'new', 'active' => 1]);
+        DB::table('customer_addresses')->insert(['id' => 1, 'customer_id' => 1]);
+    }
+
+    public function test_checkout_applies_product_discount_like_operator_discount(): void
+    {
+        $this->checkoutSchema();
+        // variant 1 — 10 ₼; məhsul 1-də 15% endirim → 8.50 ₼
+        DB::table('product_discounts')->insert(['product_id' => 1, 'percent' => 15,
+            'starts_at' => now()->subHour(), 'ends_at' => now()->addDay(), 'created_at' => now(), 'updated_at' => now()]);
+        $service = app(CartService::class);
+        $service->change($this->customer(), 1, 'add', 2);
+        $body = ['cart' => $service->items($this->customer()), 'address_mode' => 'existing', 'address_id' => 1, 'payment_method_id' => 1];
+
+        $this->actingAs($this->customer())->postJson('/checkout', $body)->assertOk();
+        $order = DB::table('orders')->first();
+        $item = DB::table('order_items')->first();
+        $this->assertEquals([20.0, 3.0, 17.0], [(float) $order->subtotal, (float) $order->discount, (float) $order->total]);
+        $this->assertEquals([8.5, 10.0, 17.0], [(float) $item->unit_price, (float) $item->list_price, (float) $item->total]);
     }
 }

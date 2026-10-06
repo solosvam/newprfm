@@ -115,6 +115,7 @@ class AjaxController extends Controller
             )
             ->with([
                 'brand:id,name',
+                'activeDiscount',
                 'type:id,name_az',
                 'genders:id,name_az',
                 'images' => fn ($i) => $i->limit(1),
@@ -134,7 +135,9 @@ class AjaxController extends Controller
             'variants' => $p->variants->map(fn ($v) => [
                 'id' => $v->id,
                 'label' => $v->size?->name_az ?? '—',
-                'price' => (float) $v->price,
+                // məhsul endirimi avtomatik; list_price — adi qiymət
+                'price' => $v->salePrice(),
+                'list_price' => (float) $v->price,
             ])->values(),
         ])->values());
     }

@@ -9,6 +9,7 @@ use App\Models\PromoCode;
 
 class PromoCodeService
 {
+    /** Promo kodun tətbiq olunduğu məbləğ: yalnız endirimsiz məhsullar (endirimli məhsula promo işləmir) */
     public function subtotalFor(array $items): float
     {
         $quantities = collect($items)
@@ -17,7 +18,7 @@ class PromoCodeService
                 fn ($item) => (int) $item['quantity']
             ));
 
-        $variants = ProductVariant::whereIn('id', $quantities->keys())
+        $variants = ProductVariant::with('product.activeDiscount')->whereIn('id', $quantities->keys())
             ->where('active', 1)
             ->whereHas('product', fn ($query) => $query->where('active', 1))
             ->get();
@@ -27,8 +28,13 @@ class PromoCodeService
             throw new PromoCodeException('Səbətdə mövcud olmayan məhsul var.');
         }
 
+        $eligible = $variants->filter(fn ($variant) => $variant->salePrice() >= (float) $variant->price);
+        if ($eligible->isEmpty()) {
+            throw new PromoCodeException(__('promo_not_for_discounted'));
+        }
+
         return round(
-            $variants->sum(
+            $eligible->sum(
                 fn ($variant) => (float) $variant->price * $quantities[$variant->id]
             ),
             2

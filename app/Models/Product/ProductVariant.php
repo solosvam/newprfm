@@ -2,6 +2,7 @@
 
 namespace App\Models\Product;
 
+use App\Jobs\NotifyPriceDrop;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model
@@ -16,6 +17,29 @@ class ProductVariant extends Model
         'price',
         'active',
     ];
+
+    /** Qiymət endi — "Qiymət enəndə xəbər ver" abunəçilərinə push (növbədə, tranzaksiyadan sonra) */
+    protected static function booted(): void
+    {
+        static::updated(function (ProductVariant $variant) {
+            if ($variant->wasChanged('price') && (float) $variant->price < (float) $variant->getOriginal('price')) {
+                NotifyPriceDrop::dispatch($variant->id)->afterCommit();
+            }
+        });
+    }
+
+    /** Müştərinin ödəyəcəyi qiymət: məhsulun aktiv endirimi varsa — endirimli (hamı üçün), yoxsa adi */
+    public function salePrice(): float
+    {
+        $discount = $this->product?->activeDiscount;
+
+        return $discount?->isActive() ? $discount->apply((float) $this->price) : (float) $this->price;
+    }
+
+    public function priceAlerts()
+    {
+        return $this->hasMany(PriceAlert::class);
+    }
 
     public function product()
     {

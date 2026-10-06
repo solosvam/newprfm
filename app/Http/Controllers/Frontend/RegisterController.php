@@ -118,7 +118,7 @@ class RegisterController extends Controller
             }
         }
 
-        Auth::login($customer);
+        Auth::login($customer, true); // "Məni xatırla" seçimi yoxdur — müştəri həmişə xatırlanır
         $request->session()->regenerate();
 
         return redirect()->route('home');

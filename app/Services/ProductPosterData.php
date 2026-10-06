@@ -11,7 +11,8 @@ class ProductPosterData
     /** null — şəkil və ya aktiv ölçü yoxdur, poster çəkilə bilməz */
     public function for(Product $product): ?array
     {
-        $product->load(['brand', 'type', 'genders', 'images', 'variants.size']);
+        $product->load(['brand', 'activeDiscount', 'type', 'genders', 'images', 'variants.size']);
+        $discount = $product->visibleDiscount(); // məhsul endirimi: köhnə/yeni qiymət, lent, bitmə tarixi
         $image = $product->images->first()?->image;
         $variants = $product->variants->where('active', 1)->sortBy('price')->values();
 
@@ -28,13 +29,18 @@ class ProductPosterData
             'brand' => $product->brand?->name ?? '',
             'name' => $product->name,
             'subtitle' => $subtitle,
-            'caption' => $this->caption($product, $subtitle, $variants),
+            'caption' => $this->caption($product, $subtitle, $variants, $discount),
+            'discount' => $discount ? [
+                'percent' => $discount->percentLabel(),
+                'until' => 'Endirim '.$discount->ends_at->format('d.m.Y, H:i').'-dək',
+            ] : null,
             'image' => asset('frontend/uploads/products/'.basename($image)),
             'logo' => asset('frontend/images/logo.svg'),
             'filename' => (Str::slug($product->brand?->name.' '.$product->name) ?: 'parfumshop-product').'.png',
             'variants' => $variants->map(fn ($variant) => [
                 'size' => $variant->size?->name_az ?? 'Ölçü',
-                'price' => number_format((float) $variant->price, 2, '.', ''),
+                'price' => number_format($variant->salePrice(), 2, '.', ''),
+                'regular_price' => $discount ? number_format((float) $variant->price, 2, '.', '') : null,
             ]),
         ];
     }
@@ -42,13 +48,20 @@ class ProductPosterData
     /**
      * Posterlə birgə göndərilən mətn — qiymət bildirişdə və söhbət siyahısında da görünsün:
      * "Trussardi Black Extreme\nKişi üçün | Eau De Toilette\n30 ml — 107 ₼\n…".
+     * Endirimdə: "30 ml — ~107~ 91 ₼" (WhatsApp üstündən xətt) və sonda "Endirim 08.10.2026-dək".
      */
-    private function caption(Product $product, string $subtitle, $variants): string
+    private function caption(Product $product, string $subtitle, $variants, $discount = null): string
     {
-        $price = fn (float $value): string => number_format($value, fmod($value, 1) == 0 ? 0 : 2, '.', ' ').' ₼';
+        $number = fn (float $value): string => number_format($value, fmod($value, 1) == 0 ? 0 : 2, '.', ' ');
 
-        return collect([trim(($product->brand?->name ?? '').' '.$product->name), $subtitle])
-            ->merge($variants->map(fn ($variant) => ($variant->size?->name_az ?? 'Ölçü').' — '.$price((float) $variant->price)))
+        return collect([
+            trim(($product->brand?->name ?? '').' '.$product->name),
+            $subtitle,
+            $discount ? '🔥 '.$discount->percentLabel().'% endirim' : null,
+        ])
+            ->merge($variants->map(fn ($variant) => ($variant->size?->name_az ?? 'Ölçü').' — '
+                .($discount ? '~'.$number((float) $variant->price).'~ ' : '').$number($variant->salePrice()).' ₼'))
+            ->push($discount ? 'Endirim '.$discount->ends_at->format('d.m.Y').'-dək' : null)
             ->filter()
             ->implode("\n");
     }

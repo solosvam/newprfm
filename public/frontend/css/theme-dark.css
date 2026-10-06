@@ -1,6 +1,7 @@
 [data-theme="dark"] {
     --bg: #19161F;
     --surface: #211c2b;
+    --image-bg: #ffffff;        /* məhsul şəkilləri ağ fonda (açıq temadakı kimi) */
     --surface-2: #2a2438;
     --accent-bg: #302442;
     --accent: #BDA4E5;

@@ -17,7 +17,7 @@ class FavoriteController extends Controller
     public function index(Request $request)
     {
         $products = $request->user()->favoriteProducts()
-            ->with(['brand', 'type', 'images', 'genders', 'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'), 'variants.size'])
+            ->with(['brand', 'activeDiscount', 'type', 'images', 'genders', 'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'), 'variants.size'])
             ->where('products.active', 1)
             ->latest('product_favorites.created_at')
             ->get();

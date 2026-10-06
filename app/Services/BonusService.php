@@ -50,15 +50,7 @@ class BonusService {
     foreach ($due as $lot) {
      $balance = (float) \Illuminate\Support\Facades\DB::table('customers')->where('id', $customerId)->value('bonus_balance');
 
-     // Bu bonusdan sonra bitən (və ya müddətsiz) hələ aktiv bonuslar
-     $later = (float) $customer->bonusTransactions()->lots()
-      ->whereNull('expired_at')->where('id', '!=', $lot->id)
-      ->where(fn ($q) => $q->whereNull('expires_at')
-       ->orWhere('expires_at', '>', $lot->expires_at)
-       ->orWhere(fn ($q) => $q->where('expires_at', $lot->expires_at)->where('id', '>', $lot->id)))
-      ->sum('amount');
-
-     $amount = round(max(0, min((float) $lot->amount, $balance - $later)), 2);
+     $amount = $this->lotRemainder($customer, $lot, $balance);
 
      if ($amount > 0) {
       \Illuminate\Support\Facades\DB::table('customers')->where('id', $customerId)->decrement('bonus_balance', $amount);
@@ -75,6 +67,66 @@ class BonusService {
   }
 
   return $processed;
+ }
+
+ /**
+  * Bonus paketindən hələ istifadə olunmamış (vaxtı çatanda silinəcək) hissə — expireDue və xatırlatma üçün ortaq hesab:
+  * balans − bu paketdən SONRA bitən (və ya müddətsiz) aktiv paketlərin cəmi, paketin məbləğindən çox deyil.
+  */
+ private function lotRemainder(Customer $customer, $lot, float $balance): float {
+  $later = (float) $customer->bonusTransactions()->lots()
+   ->whereNull('expired_at')->where('id', '!=', $lot->id)
+   ->where(fn ($q) => $q->whereNull('expires_at')
+    ->orWhere('expires_at', '>', $lot->expires_at)
+    ->orWhere(fn ($q) => $q->where('expires_at', $lot->expires_at)->where('id', '>', $lot->id)))
+   ->sum('amount');
+
+  return round(max(0, min((float) $lot->amount, $balance - $later)), 2);
+ }
+
+ /** Müddəti bitməzdən neçə gün əvvəl xatırladılır */
+ public const REMIND_DAYS = 3;
+
+ /**
+  * Bonus müddəti bitməzdən 3 gün əvvəl SMS (bonus:remind-expiring, hər gün): müştəri üzrə yanacaq qalıq və ən yaxın tarix.
+  * Hər paket üçün bir dəfə (reminded_at); xərclənib qalığı qalmayan paketə SMS getmir. Göndərilən SMS sayını qaytarır.
+  */
+ public function remindExpiring(SmsService $sms): int {
+  $now = now();
+  $due = \App\Models\Customer\CustomerBonusTransaction::lots()
+   ->whereNotNull('expires_at')->where('expires_at', '>', $now)->where('expires_at', '<=', $now->copy()->addDays(self::REMIND_DAYS))
+   ->whereNull('expired_at')->whereNull('reminded_at')
+   ->orderBy('expires_at')->get()->groupBy('customer_id');
+
+  $sent = 0;
+  foreach ($due as $customerId => $lots) {
+   $customer = Customer::find($customerId);
+   if (!$customer) continue;
+   $balance = (float) $customer->bonus_balance;
+   $amount = 0.0;
+   $date = null;
+   foreach ($lots as $lot) {
+    $left = $this->lotRemainder($customer, $lot, $balance);
+    if ($left > 0) {
+     $amount += $left;
+     $date ??= $lot->expires_at;
+    }
+   }
+   \App\Models\Customer\CustomerBonusTransaction::whereKey($lots->pluck('id'))->update(['reminded_at' => $now]);
+
+   if ($amount <= 0 || !$customer->active || !$customer->mobile) continue;
+   $values = ['name' => $customer->name, 'amount' => number_format($amount, 2), 'date' => $date->format('d.m.Y')];
+   $message = \App\Models\SmsTemplate::message('bonus_expiring', $values)
+    ?? "Parfumshop: hesabinizdaki {$values['amount']} AZN bonusun muddeti {$values['date']} tarixinde bitir. Istifade etmeyi unutmayin!";
+   try {
+    $sms->send($customer->mobile, $message);
+    $sent++;
+   } catch (\Throwable $e) {
+    report($e); // bir müştərinin SMS xətası digərlərini dayandırmasın
+   }
+  }
+
+  return $sent;
  }
 
  /** Bonus şərtlərinin standart mətni (Ayarlar → Bonuslar → "Bonus şərtləri"); :percent, :registration əvəz olunur */

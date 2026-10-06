@@ -19,6 +19,9 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /** SMS kodu üçün səhv cəhd limiti (bundan sonra yeni kod istənməlidir) */
+    private const OTP_MAX_ATTEMPTS = 5;
+
     public function login()
     {
         return view('frontend.login');
@@ -77,7 +80,7 @@ class AuthController extends Controller
             }
         }
 
-        Auth::login($customer);
+        Auth::login($customer, true); // "Məni xatırla" seçimi yoxdur — müştəri həmişə xatırlanır
         $request->session()->regenerate();
 
         return response()->json(['status' => 'success', 'redirect' => route('home')]);
@@ -117,6 +120,20 @@ class AuthController extends Controller
         return response()->json(['status' => 'success', 'redirect' => route('home')]);
     }
 
+    /** "Şifrəni unutdum": şifrəsi olan aktiv müştəriyə SMS kod → verifyOtp → setPassword (şifrəsiz müştəri ilə eyni axın) */
+    public function forgotPassword(Request $request, SmsService $sms)
+    {
+        $mobile = $this->normalizeMobile($request->input('mobile'));
+        $customer = Customer::where('mobile', $mobile)->where('active', 1)->whereNotNull('password')->first();
+        if (!$customer) {
+            throw ValidationException::withMessages(['mobile' => __('auth_no_account_found_for_this_number_please_register')]);
+        }
+
+        $this->sendOtp($mobile, $sms);
+
+        return response()->json(['status' => 'otp', 'mobile' => $this->maskedMobile($mobile)]);
+    }
+
     public function verifyOtp(Request $request)
     {
         $mobile = $this->normalizeMobile($request->input('mobile'));
@@ -130,6 +147,14 @@ class AuthController extends Controller
         $data = Cache::get($this->otpKey($mobile));
 
         if (!$data || !Hash::check((string) $request->otp, $data['code'])) {
+            // Kodu təxmin etmək olmasın: 5 səhv cəhddən sonra kod etibarsızdır, yenisi istənməlidir
+            if ($data && ($data['attempts'] = ($data['attempts'] ?? 0) + 1) >= self::OTP_MAX_ATTEMPTS) {
+                Cache::forget($this->otpKey($mobile));
+                throw ValidationException::withMessages(['otp' => __('auth_too_many_otp_attempts')]);
+            }
+            if ($data) {
+                Cache::put($this->otpKey($mobile), $data, now()->addSeconds(max(1, ($data['expires'] ?? time() + 60) - time())));
+            }
             throw ValidationException::withMessages(['otp' => __('validation_incorrect_or_expired_otp_code')]);
         }
 
@@ -166,7 +191,7 @@ class AuthController extends Controller
     public function resendOtp(Request $request, SmsService $sms)
     {
         $mobile = $this->normalizeMobile($request->input('mobile'));
-        $customer = Customer::where('mobile', $mobile)->whereNull('password')->where('active', 1)->firstOrFail();
+        $customer = Customer::where('mobile', $mobile)->where('active', 1)->firstOrFail(); // şifrəsiz və ya "Şifrəni unutdum"
 
         $this->sendOtp($customer->mobile, $sms);
 
@@ -271,7 +296,8 @@ class AuthController extends Controller
 
         $code = (string) random_int(100000, 999999);
 
-        Cache::put($this->otpKey($mobile), ['code' => Hash::make($code)], now()->addMinutes(3));
+        $expires = now()->addMinutes(3);
+        Cache::put($this->otpKey($mobile), ['code' => Hash::make($code), 'attempts' => 0, 'expires' => $expires->timestamp], $expires);
         Cache::put($throttleKey, true, now()->addSeconds(60));
 
         $sms->send($mobile, 'ParfumShop.az tesdiq kodunuz: '.$code);

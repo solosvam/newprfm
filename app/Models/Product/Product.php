@@ -31,6 +31,23 @@ class Product extends Model
         return $this->belongsTo(Type::class, 'type_id');
     }
 
+    public function discounts()
+    {
+        return $this->hasMany(ProductDiscount::class)->orderByDesc('starts_at');
+    }
+
+    /** Saytda göstərilən endirim (aktiv olan) — kart lenti, məhsul səhifəsi, axtarış */
+    public function visibleDiscount(): ?ProductDiscount
+    {
+        return $this->activeDiscount?->isActive() ? $this->activeDiscount : null;
+    }
+
+    /** Hazırda aktiv endirim (dövrlər üst-üstə düşmür — ən çox biri) */
+    public function activeDiscount()
+    {
+        return $this->hasOne(ProductDiscount::class)->where('starts_at', '<=', now())->where('ends_at', '>', now())->orderByDesc('starts_at');
+    }
+
     public function images()
     {
         return $this->hasMany(ProductImage::class, 'product_id')
@@ -70,7 +87,8 @@ class Product extends Model
 
     public function variants()
     {
-        return $this->hasMany(ProductVariant::class, 'product_id');
+        // chaperone: ölçü öz məhsulunu (və onun endirimini) əlavə sorğusuz tanısın — ProductVariant::salePrice
+        return $this->hasMany(ProductVariant::class, 'product_id')->chaperone('product');
     }
 
     public function reviews()

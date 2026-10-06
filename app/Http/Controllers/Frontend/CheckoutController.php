@@ -151,7 +151,8 @@ class CheckoutController extends Controller
             $cart = collect($data['cart']) -> keyBy('variant_id');
 
             // Deaktiv məhsulun variantı da "mövcud deyil" sayılır (səbətdə köhnə qalmış ola bilər)
-            $variants = ProductVariant ::whereIn('id', $cart -> keys())
+            $variants = ProductVariant ::with('product.activeDiscount')
+                -> whereIn('id', $cart -> keys())
                 -> where('active', 1)
                 -> whereHas('product', fn ($q) => $q -> where('active', 1))
                 -> get();
@@ -162,43 +163,52 @@ class CheckoutController extends Controller
                 __('validation_your_cart_contains_an_unavailable_product')
             );
 
-            // Məhsullar və yekun məbləğ
+            // Məhsullar və yekun məbləğ.
+            // Məhsul endirimi (ProductDiscount) CRM-dəki operator endirimi kimi yazılır: unit_price — endirimli, list_price — adi;
+            // subtotal adi qiymətlərlə, fərq discount-a düşür (PaymentItemsBuilder, ləğv və bonus bunu nəzərə alır).
             $subtotal = 0;
+            $saleDiscount = 0;
+            $promoBase = 0; // promo kod yalnız endirimsiz məhsullara
             $items = [];
 
             foreach($variants as $variant) {
                 $quantity = (int)$cart[$variant -> id]['quantity'];
+                $regular = (float) $variant -> price;
+                // hissə-hissə (öz kreditimiz) — endirim yoxdur
+                $sale = $paymentMethod -> code === 'installment' ? $regular : $variant -> salePrice();
 
-                $lineTotal = round(
-                    (float)$variant -> price * $quantity,
-                    2
-                );
-
-                $subtotal += $lineTotal;
+                $lineTotal = round($sale * $quantity, 2);
+                $subtotal += round($regular * $quantity, 2);
+                $saleDiscount += round(($regular - $sale) * $quantity, 2);
+                if ($sale >= $regular) {
+                    $promoBase += $lineTotal;
+                }
 
                 $items[] = [
                     'product_id' => $variant -> product_id,
                     'product_variant_id' => $variant -> id,
-                    'unit_price' => $variant -> price,
+                    'unit_price' => $sale,
+                    'list_price' => $sale < $regular ? $regular : null,
                     'quantity' => $quantity,
                     'total' => $lineTotal,
                 ];
             }
 
             $subtotal = round($subtotal, 2);
+            $saleDiscount = round($saleDiscount, 2);
             $discount = 0;
             $promo = null;
             // Promo kod daxili kreditə (installment) tətbiq olunmur — checkout səhifəsi də onu bağlayır (promo-lock)
-            if (($code = session('promo_code')) && $paymentMethod->code !== 'installment') {
+            if (($code = session('promo_code')) && $paymentMethod->code !== 'installment' && $promoBase > 0) {
                 try {
-                    ['promo' => $promo, 'discount' => $discount] = app(PromoCodeService::class)->resolve($code, $subtotal, true);
+                    ['promo' => $promo, 'discount' => $discount] = app(PromoCodeService::class)->resolve($code, round($promoBase, 2), true);
                 } catch (PromoCodeException) {
                     session()->forget('promo_code');
                 }
             }
             // Dəvət olunanın ilk sifariş endirimi (referal) — orders.discount-a daxildir, ayrıca referral_discount-da da saxlanır
-            $referralDiscount = app(ReferralService::class)->discountFor($customer, $subtotal, (float) $discount, $paymentMethod->code);
-            $discount = round($discount + $referralDiscount, 2);
+            $referralDiscount = app(ReferralService::class)->discountFor($customer, round($subtotal - $saleDiscount, 2), (float) $discount, $paymentMethod->code);
+            $discount = round($saleDiscount + $discount + $referralDiscount, 2);
             $goods = round($subtotal - $discount, 2);
             $delivery = app(ShopPricing::class)->deliveryFee($goods);
             $giftWrapFee = app(ShopPricing::class)->giftWrapFee((bool)($data['gift_wrap'] ?? false));

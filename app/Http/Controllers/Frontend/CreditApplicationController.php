@@ -28,11 +28,11 @@ class CreditApplicationController extends Controller
 
     private function selection(array $draft): array
     {
-        $variant = ProductVariant::with(['product.brand', 'size'])
+        $variant = ProductVariant::with(['product.brand', 'product.activeDiscount', 'size'])
             ->whereKey($draft['product_variant_id'])->where('active', 1)->firstOrFail();
         abort_unless($variant->product?->active, 404);
         $period = CreditPeriod::whereKey($draft['credit_period_id'])->where('active', 1)->firstOrFail();
-        $price = (float) $variant->price;
+        $price = (float) $variant->price; // hissə-hissə ödənişə məhsul endirimi tətbiq olunmur
         if (!$period->availableFor($price)) {
             throw ValidationException::withMessages(['credit_period_id' => __('credit_period_not_available', [
                 'limit' => CreditPeriod::SMALL_AMOUNT_LIMIT, 'months' => implode(', ', CreditPeriod::SMALL_AMOUNT_MONTHS),

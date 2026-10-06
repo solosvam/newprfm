@@ -454,6 +454,13 @@
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link" data-bs-toggle="tab" href="#product-images" role="tab">Şəkillər</a>
                                 </li>
+                                @can('product.discount')
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#product-discount" role="tab">Endirim
+                                            @if($product->activeDiscount)<span class="badge bg-success ms-1">−{{ $product->activeDiscount->percentLabel() }}%</span>@endif
+                                        </a>
+                                    </li>
+                                @endcan
                             </ul>
 
                             <form id="productForm" method="POST" action="{{ route('admin.product.update', $product->id) }}" enctype="multipart/form-data">
@@ -679,9 +686,14 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    {{-- Endirim: digər tablarla eyni yerdə; sahələri öz formalarına bağlıdır (partials/discount-forms) --}}
+                                    @can('product.discount')
+                                        @include('backend.product_menu.product.partials.discount-tab')
+                                    @endcan
                                 </div>
 
-                                <div class="mt-4 d-flex gap-2">
+                                <div class="mt-4 d-flex gap-2" data-product-actions>
                                     <button type="submit" class="btn btn-primary">Yadda saxla</button>
                                     <button type="submit"
                                             form="delete-product-form"
@@ -695,6 +707,10 @@
                             <form id="delete-product-form" method="POST" action="{{ route('admin.product.destroy', $product->id) }}">
                                 @csrf
                             </form>
+
+                            @can('product.discount')
+                                @include('backend.product_menu.product.partials.discount-forms')
+                            @endcan
                         </div>
                     </div>
                 </section>

@@ -408,7 +408,7 @@ class CrmController extends Controller
 
             // Məhsullar — sayt qiyməti bazadan; operator yalnız endirim edə bilər (qiymət ≤ sayt qiyməti)
             $cart = collect($data['cart'])->keyBy('variant_id');
-            $variants = ProductVariant::whereIn('id', $cart->keys())
+            $variants = ProductVariant::with('product.activeDiscount')->whereIn('id', $cart->keys())
                 ->where('active', 1)
                 ->whereHas('product', fn ($p) => $p->where('active', 1))
                 ->get();
@@ -421,7 +421,13 @@ class CrmController extends Controller
                 $quantity = (int) $cart[$variant->id]['quantity'];
                 $listPrice = round((float) $variant->price, 2);
                 $price = $cart[$variant->id]['price'] ?? null;
-                $unitPrice = $price === null ? $listPrice : round((float) $price, 2);
+                // qiymət göndərilməyibsə — məhsul endirimi avtomatik (salePrice); operator yenə də endirim edə bilər.
+                // Hissə-hissə (öz kreditimiz): məhsul endirimi tətbiq olunmur — göndərilən qiymət endirimli qiymətdirsə, adi qiymət
+                $sale = $variant->salePrice();
+                $unitPrice = $price === null ? $sale : round((float) $price, 2);
+                if ($code === 'installment' && $sale < $listPrice && ($price === null || abs($unitPrice - $sale) < 0.005)) {
+                    $unitPrice = $listPrice;
+                }
                 abort_if($unitPrice > $listPrice, 422, 'Qiymət saytdakı qiymətdən yüksək ola bilməz.');
 
                 $subtotal += $listPrice * $quantity;

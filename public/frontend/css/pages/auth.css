@@ -40,6 +40,7 @@
 .auth-link { background: none; border: none; color: var(--accent); font-size: 13px; cursor: pointer; padding: 0; }
 .auth-link:disabled { color: var(--text-muted); cursor: not-allowed; }
 .auth-link:not(:disabled):hover { text-decoration: underline; }
+.auth-forgot { display: block; margin: 8px 0 0 auto; }
 .auth-actions-row { display: flex; gap: 12px; }
 .auth-actions-row .btn { flex: 1; margin: 0; }
 .hide-form { display: none !important; }

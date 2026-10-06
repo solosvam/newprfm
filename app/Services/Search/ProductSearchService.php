@@ -275,7 +275,7 @@ class ProductSearchService
                 }
             }))
             ->with([
-                'brand', 'type', 'genders', 'images',
+                'brand', 'activeDiscount', 'type', 'genders', 'images',
                 'variants' => fn ($variants) => $variants->where('active', 1)->orderBy('price'),
                 'variants.size',
             ])
@@ -345,7 +345,10 @@ class ProductSearchService
             'type' => $product->type?->{'name_'.$locale} ?: $product->type?->name_az,
             'gender' => $gender?->{'name_'.$locale} ?: $gender?->name_az,
             'size' => $variant?->size?->{'name_'.$locale} ?: $variant?->size?->name_az,
-            'price' => $variant ? number_format((float) $variant->price, 2, '.', '') : null,
+            // məhsul endirimi bu ziyarətçiyə aiddirsə — endirimli; regular_price + discount — axtarış siyahısında köhnə qiymət və faiz
+            'price' => $variant ? number_format($variant->salePrice(), 2, '.', '') : null,
+            'regular_price' => $variant ? number_format((float) $variant->price, 2, '.', '') : null,
+            'discount' => $product->visibleDiscount()?->percentLabel(),
             'image' => $image ? asset('frontend/uploads/products/'.$image->image) : null,
         ];
     }

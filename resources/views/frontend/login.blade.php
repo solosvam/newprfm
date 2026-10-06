@@ -17,6 +17,8 @@
 
                         <div id="passwordArea" class="hide-form">
                             <input type="password" id="loginPassword" class="auth-input" placeholder="{{ __('auth_password') }}" autocomplete="current-password" />
+                            {{-- SMS kodu → yeni şifrə (şifrəsiz müştərinin axını ilə eyni) --}}
+                            <button type="button" id="forgotPasswordBtn" class="auth-link auth-forgot">{{ __('auth_forgot_password') }}</button>
                         </div>
 
                         <div id="inactiveOtpArea" class="auth-inactive-otp hide-form">
@@ -69,7 +71,7 @@
             <div id="setPasswordSection" class="hide-form auth-card">
                 <div class="otpSection-wrapper">
                     <div class="headers">
-                        <h1 class="auth-title">{{ __('auth_set_password') }}</h1>
+                        <h1 class="auth-title" id="setPasswordTitle" data-title="{{ __('auth_set_password') }}" data-reset-title="{{ __('auth_new_password') }}">{{ __('auth_set_password') }}</h1>
                         <input type="password" id="newPassword" class="auth-input" placeholder="{{ __('auth_new_password') }}" autocomplete="new-password" />
                         <input type="password" id="newPasswordConfirmation" class="auth-input" placeholder="{{ __('auth_confirm_password') }}" autocomplete="new-password" />
                         <p class="error-message auth-error hide-form" id="passwordError"></p>
@@ -94,6 +96,7 @@
             'otpUrl' => route('front.login.otp'),
             'resendUrl' => route('front.login.otp.resend'),
             'setPasswordUrl' => route('front.login.set-password'),
+            'forgotUrl' => route('front.login.forgot'),
             'registerUrl' => '#',
             // Qeydiyyat formundan yönləndirmə: nömrə hazır gəlir
             'prefillMobile' => preg_match('/^994\\d{9}$/', (string) request('mobile')) ? request('mobile') : null,

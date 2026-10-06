@@ -282,7 +282,10 @@
         const chips = el('div', 'as-chips');
         product.variants.forEach((variant) => {
             const chip = el('span', variant.match ? 'as-chip is-match' : 'as-chip');
-            chip.append(el('span', null, variant.size), el('strong', null, `${variant.price} ₼`));
+            chip.append(el('span', null, variant.size));
+            // məhsul endirimi: köhnə qiymət üstündən xətt
+            if (Number(variant.regular_price) > Number(variant.price)) chip.append(el('s', 'as-muted', variant.regular_price));
+            chip.append(el('strong', null, `${variant.price} ₼`));
             chips.append(chip);
         });
         if (!product.variants.length) chips.append(el('span', 'as-muted', 'Aktiv ölçü yoxdur'));

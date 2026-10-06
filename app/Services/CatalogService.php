@@ -22,6 +22,7 @@ class CatalogService
         return Product::query()
             ->with([
                 'brand',
+                'activeDiscount',
                 'type',
                 'images',
                 'genders',
@@ -41,11 +42,13 @@ class CatalogService
             $min = max(0, (float) $request->input('min_price', 0));
             $max = (float) $request->input('max_price', 0);
 
-            $query->whereHas('variants', function ($q) use ($min, $max) {
-                $q->where('active', 1)->where('price', '>=', $min);
+            // məhsul endirimi nəzərə alınır — müştərinin ödəyəcəyi qiymətlə
+            [$sale, $bindings] = $this->salePriceSql();
+            $query->whereHas('variants', function ($q) use ($min, $max, $sale, $bindings) {
+                $q->where('active', 1)->whereRaw("$sale >= ?", [...$bindings, $min]);
 
                 if ($max > 0) {
-                    $q->where('price', '<=', $max);
+                    $q->whereRaw("$sale <= ?", [...$bindings, $max]);
                 }
             });
         }
@@ -90,8 +93,10 @@ class CatalogService
 
             case 'price_asc':
             case 'price_desc':
+                // endirimli qiymətlə (bu ziyarətçiyə aid endirim)
+                [$sale, $bindings] = $this->salePriceSql();
                 $priceQuery = ProductVariant::query()
-                    ->selectRaw('MIN(price)')
+                    ->selectRaw("MIN($sale)", $bindings)
                     ->whereColumn('product_id', 'products.id')
                     ->where('active', 1);
 
@@ -100,6 +105,20 @@ class CatalogService
             default:
                 return $query->orderByDesc('products.id');
         }
+    }
+
+    /**
+     * Variantın endirimli qiyməti üçün SQL (product_variants sətrinin kontekstində) — ProductVariant::salePrice ilə eyni qayda:
+     * aktiv endirim, qəpiklə yuvarlaqlaşdırılır.
+     *
+     * @return array{0: string, 1: array}
+     */
+    private function salePriceSql(): array
+    {
+        $percent = "(SELECT pd.percent FROM product_discounts pd WHERE pd.product_id = product_variants.product_id"
+            ." AND pd.starts_at <= ? AND pd.ends_at > ? ORDER BY pd.starts_at DESC LIMIT 1)";
+
+        return ["ROUND(product_variants.price * (100 - COALESCE($percent, 0)) / 100, 2)", [now(), now()]];
     }
 
     public function catalogData(): array

@@ -28,6 +28,7 @@ use App\Http\Controllers\Backend\ReferralsController;
 use App\Http\Controllers\Backend\PromoCodesController;
 use App\Http\Controllers\Backend\RefundController;
 
+use App\Http\Controllers\Backend\Product\ProductDiscountsController;
 use App\Http\Controllers\Backend\Product\BrandsController;
 use App\Http\Controllers\Backend\Product\SizesController;
 use App\Http\Controllers\Backend\Product\TypesController;
@@ -519,6 +520,17 @@ Route::prefix('admin')
                     Route::post('/add', 'create')->name('create');
                     Route::post('/update/{id}', 'update')->name('update');
                     Route::post('/delete/{id}', 'destroy')->name('destroy');
+                });
+
+            // Məhsul endirimləri: məhsulun "Endirim" tabı + "Endirimdəki məhsullar"
+            Route::controller(ProductDiscountsController::class)
+                ->middleware('can:product.discount')
+                ->name('product-discounts.')
+                ->group(function () {
+                    Route::get('/product-discounts', 'index')->name('index');
+                    Route::post('/product/{product}/discounts', 'store')->name('store');
+                    Route::post('/product-discounts/{discount}/end', 'end')->name('end');
+                    Route::delete('/product-discounts/{discount}', 'destroy')->name('destroy');
                 });
 
             // Axtarış lüğəti (search_aliases) + statistika

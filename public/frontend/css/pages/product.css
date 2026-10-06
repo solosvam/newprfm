@@ -39,7 +39,10 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 .price-qty-row .price-row { margin: 0; }
 .price-qty-row .qty { margin: 0; }
 
-.size-pill { display: inline-block; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 600; margin-bottom: 16px; cursor: pointer; }
+.size-pill { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 600; margin-bottom: 16px; cursor: pointer; line-height: 1.25; }
+.size-pill__price { font-size: 12px; font-weight: 500; opacity: .8; white-space: nowrap; }
+/* seçili düymənin fonunda qırmızı/boz oxunmur — ağ (cari rəng) */
+.size-pill.active-size-amount .price-sale, .size-pill.active-size-amount .price-old { color: inherit; }
 .size-pill.active-size-amount { background: var(--accent); color: var(--on-accent); }
 
 .qty { display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 999px; width: fit-content; padding: 6px 16px; margin-bottom: 16px; font-size: 15px; color: var(--text); }
@@ -218,3 +221,41 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 .rating-count { font-size: 12px; color: var(--text-muted); }
 .section-head--spaced { margin-top: 40px; }
 .one-click-error { display: none; color: var(--danger); }
+
+/* "Qiymət enəndə xəbər ver" (main.js → [data-price-alert]) */
+.price-alert {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    margin: 4px 0 10px; padding: 8px 12px; border: 0; border-radius: 10px; background: none;
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--text-secondary); cursor: pointer;
+}
+.price-alert:hover:not(:disabled) { color: var(--accent); }
+.price-alert.is-on { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.price-alert.is-on svg { fill: currentColor; }
+.price-alert:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Endirim bloku: faiz + bitməyə geri sayım */
+.price-row .price-old { font-size: 20px; }
+.price-row [data-price-current] { color: inherit; }
+.price-row .price-old:not([hidden]) + [data-price-current] { color: var(--danger); }
+.sale-box {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px;
+    background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--text); text-decoration: none; font-size: 14px;
+}
+.sale-box__badge { padding: 2px 8px; border-radius: 999px; background: var(--danger); color: #fff; font-weight: 700; }
+.sale-box__timer { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--danger); }
+
+/* Satışda olmayan ətir (product-unavailable) */
+.unavailable { display: grid; grid-template-columns: minmax(0, 320px) 1fr; gap: 32px; align-items: center; margin: 8px 0 32px; }
+.unavailable__image { aspect-ratio: 1; border-radius: 14px; background: var(--image-bg); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.unavailable__image img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(.6); opacity: .8; }
+.unavailable__badge { display: inline-block; padding: 4px 12px; border-radius: 999px; background: color-mix(in srgb, var(--text-muted) 18%, transparent); color: var(--text-secondary); font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.unavailable__brand { display: block; font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+.unavailable__text { color: var(--text-secondary); line-height: 1.6; margin: 12px 0 20px; max-width: 480px; }
+.unavailable__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.unavailable__actions .btn { width: auto; margin: 0; }
+@media (max-width: 700px) {
+    .unavailable { grid-template-columns: 1fr; gap: 20px; }
+    .unavailable__image { max-width: 260px; margin: 0 auto; }
+    .unavailable__actions .btn { flex: 1; }
+}
+

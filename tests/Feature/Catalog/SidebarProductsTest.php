@@ -21,6 +21,7 @@ class SidebarProductsTest extends TestCase
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('slug'), $t->integer('brand_id')->nullable(), $t->boolean('active')]);
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->integer('size_id')->nullable(), $t->decimal('price'), $t->boolean('active')]);
         Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->string('image'), $t->integer('sort_order')->default(0)]);
+        (require database_path('migrations/2026_10_07_170000_create_product_discounts_table.php'))->up(); // məhsul endirimi (activeDiscount)
         Schema::create('order_statuses', fn (Blueprint $t) => [$t->id(), $t->string('code')]);
         Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('order_status_id'), $t->timestamps()]);
         Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->integer('order_id'), $t->integer('product_id'), $t->integer('quantity'), $t->integer('cancelled_quantity')->default(0)]);

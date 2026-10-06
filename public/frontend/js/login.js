@@ -254,6 +254,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // "Şifrəni unutdum": SMS kod → təsdiq → yeni şifrə (şifrəsiz müştərinin axını ilə eyni bölmələr)
+    document.getElementById('forgotPasswordBtn').addEventListener('click', async function () {
+        error(loginError, '');
+        this.disabled = true;
+        try {
+            const data = await post(auth.forgotUrl, {mobile: currentMobile});
+            const title = document.getElementById('setPasswordTitle');
+            title.textContent = title.dataset.resetTitle;
+            loginBox.style.display = 'none';
+            otpSection.classList.remove('hide-form');
+            otpSection.style.display = 'block';
+            otpMessage.textContent = auth.messages.otpSent.replace(':mobile', data.mobile);
+            startTimer();
+            requestAnimationFrame(() => otpInput.focus());
+        } catch (e) {
+            error(loginError, e.message);
+        } finally {
+            this.disabled = false;
+        }
+    });
+
     document.getElementById('otpSubmitBtn').addEventListener('click', async function () {
         error(otpError, '');
         try {
@@ -294,6 +315,8 @@ document.addEventListener('DOMContentLoaded', function () {
         passwordActions.classList.add('hide-form');
         password.value = '';
         lastCheckedMobile = '';
+        const title = document.getElementById('setPasswordTitle');
+        title.textContent = title.dataset.title; // "Şifrəni unutdum"dan qayıdanda
         mobile.focus();
         clearInterval(timer);
     });

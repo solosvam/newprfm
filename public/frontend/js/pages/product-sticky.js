@@ -11,8 +11,9 @@
 
     // Ölçü, qiymət, düymə mətni və vəziyyəti əsas blokla eyni qalsın
     function sync() {
-        sizeEl.textContent = buyCore.querySelector('.size-pill.active-size-amount')?.textContent.trim() || '';
-        priceEl.textContent = buyCore.querySelector('[data-price-display]')?.textContent.trim() || '';
+        // ölçü düyməsində qiymət də var — yalnız ölçü adı; qiymət — endirimli (köhnə qiymətsiz)
+        sizeEl.textContent = buyCore.querySelector('.size-pill.active-size-amount .size-pill__size')?.textContent.trim() || '';
+        priceEl.textContent = buyCore.querySelector('[data-price-current]')?.textContent.trim() || '';
         stickyBtn.textContent = mainBtn.textContent.trim();
         stickyBtn.disabled = mainBtn.disabled;
     }

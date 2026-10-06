@@ -13,6 +13,7 @@ class ProductDetailService
     {
         return Product::with([
             'brand',
+            'activeDiscount',
             'type',
             'images',
             'genders',
@@ -41,6 +42,7 @@ class ProductDetailService
             ])
             ->with([
                 'brand',
+                'activeDiscount',
                 'type',
                 'images',
                 'genders',
@@ -50,6 +52,25 @@ class ProductDetailService
             ->orderByDesc('shared_ingredients_count')
             ->limit($limit)
             ->get();
+    }
+
+    /** Satışda olmayan ətir üçün əvəzlər: əvvəl tərkibcə oxşar, çatmasa — həmin brendin aktiv ətirləri */
+    public function alternatives(Product $product, int $limit = 8): Collection
+    {
+        $list = $this->similarProducts($product, $limit);
+        if ($list->count() < $limit && $product->brand_id) {
+            $list = $list->concat(
+                Product::query()
+                    ->where('active', 1)->where('brand_id', $product->brand_id)
+                    ->where('id', '!=', $product->id)->whereNotIn('id', $list->pluck('id'))
+                    ->whereHas('variants', fn ($q) => $q->where('active', 1))
+                    ->with(['brand', 'activeDiscount', 'type', 'images', 'genders',
+                        'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'), 'variants.size'])
+                    ->latest('id')->limit($limit - $list->count())->get()
+            );
+        }
+
+        return $list->values();
     }
 
     public function ratings(Product $product): array
@@ -80,6 +101,11 @@ class ProductDetailService
             'creditPeriods' => $this->creditPeriods(),
             'creditTermItems' => CreditTermItem::orderBy('sort_order')->orderBy('id')->get(),
             'creditProfileComplete' => auth()->check() && (bool) auth()->user()->creditProfile?->isComplete(),
+            // "Qiymət enəndə xəbər ver": müştərinin bu məhsulda aktiv abunə olduğu ölçülər
+            'priceAlertVariantIds' => auth()->check()
+                ? \App\Models\Product\PriceAlert::where('customer_id', auth()->id())->whereNull('notified_at')
+                    ->whereIn('product_variant_id', $product->variants->pluck('id'))->pluck('product_variant_id')->map(fn ($id) => (int) $id)->all()
+                : [],
         ], $this->ratings($product));
     }
 }

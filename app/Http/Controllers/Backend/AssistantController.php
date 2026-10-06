@@ -95,6 +95,7 @@ class AssistantController extends Controller
                 'brand:id,name',
                 'type:id,name_az',
                 'images' => fn ($images) => $images->limit(1),
+                'activeDiscount',
                 'variants' => fn ($variants) => $variants->where('active', 1)->with('size:id,name_az')->orderBy('price'),
             ])
             ->get()
@@ -121,7 +122,9 @@ class AssistantController extends Controller
                 'variants' => $product->variants->map(fn ($variant) => [
                     'id' => $variant->id,
                     'size' => $variant->size?->name_az ?? '—',
-                    'price' => number_format((float) $variant->price, 2, '.', ''),
+                    // operator müştəriyə endirimli qiyməti desin
+                    'price' => number_format($variant->salePrice(), 2, '.', ''),
+                    'regular_price' => number_format((float) $variant->price, 2, '.', ''),
                     // müştəri "100" yazıbsa — "100 ml" variantı seçilmiş görünür
                     'match' => $size !== null && preg_replace('/\D+/', '', (string) $variant->size?->name_az) === $size,
                 ])->values(),
