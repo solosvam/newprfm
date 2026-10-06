@@ -545,7 +545,7 @@
     "checkout_payment_hint_cash": "Cash or card to courier",
     "checkout_payment_hint_card": "Visa, Mastercard",
     "checkout_payment_hint_installment": "Pay in installments without a bank card",
-    "credit_period_not_available": "For amounts up to :limit AZN only :months-month installments are available.",
+    "credit_period_not_available": ":months-month installments are available only for amounts above :min AZN.",
     "checkout_bonus_balance": "Balance: :amount",
     "checkout_bonus_insufficient": ":amount short",
     "checkout_bonus_insufficient_error": "Your bonus balance doesn't cover the order total",
@@ -720,5 +720,7 @@
     "countdown_days": "days",
     "countdown_hours": "hrs",
     "countdown_minutes": "min",
-    "countdown_seconds": "sec"
+    "countdown_seconds": "sec",
+    "popup_close": "Close",
+    "popup_never_show": "Don't show again"
 }

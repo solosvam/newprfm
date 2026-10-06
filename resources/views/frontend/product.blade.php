@@ -1,4 +1,6 @@
 @extends('frontend.layouts.app')
+{{-- hissə-hissə müddətlərinin minimum məbləğləri appData.creditRule-a düşsün --}}
+@section('credit-rule', '1')
 
 @section('page-css')
     <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/product.css') }}">
@@ -45,7 +47,7 @@
         $initialRegular = (float) ($firstVariant?->price ?? 0);
         $saleDiscount = $product->visibleDiscount();
         $firstPeriod = $creditPeriods->first();
-        // ≤ 200 AZN məbləğdə yalnız 3 və 6 ay (CreditPeriod::availableFor); variant dəyişəndə main.js yeniləyir.
+        // müddət məbləğ onun minimumundan yuxarı olanda görünür (CreditPeriod::availableFor); variant dəyişəndə main.js yeniləyir.
         // Hissə-hissə ödənişə məhsul endirimi tətbiq olunmur — kredit cədvəli adi qiymətlə
         $firstAvailablePeriod = $creditPeriods->first(fn ($p) => $p->availableFor($initialRegular));
     @endphp

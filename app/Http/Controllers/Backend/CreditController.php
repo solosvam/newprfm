@@ -25,6 +25,7 @@ class CreditController extends Controller
             'periods.*.id' => ['nullable', 'integer'],
             'periods.*.month' => ['required', 'integer', 'min:1', 'max:120'],
             'periods.*.interest_rate' => ['required', 'numeric', 'min:0', 'max:999.99'],
+            'periods.*.min_amount' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'periods.*.active' => ['nullable', 'boolean'],
         ]);
 
@@ -48,6 +49,7 @@ class CreditController extends Controller
                 $period->fill([
                     'month' => $row['month'],
                     'interest_rate' => $row['interest_rate'],
+                    'min_amount' => ($row['min_amount'] ?? '') === '' ? null : $row['min_amount'],
                     'active' => $row['active'] ?? false,
                     'sort_order' => $index + 1,
                 ])->save();
@@ -58,6 +60,7 @@ class CreditController extends Controller
             CreditPeriod::when($keepIds, fn ($query) => $query->whereNotIn('id', $keepIds))
                 ->when(empty($keepIds), fn ($query) => $query)
                 ->delete();
+            CreditPeriod::forgetRule();
         });
 
         return back()->with('success', 'Kredit faizləri yeniləndi!');

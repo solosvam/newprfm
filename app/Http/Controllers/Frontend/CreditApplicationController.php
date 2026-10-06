@@ -34,9 +34,7 @@ class CreditApplicationController extends Controller
         $period = CreditPeriod::whereKey($draft['credit_period_id'])->where('active', 1)->firstOrFail();
         $price = (float) $variant->price; // hissə-hissə ödənişə məhsul endirimi tətbiq olunmur
         if (!$period->availableFor($price)) {
-            throw ValidationException::withMessages(['credit_period_id' => __('credit_period_not_available', [
-                'limit' => CreditPeriod::SMALL_AMOUNT_LIMIT, 'months' => implode(', ', CreditPeriod::SMALL_AMOUNT_MONTHS),
-            ])]);
+            throw ValidationException::withMessages(['credit_period_id' => $period->unavailableMessage()]);
         }
         $rate = (float) $period->interest_rate;
         $total = round($price * (1 + $rate / 100), 2);

@@ -16,6 +16,7 @@ class BrandsPageTest extends TestCase
         DB::purge('sqlite');
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('slug'), $t->string('image')->nullable(), $t->boolean('active')]);
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->integer('brand_id'), $t->boolean('active')]);
+        (require base_path('database/migrations/2026_10_08_100000_create_popups_tables.php'))->up();
         Schema::create('categories', fn (Blueprint $t) => [$t->id(), $t->string('name_az'), $t->string('name_en')->nullable(), $t->string('name_ru')->nullable(), $t->string('slug'), $t->boolean('active')]);
         foreach (['Chanel', 'Christian Dior', 'Ömür Parfum', '4711', 'Şəki Ətirləri', 'Armani', 'Zara', 'Gizli'] as $i => $name) {
             DB::table('brands')->insert(['id' => $i + 1, 'name' => $name, 'slug' => 'b'.($i + 1), 'active' => $name !== 'Gizli']);

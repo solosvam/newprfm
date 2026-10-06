@@ -1,4 +1,6 @@
 @extends('frontend.layouts.app')
+{{-- hissə-hissə müddətlərinin minimum məbləğləri appData.creditRule-a düşsün --}}
+@section('credit-rule', '1')
 
 @section('page-css')
 <link rel="stylesheet" href="{{ asset_v('frontend/css/components/order-summary.css') }}">

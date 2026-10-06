@@ -507,7 +507,7 @@
     "checkout_payment_hint_cash": "Nağd və ya kart",
     "checkout_payment_hint_card": "Visa, Mastercard",
     "checkout_payment_hint_installment": "Bank kartı olmadan hissə-hissə ödəniş",
-    "credit_period_not_available": ":limit AZN-ə qədər məbləğdə yalnız :months aylıq hissə-hissə ödəniş mümkündür.",
+    "credit_period_not_available": ":months aylıq hissə-hissə ödəniş yalnız :min AZN-dən yuxarı məbləğdə mümkündür.",
     "checkout_bonus_balance": "Balans: :amount",
     "checkout_bonus_insufficient": ":amount çatışmır",
     "checkout_bonus_insufficient_error": "Bonus balansınız sifariş məbləğini örtmür",
@@ -682,5 +682,7 @@
     "countdown_days": "gün",
     "countdown_hours": "saat",
     "countdown_minutes": "dəq",
-    "countdown_seconds": "san"
+    "countdown_seconds": "san",
+    "popup_close": "Bağla",
+    "popup_never_show": "Bir daha göstərmə"
 }

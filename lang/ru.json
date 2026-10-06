@@ -545,7 +545,7 @@
     "checkout_payment_hint_cash": "Наличными или картой курьеру",
     "checkout_payment_hint_card": "Visa, Mastercard",
     "checkout_payment_hint_installment": "Оплата частями без банковской карты",
-    "credit_period_not_available": "Для суммы до :limit AZN доступна только рассрочка на :months мес.",
+    "credit_period_not_available": "Рассрочка на :months мес. доступна только для суммы свыше :min AZN.",
     "checkout_bonus_balance": "Баланс: :amount",
     "checkout_bonus_insufficient": "Не хватает :amount",
     "checkout_bonus_insufficient_error": "Бонусного баланса недостаточно для оплаты заказа",
@@ -720,5 +720,7 @@
     "countdown_days": "дн",
     "countdown_hours": "ч",
     "countdown_minutes": "мин",
-    "countdown_seconds": "сек"
+    "countdown_seconds": "сек",
+    "popup_close": "Закрыть",
+    "popup_never_show": "Больше не показывать"
 }

@@ -110,6 +110,10 @@ Route::get('/image/product/{size}/{image}', [ProductImageController::class, 'sho
     ->where('image', '[A-Za-z0-9._-]+')
     ->name('product.image');
 
+// Admin popup-ları: göstərilmə / klik / bağlama / "bir daha göstərmə" sayğacları (popup.js, sendBeacon)
+Route::post('/popup/{popup}/event', [\App\Http\Controllers\Frontend\PopupController::class, 'event'])
+    ->whereNumber('popup')->middleware('throttle:60,1')->name('popup.event');
+
 
 /*
 |--------------------------------------------------------------------------

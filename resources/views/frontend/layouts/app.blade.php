@@ -46,12 +46,13 @@
                 'close' => __('push_ios_close'),
             ],
         ] : null,
-        // hissə-hissə: ≤ limit məbləğdə yalnız bu aylar (CreditPeriod::availableFor ilə eyni)
-        'creditRule' => \App\Models\Credit\CreditPeriod::amountRule(),
+        // hissə-hissə: hər müddətin minimum məbləği {ay: min} (CreditPeriod::availableFor ilə eyni) — yalnız @section('credit-rule') olan səhifələrdə
+        'creditRule' => View::hasSection('credit-rule') ? \App\Models\Credit\CreditPeriod::amountRule() : null,
     ];
 @endphp
 <script type="application/json" id="app-data">@json($appData)</script>
 @include('frontend.partials.theme-script')
 @yield('page-scripts')
+@include('frontend.partials.popups')
 </body>
 </html>

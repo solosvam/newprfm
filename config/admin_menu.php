@@ -83,6 +83,11 @@ return [
                         'permission' => 'site.banners',
                     ],
                     [
+                        'title'      => 'Popup-lar',
+                        'route'      => 'admin.popups.index',
+                        'permission' => 'site.popups',
+                    ],
+                    [
                         'title'      => 'Vitrin (Populyar)',
                         'route'      => 'admin.featured.index',
                         'permission' => 'site.featured',

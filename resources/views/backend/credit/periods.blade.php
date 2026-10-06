@@ -16,23 +16,36 @@
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
 
+    <div class="alert alert-info d-flex gap-3 align-items-start mb-4" role="note" style="font-size: 15px; line-height: 1.55;">
+        <i data-acorn-icon="info-hexagon" class="flex-shrink-0 mt-1"></i>
+        <div>
+            <strong>Minimum məbləğ</strong> — müddət saytda yalnız məbləğ bu həddən <strong>yuxarı</strong> olanda görünür
+            (məhsul səhifəsi, checkout, kredit müraciəti). Məsələn, 12 ay üçün 200 yazsanız, 200 ₼ və aşağı məbləğdə 12 ay təklif olunmur.
+            Boş saxlasanız — məhdudiyyət yoxdur.
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <form method="POST" action="{{ route('admin.credit.periods.update') }}">
                 @csrf
                 <div id="creditPeriods">
                     @forelse(old('periods', $periods->map(fn($p) => [
-                        'id'=>$p->id, 'month'=>$p->month, 'interest_rate'=>$p->interest_rate, 'active'=>$p->active
+                        'id'=>$p->id, 'month'=>$p->month, 'interest_rate'=>$p->interest_rate, 'min_amount'=>$p->min_amount, 'active'=>$p->active
                     ])->toArray()) as $index => $period)
                         <div class="row g-2 mb-2 credit-period-row">
                             <input type="hidden" class="period-id" value="{{ $period['id'] ?? '' }}">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Ay</label>
                                 <input type="number" min="1" class="form-control period-month" value="{{ $period['month'] ?? '' }}" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Faiz (%)</label>
                                 <input type="number" min="0" step="0.01" class="form-control period-rate" value="{{ $period['interest_rate'] ?? '' }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Minimum məbləğ (₼)</label>
+                                <input type="number" min="0" step="0.01" class="form-control period-min" value="{{ isset($period['min_amount']) && $period['min_amount'] !== null ? (float) $period['min_amount'] : '' }}" placeholder="məhdudiyyət yoxdur">
                             </div>
                             <div class="col-md-2 d-flex align-items-end pb-2">
                                 <div class="form-check form-switch">
@@ -40,17 +53,18 @@
                                     <label class="form-check-label">Aktiv</label>
                                 </div>
                             </div>
-                            <div class="col-md-2 d-flex align-items-end">
+                            <div class="col-md-1 d-flex align-items-end">
                                 <button class="btn btn-outline-danger remove-period mb-1" type="button">-</button>
                             </div>
                         </div>
                     @empty
                         <div class="row g-2 mb-2 credit-period-row">
                             <input type="hidden" class="period-id">
-                            <div class="col-md-4"><label class="form-label">Ay</label><input type="number" min="1" class="form-control period-month" required></div>
-                            <div class="col-md-4"><label class="form-label">Faiz (%)</label><input type="number" min="0" step="0.01" class="form-control period-rate" required></div>
+                            <div class="col-md-3"><label class="form-label">Ay</label><input type="number" min="1" class="form-control period-month" required></div>
+                            <div class="col-md-3"><label class="form-label">Faiz (%)</label><input type="number" min="0" step="0.01" class="form-control period-rate" required></div>
+                            <div class="col-md-3"><label class="form-label">Minimum məbləğ (₼)</label><input type="number" min="0" step="0.01" class="form-control period-min" placeholder="məhdudiyyət yoxdur"></div>
                             <div class="col-md-2 d-flex align-items-end pb-2"><div class="form-check form-switch"><input class="form-check-input period-active" type="checkbox" value="1" checked><label class="form-check-label">Aktiv</label></div></div>
-                            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-outline-danger remove-period mb-1" type="button">-</button></div>
+                            <div class="col-md-1 d-flex align-items-end"><button class="btn btn-outline-danger remove-period mb-1" type="button">-</button></div>
                         </div>
                     @endforelse
                 </div>
@@ -74,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
             row.querySelector('.period-id').name = `periods[${index}][id]`;
             row.querySelector('.period-month').name = `periods[${index}][month]`;
             row.querySelector('.period-rate').name = `periods[${index}][interest_rate]`;
+            row.querySelector('.period-min').name = `periods[${index}][min_amount]`;
             row.querySelector('.period-active').name = `periods[${index}][active]`;
         });
     }
@@ -83,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
         row.querySelector('.period-id').value = '';
         row.querySelector('.period-month').value = '';
         row.querySelector('.period-rate').value = '';
+        row.querySelector('.period-min').value = '';
         row.querySelector('.period-active').checked = true;
         area.appendChild(row);
         reindex();
@@ -95,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
             row.querySelector('.period-id').value = '';
             row.querySelector('.period-month').value = '';
             row.querySelector('.period-rate').value = '';
+            row.querySelector('.period-min').value = '';
             row.querySelector('.period-active').checked = true;
         } else {
             event.target.closest('.credit-period-row').remove();

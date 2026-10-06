@@ -334,9 +334,9 @@
                 radio.dataset.monthly = monthly.toFixed(2);
                 radio.dataset.total = total.toFixed(2);
             }
-            // ≤ limit məbləğdə yalnız icazəli aylar (CreditPeriod::availableFor)
-            const rule = appData.creditRule;
-            row.hidden = Boolean(rule) && creditPrice <= rule.limit && !rule.months.includes(months);
+            // müddət yalnız məbləğ onun minimumundan yuxarı olanda (CreditPeriod::availableFor)
+            const min = appData.creditRule?.mins?.[months];
+            row.hidden = min != null && creditPrice <= min;
         });
         const checked = installment.querySelector('tr[data-month]:not([hidden]) input[name="installment"]:checked');
         if (!checked) {

@@ -215,7 +215,7 @@ class CheckoutController extends Controller
             $payable = round($goods + $delivery + $giftWrapFee, 2);
             $period = $paymentMethod->code === 'installment' ? CreditPeriod::whereKey($data['credit_period_id'])->where('active', 1)->firstOrFail() : null;
             if ($period && !$period->availableFor($payable)) {
-                abort(422, __('credit_period_not_available', ['limit' => CreditPeriod::SMALL_AMOUNT_LIMIT, 'months' => implode(', ', CreditPeriod::SMALL_AMOUNT_MONTHS)]));
+                abort(422, $period->unavailableMessage());
             }
             $creditTotal = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
 

@@ -23,6 +23,7 @@ use App\Http\Controllers\Backend\CrmController;
 use App\Http\Controllers\Backend\EasyOrdersController;
 use App\Http\Controllers\Backend\OrdersController;
 use App\Http\Controllers\Backend\CartsController;
+use App\Http\Controllers\Backend\PopupsController;
 use App\Http\Controllers\Backend\PriceAlertsController;
 use App\Http\Controllers\Backend\StatisticsController;
 use App\Http\Controllers\Backend\FeaturedProductsController;
@@ -482,6 +483,19 @@ Route::prefix('admin')
                     Route::post('/reorder', 'reorder')->name('reorder');
                     Route::get('/search', 'search')->middleware('throttle:120,1')->name('search');
                     Route::delete('/{featured}', 'destroy')->name('destroy');
+                });
+
+            Route::controller(PopupsController::class)
+                ->middleware('can:site.popups')
+                ->prefix('popups')
+                ->name('popups.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/create', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
+                    Route::get('/{popup}/edit', 'edit')->name('edit');
+                    Route::post('/{popup}', 'update')->name('update');
+                    Route::delete('/{popup}', 'destroy')->name('destroy');
                 });
 
             Route::controller(BannersController::class)
