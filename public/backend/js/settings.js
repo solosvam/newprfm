@@ -61,11 +61,4 @@ document.addEventListener('DOMContentLoaded', () => {
         if (label) label.textContent = w + '×' + h;
     });
 
-    // Şərt keçidini yeni tabda aç
-    form.querySelectorAll('[data-open-url]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const url = $(button.dataset.openUrl)?.value.trim();
-            if (url && /^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
-        });
-    });
 });

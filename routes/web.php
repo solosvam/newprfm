@@ -302,31 +302,30 @@ require __DIR__ . '/admin.php';
 
 /*
 |--------------------------------------------------------------------------
+| Məlumat səhifələri və FAQ (ünvanlar App\Models\Page::PAGES-dən; /{slug} məhsul route-undan əvvəl)
+|--------------------------------------------------------------------------
+*/
+
+foreach (\App\Models\Page::PAGES as $pageKey => [$pageSlug]) {
+    Route::get('/'.$pageSlug, [\App\Http\Controllers\Frontend\PageController::class, 'show'])
+        ->defaults('key', $pageKey)->name('front.page.'.$pageKey);
+}
+Route::get('/faq', [\App\Http\Controllers\Frontend\PageController::class, 'faq'])->name('front.faq');
+Route::get('/bonus', [\App\Http\Controllers\Frontend\PageController::class, 'bonus'])->name('front.bonus');
+Route::get('/referral', [\App\Http\Controllers\Frontend\PageController::class, 'referral'])->name('front.referral');
+Route::get('/installment', [\App\Http\Controllers\Frontend\PageController::class, 'installment'])->name('front.installment');
+
+/*
+|--------------------------------------------------------------------------
 | Product Details - Must Be Last
 |--------------------------------------------------------------------------
 */
 
-Route::get('/index.php', function (Request $request)
-{
-    if ($request->query('route') !== 'product/product')
-    {
-        abort(404);
-    }
+// Sitemap (robots.txt statik faylıdır — nginx .txt-ni PHP-yə ötürmür; `php artisan seo:robots` yaradır)
+Route::get('/sitemap.xml', [\App\Http\Controllers\Frontend\SitemapController::class, 'index'])->name('sitemap');
 
-    $oldId = $request->query('product_id');
-
-    if (!ctype_digit((string) $oldId) || (int) $oldId < 1)
-    {
-        abort(404);
-    }
-
-    $product = Product::where('old_id', (int) $oldId)
-        ->firstOrFail();
-
-    return redirect()->route('product', [
-        'slug' => $product->slug,
-    ], 301);
-});
+// Köhnə OpenCart ünvanları (/index.php?route=...) → yeni səhifələr, 301 (xəritə: database/data/legacy_urls.php)
+Route::get('/index.php', \App\Http\Controllers\Frontend\LegacyRedirectController::class)->name('legacy.redirect');
 
 Route::controller(ProductController::class)->group(function () {
     Route::get('/{slug}', 'product')->name('product');

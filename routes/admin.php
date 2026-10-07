@@ -23,6 +23,7 @@ use App\Http\Controllers\Backend\CrmController;
 use App\Http\Controllers\Backend\EasyOrdersController;
 use App\Http\Controllers\Backend\OrdersController;
 use App\Http\Controllers\Backend\CartsController;
+use App\Http\Controllers\Backend\PagesController;
 use App\Http\Controllers\Backend\PopupsController;
 use App\Http\Controllers\Backend\PriceAlertsController;
 use App\Http\Controllers\Backend\StatisticsController;
@@ -485,6 +486,16 @@ Route::prefix('admin')
                     Route::delete('/{featured}', 'destroy')->name('destroy');
                 });
 
+            Route::controller(PagesController::class)
+                ->middleware('can:site.pages')
+                ->prefix('pages')
+                ->name('pages.')
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/{page}/edit', 'edit')->name('edit');
+                    Route::post('/{page}', 'update')->name('update');
+                });
+
             Route::controller(PopupsController::class)
                 ->middleware('can:site.popups')
                 ->prefix('popups')
@@ -551,6 +562,7 @@ Route::prefix('admin')
                 ->group(function () {
                     Route::get('/product-discounts', 'index')->name('index');
                     Route::post('/product/{product}/discounts', 'store')->name('store');
+                    Route::put('/product-discounts/{discount}', 'update')->name('update');
                     Route::post('/product-discounts/{discount}/end', 'end')->name('end');
                     Route::delete('/product-discounts/{discount}', 'destroy')->name('destroy');
                 });

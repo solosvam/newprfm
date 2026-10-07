@@ -87,7 +87,14 @@ class PopupsTest extends TestCase
         $this->actingAs($customer)->post(route('popup.event', $popup), ['type' => 'dismiss'])->assertNoContent();
         $this->actingAs($customer)->post(route('popup.event', $popup), ['type' => 'dismiss'])->assertNoContent();
         $this->assertSame(1, DB::table('popup_dismissals')->where('customer_id', $customer->id)->count());
-        $this->assertTrue(Popup::forVisitor($customer->id, true)->isEmpty());
+        $this->assertTrue(Popup::forVisitor($customer->id, 'home')->isEmpty());
+
+        // "bir dəfə": görən müştəriyə başqa cihazda da çıxmır; "gündə bir dəfə" — çıxır
+        $once = $this->popup(['name' => 'once', 'frequency' => 'once']);
+        $daily = $this->popup(['name' => 'daily', 'frequency' => 'daily']);
+        $this->actingAs($customer)->post(route('popup.event', $once), ['type' => 'shown'])->assertNoContent();
+        $this->actingAs($customer)->post(route('popup.event', $daily), ['type' => 'shown'])->assertNoContent();
+        $this->assertSame(['daily'], Popup::forVisitor($customer->id, 'home')->pluck('name')->all());
     }
 
     public function test_admin_create_validates_and_lists_with_stats(): void

@@ -17,12 +17,24 @@
 <title>@yield('title', 'Parfumshop.az | Ətirlər')</title>
 <meta name="description" content="@yield('meta_description', 'Parfumshop.az — ətirlər və parfümeriya')">
 <meta name="robots" content="@yield('meta_robots', 'index, follow')">
-<link rel="canonical" href="@yield('canonical_url', url()->current())">
+@php
+    // Kanonik ünvan cari dildə; dil versiyaları hreflang ilə (az — əsas ünvan, en/ru — ?lang=)
+    $canonicalBase = \App\Support\LocaleUrl::strip(trim($__env->yieldContent('canonical_url', url()->current())));
+    $canonical = \App\Support\LocaleUrl::to($canonicalBase, app()->getLocale());
+    $indexable = !str_contains($__env->yieldContent('meta_robots', 'index, follow'), 'noindex');
+@endphp
+<link rel="canonical" href="{{ $canonical }}">
+@if($indexable)
+@foreach(\App\Support\LocaleUrl::LOCALES as $hreflang)
+<link rel="alternate" hreflang="{{ $hreflang }}" href="{{ \App\Support\LocaleUrl::to($canonicalBase, $hreflang) }}">
+@endforeach
+<link rel="alternate" hreflang="x-default" href="{{ $canonicalBase }}">
+@endif
 <meta property="og:site_name" content="Parfumshop.az">
 <meta property="og:type" content="@yield('og_type', 'website')">
 <meta property="og:title" content="@yield('og_title', 'Parfumshop.az | Ətirlər')">
 <meta property="og:description" content="@yield('meta_description', 'Parfumshop.az — ətirlər və parfümeriya')">
-<meta property="og:url" content="@yield('canonical_url', url()->current())">
+<meta property="og:url" content="{{ $canonical }}">
 @hasSection('og_image')
 <meta property="og:image" content="@yield('og_image')">
 <meta property="og:image:alt" content="@yield('og_title', 'Parfumshop.az')">

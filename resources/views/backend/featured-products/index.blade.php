@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
     $title = 'Vitrin (Populyar)';
-    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Sayt', '#' => $title];
+    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Marketinq', '#' => $title];
     $image = fn ($product) => ($img = $product?->images->first()) ? asset('frontend/uploads/products/'.$img->image) : null;
     $full = $featured->count() >= $limit;
 @endphp

@@ -74,33 +74,4 @@
     </div>
 </div>
     </div>
-    <div class="col-xl-6">
-{{-- Şərt keçidləri --}}
-<div class="card">
-    <div class="card-body">
-        <div class="settings-card-head">
-            <h5 class="mb-0">Şərt keçidləri</h5>
-            <span class="text-muted small">Checkout səhifəsində göstərilir</span>
-        </div>
-
-        @foreach ([
-            'order_terms_url'  => ['Sifariş şərtləri', $orderTermsUrl, 'Checkout-dakı “şərtlər” keçidi.'],
-            'credit_terms_url' => ['Kredit şərtləri', $creditTermsUrl, '“Hissə-hissə ödəniş” seçiləndə göstərilir.'],
-        ] as $field => [$label, $value, $hint])
-            <div @class(['mb-3' => ! $loop->last])>
-                <label for="{{ $field }}" class="form-label">{{ $label }}</label>
-                <div class="input-group has-validation">
-                    <input id="{{ $field }}" name="{{ $field }}" type="url" maxlength="2048"
-                           placeholder="https://parfumshop.az/..."
-                           value="{{ old($field, $value) }}"
-                        @class(['form-control', 'is-invalid' => $errors->has($field)])>
-                    <button type="button" class="btn btn-outline-secondary" data-open-url="{{ $field }}">Aç</button>
-                    @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="form-text">{{ $hint }}</div>
-            </div>
-        @endforeach
-    </div>
-</div>
-    </div>
 </div>

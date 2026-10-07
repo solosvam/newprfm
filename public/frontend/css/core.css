@@ -92,6 +92,16 @@ nav.cats.is-peeking > a { animation: cats-peek 1.3s ease-in-out; }
 @media (max-width: 480px) {
     nav.cats { padding-left: 14px; padding-right: 14px; }
 }
+/* Ümumi sürüşən pill menyu (data-pill-scroll: məlumat səhifələri, şəxsi kabinet) — kateqoriyalarla eyni davranış.
+   Sürüşən element [data-pill-scroll], ox (.cats-hint[data-pill-hint]) onunla eyni .pill-scroll-wrap içində. */
+.pill-scroll-wrap { position: relative; }
+.pill-scroll-wrap .cats-hint { right: 8px; margin-top: -14px; }
+[data-pill-scroll] { scroll-behavior: smooth; }
+[data-pill-scroll].has-more-end { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); }
+[data-pill-scroll].has-more-start { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px); mask-image: linear-gradient(to right, transparent, #000 48px); }
+[data-pill-scroll].has-more-start.has-more-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
+[data-pill-scroll].is-peeking > * { animation: cats-peek 1.3s ease-in-out; }
+@media (prefers-reduced-motion: reduce) { [data-pill-scroll].is-peeking > * { animation: none; } }
 nav.cats.has-more-start.has-more-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
 
 /* Language selector */
@@ -348,3 +358,22 @@ footer .logo--svg { color: var(--on-accent-bg); }
 .card-countdown__cell b { font-size: 14px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .card-countdown__cell small { font-size: 9.5px; font-weight: 600; line-height: 1; opacity: .9; }
 
+
+/* Cookie bildirişi (partials/cookie-bar): desktopda sol aşağıda kiçik kart, mobildə aşağıda zolaq */
+.cookie-bar {
+    position: fixed; left: 20px; bottom: 20px; z-index: 1100; max-width: 420px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border: 1px solid var(--border); border-radius: 16px;
+    background: var(--bg); color: var(--text); box-shadow: 0 12px 32px rgba(20, 12, 40, .18);
+    opacity: 0; transform: translateY(12px); transition: opacity .25s ease, transform .25s ease;
+}
+[data-theme="dark"] .cookie-bar { background: var(--surface); box-shadow: 0 12px 32px rgba(0, 0, 0, .5); }
+.cookie-bar.is-open { opacity: 1; transform: none; }
+.cookie-bar[hidden] { display: none; }
+.cookie-bar__text { margin: 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
+.cookie-bar__text a { color: var(--text); text-underline-offset: 3px; }
+.cookie-bar__ok { width: auto; height: 40px; margin: 0; padding: 0 18px; font-size: 14px; flex-shrink: 0; }
+@media (max-width: 760px) {
+    .cookie-bar { left: 12px; right: 12px; bottom: 12px; max-width: none; padding: 12px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .cookie-bar { transition: none; } }

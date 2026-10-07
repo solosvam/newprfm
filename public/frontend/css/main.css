@@ -6,10 +6,16 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 
 .footer-top .brand-col p { font-size: 13px; opacity: 0.8; line-height: 1.6; max-width: 260px; }
 .footer-top .fsocial { display: flex; gap: 10px; margin-top: 16px; }
-.footer-top .fsocial span { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+.footer-top .fsocial a { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1); color: inherit; display: flex; align-items: center; justify-content: center; transition: background-color .15s; }
+.footer-top .fsocial a:hover { background: rgba(255,255,255,0.22); }
+.footer-top ul a { color: inherit; text-decoration: none; }
+.footer-top ul a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .footer-top h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.65; margin: 0 0 14px; }
 .footer-top ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; opacity: 0.9; }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,0.12); padding: 20px 0 calc(20px + env(safe-area-inset-bottom,0px)); display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; opacity: 0.75; flex-wrap: wrap; gap: 12px; }
+.footer-legal { display: flex; gap: 16px; flex-wrap: wrap; }
+.footer-legal a { color: inherit; text-decoration: none; }
+.footer-legal a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .payment-icons { display: flex; gap: 8px; }
 .payment-icons span { background: rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 10px; font-size: 11px; }
 

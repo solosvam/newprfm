@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Admin → Sayt → Popup-lar. Saytda bir səhifədə ən çox bir popup göstərilir (sort_order üzrə ilk uyğun gələn).
- * "Bir daha göstərmə": qonaqda localStorage, daxil olmuş müştəridə həm localStorage, həm popup_dismissals (cihazlar arası).
+ * "Bir daha göstərmə" və "bir dəfə" tezliyində görülmüş popup: qonaqda localStorage,
+ * daxil olmuş müştəridə həm localStorage, həm popup_dismissals (cihazlar arası).
  * Statistika — popup_stats-da gün üzrə sayğaclar (adbaad log yoxdur).
  */
 class Popup extends Model

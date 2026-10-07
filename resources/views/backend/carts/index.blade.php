@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
     $title = 'Səbətdəki mallar';
-    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Satış', '#' => $title];
+    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Müştərilər', '#' => $title];
     $money = fn ($v, $d = 2) => number_format((float) $v, $d, '.', ' ');
     $days = fn ($date) => $date ? (int) \Illuminate\Support\Carbon::parse($date)->diffInDays(now()) : 0;
     $canProducts = auth('admin')->user()?->can('products.menu');

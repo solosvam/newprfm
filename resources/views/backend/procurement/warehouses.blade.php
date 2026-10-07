@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
     $title = 'Anbarlar';
-    $breadcrumbs = ['/' => 'ParfumShop', '' => 'Anbarlar'];
+    $breadcrumbs = ['/' => 'ParfumShop', '' => 'Satışlar', '#' => 'Anbarlar'];
 @endphp
 
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])

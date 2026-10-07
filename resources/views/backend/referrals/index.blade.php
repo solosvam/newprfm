@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
     $title = 'Dəvətlər (referal)';
-    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Satış', '#' => $title];
+    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Müştərilər', '#' => $title];
     $money = fn ($v) => number_format((float) $v, 2, '.', ' ');
     $person = fn ($customer) => $customer ? trim($customer->name.' '.$customer->surname) : '—';
     $statuses = [

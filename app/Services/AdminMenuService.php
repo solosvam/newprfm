@@ -16,6 +16,13 @@ class AdminMenuService
     {
         $result = [];
         foreach ($items as $item) {
+            if (!empty($item['separator'])) {
+                // ayırıcı: əvvəlində və ardıcıl gələndə lazım deyil
+                if ($result && empty(end($result)['separator'])) {
+                    $result[] = $item;
+                }
+                continue;
+            }
             if (!empty($item['permission']) && Gate::forUser(auth('admin')->user())->denies($item['permission'])) {
                 continue;
             }
@@ -31,6 +38,10 @@ class AdminMenuService
 
             $result[] = $item;
         }
+        // sonda qalan ayırıcı (məs. Statistika icazəsi yoxdursa)
+        if ($result && !empty(end($result)['separator'])) {
+            array_pop($result);
+        }
 
         return $result;
     }
@@ -44,6 +55,9 @@ class AdminMenuService
     {
         $pages = [];
         foreach ($items as $item) {
+            if (!empty($item['separator'])) {
+                continue;
+            }
             $label = $parent === '' ? $item['title'] : $parent.' > '.$item['title'];
             if (isset($item['children'])) {
                 array_push($pages, ...$this->flatten($item['children'], $label));

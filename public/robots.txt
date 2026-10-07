@@ -1,2 +1,10 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /profile
+Disallow: /checkout
+Disallow: /cart
+Disallow: /orders
+Disallow: /w/
+Disallow: /pay/
+
+# Sitemap sətri prod-da əlavə olunur: php artisan seo:robots

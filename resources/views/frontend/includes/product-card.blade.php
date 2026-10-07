@@ -46,8 +46,11 @@
                             </div>
 
                             @if ($image)
+                                {{-- 200px — 1x ekranlar və kiçik kartlar, 400px — retina (ProductImageController ölçüləri) --}}
                                 <img
                                     src="{{ route('product.image', ['size' => 400, 'image' => $image->image]) }}"
+                                    srcset="{{ route('product.image', ['size' => 200, 'image' => $image->image]) }} 200w, {{ route('product.image', ['size' => 400, 'image' => $image->image]) }} 400w"
+                                    sizes="(max-width: 760px) 40vw, 240px"
                                     alt="{{ $product->name }}"
                                     width="400"
                                     height="400"

@@ -136,9 +136,10 @@
     font-size: 13px; color: var(--accent); font-weight: 600; cursor: pointer;
 }
 
-.filter-card__footer { display: flex; gap: 10px; align-items: center; padding: 16px 0; border-top: 1px solid var(--border); margin-top: 4px; }
-.filter-clear { flex: 1; margin: 0; }
-.filter-apply { flex: 1; margin: 0; }
+/* Düymələr alt-alta: dar sütunda yan-yana sığmırdı; əsas düymə ("Tətbiq et") yuxarıda */
+.filter-card__footer { display: flex; flex-direction: column; gap: 10px; padding: 16px 0; border-top: 1px solid var(--border); margin-top: 4px; }
+.filter-clear { width: 100%; margin: 0; }
+.filter-apply { width: 100%; margin: 0; order: -1; }
 
 
 /* Price range slider */

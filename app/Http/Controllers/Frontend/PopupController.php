@@ -12,7 +12,9 @@ use Illuminate\Validation\Rule;
 
 /**
  * popup.js hadisələri: shown / click / close / dismiss → gün üzrə sayğac.
- * dismiss ("Bir daha göstərmə") daxil olmuş müştəri üçün bazada da saxlanılır — başqa cihazda da çıxmasın.
+ * Daxil olmuş müştəri üçün bazada da saxlanılır (popup_dismissals) — başqa cihazda da çıxmasın:
+ *  - dismiss ("Bir daha göstərmə");
+ *  - shown — tezliyi "bir dəfə" olan popup (görüb, bir daha çıxmasın).
  * navigator.sendBeacon ilə gəlir (_token form sahəsində).
  */
 class PopupController extends Controller
@@ -23,7 +25,8 @@ class PopupController extends Controller
 
         PopupStat::bump($popup->id, Popup::EVENTS[$type]);
 
-        if ($type === 'dismiss' && ($customerId = auth()->id())) {
+        $hideForever = $type === 'dismiss' || ($type === 'shown' && $popup->frequency === 'once');
+        if ($hideForever && ($customerId = auth()->id())) {
             DB::table('popup_dismissals')->insertOrIgnore([
                 'popup_id' => $popup->id, 'customer_id' => $customerId, 'created_at' => now(),
             ]);

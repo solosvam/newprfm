@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
     $title = 'Sifarişlər';
-    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Satış', '#' => $title];
+    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Satışlar', '#' => $title];
     $sources = ['customer' => 'Sayt — səbət', 'one_click' => 'Bir kliklə', 'operator' => 'Operator (CRM)'];
     $statusColor = ['new' => 'primary', 'delivered' => 'success', 'cancelled' => 'danger', 'sent' => 'info', 'at_address' => 'info'];
 @endphp

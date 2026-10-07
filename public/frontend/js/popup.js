@@ -149,7 +149,8 @@
 
     function show() {
         // başqa pəncərə (modal) açıqdırsa, bir az sonra yenidən yoxla
-        if (document.querySelector('.modal.is-open, .push-ios.is-open, [aria-modal="true"]:not(.site-popup__box)')) {
+        // cookie zolağı da aşağıdadır — əvvəlcə o bağlansın
+        if (document.querySelector('.modal.is-open, .push-ios.is-open, [aria-modal="true"]:not(.site-popup__box), #cookieBar:not([hidden])')) {
             setTimeout(show, 3000);
             return;
         }

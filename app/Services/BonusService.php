@@ -129,11 +129,11 @@ class BonusService {
   return $sent;
  }
 
- /** Bonus şərtlərinin standart mətni (Ayarlar → Bonuslar → "Bonus şərtləri"); :percent, :registration əvəz olunur */
+ /** Bonus şərtlərinin standart mətni (Ayarlar → Bonuslar → "Bonus şərtləri"); :percent, :registration, :expiry əvəz olunur */
  public const TERMS_DEFAULTS = [
-  'az' => "Bonus nədir?\nBonus Parfumshop.az-da alış-veriş edən müştərilərə verilən hədiyyə balansıdır. 1 bonus = 1 ₼.\n\nBonus necə qazanılır?\n• Hər sifarişdən məhsulların dəyərinin :percent%-i bonus olaraq hesabınıza yazılır (çatdırılma haqqı nəzərə alınmır).\n• Saytda qeydiyyatdan keçən yeni müştərilərə :registration ₼ qeydiyyat bonusu verilir.\n• Dostunuzu dəvət etdikdə, onun ilk sifarişi təhvil verildikdən sonra referal bonusu qazanırsınız.\n\nBonus necə istifadə olunur?\n• Sifariş zamanı ödəniş üsulu olaraq bonus balansını seçin.\n• Bonus balansı sifarişin yekun məbləğini tam ödəməlidir.\n\nVacib məlumat\n• Sifariş bonusu sifariş təhvil verildikdən sonra hesabınıza yazılır. Bonus balansı və ya hissə-hissə ödənişlə alınan sifarişlərə bonus verilmir.\n• Bonus nağd pula çevrilmir və başqa hesaba köçürülmür.\n• Parfumshop.az bonus şərtlərini dəyişmək hüququnu özündə saxlayır.",
-  'en' => "What is a bonus?\nBonus is a reward balance for customers shopping at Parfumshop.az. 1 bonus = 1 ₼.\n\nHow to earn bonuses?\n• :percent% of the product value of every order is credited to your account as bonus (delivery fee excluded).\n• New customers who sign up on the website receive a :registration ₼ welcome bonus.\n• When you invite a friend, you earn a referral bonus after their first order is delivered.\n\nHow to use bonuses?\n• Choose bonus balance as the payment method when placing an order.\n• Your bonus balance must cover the full order total.\n\nImportant\n• The order bonus is credited to your account after the order is delivered. Orders paid with bonus balance or in installments do not earn bonus.\n• Bonuses cannot be exchanged for cash or transferred to another account.\n• Parfumshop.az reserves the right to change the bonus terms.",
-  'ru' => "Что такое бонус?\nБонус — это подарочный баланс для покупателей Parfumshop.az. 1 бонус = 1 ₼.\n\nКак получить бонусы?\n• С каждого заказа на ваш счёт начисляется :percent% от стоимости товаров (без учёта доставки).\n• Новые покупатели при регистрации на сайте получают :registration ₼ приветственного бонуса.\n• Пригласив друга, вы получаете реферальный бонус после доставки его первого заказа.\n\nКак использовать бонусы?\n• При оформлении заказа выберите оплату бонусным балансом.\n• Бонусного баланса должно хватать на всю сумму заказа.\n\nВажно\n• Бонус за заказ начисляется после его доставки. За заказы, оплаченные бонусным балансом или в рассрочку, бонус не начисляется.\n• Бонусы не обмениваются на деньги и не переводятся на другой счёт.\n• Parfumshop.az оставляет за собой право изменять условия бонусной программы.",
+  'az' => "Bonus nədir?\nBonus Parfumshop.az-da alış-veriş edən müştərilərə verilən hədiyyə balansıdır və manatla hesablanır.\n\nBonus necə qazanılır?\n• Hər sifarişdən məhsulların dəyərinin :percent%-i bonus olaraq hesabınıza yazılır (çatdırılma haqqı nəzərə alınmır).\n• Saytda qeydiyyatdan keçən yeni müştərilərə :registration ₼ qeydiyyat bonusu verilir.\n• Dostunuzu dəvət etdikdə, onun ilk sifarişi təhvil verildikdən sonra referal bonusu qazanırsınız.\n\nBonus necə istifadə olunur?\n• Sifariş zamanı ödəniş üsulu olaraq bonus balansını seçin.\n• Bonus balansı sifarişin yekun məbləğini tam ödəməlidir.\n\nVacib məlumat\n• Sifariş bonusu sifariş təhvil verildikdən sonra hesabınıza yazılır. Bonus balansı və ya hissə-hissə ödənişlə alınan sifarişlərə bonus verilmir.\n• :expiry\n• Bonus nağd pula çevrilmir və başqa hesaba köçürülmür.\n• Parfumshop.az bonus şərtlərini dəyişmək hüququnu özündə saxlayır.",
+  'en' => "What is a bonus?\nBonus is a reward balance in manats for customers shopping at Parfumshop.az.\n\nHow to earn bonuses?\n• :percent% of the product value of every order is credited to your account as bonus (delivery fee excluded).\n• New customers who sign up on the website receive a :registration ₼ welcome bonus.\n• When you invite a friend, you earn a referral bonus after their first order is delivered.\n\nHow to use bonuses?\n• Choose bonus balance as the payment method when placing an order.\n• Your bonus balance must cover the full order total.\n\nImportant\n• The order bonus is credited to your account after the order is delivered. Orders paid with bonus balance or in installments do not earn bonus.\n• :expiry\n• Bonuses cannot be exchanged for cash or transferred to another account.\n• Parfumshop.az reserves the right to change the bonus terms.",
+  'ru' => "Что такое бонус?\nБонус — это подарочный баланс в манатах для покупателей Parfumshop.az.\n\nКак получить бонусы?\n• С каждого заказа на ваш счёт начисляется :percent% от стоимости товаров (без учёта доставки).\n• Новые покупатели при регистрации на сайте получают :registration ₼ приветственного бонуса.\n• Пригласив друга, вы получаете реферальный бонус после доставки его первого заказа.\n\nКак использовать бонусы?\n• При оформлении заказа выберите оплату бонусным балансом.\n• Бонусного баланса должно хватать на всю сумму заказа.\n\nВажно\n• Бонус за заказ начисляется после его доставки. За заказы, оплаченные бонусным балансом или в рассрочку, бонус не начисляется.\n• :expiry\n• Бонусы не обмениваются на деньги и не переводятся на другой счёт.\n• Parfumshop.az оставляет за собой право изменять условия бонусной программы.",
  ];
 
  /** Müştəriyə göstəriləcək bonus şərtləri (dəyərlər hazırkı ayarlarla əvəz olunur) */
@@ -144,7 +144,24 @@ class BonusService {
   return strtr($text, [
    ':percent' => $num(Setting::valueOf('order_bonus_percent', 5)),
    ':registration' => $num(Setting::valueOf('registration_bonus_amount', 10)),
+   ':expiry' => $this->expiryText($locale),
   ]);
+ }
+
+ /** Bonus şərtlərindəki :expiry — istifadə müddəti cümləsi (Ayarlar → Bonuslar → istifadə müddəti) */
+ public function expiryText(string $locale = 'az'): string {
+  $order = $this->expiryDays('earn');
+  if ($order === null) {
+   return ['az' => 'Bonusların istifadə müddəti məhdud deyil.', 'en' => 'Bonuses do not expire.', 'ru' => 'Срок действия бонусов не ограничен.'][$locale] ?? 'Bonusların istifadə müddəti məhdud deyil.';
+  }
+  $register = (int) Setting::valueOf('registration_bonus_enabled', 1) === 1 ? $this->expiryDays('register') : null;
+  $remind = self::REMIND_DAYS;
+  $texts = [
+   'az' => "Sifariş bonusu yazıldığı gündən {$order} gün ərzində istifadə olunmalıdır".($register ? ", qeydiyyat bonusu — {$register} gün ərzində" : '').". Müddəti bitən bonus balansdan silinir; bitməsinə {$remind} gün qalmış SMS ilə xəbər veririk.",
+   'en' => "Order bonuses must be used within {$order} days of being credited".($register ? ", the welcome bonus within {$register} days" : '').". Expired bonuses are removed from your balance; we send an SMS {$remind} days before they expire.",
+   'ru' => "Бонус за заказ нужно использовать в течение {$order} дней с момента начисления".($register ? ", бонус за регистрацию — в течение {$register} дней" : '').". Просроченные бонусы списываются с баланса; за {$remind} дня до окончания срока мы отправляем SMS.",
+  ];
+  return $texts[$locale] ?? $texts['az'];
  }
 
  /** İndiki admin faizi — sifariş yarananda orders.bonus_percent-ə yazılır (ayar sonra dəyişsə köhnə sifarişlərə təsir etmir) */

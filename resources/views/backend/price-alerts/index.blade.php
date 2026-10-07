@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
     $title = 'Endirim gözləyənlər';
-    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Satış', '#' => $title];
+    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Müştərilər', '#' => $title];
     $money = fn ($v) => number_format((float) $v, 2, '.', ' ');
     $date = fn ($v) => \Illuminate\Support\Carbon::parse($v)->format('d.m.Y');
     $link = fn (array $params) => route('admin.price-alerts.index', array_filter($params + ['view' => $view === 'customers' ? 'customers' : null, 'notified' => $notified ? 1 : null]));

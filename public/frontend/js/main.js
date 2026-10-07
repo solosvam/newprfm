@@ -612,7 +612,14 @@
 
                 if (!response.ok) throw new Error('Language change failed');
 
-                window.location.reload();
+                // ünvanda ?lang= varsa (Google-dan gələn dil versiyası), o köhnə dili qaytarmasın
+                const url = new URL(window.location.href);
+                if (url.searchParams.has('lang')) {
+                    url.searchParams.delete('lang');
+                    window.location.replace(url.toString());
+                } else {
+                    window.location.reload();
+                }
             } catch (error) {
                 this.value = previousLocale;
                 this.disabled = false;
@@ -718,27 +725,30 @@
         if (!details.hidden) details.querySelector('input')?.focus();
     });
 
-    // Kateqoriya menyusu: sürüşdürülə bilirsə kənarları solğunlaşdır, aktiv kateqoriyanı görünən yerə gətir
-    (function initCategoryNav() {
-        const nav = document.querySelector('nav.cats');
+    // Üfüqi sürüşən pill menyular (kateqoriyalar, məlumat səhifələri, şəxsi kabinet):
+    // sürüşdürülə bilirsə kənarları solğunlaşdır, aktiv bəndi görünən yerə gətir, sağda hərəkət edən ox
+    function initScrollPills(nav, hint) {
         if (!nav) return;
         const update = () => {
             const max = nav.scrollWidth - nav.clientWidth;
             nav.classList.toggle('has-more-start', nav.scrollLeft > 4);
             nav.classList.toggle('has-more-end', max - nav.scrollLeft > 4);
         };
-        const active = nav.querySelector('a.active');
-        if (active && active.offsetLeft + active.offsetWidth > nav.clientWidth) {
-            nav.style.scrollBehavior = 'auto';
-            nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
-            nav.style.scrollBehavior = '';
+        const active = nav.querySelector('a.active, a.is-active, [aria-current="page"]');
+        if (active) {
+            // offsetLeft yox: link li içində ola bilər — ekran koordinatları ilə hesablanır
+            const offset = active.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+            if (offset + active.offsetWidth > nav.clientWidth) {
+                nav.style.scrollBehavior = 'auto';
+                nav.scrollLeft = offset - (nav.clientWidth - active.offsetWidth) / 2;
+                nav.style.scrollBehavior = '';
+            }
         }
         update();
         nav.addEventListener('scroll', update, { passive: true });
         window.addEventListener('resize', update);
 
         // Sağda hərəkət edən ox + səhifə açılanda menyunun özü bir az sürüşüb qayıdır
-        const hint = document.querySelector('[data-cats-hint]');
         if (!hint) return;
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let interacted = false;
@@ -792,7 +802,13 @@
         });
 
         syncHint();
-    })();
+    }
+
+    initScrollPills(document.querySelector('nav.cats'), document.querySelector('[data-cats-hint]'));
+    // data-pill-scroll — sürüşən konteyner; ox onunla eyni valideyndə (data-pill-hint)
+    document.querySelectorAll('[data-pill-scroll]').forEach(nav => {
+        initScrollPills(nav, nav.parentElement.querySelector('[data-pill-hint]'));
+    });
 
     // Brend zolağı: kənar solğunlaşması, desktopda oxlar və siçanla sürükləmə
     // (Windows-da touchpad olmadan üfüqi sürüşdürmək çətindir)

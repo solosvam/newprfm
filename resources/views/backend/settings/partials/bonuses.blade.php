@@ -110,7 +110,8 @@
                     @endforeach
                 </div>
                 <div class="form-text mt-2">
-                    <code>:percent</code> — sifariş bonusu faizi, <code>:registration</code> — qeydiyyat bonusu məbləği ilə avtomatik əvəz olunur.
+                    <code>:percent</code> — sifariş bonusu faizi, <code>:registration</code> — qeydiyyat bonusu məbləği,
+                    <code>:expiry</code> — istifadə müddəti cümləsi (soldakı müddət ayarından) ilə avtomatik əvəz olunur.
                     Hər sətir ayrıca abzas kimi göstərilir; "• " ilə başlayan sətirlər siyahı olur.
                 </div>
             </div>

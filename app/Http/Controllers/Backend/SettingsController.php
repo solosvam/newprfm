@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\BonusService;
+use App\Services\ContactInfo;
 use App\Services\Referral\ReferralOgImage;
 use App\Services\Referral\ReferralSettings;
 use Illuminate\Http\RedirectResponse;
@@ -22,10 +23,13 @@ class SettingsController extends Controller
         'referral' => 'Referal',
         'orders' => 'Sifariş və çatdırılma',
         'banners' => 'Bannerlər',
+        'contact' => 'Əlaqə məlumatları',
     ];
 
     /** Mətn kimi saxlanan açarlar (boş olanda 0 yox, '' yazılır) */
-    private const TEXT_KEYS = ['bonus_terms_az', 'bonus_terms_en', 'bonus_terms_ru', 'order_terms_url', 'credit_terms_url', 'referral_share_text_az', 'referral_share_text_en', 'referral_share_text_ru'];
+    private const TEXT_KEYS = ['bonus_terms_az', 'bonus_terms_en', 'bonus_terms_ru', 'referral_share_text_az', 'referral_share_text_en', 'referral_share_text_ru',
+        'contact_phone', 'contact_whatsapp', 'contact_email', 'contact_hours_az', 'contact_hours_en', 'contact_hours_ru',
+        'contact_address_az', 'contact_address_en', 'contact_address_ru', 'contact_instagram', 'contact_facebook', 'contact_youtube'];
 
     public function index(): RedirectResponse
     {
@@ -89,8 +93,6 @@ class SettingsController extends Controller
                 'freeDeliveryFrom' => Setting::valueOf('free_delivery_from', 0),
                 'giftWrapMode' => Setting::valueOf('gift_wrap_mode', 'free'),
                 'giftWrapFee' => Setting::valueOf('gift_wrap_fee', 0),
-                'orderTermsUrl' => Setting::valueOf('order_terms_url', ''),
-                'creditTermsUrl' => Setting::valueOf('credit_terms_url', ''),
             ],
             'banners' => [
                 'bannerSizes' => collect(Setting::BANNER_DIMENSIONS)->map(fn ($size, $key) => [
@@ -98,6 +100,9 @@ class SettingsController extends Controller
                     'height' => Setting::valueOf("{$key}_height", $size[1]),
                 ])->all(),
                 'bannerSlideInterval' => Setting::valueOf('banner_slide_interval', 5),
+            ],
+            'contact' => [
+                'contact' => collect(ContactInfo::DEFAULTS)->map(fn ($default, $key) => app(ContactInfo::class)->raw($key))->all(),
             ],
         };
     }
@@ -124,8 +129,6 @@ class SettingsController extends Controller
                 'free_delivery_from' => ['required_if:delivery_mode,threshold', 'nullable', 'numeric', 'min:0.01'],
                 'gift_wrap_mode' => ['required', 'in:free,paid'],
                 'gift_wrap_fee' => ['required_if:gift_wrap_mode,paid', 'nullable', 'numeric', 'min:0'],
-                'order_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
-                'credit_terms_url' => ['nullable', 'url:http,https', 'max:2048'],
             ],
             'banners' => collect(array_keys(Setting::BANNER_DIMENSIONS))
                 ->flatMap(fn ($key) => [
@@ -135,6 +138,20 @@ class SettingsController extends Controller
                 // Eyni yerdə bir neçə banner olanda hər slaydın göstərilmə müddəti (saniyə)
                 ->put('banner_slide_interval', ['required', 'integer', 'min:2', 'max:60'])
                 ->all(),
+            'contact' => [
+                'contact_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\s-]+$/'],
+                'contact_whatsapp' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\s-]+$/'],
+                'contact_email' => ['nullable', 'email', 'max:120'],
+                'contact_hours_az' => ['nullable', 'string', 'max:120'],
+                'contact_hours_en' => ['nullable', 'string', 'max:120'],
+                'contact_hours_ru' => ['nullable', 'string', 'max:120'],
+                'contact_address_az' => ['nullable', 'string', 'max:200'],
+                'contact_address_en' => ['nullable', 'string', 'max:200'],
+                'contact_address_ru' => ['nullable', 'string', 'max:200'],
+                'contact_instagram' => ['nullable', 'url:https', 'max:300'],
+                'contact_facebook' => ['nullable', 'url:https', 'max:300'],
+                'contact_youtube' => ['nullable', 'url:https', 'max:300'],
+            ],
         };
     }
 

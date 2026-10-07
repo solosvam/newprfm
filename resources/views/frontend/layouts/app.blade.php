@@ -53,6 +53,7 @@
 <script type="application/json" id="app-data">@json($appData)</script>
 @include('frontend.partials.theme-script')
 @yield('page-scripts')
+@include('frontend.partials.cookie-bar')
 @include('frontend.partials.popups')
 </body>
 </html>

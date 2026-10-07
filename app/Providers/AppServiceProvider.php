@@ -13,7 +13,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-
+        // Əlaqə məlumatları bir sorğu ilə oxunur və sorğu boyunca paylaşılır (footer + Əlaqə səhifəsi)
+        $this->app->scoped(\App\Services\ContactInfo::class);
     }
 
     /**

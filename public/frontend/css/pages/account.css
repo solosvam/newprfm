@@ -332,19 +332,24 @@
         scroll-snap-type: x proximity;
     }
     .account-nav::-webkit-scrollbar { display: none; }
+    /* pill-lər — mobil kateqoriya menyusu ilə eyni görünüş */
     .account-nav a {
         flex-shrink: 0;
-        padding: 8px 14px;
-        border: 1px solid var(--border);
+        display: flex; align-items: center; gap: 4px;
+        height: 36px; padding: 0 14px;
+        border: 1px solid var(--border-strong);
         border-radius: 999px;
-        font-size: 13px;
+        background: var(--surface-2); color: var(--text);
+        font-size: 13.5px; font-weight: 500;
         white-space: nowrap;
         scroll-snap-align: start;
     }
+    .account-nav a:hover { border-color: var(--accent); color: var(--text); }
     .account-nav a.active {
         background: var(--accent);
         border-color: var(--accent);
         color: var(--on-accent);
+        font-weight: 600;
     }
     .account-nav a.active .account-nav-count,
     .account-nav a.active .account-nav-note { color: inherit; opacity: .8; }
@@ -408,19 +413,24 @@
         scroll-snap-type: x proximity;
     }
     .account-nav::-webkit-scrollbar { display: none; }
+    /* pill-lər — mobil kateqoriya menyusu ilə eyni görünüş */
     .account-nav a {
         flex-shrink: 0;
-        padding: 8px 14px;
-        border: 1px solid var(--border);
+        display: flex; align-items: center; gap: 4px;
+        height: 36px; padding: 0 14px;
+        border: 1px solid var(--border-strong);
         border-radius: 999px;
-        font-size: 13px;
+        background: var(--surface-2); color: var(--text);
+        font-size: 13.5px; font-weight: 500;
         white-space: nowrap;
         scroll-snap-align: start;
     }
+    .account-nav a:hover { border-color: var(--accent); color: var(--text); }
     .account-nav a.active {
         background: var(--accent);
         border-color: var(--accent);
         color: var(--on-accent);
+        font-weight: 600;
     }
     .account-nav a.active .account-nav-count,
     .account-nav a.active .account-nav-note { color: inherit; opacity: .8; }

@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
     $title = 'Endirimdəki məhsullar';
-    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Satış', '#' => $title];
+    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Kataloq', '#' => $title];
     $image = fn ($product) => ($img = $product?->images->first()) ? asset('frontend/uploads/products/'.$img->image) : null;
     $tabs = ['active' => 'Aktiv', 'scheduled' => 'Planlaşdırılıb', 'ended' => 'Bitib'];
 @endphp

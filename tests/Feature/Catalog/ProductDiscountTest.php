@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /** Məhsul endirimi: endirimli qiymət qaydaları, promo kod istisnası, qiymətə görə sıralama, admin yaratma */
@@ -97,5 +98,55 @@ class ProductDiscountTest extends TestCase
             $this->assertArrayHasKey('starts_at', $e->errors());
         }
         $this->assertSame(1, ProductDiscount::count());
+    }
+
+    public function test_ended_discount_does_not_block_new_one_in_the_same_minute(): void
+    {
+        Queue::fake();
+        Carbon::setTestNow('2026-10-07 03:55:42');
+        $controller = app(ProductDiscountsController::class);
+        $active = $this->discount(['starts_at' => '2026-10-06 03:54:00', 'ends_at' => '2026-10-08 00:00:00']);
+
+        $controller->end($active);
+        $this->assertSame('2026-10-07 03:55:00', $active->fresh()->ends_at->format('Y-m-d H:i:s'));
+
+        // admin indiki dəqiqəni (03:55) başlama kimi seçir — bitmiş endirim mane olmur
+        $controller->store(Request::create('/', 'POST', ['percent' => 20, 'starts_at' => '2026-10-07T03:55', 'ends_at' => '2026-10-09T03:55']), Product::find(1));
+        $this->assertSame(2, ProductDiscount::count());
+        $this->assertSame('20', ProductDiscount::latest('id')->first()->percentLabel());
+        Carbon::setTestNow();
+    }
+
+    public function test_admin_edits_active_and_scheduled_discounts_and_deletes_any(): void
+    {
+        Queue::fake();
+        $controller = app(ProductDiscountsController::class);
+        $active = $this->discount();
+        $originalStart = $active->starts_at->format('Y-m-d H:i:s');
+
+        // aktiv: faiz və bitmə dəyişir, başlama göndərilsə də dəyişmir
+        $controller->update(Request::create('/', 'PUT', ['percent' => 25, 'starts_at' => now()->addDays(3)->format('Y-m-d\TH:i'), 'ends_at' => now()->addDays(4)->format('Y-m-d\TH:i')]), $active);
+        $active->refresh();
+        $this->assertSame(['25', $originalStart], [$active->percentLabel(), $active->starts_at->format('Y-m-d H:i:s')]);
+        Queue::assertPushed(NotifyPriceDrop::class);   // faiz artdı
+
+        // planlaşdırılmış: özü ilə üst-üstə düşmə sayılmır, başqası ilə — xəta
+        $scheduled = $this->discount(['starts_at' => now()->addDays(10), 'ends_at' => now()->addDays(12)]);
+        $controller->update(Request::create('/', 'PUT', ['percent' => 30, 'starts_at' => now()->addDays(11)->format('Y-m-d\TH:i'), 'ends_at' => now()->addDays(13)->format('Y-m-d\TH:i')]), $scheduled);
+        $this->assertSame('30', $scheduled->fresh()->percentLabel());
+        try {
+            $controller->update(Request::create('/', 'PUT', ['percent' => 30, 'starts_at' => now()->addDays(2)->format('Y-m-d\TH:i'), 'ends_at' => now()->addDays(13)->format('Y-m-d\TH:i')]), $scheduled->fresh());
+            $this->fail('Aktiv endirimlə üst-üstə düşən dövr qəbul olunmamalıdır');
+        } catch (ValidationException $e) {
+            $this->assertSame('discountEdit', $e->errorBag);
+        }
+
+        // bitmiş endirim redaktə olunmur, amma silinir; aktiv də silinir
+        $ended = $this->discount(['starts_at' => now()->subDays(5), 'ends_at' => now()->subDays(2)]);
+        $controller->update(Request::create('/', 'PUT', ['percent' => 50, 'ends_at' => now()->addDay()->format('Y-m-d\TH:i')]), $ended);
+        $this->assertSame('15', $ended->fresh()->percentLabel());
+        $controller->destroy($ended);
+        $controller->destroy($active);
+        $this->assertSame([$scheduled->id], ProductDiscount::pluck('id')->all());
     }
 }

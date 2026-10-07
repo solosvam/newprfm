@@ -17,6 +17,6 @@
 <!-- Vendor Styles End -->
 <!-- Template Base Styles Start -->
 <link rel="stylesheet" href="{{asset('backend/css/styles.css?v=1')}}"/>
-<link rel="stylesheet" href="{{asset('backend/css/main.css')}}"/>
+<link rel="stylesheet" href="{{asset_v('backend/css/main.css')}}"/>
 <!-- Template Base Styles End -->
 <script src="{{ asset('backend/js/base/loader.js?v=1.1') }}"></script>

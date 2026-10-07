@@ -152,14 +152,10 @@
 
                                 <p id="creditEstimate" hidden></p>
 
-                                @php $creditTermsUrl = \App\Models\Setting::valueOf('credit_terms_url', ''); @endphp
+                                {{-- Hissə-hissə ödəniş qaydaları səhifəsi (Ayarlar → Kredit → Şərtlər və qaydalar) --}}
                                 <div class="checkout-check installment__terms">
                                     <input type="checkbox" id="creditTerms" aria-labelledby="creditTermsText">
-                                    @if($creditTermsUrl)
-                                        <a id="creditTermsText" href="{{ $creditTermsUrl }}" target="_blank" rel="noopener noreferrer">{{ __('checkout_credit_accept_terms') }}</a>
-                                    @else
-                                        <label id="creditTermsText" for="creditTerms">{{ __('checkout_credit_accept_terms') }}</label>
-                                    @endif
+                                    <a id="creditTermsText" href="{{ route('front.installment') }}" target="_blank" rel="noopener">{{ __('checkout_credit_accept_terms') }}</a>
                                 </div>
                             @endif
                         </div>
@@ -221,13 +217,11 @@
 
                     <button id="placeOrder" type="button" class="btn btn-dark">{{ __('checkout_confirm_order') }}</button>
 
-                    @php $orderTermsUrl = \App\Models\Setting::valueOf('order_terms_url', ''); @endphp
-                    @if($orderTermsUrl)
-                        <p class="checkout-terms-notice">
-                            {{ __('checkout_terms_before') }}
-                            <a href="{{ $orderTermsUrl }}" target="_blank" rel="noopener noreferrer">{{ __('checkout_terms_link') }}</a>{{ __('checkout_terms_after') }}
-                        </p>
-                    @endif
+                    {{-- İstifadə şərtləri səhifəsi (Marketinq → Məlumat səhifələri) --}}
+                    <p class="checkout-terms-notice">
+                        {{ __('checkout_terms_before') }}
+                        <a href="{{ route('front.page.terms') }}" target="_blank" rel="noopener">{{ __('checkout_terms_link') }}</a>{{ __('checkout_terms_after') }}
+                    </p>
 
                     <ul class="cart-trust">
                         <li>

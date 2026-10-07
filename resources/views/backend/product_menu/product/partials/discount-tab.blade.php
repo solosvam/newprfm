@@ -77,12 +77,18 @@
                                     <td class="fw-bold">−{{ $discount->percentLabel() }}%</td>
                                     <td class="text-nowrap">{{ $discount->starts_at->format('d.m.Y H:i') }}<br>{{ $discount->ends_at->format('d.m.Y H:i') }}</td>
                                     <td><span class="badge {{ $class }}">{{ $label }}</span></td>
-                                    <td class="text-end">
-                                        @if($discount->status() === 'active')
-                                            <button type="submit" form="discount-end-{{ $discount->id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Endirim indi bitirilsin?')">Bitir</button>
-                                        @elseif($discount->status() === 'scheduled')
-                                            <button type="submit" form="discount-delete-{{ $discount->id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Planlaşdırılmış endirim silinsin?')">Sil</button>
+                                    <td class="text-end text-nowrap">
+                                        @if($discount->status() !== 'ended')
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-discount-edit
+                                                    data-url="{{ route('admin.product-discounts.update', $discount) }}" data-id="{{ $discount->id }}"
+                                                    data-percent="{{ $discount->percentLabel() }}" data-status="{{ $discount->status() }}"
+                                                    data-starts="{{ $discount->starts_at->format('Y-m-d\TH:i') }}" data-ends="{{ $discount->ends_at->format('Y-m-d\TH:i') }}">Redaktə</button>
                                         @endif
+                                        @if($discount->status() === 'active')
+                                            <button type="submit" form="discount-end-{{ $discount->id }}" class="btn btn-sm btn-outline-warning" onclick="return confirm('Endirim indi bitirilsin? Tarixçədə qalacaq.')">Bitir</button>
+                                        @endif
+                                        <button type="submit" form="discount-delete-{{ $discount->id }}" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('{{ ['active' => 'Aktiv endirim dərhal dayanacaq və tarixçədən silinəcək. Davam edilsin?', 'scheduled' => 'Planlaşdırılmış endirim silinsin?', 'ended' => 'Endirim tarixçədən silinsin?'][$discount->status()] }}')">Sil</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -112,7 +118,7 @@
     })();
     // #product-discount ilə açılanda (əlavə/xəta sonrası) — Endirim tabı açıq gəlsin
     document.addEventListener('DOMContentLoaded', () => {
-        if (location.hash === '#product-discount' || {{ $discountErrors->any() ? 'true' : 'false' }}) {
+        if (location.hash === '#product-discount' || {{ $discountErrors->any() || $errors->getBag('discountEdit')->any() ? 'true' : 'false' }}) {
             const tab = document.querySelector('a[href="#product-discount"]');
             // admin-də Bootstrap 5.0.1 — getOrCreateInstance yoxdur
             if (tab && window.bootstrap) (bootstrap.Tab.getInstance(tab) || new bootstrap.Tab(tab)).show();

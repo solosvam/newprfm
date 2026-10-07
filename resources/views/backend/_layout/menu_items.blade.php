@@ -1,4 +1,12 @@
 @foreach($items as $item)
+    @if(!empty($item['separator']))
+        <li class="menu-separator" aria-hidden="true">
+            <div class="col-12 px-1 py-2">
+                <div class="separator-light"></div>
+            </div>
+        </li>
+        @continue
+    @endif
     <li>
         @if(!empty($item['children']))
             <a href="#{{ $item['id'] }}" data-href="/{{ $item['id'] }}">

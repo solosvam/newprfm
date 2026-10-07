@@ -5,6 +5,7 @@
 @endsection
 
 @section('title', '404 — ' . __('error_404_title') . ' | parfumshop')
+@section('meta_robots', 'noindex, follow')
 
 @section('content')
     <main>

@@ -2,7 +2,7 @@
 @php
     $html_tag_data = [];
     $title = 'Popup-lar';
-    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Sayt', '#' => $title];
+    $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Marketinq', '#' => $title];
     $statusBadge = ['active' => ['Aktiv', 'success'], 'scheduled' => ['Planlaşdırılıb', 'primary'], 'ended' => ['Bitib', 'muted'], 'off' => ['Deaktiv', 'muted']];
     $positionShort = ['center' => 'mərkəz', 'corner' => 'künc', 'bar' => 'zolaq'];
     $num = fn ($v) => number_format((int) $v, 0, '.', ' ');

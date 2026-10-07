@@ -18,7 +18,9 @@
 
     <h1 class="account-greeting">{{ __('navigation_hello_name', ['name' => trim(auth()->user()->name.' '.auth()->user()->surname)]) }}</h1>
 
-    <nav class="account-nav">
+    {{-- Mobildə üfüqi pill-lər + ox (main.js initScrollPills), kateqoriya menyusu ilə eyni --}}
+    <div class="pill-scroll-wrap">
+    <nav class="account-nav" data-pill-scroll>
         <a href="{{ route('profile') }}" class="{{ request()->routeIs('profile') ? 'active' : '' }}">{{ __('catalog_account_information') }}</a>
         <a href="{{ route('profile.personal') }}" class="{{ request()->routeIs('profile.personal*') ? 'active' : '' }}">{{ __('catalog_personal_details') }}</a>
         <a href="{{ route('profile.credit') }}" class="{{ request()->routeIs('profile.credit*') ? 'active' : '' }}">
@@ -39,6 +41,10 @@
             <a href="{{ route('profile.referral') }}" class="{{ request()->routeIs('profile.referral') ? 'active' : '' }}">{{ __('referral_title') }}</a>
         @endif
     </nav>
+    <button type="button" class="cats-hint" data-pill-hint hidden aria-label="{{ __('auth_my_account') }} →" tabindex="-1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+    </div>
 
     <form method="POST" action="{{ route('front.logout') }}" class="cabinet-logout-form">
         @csrf
