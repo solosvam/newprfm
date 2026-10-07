@@ -213,9 +213,20 @@
         <div class="courier-client">
             <div>
                 <div class="courier-wh__name">{{ trim($order->customer?->name.' '.$order->customer?->surname) }}</div>
-                @if($addressLine)<a class="courier-wh__addr" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($addressLine) }}" target="_blank" rel="noopener">{{ $addressLine }}</a>@endif
+                @if($addressLine)<a class="courier-wh__addr" href="{{ $a->mapsUrl() }}" target="_blank" rel="noopener">{{ $addressLine }}</a>@endif
                 @if($addressExtra)<div class="small">{{ $addressExtra }}</div>@endif
-                @if($a?->address_note)<div class="small text-muted">{{ $a->address_note }}</div>@endif
+                {{-- ünvan qeydi (sütun "note") — orientir və s. --}}
+                @if($a?->note)<div class="small text-muted">{{ $a->note }}</div>@endif
+                @if($a)
+                    {{-- Naviqasiya: müştəri xəritədə nöqtə seçibsə — dəqiq nöqtə, yoxsa ünvan mətni ilə --}}
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <a href="{{ $a->directionsUrl() }}" target="_blank" rel="noopener" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
+                            <i data-acorn-icon="pin" data-acorn-size="14"></i> Google Maps
+                        </a>
+                        <a href="{{ $a->wazeUrl() }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">Waze</a>
+                        @if($a->hasLocation())<span class="badge bg-outline-success align-self-center">📍 dəqiq nöqtə</span>@endif
+                    </div>
+                @endif
                 @if($order->customer_note)<div class="small mt-1"><b>Qeyd:</b> {{ $order->customer_note }}</div>@endif
             </div>
             <div class="d-flex flex-column gap-1 align-items-center">

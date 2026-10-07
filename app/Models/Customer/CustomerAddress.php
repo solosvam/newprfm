@@ -33,13 +33,22 @@ class CustomerAddress extends Model {
             'floor' => ['nullable', 'string', 'max:30'],
             'apartment' => ['nullable', 'string', 'max:30'],
             'address_note' => ['nullable', 'string', 'max:1000'],
+            // xəritədə seçilmiş nöqtə (Google Maps) — Azərbaycan hüdudları təxminən
+            'latitude' => ['nullable', 'numeric', 'between:38,42', 'required_with:longitude'],
+            'longitude' => ['nullable', 'numeric', 'between:44,51', 'required_with:latitude'],
         ]);
     }
 
     /** Formdan gələn məlumatı cədvəl sütunlarına çevirir (şəhərin adı `city`-yə də yazılır) */
     public static function attributesFromForm(array $data, ?string $title = null): array
     {
-        return [
+        // koordinat yalnız formada varsa yazılır — göndərməyən forma mövcud nöqtəni silməsin
+        $location = array_key_exists('latitude', $data) ? [
+            'latitude' => $data['latitude'] !== null && $data['latitude'] !== '' ? round((float) $data['latitude'], 7) : null,
+            'longitude' => ($data['longitude'] ?? null) !== null && $data['longitude'] !== '' ? round((float) $data['longitude'], 7) : null,
+        ] : [];
+
+        return $location + [
             'title' => $title ?? ($data['title'] ?? null),
             'city_id' => (int) $data['city_id'],
             'city' => City::whereKey($data['city_id'])->value('name'),
@@ -50,6 +59,33 @@ class CustomerAddress extends Model {
             'apartment' => $data['apartment'] ?? null,
             'note' => $data['address_note'] ?? null,
         ];
+    }
+
+    public function hasLocation(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
+    /** Naviqasiya linkləri: koordinat varsa — nöqtə, yoxdursa — ünvan mətni ilə axtarış */
+    public function mapsUrl(): string
+    {
+        return $this->hasLocation()
+            ? 'https://www.google.com/maps/search/?api=1&query='.$this->latitude.','.$this->longitude
+            : 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($this->city.', '.$this->address);
+    }
+
+    public function directionsUrl(): string
+    {
+        return 'https://www.google.com/maps/dir/?api=1&destination='.($this->hasLocation()
+            ? $this->latitude.','.$this->longitude
+            : rawurlencode($this->city.', '.$this->address));
+    }
+
+    public function wazeUrl(): string
+    {
+        return $this->hasLocation()
+            ? 'https://waze.com/ul?ll='.$this->latitude.','.$this->longitude.'&navigate=yes'
+            : 'https://waze.com/ul?q='.rawurlencode($this->city.', '.$this->address).'&navigate=yes';
     }
 
     public function getLabelAttribute():string

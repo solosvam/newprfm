@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: val('addressTitle'), city_id: Number(val('city')) || null,
             address: val('address'), building: val('building'), entrance: val('entrance'),
             floor: val('floor'), apartment: val('apartment'), address_note: val('addressNote'),
+            latitude: isNew ? val('latitude') : null, longitude: isNew ? val('longitude') : null,
         };
         try {
             const response = await fetch(config.url, {

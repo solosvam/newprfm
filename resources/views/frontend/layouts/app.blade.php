@@ -54,6 +54,7 @@
 @include('frontend.partials.theme-script')
 @yield('page-scripts')
 @include('frontend.partials.cookie-bar')
+@include('frontend.partials.advisor-fab')
 @include('frontend.partials.popups')
 </body>
 </html>

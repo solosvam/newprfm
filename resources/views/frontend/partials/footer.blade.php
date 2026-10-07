@@ -50,6 +50,7 @@
                         <li><a href="{{ route('front.referral') }}">{{ __('referral_title') }}</a></li>
                     @endif
                 @endforeach
+                <li><a href="{{ route('front.advisor') }}">{{ __('advisor_link') }}</a></li>
                 <li><a href="{{ route('front.faq') }}">{{ __('faq_title') }}</a></li>
                 <li><a href="{{ auth()->check() ? route('profile') : route('front.login') }}">{{ __('footer_account') }}</a></li>
             </ul>

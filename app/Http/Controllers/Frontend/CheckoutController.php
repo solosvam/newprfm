@@ -72,6 +72,8 @@ class CheckoutController extends Controller
                 'floor' => ['nullable', 'string', 'max:30'],
                 'apartment' => ['nullable', 'string', 'max:30'],
                 'address_note' => ['nullable', 'string', 'max:1000'],
+                'latitude' => CustomerAddress::formRules()['latitude'],
+                'longitude' => CustomerAddress::formRules()['longitude'],
 
                 'payment_method_id' => [
                     'required',

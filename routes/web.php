@@ -312,6 +312,10 @@ foreach (\App\Models\Page::PAGES as $pageKey => [$pageSlug]) {
 }
 Route::get('/faq', [\App\Http\Controllers\Frontend\PageController::class, 'faq'])->name('front.faq');
 Route::get('/bonus', [\App\Http\Controllers\Frontend\PageController::class, 'bonus'])->name('front.bonus');
+// AI ətir məsləhətçisi
+Route::get('/advisor', [\App\Http\Controllers\Frontend\AdvisorController::class, 'show'])->name('front.advisor');
+Route::post('/advisor', [\App\Http\Controllers\Frontend\AdvisorController::class, 'recommend'])
+    ->middleware('throttle:8,1')->name('front.advisor.recommend');
 Route::get('/referral', [\App\Http\Controllers\Frontend\PageController::class, 'referral'])->name('front.referral');
 Route::get('/installment', [\App\Http\Controllers\Frontend\PageController::class, 'installment'])->name('front.installment');
 

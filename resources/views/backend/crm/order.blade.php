@@ -169,7 +169,14 @@
                         @if($customer->mobile_2)
                             <div><dt>Ehtiyat telefon</dt><dd><a href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile_2) }}">{{ $customer->mobile_2 }}</a></dd></div>
                         @endif
-                        <div class="od-facts__wide"><dt>Ünvan</dt><dd>{{ $order->address?->label ?: 'Ünvan dəqiqləşdirilməyib' }}</dd></div>
+                        <div class="od-facts__wide"><dt>Ünvan</dt><dd>
+                            {{ $order->address?->label ?: 'Ünvan dəqiqləşdirilməyib' }}
+                            @if($order->address)
+                                <a href="{{ $order->address->mapsUrl() }}" target="_blank" rel="noopener" class="ms-1 {{ $order->address->hasLocation() ? 'text-success' : 'text-muted' }}" title="{{ $order->address->hasLocation() ? 'Müştəri xəritədə nöqtə seçib' : 'Nöqtə seçilməyib — ünvan mətni ilə axtarış' }}">
+                                    <i data-acorn-icon="pin" data-acorn-size="14"></i> xəritə
+                                </a>
+                            @endif
+                        </dd></div>
                         <div><dt>Qablaşdırma</dt><dd>@if($order->gift_wrap)<span class="badge bg-outline-primary">Hədiyyəlik</span>@else Standart @endif</dd></div>
                         <div><dt>Kuryer</dt><dd>
                             @if($order->courier)

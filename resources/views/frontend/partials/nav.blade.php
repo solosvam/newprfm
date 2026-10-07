@@ -22,6 +22,14 @@
               data-click-url="{{ route('search.click') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="search" name="q" id="searchInput" value="{{ request('q') }}" placeholder="{{ __('nav_search_placeholder') }}" aria-label="{{ __('nav_search_label') }}">
+            {{-- Səsli axtarış: brauzer dəstəkləyəndə görünür (frontend/js/voice-search.js).
+                 Dil həmişə ingilis: axtarışda brend/ətir adları deyilir (Chanel, Coco Mademoiselle) —
+                 az-AZ tanıma onları "kuku mahnı modelləri" kimi yazırdı --}}
+            <button type="button" class="search-voice" id="searchVoice" hidden aria-label="{{ __('voice_search') }}" title="{{ __('voice_search') }}"
+                    data-lang="en-US"
+                    data-listening="{{ __('voice_listening') }}" data-denied="{{ __('voice_denied') }}" data-no-speech="{{ __('voice_no_speech') }}">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg>
+            </button>
             <div class="search-results" id="searchResults" hidden aria-live="polite">
         </form>
 

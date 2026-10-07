@@ -262,6 +262,14 @@ class AuthController extends Controller
             ->latest()
             ->paginate(20);
 
+        // sonsuz scroll: növbəti səhifənin sətirləri (frontend/js/infinite-list.js)
+        if (request()->ajax()) {
+            return response()->json([
+                'html' => view('frontend.partials.bonus-rows', compact('transactions'))->render(),
+                'next' => $transactions->nextPageUrl(),
+            ]);
+        }
+
         return view('frontend.bonus', compact('transactions'));
     }
 

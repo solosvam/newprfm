@@ -70,6 +70,11 @@ return [
         'sender' => env('PARFUMSHOP_SMS_SENDER', 'ParfumShop'),
     ],
 
+    // Ünvan üçün xəritə (checkout, CRM): Maps JavaScript API + Places API + Geocoding API; açar HTTP referrer ilə məhdudlaşdırılmalıdır
+    'google_maps' => [
+        'key' => env('GOOGLE_MAPS_KEY'),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-5-mini'),

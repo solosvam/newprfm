@@ -192,6 +192,7 @@
 
 /* ---------- Order history list ---------- */
 .order-history { display: flex; flex-direction: column; gap: 10px; }
+.order-history__list { display: flex; flex-direction: column; gap: 10px; }
 
 .order-history__header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .order-history__header .account-panel-title { margin: 0; }
@@ -548,3 +549,12 @@
     0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent); }
     100% { box-shadow: 0 0 0 8px transparent; }
 }
+
+/* Sonsuz scroll (partials/infinite-sentinel) */
+.infinite-sentinel { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 12px 0; color: var(--text-muted); font-size: 14px; }
+.infinite-sentinel__spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--accent); animation: infinite-spin .7s linear infinite; display: none; }
+.infinite-sentinel[data-state="loading"] .infinite-sentinel__spinner { display: inline-block; }
+.infinite-sentinel__text { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.infinite-sentinel__button { width: auto; height: 40px; margin: 0; padding: 0 18px; font-size: 14px; }
+@keyframes infinite-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .infinite-sentinel__spinner { animation-duration: 2s; } }

@@ -440,6 +440,9 @@
             floor: val('floor'),
             apartment: val('apartment'),
             address_note: val('addressNote'),
+            // xəritədə seçilmiş nöqtə (partials/address-map); seçilməyibsə null
+            latitude: isNew ? val('latitude') : null,
+            longitude: isNew ? val('longitude') : null,
             payment_method_id: Number(paymentRadios.find(r => r.checked)?.value),
             credit_period_id: isInstallment ? (Number(els.periodInput?.value) || null) : null,
             birbank_installment_months: selectedCode() === BIRBANK_INSTALLMENT

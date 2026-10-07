@@ -22,6 +22,14 @@ class OrdersController extends Controller
             ->latest()
             ->paginate(10);
 
+        // sonsuz scroll: növbəti səhifənin kartları (frontend/js/infinite-list.js)
+        if (request()->ajax()) {
+            return response()->json([
+                'html' => view('frontend.partials.order-cards', compact('orders'))->render(),
+                'next' => $orders->nextPageUrl(),
+            ]);
+        }
+
         return view('frontend.orders', compact('orders'));
     }
 

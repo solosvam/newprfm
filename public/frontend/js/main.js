@@ -8,6 +8,9 @@
     let appData = {};
     try { appData = JSON.parse(document.getElementById('app-data')?.textContent || '{}'); } catch (e) {}
 
+    // digər skriptlər (voice-search.js və s.) eyni bildirişdən istifadə etsin
+    window.ParfumNotify = (message, type) => notify(message, type);
+
     function notify(message, type = 'success') {
         if (!window.jQuery || typeof window.jQuery.notify !== 'function') return;
         const $ = window.jQuery;
@@ -228,7 +231,9 @@
     const favoriteSelector = '.fav-btn, .favorite-toggle';
     const activeFavoriteIcon = '/frontend/images/product-card-wishlist-active.svg';
 
+    let lastFavoriteIds = [];
     function paintFavorites(ids) {
+        lastFavoriteIds = ids;
         const selectedIds = ids.map(Number);
 
         document.querySelectorAll(favoriteSelector).forEach(button => {
@@ -910,12 +915,15 @@
     }
     syncPriceAlert();
 
-    // Kartlarda geri sayım qutuları (gün / saat / dəq / san); bitəndə qutular gizlənir
+    // Səhifəyə sonradan kart əlavə olunanda (AI seçici və s.): seçilmişlər ürəyini yenidən rənglə
+    document.addEventListener('parfum:cards-added', () => paintFavorites(lastFavoriteIds));
+
+    // Kartlarda geri sayım qutuları (gün / saat / dəq / san); bitəndə qutular gizlənir.
+    // Hər saniyə yenidən axtarılır — AJAX ilə gələn kartlar (AI seçici, sonsuz scroll) da sayılsın
     (() => {
-        const boxes = [...document.querySelectorAll('[data-card-countdown]')];
-        if (!boxes.length) return;
+        if (!document.querySelector('[data-card-countdown]') && !document.querySelector('[data-dynamic-cards]')) return;
         const pad = (n) => String(n).padStart(2, '0');
-        const tick = () => boxes.forEach((box) => {
+        const tick = () => document.querySelectorAll('[data-card-countdown]').forEach((box) => {
             let s = Math.max(0, Math.floor((Number(box.dataset.cardCountdown) - Date.now()) / 1000));
             if (s === 0) { box.hidden = true; return; }
             const parts = { d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60 };

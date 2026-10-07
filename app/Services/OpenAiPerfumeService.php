@@ -92,6 +92,12 @@ class OpenAiPerfumeService
         return $data['ingredients'];
     }
 
+    /** Ümumi strukturlaşdırılmış JSON sorğusu (web axtarışı olmadan) — məs. AI ətir məsləhətçisi */
+    public function json(string $prompt, array $schema): array
+    {
+        return $this->request($prompt, $schema, false, false);
+    }
+
     private function request(
         string $prompt,
         array $schema,

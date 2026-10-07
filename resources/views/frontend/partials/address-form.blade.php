@@ -31,6 +31,8 @@
         <div class="checkout-field"><input type="text" id="apartment" maxlength="30" placeholder="{{ __('checkout_apartment') }}"></div>
     </div>
 
+    @include('frontend.partials.address-map')
+
     <div class="checkout-field address-form__note">
         <textarea id="addressNote" maxlength="1000" placeholder="{{ __('checkout_address_extra_info') }}"></textarea>
     </div>

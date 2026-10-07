@@ -56,7 +56,8 @@
                 // @json arqumenti vergülə görə bölür — massiv əvvəlcə dəyişənə yığılır
                 $addressData = ['title' => $address->title, 'city_id' => $address->city_id, 'address' => $address->address,
                     'building' => $address->building, 'entrance' => $address->entrance, 'floor' => $address->floor,
-                    'apartment' => $address->apartment, 'address_note' => $address->note, 'is_default' => (bool) $address->is_default];
+                    'apartment' => $address->apartment, 'address_note' => $address->note, 'is_default' => (bool) $address->is_default,
+                    'latitude' => $address->latitude, 'longitude' => $address->longitude];
             @endphp
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 d-flex gap-2">
@@ -65,6 +66,10 @@
                         <div class="text-muted mt-1">{{ $address->city }}, {{ $address->address }}</div>
                         @if($details)<div class="text-muted">{{ $details }}</div>@endif
                         @if($address->note)<div class="text-muted fst-italic">{{ $address->note }}</div>@endif
+                        <a href="{{ $address->mapsUrl() }}" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-1 mt-1 {{ $address->hasLocation() ? 'text-success' : 'text-muted' }}" style="font-size: 13px">
+                            <i data-acorn-icon="pin" data-acorn-size="14"></i>
+                            {{ $address->hasLocation() ? 'Xəritədə nöqtə seçilib — aç' : 'Xəritədə axtar (nöqtə seçilməyib)' }}
+                        </a>
                     </div>
                     {{-- qələm → redaktə pəncərəsi (aşağıdakı #crmAddressModal) --}}
                     <button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-primary align-self-start" title="Ünvanı redaktə et"
@@ -81,7 +86,7 @@
 
     {{-- Ünvanın redaktəsi: qələm → pəncərə; AJAX ilə yadda saxlanır, tab yenilənir --}}
     <div class="modal fade" id="crmAddressModal" tabindex="-1" aria-labelledby="crmAddressModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <form class="modal-content" id="crmAddressForm" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title" id="crmAddressModalTitle">Ünvanı redaktə et</h5>
@@ -112,6 +117,29 @@
                             <label class="form-label" for="addr-note">Əlavə məlumat</label>
                             <textarea class="form-control" id="addr-note" name="address_note" rows="2" maxlength="1000" placeholder="Kuryer üçün qeyd, orientir…"></textarea>
                         </div>
+                        @if($mapsKey = config('services.google_maps.key'))
+                            {{-- Xəritədə nöqtə (public/shared/address-map.js) --}}
+                            <div class="col-12">
+                                <div class="address-map" id="crmAddressMap" data-address-map data-key="{{ $mapsKey }}" data-lang="az"
+                                     data-lat="#addr-lat" data-lng="#addr-lng" data-address="#addr-address" data-city="#addr-city"
+                                     data-text-pick="Xəritədə nöqtəni seç" data-text-change="Xəritədəki nöqtəni dəyiş" data-text-hint="Xəritəyə basın və ya pin-i sürüşdürün."
+                                     data-text-selected="Nöqtə seçildi" data-text-denied="Yer təyin olunmadı" data-text-error="Xəritə yüklənmədi (GOOGLE_MAPS_KEY?)" data-text-use="Bu ünvanı yaz" data-text-approx="Ünvan dəqiq tapılmadı — pin-i özünüz qoyun.">
+                                    <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2" data-map-open>
+                                        <i data-acorn-icon="pin" data-acorn-size="16"></i><span data-map-open-label>Xəritədə nöqtəni seç</span>
+                                    </button>
+                                    <div class="mt-2" data-map-panel hidden>
+                                        <div data-map-canvas style="height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid var(--separator);"></div>
+                                        <div class="d-flex gap-2 mt-2">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-map-locate>Mənim yerim</button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" data-map-clear>Nöqtəni sil</button>
+                                        </div>
+                                        <div class="text-muted mt-2" style="font-size: 13px" data-map-status></div>
+                                    </div>
+                                    <input type="hidden" id="addr-lat" name="latitude">
+                                    <input type="hidden" id="addr-lng" name="longitude">
+                                </div>
+                            </div>
+                        @endif
                         <div class="col-12">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="addr-default" name="is_default" value="1">
@@ -130,6 +158,17 @@
     </div>
 </div>
 
+@if(config('services.google_maps.key'))
+    <style>
+        /* Ünvan təklifləri (Google Places) — CRM ünvan pəncərəsi */
+        .address-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 1060; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--foreground); border: 1px solid var(--separator); border-radius: var(--border-radius-md); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+        .address-suggest[hidden] { display: none; }
+        .address-suggest li { display: flex; flex-direction: column; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+        .address-suggest li small { color: var(--muted); }
+        .address-suggest li:hover, .address-suggest li.is-active { background: rgba(var(--primary-rgb), .08); }
+    </style>
+    <script src="{{ asset_v('shared/address-map.js') }}"></script>
+@endif
 <script>
     // Tab hər yüklənəndə bu skript yenidən işləyir — hadisələr namespace ilə bir dəfə bağlanır
     (() => {
@@ -139,6 +178,7 @@
         // pəncərə body-yə köçürülür: tab yenilənəndə (#tabContent.html) itməsin, backdrop düzgün işləsin
         document.querySelectorAll('body > #crmAddressModal').forEach((old) => { if (old !== modalEl) old.remove(); });
         document.body.appendChild(modalEl);
+        window.AddressMap?.init();
         // admin-də Bootstrap 5.0.1 — getOrCreateInstance yoxdur
         const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
         const error = form.querySelector('[data-address-error]');
@@ -150,10 +190,11 @@
             form.reset();
             error.hidden = true;
             form.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
-            ['title', 'city_id', 'address', 'building', 'entrance', 'floor', 'apartment', 'address_note'].forEach((name) => {
-                form.elements[name].value = data[name] ?? '';
+            ['title', 'city_id', 'address', 'building', 'entrance', 'floor', 'apartment', 'address_note', 'latitude', 'longitude'].forEach((name) => {
+                if (form.elements[name]) form.elements[name].value = data[name] ?? '';
             });
             form.elements.is_default.checked = Boolean(data.is_default);
+            document.getElementById('crmAddressMap')?.dispatchEvent(new Event('address-map:refresh'));
             modal.show();
         });
 
