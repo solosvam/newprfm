@@ -27,13 +27,15 @@
         <header class="advisor-hero">
             <div class="advisor-hero__bot">
                 <img src="{{ asset_v('frontend/images/advisor-bot-lg.webp') }}" alt="" width="180" height="180" decoding="async" fetchpriority="high">
+                {{-- dairənin içində — robotla birgə üzür --}}
+                <span class="advisor-hero__badge">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
+                    AI
+                </span>
             </div>
-            <span class="advisor-hero__badge">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
-                AI
-            </span>
-            <h1 class="advisor-hero__title">{{ __('advisor_title') }}</h1>
-            <p class="advisor-hero__text">{{ __('advisor_subtitle') }}</p>
+            {{-- robot müştəriyə özü müraciət edir (nitq balonu) --}}
+            <h1 class="advisor-hero__title">{{ __('advisor_greeting') }}</h1>
+            <p class="advisor-hero__speech">{{ __('advisor_speech') }}</p>
         </header>
 
         <form class="advisor-form" id="advisorForm" action="{{ route('front.advisor.recommend') }}" method="POST" novalidate

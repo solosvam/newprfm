@@ -776,12 +776,12 @@
     "advisor_q_liked": "Bəyəndiyiniz ətir varmı?",
     "advisor_optional": "istəyə görə",
     "advisor_liked_placeholder": "Məs.: Dior Sauvage, Baccarat Rouge 540",
-    "advisor_submit": "Ətirləri seç",
-    "advisor_loading": "Süni intellekt kataloqu nəzərdən keçirir…",
+    "advisor_submit": "Mənim üçün seç",
+    "advisor_loading": "Bir saniyə… kataloqu vərəqləyir, sizə uyğun ətirləri seçirəm",
     "advisor_error": "Hazırda tövsiyə almaq alınmadı, bir az sonra yenidən cəhd edin.",
     "advisor_empty": "Bu seçimlərə uyğun ətir tapılmadı — büdcəni və ya seçimləri dəyişin.",
-    "advisor_results": "Sizə uyğun ətirlər",
-    "advisor_again": "Seçimləri dəyiş",
+    "advisor_results": "Sizin üçün seçdiklərim",
+    "advisor_again": "Başqa cavablarla yenidən seçim",
     "advisor_disclaimer": "Tövsiyələri süni intellekt hazırlayır — almadan əvvəl ətrin təsvirinə baxın.",
     "advisor_link": "AI ətir seçici",
     "map_pick": "Xəritədə nöqtəni seç",
@@ -795,5 +795,7 @@
     "map_optional": "Kuryer sizi daha tez tapsın — istəyə görə",
     "map_use_address": "Bu ünvanı yaz",
     "map_approx": "Ünvan xəritədə dəqiq tapılmadı — pin-i evinizin üstünə özünüz qoyun.",
-    "advisor_fab_bubble": "Sizə uyğun ətri tapmağa kömək edim? ✨"
+    "advisor_fab_bubble": "Sizə uyğun ətri tapmağa kömək edim? ✨",
+    "advisor_greeting": "Salam! Mən sizin ətir köməkçinizəm 👋",
+    "advisor_speech": "Mənə bir neçə sualın cavabını deyin — kataloqumuzdakı yüzlərlə ətir arasından sizin zövqünüzə ən uyğun olanları özüm seçəcəyəm."
 }

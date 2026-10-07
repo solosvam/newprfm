@@ -108,3 +108,31 @@
     .advisor-hero__bot, .advisor-thinking__bot, .advisor-thinking__dots i { animation: none; }
 }
 .advisor.is-thinking .advisor-hero__bot { display: none; }
+
+/* Robotun sözləri — nitq balonu (quyruğu yuxarıya, robota) */
+.advisor-hero__title { font-size: 28px; }
+.advisor-hero__speech {
+    position: relative; max-width: 560px; margin: 16px auto 0; padding: 16px 22px;
+    border-radius: 18px; background: var(--surface); border: 1px solid var(--border);
+    font-size: 16px; line-height: 1.6; color: var(--text);
+    box-shadow: 0 8px 24px rgba(20, 12, 40, .08);
+}
+.advisor-hero__speech::before {
+    content: ''; position: absolute; top: -9px; left: 50%; width: 16px; height: 16px; margin-left: -8px;
+    background: var(--surface); border-left: 1px solid var(--border); border-top: 1px solid var(--border);
+    transform: rotate(45deg);
+}
+@media (max-width: 760px) {
+    .advisor-hero__title { font-size: 23px; }
+    .advisor-hero__speech { font-size: 15px; padding: 14px 16px; }
+}
+
+/* "AI" nişanı dairənin sağ aşağı kənarında — robotla birgə hərəkət edir */
+.advisor-hero__bot { position: relative; }
+.advisor-hero__bot .advisor-hero__badge {
+    position: absolute; right: -6px; bottom: 12px; margin: 0;
+    background: var(--accent); color: var(--on-accent);
+    box-shadow: 0 6px 16px rgba(43, 31, 74, .3); border: 2px solid var(--bg);
+}
+[data-theme="dark"] .advisor-hero__bot .advisor-hero__badge { color: var(--on-accent); background: var(--accent); }
+.advisor-hero__bot + .advisor-hero__title { margin-top: 18px; }
