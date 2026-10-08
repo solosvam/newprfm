@@ -31,6 +31,10 @@ Son yenilənmə: 8 oktyabr 2026.
 - [ ] **Web push (OneSignal): abunəçilərin niyə görünmədiyini yoxlamaq** (App ID və domen).
 - [ ] **Push üçün teqlər, `push_subscriptions` cədvəli, admin statistikası, "test push" düyməsi.** Heç biri yoxdur.
 - [ ] **Tərk edilmiş səbət və endirimlər üçün push.** Hazırda push yalnız "Qiymət enəndə xəbər ver" üçün gedir.
+- [ ] **Referal linki `paf.az` üzərindən olmalıdır.** Müştərinin kabinetdə (`/profile/referral`) kopyalayıb paylaşdığı dəvət linki
+  hazırda saytın öz domenindədir (`/r/{code}`, `ReferralService::linkFor`). Link `paf.az/...` formasında olmalı,
+  açılanda indiki `referral.track` məntiqi ilə işləməlidir (kod cookie-yə yazılır, qeydiyyata yönləndirilir).
+  Influencer proqramındakı `paf.az` qısa link sistemi ilə ortaq qurulmalıdır (bölmə 6).
 
 ## 3. Brauzer extension-ları
 
