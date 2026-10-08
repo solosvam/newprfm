@@ -35,6 +35,14 @@ Son yenilənmə: 8 oktyabr 2026.
   hazırda saytın öz domenindədir (`/r/{code}`, `ReferralService::linkFor`). Link `paf.az/...` formasında olmalı,
   açılanda indiki `referral.track` məntiqi ilə işləməlidir (kod cookie-yə yazılır, qeydiyyata yönləndirilir).
   Influencer proqramındakı `paf.az` qısa link sistemi ilə ortaq qurulmalıdır (bölmə 6).
+- [ ] **Müştərinin son aktivliyi və passiv müştərilər.** Müştərilər `remember_token` ilə daxil qalır, logout olmurlar,
+  ona görə yalnız login anını saxlamaq kifayət deyil. `customers` cədvəlinə son aktivlik vaxtı (`last_seen_at`) əlavə olunur:
+  login olmuş müştərinin sayta hər girişində yenilənir, amma gündə ən çox bir dəfə (son yazılandan 1 gündən çox keçibsə).
+  Ayrı-ayrı səhifə keçidləri saxlanılmır. Hazırda belə sütun yoxdur.
+  Admin paneldə:
+  - statistika: son 10 gündə, 1 ayda və s. sayta girməyən müştərilərin sayı;
+  - ayrıca səhifə: həmin müştərilərin siyahısı, müddətə görə filtr, seçilənlərə push və ya SMS göndərmək.
+  Push üçün müştərini abunəsinə bağlamaq lazımdır (`push_subscriptions` hələ yoxdur — yuxarıdakı push bəndi ilə əlaqəli).
 
 ## 3. Brauzer extension-ları
 
