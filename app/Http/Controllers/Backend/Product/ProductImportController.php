@@ -82,11 +82,19 @@ class ProductImportController extends Controller
         try {
             $images = $serper->search($request->string('query')->toString());
 
+            // ID URL-dən çıxarılır və namizədlər sessiyada yığılır: təkrar axtarış (və ya başqa tabda axtarış)
+            // əvvəl göstərilmiş checkbox-ları başqa şəklə bağlamasın.
             $images = collect($images)
-                ->map(fn (array $image, int $index) => ['id' => $index] + $image)
+                ->map(fn (array $image) => ['id' => 'i'.substr(sha1($image['original_url']), 0, 16)] + $image)
                 ->all();
 
-            $request->session()->put('product_image_candidates', $images);
+            $candidates = array_replace(
+                $request->session()->get('product_image_candidates', []),
+                collect($images)->keyBy('id')->all(),
+            );
+            $candidates = array_slice($candidates, -200, preserve_keys: true);
+
+            $request->session()->put('product_image_candidates', $candidates);
 
             return response()->json(['images' => $images]);
         } catch (RuntimeException $exception) {

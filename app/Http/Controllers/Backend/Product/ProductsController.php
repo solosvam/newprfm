@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Throwable;
 
 class ProductsController extends Controller
 {
@@ -54,7 +55,7 @@ class ProductsController extends Controller
 
     public function create(AddProductRequest $request)
     {
-        DB::transaction(function () use ($request) {
+        $failedImages = DB::transaction(function () use ($request) {
 
             $product = Product::create([
                 'brand_id'   => $request->brand_id,
@@ -100,7 +101,7 @@ class ProductsController extends Controller
 
             $manager = ImageManager::usingDriver(Driver::class);
 
-            $this->storeSelectedRemoteImages($product, $request, $manager);
+            $failedImages = $this->storeSelectedRemoteImages($product, $request, $manager);
 
             /*
              * Əl ilə yüklənən şəkillər
@@ -125,7 +126,15 @@ class ProductsController extends Controller
                     ]);
                 }
             }
+
+            return $failedImages;
         });
+
+        if ($failedImages > 0) {
+            return redirect()
+                ->route('admin.product.list')
+                ->with('error', "Məhsul əlavə edildi, amma seçilən şəkillərdən {$failedImages} ədədi yüklənmədi (mənbə sayt icazə vermədi). Başqa şəkil seçin.");
+        }
 
         return redirect()
             ->route('admin.product.list')
@@ -145,56 +154,126 @@ class ProductsController extends Controller
         return view('backend.product_menu.product.edit',compact('product','brands','types','genders','categories','ingredients','sizes'));
     }
 
-    private function storeSelectedRemoteImages(Product $product, AddProductRequest $request, ImageManager $manager): void
+    /**
+     * Axtarışdan seçilən şəkilləri endirib məhsula əlavə edir.
+     * "Əsas şəkil" seçilibsə, o, mövcud şəkillərdən də qabağa keçir.
+     * Qaytarır: yüklənə bilməyən şəkillərin sayı.
+     */
+    private function storeSelectedRemoteImages(Product $product, AddProductRequest $request, ImageManager $manager): int
     {
-        $selectedIds = array_map('intval', $request->input('remote_image_ids', []));
+        $selectedIds = array_values(array_unique(array_map('strval', $request->input('remote_image_ids', []))));
         $primaryId = $request->filled('remote_primary_image_id')
-            ? (int) $request->input('remote_primary_image_id')
+            ? (string) $request->input('remote_primary_image_id')
             : null;
 
         if (!$selectedIds) {
-            return;
+            return 0;
         }
 
         if ($primaryId !== null && in_array($primaryId, $selectedIds, true)) {
             $selectedIds = array_values(array_unique(array_merge([$primaryId], $selectedIds)));
+        } else {
+            $primaryId = null;
         }
 
         $candidates = $request->session()->get('product_image_candidates', []);
         $sortOrder = $this->nextImageSortOrder($product);
+        $failed = 0;
+        $primaryImage = null;
 
         foreach ($selectedIds as $id) {
             $candidate = $candidates[$id] ?? null;
-            $url = $candidate['original_url'] ?? null;
+            $contents = $candidate ? $this->downloadRemoteImage($candidate) : null;
 
-            if (!$url) {
-                continue;
-            }
-
-            $response = Http::timeout(20)
-                ->connectTimeout(5)
-                ->withoutRedirecting()
-                ->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; ParfumShopImageImporter/1.0)'])
-                ->get($url);
-
-            if (!$response->successful() || strlen($response->body()) > 10 * 1024 * 1024) {
+            if ($contents === null) {
+                $failed++;
                 continue;
             }
 
             $imageName = $this->generateProductImageName($product);
             $path = public_path('frontend/uploads/products/' . $imageName);
 
-            $manager
-                ->decode($response->body())
-                ->cover(600, 600)
-                ->save($path, quality: 82);
+            try {
+                $manager
+                    ->decode($contents)
+                    ->cover(600, 600)
+                    ->save($path, quality: 82);
+            } catch (Throwable $exception) {
+                report($exception);
+                $failed++;
+                continue;
+            }
 
-            ProductImage::create([
+            $image = ProductImage::create([
                 'product_id' => $product->id,
                 'image' => $imageName,
                 'sort_order' => $sortOrder++,
             ]);
+
+            if ($id === $primaryId) {
+                $primaryImage = $image;
+            }
         }
+
+        if ($primaryImage) {
+            $this->moveImageToFront($product, $primaryImage);
+        }
+
+        return $failed;
+    }
+
+    /**
+     * Orijinal şəkli endirir. Yönləndirmələrə icazə verilir (yalnız https), brauzer kimi sorğu göndərilir,
+     * Referer mənbənin öz domeni olur (hotlink qadağası olan saytlar üçün). Alınmasa null.
+     */
+    private function downloadRemoteImage(array $candidate): ?string
+    {
+        $url = $candidate['original_url'] ?? null;
+
+        if (!$url || parse_url($url, PHP_URL_SCHEME) !== 'https') {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(20)
+                ->connectTimeout(5)
+                ->withOptions(['allow_redirects' => ['max' => 3, 'protocols' => ['https']]])
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36',
+                    'Accept' => 'image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8',
+                    'Referer' => 'https://' . parse_url($url, PHP_URL_HOST) . '/',
+                ])
+                ->get($url);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return null;
+        }
+
+        $body = $response->body();
+        $type = strtolower((string) $response->header('Content-Type'));
+
+        if (!$response->successful() || $body === '' || strlen($body) > 10 * 1024 * 1024) {
+            return null;
+        }
+
+        // HTML səhifə (məs. "giriş qadağandır") şəkil kimi qəbul edilməsin
+        if (str_starts_with($type, 'text/')) {
+            return null;
+        }
+
+        return $body;
+    }
+
+    /** Şəkli 1-ci sıraya keçirir, qalanlarının indiki sırasını saxlayır */
+    private function moveImageToFront(Product $product, ProductImage $first): void
+    {
+        $ids = $product->images()->pluck('id')
+            ->reject(fn ($id) => $id === $first->id)
+            ->prepend($first->id)
+            ->all();
+
+        $this->updateImageOrder($product, $ids);
     }
 
     private function nextImageSortOrder(Product $product): int
@@ -213,7 +292,7 @@ class ProductsController extends Controller
 
     public function update(AddProductRequest $request, $id)
     {
-        DB::transaction(function () use ($request, $id) {
+        $failedImages = DB::transaction(function () use ($request, $id) {
             $product = Product::findOrFail($id);
 
             $product->update([
@@ -284,7 +363,7 @@ class ProductsController extends Controller
             $manager = ImageManager::usingDriver(Driver::class);
 
             // Edit zamanı axtarışdan seçilən uzaq şəkilləri də məhsula əlavə et.
-            $this->storeSelectedRemoteImages($product, $request, $manager);
+            $failedImages = $this->storeSelectedRemoteImages($product, $request, $manager);
 
             /*
              * Yeni şəkillər
@@ -314,7 +393,15 @@ class ProductsController extends Controller
                     ]);
                 }
             }
+
+            return $failedImages;
         });
+
+        if ($failedImages > 0) {
+            return redirect()
+                ->route('admin.product.list')
+                ->with('error', "Məhsul yeniləndi, amma seçilən şəkillərdən {$failedImages} ədədi yüklənmədi (mənbə sayt icazə vermədi). Başqa şəkil seçin.");
+        }
 
         return redirect()
             ->route('admin.product.list')

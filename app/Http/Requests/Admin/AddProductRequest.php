@@ -136,15 +136,15 @@ class AddProductRequest extends FormRequest
             ],
 
             'remote_image_ids.*' => [
-                'integer',
+                'string',
                 'distinct',
-                'min:0',
+                'max:40',
             ],
 
             'remote_primary_image_id' => [
                 'nullable',
-                'integer',
-                'min:0',
+                'string',
+                'max:40',
             ],
 
             'image_order' => [
