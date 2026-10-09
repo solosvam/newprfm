@@ -11,7 +11,8 @@ class CategoriesController extends Controller
 {
     public function index()
     {
-        $categories = Category::all();
+        // Kateqoriyadakı məhsulların sayı (aktiv/deaktiv fərqi olmadan)
+        $categories = Category::withCount('products')->get();
 
         return view('backend.product_menu.category.list',[
             'categories'    => $categories

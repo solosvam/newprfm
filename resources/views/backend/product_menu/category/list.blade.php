@@ -51,6 +51,7 @@
                             <th class="text-muted text-small text-uppercase">Adı AZ</th>
                             <th class="text-muted text-small text-uppercase">Adı EN</th>
                             <th class="text-muted text-small text-uppercase">Adı RU</th>
+                            <th class="text-muted text-small text-uppercase">Məhsul sayı</th>
                             <th class="text-muted text-small text-uppercase">Aktiv</th>
                             <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
@@ -62,6 +63,7 @@
                                 <td>{{ $category->name_az }}</td>
                                 <td>{{ $category->name_en }}</td>
                                 <td>{{ $category->name_ru }}</td>
+                                <td>{{ $category->products_count }}</td>
                                 <td>
                                     @if($category->active)
                                         <span class="badge bg-outline-success">Aktiv</span>

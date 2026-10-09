@@ -10,7 +10,8 @@ class IngredientController extends Controller
 {
     public function index()
     {
-        $ingredients = Ingredient::all();
+        // Notun seçildiyi məhsulların sayı (aktiv/deaktiv fərqi olmadan)
+        $ingredients = Ingredient::withCount('products')->get();
 
         return view('backend.product_menu.ingredients.list',[
             'ingredients'    => $ingredients
