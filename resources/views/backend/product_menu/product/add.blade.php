@@ -15,8 +15,7 @@
 @endsection
 
 @section('js_page')
-    <script src="{{ asset('backend/js/vendor/select2.full.min.js') }}"></script>
-    <script src="{{ asset('backend/js/forms/controls.select2.js') }}"></script>
+    {{-- select2.full.min.js və controls.select2.js layout-da (backend._layout.scripts) yüklənir --}}
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -367,7 +366,7 @@
 
                                                     <div class="col-md-9">
                                                         <label for="brand_id">Brend</label>
-                                                        <select class="form-select select2" id="brand_id" name="brand_id" required>
+                                                        <select class="form-select select2" id="brand_id" name="brand_id">
                                                             <option value="" @selected(!old('brand_id'))>Seçin</option>
                                                             @foreach($brands as $brand)
                                                                 <option value="{{ $brand->id }}" @selected(old('brand_id') == $brand->id)>
@@ -380,7 +379,7 @@
 
                                                 <div class="mt-3">
                                                     <label for="category">Kateqoriyalar</label>
-                                                    <select class="form-select select-multiple" id="category" multiple name="categories[]" required>
+                                                    <select class="form-select select-multiple" id="category" multiple name="categories[]">
                                                         @foreach($categories as $category)
                                                             <option value="{{ $category->id }}" @selected(in_array($category->id, old('categories', [])))>
                                                                 {{ $category->name_az }}
@@ -393,7 +392,7 @@
                                                     <div class="col-md-6">
                                                         <div>
                                                         <label for="gender">Cinsiyyət</label>
-                                                        <select class="form-select select-multiple" id="gender" multiple name="genders[]" required>
+                                                        <select class="form-select select-multiple" id="gender" multiple name="genders[]">
                                                             @foreach($genders as $gender)
                                                                 <option value="{{ $gender->id }}" @selected(in_array($gender->id, old('genders', [])))>
                                                                     {{ $gender->name_az }}
@@ -405,7 +404,7 @@
                                                     <div class="col-md-6">
                                                     <div>
                                                         <label for="type">Məhsul tipi</label>
-                                                        <select id="type" class="form-select select2" name="type_id" required>
+                                                        <select id="type" class="form-select select2" name="type_id">
                                                             @foreach($types as $type)
                                                                 <option value="{{ $type->id }}" @selected(old('type_id') == $type->id)>
                                                                     {{ $type->name_az }}
