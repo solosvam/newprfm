@@ -3,7 +3,7 @@
 Layihə üzrə **yeganə** görüləcək işlər sənədi. Yeni iş əlavə olunanda, iş bitəndə və ya qərar veriləndə yalnız bu fayl yenilənir.
 Əvvəlki `docs/order-fulfillment-plan.md` və `docs/backlog.md` bu fayla birləşdirilib silinib.
 
-Son yenilənmə: 8 oktyabr 2026.
+Son yenilənmə: 9 oktyabr 2026.
 
 ---
 
@@ -80,6 +80,15 @@ Meta tərəfi hazırdır, Instagram girişi testdən keçib. Laravel-də hələ 
 ## 7. Git
 
 - [ ] Köhnə `fix/banner-product-cls` branch-ı (28 sentyabr, 5 commit, main-ə birləşdirilməyib). Banner və məhsul şəkillərinin ölçüləri artıq main-də başqa yolla yazılıb, ona görə branch-a ehtiyac görünmür — yoxlayıb silmək olar.
+
+## 8. Köhnə saytdan gələn məhsulların təmizlənməsi
+
+Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9 oktyabr, yarımçıq importdan sonra); prodda tam importdan sonra yenidən sayılmalıdır.
+
+- [ ] **Adında "Shower Gel" olan məhsullar.** Lokalda 15 məhsul, hamısı "Digər" tipində (köhnədə `parfum_type` boşdur),
+  məs. "Coco Noir Shower Gel L 200ml", "Invictus Shower Gel m 150ml".
+- [ ] **Adında "ml" olan məhsullar.** Lokalda 157 məhsul (3-ü aktiv). Həcm, cins (L / m) və dəst məlumatı ölçüdə yox, adın içindədir,
+  ölçü isə "Standart" və ya "SET" olur: məs. "ZEN m Gift Set 2pc 50ml", "Gucci By Gucci Sport m Gift Set 3pc 90ml".
 
 ---
 
