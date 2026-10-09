@@ -5,10 +5,14 @@
 @endphp
 @extends('backend.layout',['html_tag_data'=>$html_tag_data, 'title'=>$title])
 
+@section('css')
+    <link rel="stylesheet" href="{{ asset('backend/css/vendor/datatables.min.css') }}"/>
+@endsection
+
 @section('js_page')
-    <script src="{{asset('backend/js/plugins/lists.js')}}"></script>
-    <script src="{{asset('backend/js/cs/scrollspy.js')}}"></script>
-    <script src="{{asset('backend/js/vendor/list.js')}}"></script>
+    <script src="{{ asset('backend/js/vendor/datatables.min.js') }}"></script>
+    <script src="{{ asset('backend/js/cs/datatable.extend.js') }}"></script>
+    <script src="{{ asset_v('backend/js/plugins/datatable.static.js') }}"></script>
 @endsection
 
 @section('content')
@@ -34,59 +38,35 @@
                 <!-- Top Buttons End -->
             </div>
         </div>
-        <div class="row">
-            <div class="col">
-                <section class="scroll-section" id="userButtons">
-                    <div class="row g-2" id="sortAndFilter">
-                        <div class="col-12">
-                            <div class="row gx-2">
-                                <div class="col-12 col-sm mb-1 mb-sm-0">
-                                    <div class="search-input-container shadow rounded-md bg-foreground mb-2">
-                                        <input class="form-control search" type="text" autocomplete="off" placeholder="Axtarış" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="data-table-rows slim">
+            @include('backend._layout.datatable-toolbar', ['table' => '#datatableIngredients'])
 
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row g-0 h-100 align-content-center mb-2 custom-sort d-none d-sm-flex">
-                                        <div class="col-4 col-sm-3 d-flex align-items-center">
-                                            <div class="text-small">ADI AZ</div>
-                                        </div>
-                                        <div class="col-4 col-sm-3 d-flex align-items-center">
-                                            <div class="text-small">ADI EN</div>
-                                        </div>
-                                        <div class="col-4 col-sm-3 d-flex align-items-center">
-                                            <div class="text-small">ADI RU</div>
-                                        </div>
-                                        <div class="col-4 col-sm-3 d-flex align-items-center justify-content-end">
-                                            <div class="text-small">EDIT</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="list scroll-out">
-                                        <div class="scroll-by-count" data-count="20" data-childSelector=".scroll-child">
-                                            @foreach($ingredients as $ingredient)
-                                                <div class="h-auto sh-sm-5 mb-3 mb-sm-0 scroll-child">
-                                                    <div class="row g-0 h-100 align-content-center">
-                                                        <div class="col-12 col-sm-3 d-flex align-items-center category">{{$ingredient->name_az}}</div>
-                                                        <div class="col-12 col-sm-3 d-flex align-items-center category">{{$ingredient->name_en}}</div>
-                                                        <div class="col-12 col-sm-3 d-flex align-items-center category">{{$ingredient->name_ru}}</div>
-                                                        <div class="col-12 col-sm-3 d-flex align-items-center justify-content-sm-end text-muted sale">
-                                                            <a href="{{route('admin.ingredient.edit',$ingredient->id)}}" class="btn btn-outline-secondary btn-sm ms-1" type="button">Edit</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+            <div class="data-table-responsive-wrapper">
+                <table id="datatableIngredients" class="data-table nowrap w-100 data-table-static"
+                       data-noun="not" data-noun-from="notdan">
+                    <thead>
+                    <tr>
+                        <th class="text-muted text-small text-uppercase">#</th>
+                        <th class="text-muted text-small text-uppercase">Adı AZ</th>
+                        <th class="text-muted text-small text-uppercase">Adı EN</th>
+                        <th class="text-muted text-small text-uppercase">Adı RU</th>
+                        <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($ingredients as $ingredient)
+                        <tr>
+                            <td></td>
+                            <td>{{ $ingredient->name_az }}</td>
+                            <td>{{ $ingredient->name_en }}</td>
+                            <td>{{ $ingredient->name_ru }}</td>
+                            <td>
+                                <a href="{{ route('admin.ingredient.edit', $ingredient->id) }}" class="btn btn-primary btn-sm">Edit</a>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
 
