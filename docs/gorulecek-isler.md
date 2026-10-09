@@ -18,6 +18,9 @@ Son yenilənmə: 9 oktyabr 2026.
   Mətn admin paneldəki SMS şablonlarından redaktə olunur (bazada `order_sent` şablonu var, amma heç yerdə göndərilmir).
   Kuryer düyməni təkrar bassa, ikinci SMS getməməlidir.
   Qeyd: 6 oktyabrda digər statuslar üçün də SMS (qəbul olundu, təhvil verildi, ləğv edildi) danışılıb, qərar verilməyib.
+- [ ] **Bütün SMS şablonlarının yoxlanması.** Admin paneldəki hər SMS şablonuna baxıb kodda harada istifadə olunduğunu
+  (hansı hadisədə göndərildiyini) və ümumiyyətlə qoşulub-qoşulmadığını müəyyən etmək. Bilinən nümunə: `order_sent`
+  bazada var, amma heç yerdə göndərilmir (yuxarıdakı bənd).
 - [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
