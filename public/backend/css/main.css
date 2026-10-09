@@ -8,3 +8,38 @@ html[data-placement] .nav-container .logo .img {
     background-size: contain;
     background-position: left center;
 }
+
+/* Loqo ilə menyu arası (tema: 5rem) azaldılır — sağdakı istifadəçi adı sıxılıb iki sətirə düşürdü */
+@media (min-width: 1200px) {
+    html[data-placement=horizontal] .nav-container .menu-container .menu {
+        margin-left: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    /* Menyu bəndlərinin yan boşluğu (tema: 24px) — 7 bənd sığsın */
+    html[data-placement=horizontal] .nav-container .menu-container .menu > li > a {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+}
+
+html[data-placement=horizontal] .nav-container .user-container .user .name {
+    white-space: nowrap;
+}
+
+/* 1200–1399px: menyu bəndləri ilə ad birlikdə sığmır — ad gizlədilir, profil şəkli qalır */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    html[data-placement=horizontal] .nav-container .menu-container .menu {
+        margin-left: 1rem;
+        margin-right: 0.5rem;
+    }
+
+    html[data-placement=horizontal] .nav-container .menu-container .menu > li > a {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    html[data-placement=horizontal] .nav-container .user-container .user .name {
+        display: none;
+    }
+}
