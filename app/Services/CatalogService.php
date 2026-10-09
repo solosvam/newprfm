@@ -180,7 +180,7 @@ class CatalogService
                 ->get(),
             'allBrands' => Brand::where('active', 1)->get(),
             'genders' => Gender::all(),
-            'types' => Type::orderBy('id')->get(),
+            'types' => $this->filterTypes(),
             'filterSizes' => Size::query()
                 ->whereIn('id', ProductVariant::query()
                     ->select('size_id')
@@ -191,6 +191,15 @@ class CatalogService
                 ->values(),
             ...$this->sidebarProducts(),
         ];
+    }
+
+    /** Filtrdəki "Ətrin növü": yalnız aktiv məhsulu olan növlər */
+    public function filterTypes(): \Illuminate\Support\Collection
+    {
+        return Type::query()
+            ->whereHas('products', fn ($query) => $query->where('active', 1))
+            ->orderBy('id')
+            ->get();
     }
 
     public const SIDEBAR_LIMIT = 5;
