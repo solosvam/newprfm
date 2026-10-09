@@ -15,18 +15,28 @@ use DOMDocument;
 use DOMXPath;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
 class ImportOldParfumshopCategory extends Command
 {
-    protected $signature = 'parfumshop:import-category {path : Köhnə saytdakı category path} {--category-id= : Yeni saytdakı category ID} {--dry-run : DB və fayllara yazma} {--limit= : Import ediləcək maksimum məhsul sayı} {--from-page=1 : Importa başlanacaq səhifə} {--to-page= : Importun bitəcəyi səhifə}';
+    protected $signature = 'parfumshop:import-category {path? : Köhnə saytdakı category path} {--all : Kateqoriyasız, bütün product_id-ləri API-dən yoxla (deaktivlər daxil)} {--from-id=1 : --all: başlanğıc köhnə product_id} {--to-id= : --all: son köhnə product_id (verilməsə, ardıcıl boşluqlara qədər)} {--stop-after-misses=300 : --all: --to-id yoxdursa, bazadakı ən böyük old_id-dən sonra neçə ardıcıl tapılmayan ID-də dayansın} {--category-id= : Yeni saytdakı category ID} {--dry-run : DB və fayllara yazma} {--limit= : Import ediləcək maksimum məhsul sayı} {--from-page=1 : Importa başlanacaq səhifə} {--to-page= : Importun bitəcəyi səhifə}';
     protected $description = 'Köhnə ParfumShop kateqoriyasındakı məhsulları yeni sistemə import edir';
 
     private string $base = 'https://www.parfumshop.az';
 
     public function handle(): int
     {
+        if ($this->option('all')) {
+            return $this->importAllIds();
+        }
+
+        if (!$this->argument('path')) {
+            $this->error('Category path verin və ya --all istifadə edin.');
+            return self::FAILURE;
+        }
+
         $path = (string) $this->argument('path');
         $urls = $this->productUrls($path, max(1, (int) $this->option('from-page')), $this->option('to-page') !== null ? max(1, (int) $this->option('to-page')) : null);
 
@@ -67,6 +77,81 @@ class ImportOldParfumshopCategory extends Command
         }
 
         $this->info($this->option('dry-run') ? 'Dry-run tamamlandı.' : 'Import tamamlandı.');
+        return self::SUCCESS;
+    }
+
+    /**
+     * Kateqoriya səhifələri yalnız aktiv məhsulları göstərir. Bu rejim köhnə product_id-ləri ardıcıl
+     * migration API-dən soruşur: deaktiv məhsullar da gəlir. Bazada old_id-si olanlara toxunulmur.
+     */
+    private function importAllIds(): int
+    {
+        $existing = array_flip(Product::whereNotNull('old_id')->pluck('old_id')->map(fn ($id) => (int) $id)->all());
+        $from = max(1, (int) $this->option('from-id'));
+        $to = $this->option('to-id') !== null ? max($from, (int) $this->option('to-id')) : null;
+        $maxKnown = $existing ? max(array_keys($existing)) : 0;
+        $stopAfter = max(1, (int) $this->option('stop-after-misses'));
+        $limit = $this->option('limit') !== null ? max(1, (int) $this->option('limit')) : null;
+
+        $counts = ['created' => 0, 'inactive' => 0, 'skipped' => 0, 'missing' => 0, 'failed' => 0];
+        $misses = 0;
+
+        for ($oldId = $from; $to === null || $oldId <= $to; $oldId++) {
+            if ($to === null && $oldId > $maxKnown && $misses >= $stopAfter) {
+                $this->line('Son '.$stopAfter.' ID-də məhsul yoxdur, dayanıram (son yoxlanan: '.($oldId - 1).').');
+                break;
+            }
+
+            if (isset($existing[$oldId])) {
+                $counts['skipped']++;
+                $misses = 0;
+                continue;
+            }
+
+            try {
+                $data = $this->fetchProduct($oldId);
+            } catch (Throwable $e) {
+                $counts['failed']++;
+                $this->error('old_id '.$oldId.' — xəta: '.$e->getMessage());
+                continue;
+            }
+
+            if ($data === null) {
+                $counts['missing']++;
+                $misses++;
+                continue;
+            }
+
+            $misses = 0;
+            $this->line('old_id '.$oldId.': '.$data['brand'].' — '.$data['name'].($data['active'] ? '' : ' [deaktiv]'));
+
+            if (!$this->option('dry-run')) {
+                try {
+                    $this->storeProduct($data);
+                } catch (Throwable $e) {
+                    $counts['failed']++;
+                    $this->error('  Xəta: '.$e->getMessage());
+                    continue;
+                }
+            }
+
+            $counts['created']++;
+            $counts['inactive'] += $data['active'] ? 0 : 1;
+
+            if ($limit !== null && $counts['created'] >= $limit) {
+                break;
+            }
+        }
+
+        $this->newLine();
+        $this->info(($this->option('dry-run') ? 'Dry-run: yaradılacaq ' : 'Yaradıldı: ').$counts['created'].' (o cümlədən deaktiv: '.$counts['inactive'].')');
+        $this->line('Artıq bazada olduğu üçün keçildi: '.$counts['skipped']);
+        $this->line('Köhnə saytda olmayan ID: '.$counts['missing']);
+
+        if ($counts['failed']) {
+            $this->warn('Xəta: '.$counts['failed'].' — həmin ID-ləri --from-id/--to-id ilə təkrar işə salmaq olar.');
+        }
+
         return self::SUCCESS;
     }
 
@@ -142,20 +227,33 @@ class ImportOldParfumshopCategory extends Command
             throw new \RuntimeException('product_id tapılmadı: '.$url);
         }
 
+        return $this->fetchProduct((int) $id[1], $url)
+            ?? throw new \RuntimeException('Migration API məhsulu qaytarmadı: '.$id[1]);
+    }
+
+    /** Migration API-dən məhsul; köhnə saytda belə ID yoxdursa null */
+    private function fetchProduct(int $oldId, ?string $url = null): ?array
+    {
         $response = Http::acceptJson()
             ->timeout(30)
-            ->retry(3, 500)
+            // 404 = belə məhsul yoxdur; yalnız şəbəkə və server xətalarını təkrarla
+            ->retry(3, 500, fn (Throwable $e) => !$e instanceof RequestException || $e->response->serverError(), throw: false)
             ->get($this->base.'/migration-product.php', [
-                'product_id' => (int) $id[1],
-            ])
-            ->throw()
-            ->json();
+                'product_id' => $oldId,
+            ]);
 
-        if (!($response['success'] ?? false) || empty($response['product'])) {
-            throw new \RuntimeException('Migration API məhsulu qaytarmadı: '.$id[1]);
+        $json = $response->json();
+
+        if (!($json['success'] ?? false) || empty($json['product'])) {
+            if (is_array($json) && array_key_exists('success', $json)) {
+                return null;
+            }
+
+            $response->throw();
+            throw new \RuntimeException('Migration API gözlənilməz cavab qaytardı: '.$oldId);
         }
 
-        $p = $response['product'];
+        $p = $json['product'];
 
         return [
             'old_id' => (int) $p['old_id'],
@@ -175,7 +273,8 @@ class ImportOldParfumshopCategory extends Command
                 fn ($image) => $image['url'] ?? null,
                 $p['images'] ?? []
             ))),
-            'url' => $url,
+            'active' => (int) ($p['active'] ?? 1) === 1,
+            'url' => $url ?? $this->base.'/index.php?route=product/product&product_id='.$oldId,
         ];
     }
 
@@ -188,7 +287,7 @@ class ImportOldParfumshopCategory extends Command
 
             $product = Product::updateOrCreate(['old_id'=>$data['old_id']], [
                 'brand_id'=>$brand->id, 'type_id'=>$type->id, 'name'=>$data['name'],
-                'content_az'=>$data['description_az'], 'content_ru'=>$data['description_ru'], 'content_en'=>'', 'active'=>1,
+                'content_az'=>$data['description_az'], 'content_ru'=>$data['description_ru'], 'content_en'=>'', 'active'=>($data['active'] ?? true) ? 1 : 0,
             ]);
 
             $categoryMap = [35=>1, 36=>2, 37=>3, 39=>4, 55=>5, 41=>6, 44=>7];
