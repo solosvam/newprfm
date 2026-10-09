@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Məhsulu ona bağlı bütün məlumatlar və şəkil faylları ilə birlikdə silir.
- * Sifarişdə və ya kredit müraciətində olan məhsul silinmir (tarixçə pozulmasın).
+ * Sifarişdə olan məhsul silinmir (tarixçə pozulmasın). Kredit müraciətləri sifarişə bağlıdır
+ * (credit_applications.order_id), ona görə sifariş yoxlaması onları da əhatə edir.
  */
 class ProductDeleter
 {
@@ -25,11 +26,6 @@ class ProductDeleter
             ->orWhereIn('product_variant_id', $variantIds)
             ->exists()) {
             return 'sifarişdə var';
-        }
-
-        if ($this->hasTable('credit_applications') && $variantIds->isNotEmpty()
-            && DB::table('credit_applications')->whereIn('product_variant_id', $variantIds)->exists()) {
-            return 'kredit müraciətində var';
         }
 
         return null;

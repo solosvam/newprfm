@@ -28,9 +28,11 @@ class DeleteProductsByTypeTest extends TestCase
         foreach (['product_favorites', 'product_discounts', 'featured_products', 'product_search_clicks'] as $table) {
             Schema::create($table, fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_id')]);
         }
-        foreach (['price_alerts', 'customer_cart_items', 'credit_applications'] as $table) {
+        foreach (['price_alerts', 'customer_cart_items'] as $table) {
             Schema::create($table, fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_variant_id')]);
         }
+        // Real sxem: kredit müraciəti variantla yox, sifarişlə bağlıdır
+        Schema::create('credit_applications', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id')]);
         Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_id'), $t->unsignedBigInteger('product_variant_id')]);
 
         DB::table('types')->insert([['id' => 26, 'name_az' => 'X'], ['id' => 84, 'name_az' => 'Y'], ['id' => 85, 'name_az' => 'Z']]);
