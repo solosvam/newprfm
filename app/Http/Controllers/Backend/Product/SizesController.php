@@ -11,8 +11,15 @@ class SizesController extends Controller
 {
     public function index()
     {
-        // Ölçünün seçildiyi məhsulların sayı (aktiv/deaktiv fərqi olmadan)
-        $sizes = Size::withCount(['variants as products_count' => fn ($query) => $query->select(DB::raw('count(distinct product_id)'))])->get();
+        // Ölçünün seçildiyi məhsulların sayı: aktiv və deaktiv ayrıca (bir məhsul bir dəfə sayılır)
+        $count = fn (bool $active) => fn ($query) => $query
+            ->select(DB::raw('count(distinct product_variants.product_id)'))
+            ->whereHas('product', fn ($product) => $product->where('active', $active ? '=' : '!=', 1));
+
+        $sizes = Size::withCount([
+            'variants as active_products_count' => $count(true),
+            'variants as inactive_products_count' => $count(false),
+        ])->get();
 
         return view('backend.product_menu.sizes.list',[
             'sizes'    => $sizes

@@ -40,13 +40,13 @@ class IngredientCategoryListCountTest extends TestCase
 
     public function test_ingredient_list_shows_product_count(): void
     {
-        $this->get(route('admin.ingredient.list'))->assertOk()->assertSee('Məhsul sayı')
-            ->assertSeeInOrder(['Бергамот', '<td>2</td>', 'Мускус', '<td>0</td>'], false);
+        $this->get(route('admin.ingredient.list'))->assertOk()->assertSeeInOrder(['Aktiv məhsul', 'Deaktiv məhsul'])
+            ->assertSeeInOrder(['Бергамот', '<td>1</td>', '<td>1</td>', 'Мускус', '<td>0</td>', '<td>0</td>'], false);
     }
 
     public function test_category_list_shows_product_count(): void
     {
-        $this->get(route('admin.category.list'))->assertOk()->assertSee('Məhsul sayı')
-            ->assertSeeInOrder(['Женский', '<td>2</td>', 'Новинки', '<td>0</td>'], false);
+        $this->get(route('admin.category.list'))->assertOk()->assertSeeInOrder(['Aktiv məhsul', 'Deaktiv məhsul'])
+            ->assertSeeInOrder(['Женский', '<td>1</td>', '<td>1</td>', 'Новинки', '<td>0</td>', '<td>0</td>'], false);
     }
 }

@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 class TypeListCountTest extends TestCase
 {
-    public function test_type_list_shows_product_count_including_inactive(): void
+    public function test_type_list_shows_active_and_inactive_product_counts(): void
     {
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'cache.default' => 'array']);
         DB::purge('sqlite');
@@ -35,7 +35,7 @@ class TypeListCountTest extends TestCase
         $user->setRelation('roles', collect());
 
         $this->actingAs($user, 'admin')->get(route('admin.type.list'))->assertOk()
-            ->assertSee('Məhsul sayı')
-            ->assertSeeInOrder(['Парфюмерная вода', '<td>2</td>', 'Другое', '<td>0</td>'], false);
+            ->assertSeeInOrder(['Aktiv məhsul', 'Deaktiv məhsul'])
+            ->assertSeeInOrder(['Парфюмерная вода', '<td>1</td>', '<td>1</td>', 'Другое', '<td>0</td>', '<td>0</td>'], false);
     }
 }

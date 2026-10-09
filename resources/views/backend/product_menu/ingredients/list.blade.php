@@ -51,7 +51,8 @@
                             <th class="text-muted text-small text-uppercase">Adı AZ</th>
                             <th class="text-muted text-small text-uppercase">Adı EN</th>
                             <th class="text-muted text-small text-uppercase">Adı RU</th>
-                            <th class="text-muted text-small text-uppercase">Məhsul sayı</th>
+                            <th class="text-muted text-small text-uppercase">Aktiv məhsul</th>
+                            <th class="text-muted text-small text-uppercase">Deaktiv məhsul</th>
                             <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
                         </thead>
@@ -62,7 +63,8 @@
                                 <td>{{ $ingredient->name_az }}</td>
                                 <td>{{ $ingredient->name_en }}</td>
                                 <td>{{ $ingredient->name_ru }}</td>
-                                <td>{{ $ingredient->products_count }}</td>
+                                <td>{{ $ingredient->active_products_count }}</td>
+                                <td>{{ $ingredient->inactive_products_count }}</td>
                                 <td>
                                     <a href="{{ route('admin.ingredient.edit', $ingredient->id) }}" class="btn btn-primary btn-sm">Edit</a>
                                 </td>

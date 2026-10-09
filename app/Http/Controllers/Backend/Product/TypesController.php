@@ -10,8 +10,11 @@ class TypesController extends Controller
 {
     public function index()
     {
-        // Növdəki məhsulların sayı (aktiv/deaktiv fərqi olmadan)
-        $types = Type::withCount('products')->get();
+        // Növdəki məhsulların sayı: aktiv və deaktiv ayrıca
+        $types = Type::withCount([
+            'products as active_products_count' => fn ($query) => $query->where('active', 1),
+            'products as inactive_products_count' => fn ($query) => $query->where('active', '!=', 1),
+        ])->get();
 
         return view('backend.product_menu.types.list',[
             'types'    => $types

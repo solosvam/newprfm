@@ -11,8 +11,11 @@ class CategoriesController extends Controller
 {
     public function index()
     {
-        // Kateqoriyadakı məhsulların sayı (aktiv/deaktiv fərqi olmadan)
-        $categories = Category::withCount('products')->get();
+        // Kateqoriyadakı məhsulların sayı: aktiv və deaktiv ayrıca
+        $categories = Category::withCount([
+            'products as active_products_count' => fn ($query) => $query->where('products.active', 1),
+            'products as inactive_products_count' => fn ($query) => $query->where('products.active', '!=', 1),
+        ])->get();
 
         return view('backend.product_menu.category.list',[
             'categories'    => $categories

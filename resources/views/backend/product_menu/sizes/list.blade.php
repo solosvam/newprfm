@@ -51,7 +51,8 @@
                             <th class="text-muted text-small text-uppercase">Adı AZ</th>
                             <th class="text-muted text-small text-uppercase">Adı EN</th>
                             <th class="text-muted text-small text-uppercase">Adı RU</th>
-                            <th class="text-muted text-small text-uppercase">Məhsul sayı</th>
+                            <th class="text-muted text-small text-uppercase">Aktiv məhsul</th>
+                            <th class="text-muted text-small text-uppercase">Deaktiv məhsul</th>
                             <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
                         </thead>
@@ -62,7 +63,8 @@
                                 <td>{{ $size->name_az }}</td>
                                 <td>{{ $size->name_en }}</td>
                                 <td>{{ $size->name_ru }}</td>
-                                <td>{{ $size->products_count }}</td>
+                                <td>{{ $size->active_products_count }}</td>
+                                <td>{{ $size->inactive_products_count }}</td>
                                 <td>
                                     <a href="{{ route('admin.size.edit', $size->id) }}" class="btn btn-primary btn-sm">Edit</a>
                                 </td>
