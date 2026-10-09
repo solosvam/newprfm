@@ -301,6 +301,13 @@
                 }
             });
 
+            // Ölçü seçimi: axtarışlı select2. Klonlamadan əvvəl söküb sonra yenidən qoşuruq (ikiqat konteyner olmasın).
+            function initSizeSelect(select) {
+                jQuery(select).select2({width: '100%', placeholder: ''});
+            }
+
+            variantArea.querySelectorAll('.variant-size').forEach(initSizeSelect);
+
             function reindexVariants() {
                 variantArea.querySelectorAll('.variant-row').forEach(function (row, index) {
                     row.querySelector('.variant-size').name = `variants[${index}][size_id]`;
@@ -311,7 +318,11 @@
 
             document.getElementById('addVariant').addEventListener('click', function () {
                 const firstRow = variantArea.querySelector('.variant-row');
+                const firstSize = firstRow.querySelector('.variant-size');
+
+                jQuery(firstSize).select2('destroy');
                 const newRow = firstRow.cloneNode(true);
+                initSizeSelect(firstSize);
 
                 newRow.querySelector('.variant-size').selectedIndex = 0;
                 newRow.querySelector('.variant-price').value = '';
@@ -323,6 +334,7 @@
                 `;
 
                 variantArea.appendChild(newRow);
+                initSizeSelect(newRow.querySelector('.variant-size'));
                 reindexVariants();
             });
 
@@ -597,7 +609,7 @@
                                                 <div class="row mt-3 variant-row align-items-center">
                                                     <div class="col-md-5">
                                                         <label>Ölçü</label>
-                                                        <select class="form-select variant-size" name="variants[{{ $index }}][size_id]" required>
+                                                        <select class="form-select variant-size" name="variants[{{ $index }}][size_id]">
                                                             @foreach($sizes as $size)
                                                                 <option value="{{ $size->id }}" @selected(($variant['size_id'] ?? null) == $size->id)>
                                                                     {{ $size->name_az }}
