@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 
 /**
  * Köhnə sistemdə parfum_type = 'Parfum' olan məhsulları yeni sistemdə verilən tipə keçirir.
- * Siyahı köhnə saytın migration-product.php?parfum_type=Parfum rejimindən gəlir.
+ * Siyahı köhnə saytın migration-parfum-type.php?parfum_type=Parfum faylından gəlir.
  */
 class SyncLegacyParfumType extends Command
 {
@@ -32,11 +32,11 @@ class SyncLegacyParfumType extends Command
         $parfumType = (string) $this->option('parfum-type');
 
         $response = Http::acceptJson()->timeout(60)
-            ->get('https://www.parfumshop.az/migration-product.php', ['parfum_type' => $parfumType])
+            ->get('https://www.parfumshop.az/migration-parfum-type.php', ['parfum_type' => $parfumType])
             ->json();
 
         if (!($response['success'] ?? false) || !isset($response['product_ids'])) {
-            $this->error('Köhnə sayt siyahını qaytarmadı. migration-product.php yenilənib?');
+            $this->error('Köhnə sayt siyahını qaytarmadı. migration-parfum-type.php köhnə serverə yüklənib?');
             return self::FAILURE;
         }
 

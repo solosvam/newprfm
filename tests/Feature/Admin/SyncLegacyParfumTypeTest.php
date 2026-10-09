@@ -23,7 +23,7 @@ class SyncLegacyParfumTypeTest extends TestCase
             ['id' => 2, 'old_id' => 101, 'name' => 'B', 'type_id' => 5],
             ['id' => 3, 'old_id' => 102, 'name' => 'C', 'type_id' => 1],
         ]);
-        Http::fake(['*migration-product.php*' => Http::response(['success' => true, 'product_ids' => [100, 101, 999]])]);
+        Http::fake(['*migration-parfum-type.php*' => Http::response(['success' => true, 'product_ids' => [100, 101, 999]])]);
     }
 
     public function test_dry_run_does_not_write(): void
