@@ -38,37 +38,39 @@
                 <!-- Top Buttons End -->
             </div>
         </div>
-        <div class="data-table-rows slim">
-            @include('backend._layout.datatable-toolbar', ['table' => '#datatableSizes'])
+        <section class="scroll-section">
+            <div class="card mb-5">
+                <div class="card-body">
+                    @include('backend._layout.datatable-toolbar', ['table' => '#datatableSizes'])
 
-            <div class="data-table-responsive-wrapper">
-                <table id="datatableSizes" class="data-table nowrap w-100 data-table-static"
-                       data-noun="ölçü" data-noun-from="ölçüdən">
-                    <thead>
-                    <tr>
-                        <th class="text-muted text-small text-uppercase">#</th>
-                        <th class="text-muted text-small text-uppercase">Adı AZ</th>
-                        <th class="text-muted text-small text-uppercase">Adı EN</th>
-                        <th class="text-muted text-small text-uppercase">Adı RU</th>
-                        <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($sizes as $size)
+                    <table id="datatableSizes" class="data-table responsive nowrap hover data-table-static"
+                           data-noun="ölçü" data-noun-from="ölçüdən">
+                        <thead>
                         <tr>
-                            <td></td>
-                            <td>{{ $size->name_az }}</td>
-                            <td>{{ $size->name_en }}</td>
-                            <td>{{ $size->name_ru }}</td>
-                            <td>
-                                <a href="{{ route('admin.size.edit', $size->id) }}" class="btn btn-primary btn-sm">Edit</a>
-                            </td>
+                            <th class="text-muted text-small text-uppercase">#</th>
+                            <th class="text-muted text-small text-uppercase">Adı AZ</th>
+                            <th class="text-muted text-small text-uppercase">Adı EN</th>
+                            <th class="text-muted text-small text-uppercase">Adı RU</th>
+                            <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach($sizes as $size)
+                            <tr>
+                                <td></td>
+                                <td>{{ $size->name_az }}</td>
+                                <td>{{ $size->name_en }}</td>
+                                <td>{{ $size->name_ru }}</td>
+                                <td>
+                                    <a href="{{ route('admin.size.edit', $size->id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </section>
 
         <div class="modal modal-right fade" id="newAdmin" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog">

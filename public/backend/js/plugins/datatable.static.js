@@ -1,7 +1,7 @@
 /**
  * Ajax-sız DataTable: sətirlər serverdə (Blade) çəkilir.
- * Məhsul siyahısı (datatable.products.ajax.js) ilə eyni görünüş: axtarış, çap, export,
- * nəticə sayı, "Cəmi N" yazısı və səhifələmə.
+ * Kart içində boxed görünüş (banners/list kimi): axtarış, export, nəticə sayı,
+ * "Cəmi N" yazısı və səhifələmə. Toolbar: backend._layout.datatable-toolbar.
  *
  * İstifadə: <table class="data-table nowrap w-100 data-table-static" id="..."
  *                 data-noun="ölçü" data-noun-from="ölçüdən">
@@ -22,11 +22,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const nounFrom = element.dataset.nounFrom || 'qeyddən';
 
         const datatable = table.DataTable({
-            scrollX: true,
+            responsive: true,
             buttons: ['copy', 'excel', 'csv', 'print'],
             info: true,
             order: [],
-            pageLength: 20,
+            pageLength: 50,
             sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row align-items-center mt-3"<"col-12 col-md-5 text-muted text-small"i><"col-12 col-md-7"p>>',
             language: {
                 info: `Cəmi _TOTAL_ ${nounFrom} _START_–_END_ göstərilir`,

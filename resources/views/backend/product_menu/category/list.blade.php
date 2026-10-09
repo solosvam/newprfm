@@ -38,45 +38,47 @@
                 <!-- Top Buttons End -->
             </div>
         </div>
-        <div class="data-table-rows slim">
-            @include('backend._layout.datatable-toolbar', ['table' => '#datatableCategories'])
+        <section class="scroll-section">
+            <div class="card mb-5">
+                <div class="card-body">
+                    @include('backend._layout.datatable-toolbar', ['table' => '#datatableCategories'])
 
-            <div class="data-table-responsive-wrapper">
-                <table id="datatableCategories" class="data-table nowrap w-100 data-table-static"
-                       data-noun="kateqoriya" data-noun-from="kateqoriyadan">
-                    <thead>
-                    <tr>
-                        <th class="text-muted text-small text-uppercase">#</th>
-                        <th class="text-muted text-small text-uppercase">Adı AZ</th>
-                        <th class="text-muted text-small text-uppercase">Adı EN</th>
-                        <th class="text-muted text-small text-uppercase">Adı RU</th>
-                        <th class="text-muted text-small text-uppercase">Aktiv</th>
-                        <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($categories as $category)
+                    <table id="datatableCategories" class="data-table responsive nowrap hover data-table-static"
+                           data-noun="kateqoriya" data-noun-from="kateqoriyadan">
+                        <thead>
                         <tr>
-                            <td></td>
-                            <td>{{ $category->name_az }}</td>
-                            <td>{{ $category->name_en }}</td>
-                            <td>{{ $category->name_ru }}</td>
-                            <td>
-                                @if($category->active)
-                                    <span class="badge bg-outline-success">Aktiv</span>
-                                @else
-                                    <span class="badge bg-outline-danger">Deaktiv</span>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('admin.category.edit', $category->id) }}" class="btn btn-primary btn-sm">Edit</a>
-                            </td>
+                            <th class="text-muted text-small text-uppercase">#</th>
+                            <th class="text-muted text-small text-uppercase">Adı AZ</th>
+                            <th class="text-muted text-small text-uppercase">Adı EN</th>
+                            <th class="text-muted text-small text-uppercase">Adı RU</th>
+                            <th class="text-muted text-small text-uppercase">Aktiv</th>
+                            <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach($categories as $category)
+                            <tr>
+                                <td></td>
+                                <td>{{ $category->name_az }}</td>
+                                <td>{{ $category->name_en }}</td>
+                                <td>{{ $category->name_ru }}</td>
+                                <td>
+                                    @if($category->active)
+                                        <span class="badge bg-outline-success">Aktiv</span>
+                                    @else
+                                        <span class="badge bg-outline-danger">Deaktiv</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.category.edit', $category->id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </section>
 
         <div class="modal modal-right fade" id="newAdmin" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog">

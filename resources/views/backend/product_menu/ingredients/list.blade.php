@@ -38,37 +38,39 @@
                 <!-- Top Buttons End -->
             </div>
         </div>
-        <div class="data-table-rows slim">
-            @include('backend._layout.datatable-toolbar', ['table' => '#datatableIngredients'])
+        <section class="scroll-section">
+            <div class="card mb-5">
+                <div class="card-body">
+                    @include('backend._layout.datatable-toolbar', ['table' => '#datatableIngredients'])
 
-            <div class="data-table-responsive-wrapper">
-                <table id="datatableIngredients" class="data-table nowrap w-100 data-table-static"
-                       data-noun="not" data-noun-from="notdan">
-                    <thead>
-                    <tr>
-                        <th class="text-muted text-small text-uppercase">#</th>
-                        <th class="text-muted text-small text-uppercase">Adı AZ</th>
-                        <th class="text-muted text-small text-uppercase">Adı EN</th>
-                        <th class="text-muted text-small text-uppercase">Adı RU</th>
-                        <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($ingredients as $ingredient)
+                    <table id="datatableIngredients" class="data-table responsive nowrap hover data-table-static"
+                           data-noun="not" data-noun-from="notdan">
+                        <thead>
                         <tr>
-                            <td></td>
-                            <td>{{ $ingredient->name_az }}</td>
-                            <td>{{ $ingredient->name_en }}</td>
-                            <td>{{ $ingredient->name_ru }}</td>
-                            <td>
-                                <a href="{{ route('admin.ingredient.edit', $ingredient->id) }}" class="btn btn-primary btn-sm">Edit</a>
-                            </td>
+                            <th class="text-muted text-small text-uppercase">#</th>
+                            <th class="text-muted text-small text-uppercase">Adı AZ</th>
+                            <th class="text-muted text-small text-uppercase">Adı EN</th>
+                            <th class="text-muted text-small text-uppercase">Adı RU</th>
+                            <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach($ingredients as $ingredient)
+                            <tr>
+                                <td></td>
+                                <td>{{ $ingredient->name_az }}</td>
+                                <td>{{ $ingredient->name_en }}</td>
+                                <td>{{ $ingredient->name_ru }}</td>
+                                <td>
+                                    <a href="{{ route('admin.ingredient.edit', $ingredient->id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </section>
 
         <div class="modal modal-right fade" id="newAdmin" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog">

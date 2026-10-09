@@ -38,43 +38,45 @@
                 <!-- Top Buttons End -->
             </div>
         </div>
-        <div class="data-table-rows slim">
-            @include('backend._layout.datatable-toolbar', ['table' => '#datatableTypes'])
+        <section class="scroll-section">
+            <div class="card mb-5">
+                <div class="card-body">
+                    @include('backend._layout.datatable-toolbar', ['table' => '#datatableTypes'])
 
-            <div class="data-table-responsive-wrapper">
-                <table id="datatableTypes" class="data-table nowrap w-100 data-table-static"
-                       data-noun="növ" data-noun-from="növdən">
-                    <thead>
-                    <tr>
-                        <th class="text-muted text-small text-uppercase">#</th>
-                        <th class="text-muted text-small text-uppercase">Adı AZ</th>
-                        <th class="text-muted text-small text-uppercase">Adı EN</th>
-                        <th class="text-muted text-small text-uppercase">Adı RU</th>
-                        <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($types as $type)
+                    <table id="datatableTypes" class="data-table responsive nowrap hover data-table-static"
+                           data-noun="növ" data-noun-from="növdən">
+                        <thead>
                         <tr>
-                            <td></td>
-                            <td>{{ $type->name_az }}</td>
-                            <td>{{ $type->name_en }}</td>
-                            <td>{{ $type->name_ru }}</td>
-                            <td>
-                                <a href="{{ route('admin.type.edit', $type->id) }}" class="btn btn-primary btn-sm">Edit</a>
-                            </td>
+                            <th class="text-muted text-small text-uppercase">#</th>
+                            <th class="text-muted text-small text-uppercase">Adı AZ</th>
+                            <th class="text-muted text-small text-uppercase">Adı EN</th>
+                            <th class="text-muted text-small text-uppercase">Adı RU</th>
+                            <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach($types as $type)
+                            <tr>
+                                <td></td>
+                                <td>{{ $type->name_az }}</td>
+                                <td>{{ $type->name_en }}</td>
+                                <td>{{ $type->name_ru }}</td>
+                                <td>
+                                    <a href="{{ route('admin.type.edit', $type->id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </section>
 
         <div class="modal modal-right fade" id="newAdmin" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Yeni Ölçü</h5>
+                        <h5 class="modal-title">Yeni Növ</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
