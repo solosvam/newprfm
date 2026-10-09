@@ -16,6 +16,7 @@ use App\Models\Product\ProductVariant;
 use App\Models\Product\Size;
 use App\Models\Product\Type;
 use App\Services\SeoUrl;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -24,12 +25,21 @@ use Throwable;
 
 class ProductsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::paginate(25);
-        return view('backend.product_menu.product.list',[
-            'products'    => $products,
+        return view('backend.product_menu.product.list', [
+            'status' => $this->listStatus($request),
+            'counts' => [
+                'active' => Product::where('active', 1)->count(),
+                'inactive' => Product::where('active', '!=', 1)->count(),
+            ],
         ]);
+    }
+
+    /** Siyahı tabı: aktiv (standart) və ya deaktiv */
+    private function listStatus(Request $request): string
+    {
+        return $request->query('status') === 'inactive' ? 'inactive' : 'active';
     }
 
     public function poster(Product $product, ProductPosterData $poster): \Illuminate\Http\JsonResponse
@@ -397,14 +407,17 @@ class ProductsController extends Controller
             return $failedImages;
         });
 
+        // Deaktiv məhsul yadda saxlananda Deaktiv tabına qayıt
+        $listParams = Product::whereKey($id)->value('active') == 1 ? [] : ['status' => 'inactive'];
+
         if ($failedImages > 0) {
             return redirect()
-                ->route('admin.product.list')
+                ->route('admin.product.list', $listParams)
                 ->with('error', "Məhsul yeniləndi, amma seçilən şəkillərdən {$failedImages} ədədi yüklənmədi (mənbə sayt icazə vermədi). Başqa şəkil seçin.");
         }
 
         return redirect()
-            ->route('admin.product.list')
+            ->route('admin.product.list', $listParams)
             ->with('success', 'Məhsul yeniləndi!');
     }
 
@@ -446,7 +459,7 @@ class ProductsController extends Controller
             ->with('success', 'Məhsul və ona aid məlumatlar silindi.');
     }
 
-    public function listData()
+    public function listData(Request $request)
     {
         $products = Product::with([
             'brand',
@@ -455,6 +468,7 @@ class ProductsController extends Controller
             'variants',
             'categories',
         ])
+            ->where('active', $this->listStatus($request) === 'inactive' ? '!=' : '=', 1)
             ->withCount('ingredients')
             ->orderByDesc('id')
             ->get();

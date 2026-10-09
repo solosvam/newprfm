@@ -40,6 +40,19 @@
             </div>
         </div>
 
+        <ul class="nav nav-tabs nav-tabs-line border-0 mb-3">
+            <li class="nav-item">
+                <a class="nav-link {{ $status === 'active' ? 'active' : '' }}" href="{{ route('admin.product.list') }}">
+                    Aktiv <span class="badge bg-light text-dark ms-1">{{ $counts['active'] }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ $status === 'inactive' ? 'active' : '' }}" href="{{ route('admin.product.list', ['status' => 'inactive']) }}">
+                    Deaktiv <span class="badge bg-light text-dark ms-1">{{ $counts['inactive'] }}</span>
+                </a>
+            </li>
+        </ul>
+
         <div class="data-table-rows slim">
             <div class="row">
                 <div class="col-sm-12 col-md-5 col-lg-3 col-xxl-2 mb-1">
@@ -127,7 +140,8 @@
             </div>
 
             <div class="data-table-responsive-wrapper">
-                <table id="datatableProductsAjax" class="data-table nowrap w-100">
+                <table id="datatableProductsAjax" class="data-table nowrap w-100"
+                       data-url="{{ route('admin.product.list.data', ['status' => $status]) }}">
                     <thead>
                     <tr>
                         <th class="text-muted text-small text-uppercase">#</th>

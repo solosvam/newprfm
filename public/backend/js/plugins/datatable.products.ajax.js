@@ -28,7 +28,7 @@ class ProductsAjax {
             processing: true,
 
             ajax: {
-                url: '/admin/product/list-data',
+                url: jQuery('#datatableProductsAjax').data('url'),
                 type: 'GET',
                 dataSrc: ''
             },
