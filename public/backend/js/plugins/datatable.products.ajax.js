@@ -11,7 +11,6 @@ class ProductsAjax {
 
         this._datatable = null;
         this._datatableExtend = null;
-        this._staticHeight = 62;
 
         this._createInstance();
         this._addListeners();
@@ -106,6 +105,19 @@ class ProductsAjax {
                     }
                 },
                 {
+                    // Uzun brend/ad/tip sətir keçirsin — cədvəl ekrandan daşıb üfüqi scroll yaratmasın
+                    targets: [2, 3, 4],
+                    render: function (data, type) {
+                        if (type !== 'display') {
+                            return data;
+                        }
+
+                        const text = jQuery('<div>').text(data || '').html();
+
+                        return `<span class="d-inline-block text-wrap" style="min-width: 80px; max-width: 240px; overflow-wrap: anywhere">${text}</span>`;
+                    }
+                },
+                {
                     targets: 5,
                     render: function (data) {
                         return `${data || 0} ölçü`;
@@ -163,7 +175,7 @@ class ProductsAjax {
                             </a>
                             <button type="button" class="btn btn-outline-primary btn-sm ms-1"
                                     data-product-poster-url="/admin/product/${Number(row.id)}/poster">
-                                Poster paylaş
+                                Poster
                             </button>
                         `;
                     }
@@ -199,15 +211,13 @@ class ProductsAjax {
             return;
         }
 
-        const pageLength = this._datatable.page.len();
-
         const scrollBody = document.querySelector(
             '#datatableProductsAjax_wrapper .dataTables_scrollBody'
         );
 
+        // Sabit hündürlük (sətir × 62px) real sətirdən kiçik çıxıb şaquli scroll yaradırdı — hündürlük məzmuna görədir
         if (scrollBody) {
-            scrollBody.style.height =
-                this._staticHeight * pageLength + 'px';
+            scrollBody.style.height = 'auto';
         }
     }
 }
