@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Backend\Product;
 
+use App\Services\ProductDeleter;
 use App\Services\ProductPosterData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AddProductRequest;
-use App\Models\Order\OrderItem;
 use App\Models\Product\Brand;
 use App\Models\Product\Category;
 use App\Models\Product\Gender;
@@ -421,38 +421,17 @@ class ProductsController extends Controller
             ->with('success', 'Məhsul yeniləndi!');
     }
 
-    public function destroy($id)
+    public function destroy($id, ProductDeleter $deleter)
     {
         $product = Product::findOrFail($id);
 
-        if (OrderItem::where('product_id', $product->id)->exists()) {
+        if ($reason = $deleter->blockedReason($product)) {
             return redirect()
                 ->route('admin.product.edit', $product->id)
-                ->with('error', 'Bu məhsul sifarişdə olduğu üçün silinə bilməz.');
+                ->with('error', "Bu məhsul silinə bilməz: {$reason}.");
         }
 
-        $imageNames = DB::transaction(function () use ($product) {
-            $imageNames = $product->images()->pluck('image')->all();
-
-            $product->categories()->detach();
-            $product->genders()->detach();
-            $product->ingredients()->detach();
-            $product->reviews()->delete();
-            $product->variants()->delete();
-            $product->images()->delete();
-            DB::table('product_favorites')->where('product_id', $product->id)->delete();
-            $product->delete();
-
-            return $imageNames;
-        });
-
-        foreach ($imageNames as $imageName) {
-            $path = public_path('frontend/uploads/products/' . $imageName);
-
-            if (is_file($path)) {
-                unlink($path);
-            }
-        }
+        $deleter->delete($product);
 
         return redirect()
             ->route('admin.product.list')
