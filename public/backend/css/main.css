@@ -1,1 +1,10 @@
 /* This file is reserved for overriding and extending the template styles. */
+
+/* Admin menyu loqosu: SVG (512×88) qutuya sığdırılır — əvvəl təbii ölçüsündə çəkilib sağdan və altdan kəsilirdi */
+html[data-placement] .nav-container .logo .img {
+    width: 160px;
+    height: 35px;
+    min-height: 0;
+    background-size: contain;
+    background-position: left center;
+}
