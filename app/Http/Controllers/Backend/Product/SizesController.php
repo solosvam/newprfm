@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Backend\Product;
 use App\Http\Controllers\Controller;
 use App\Models\Product\Size;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SizesController extends Controller
 {
     public function index()
     {
-        $sizes = Size::all();
+        // Ölçünün seçildiyi məhsulların sayı (aktiv/deaktiv fərqi olmadan)
+        $sizes = Size::withCount(['variants as products_count' => fn ($query) => $query->select(DB::raw('count(distinct product_id)'))])->get();
 
         return view('backend.product_menu.sizes.list',[
             'sizes'    => $sizes
