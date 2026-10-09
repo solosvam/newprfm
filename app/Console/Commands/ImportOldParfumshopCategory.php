@@ -26,6 +26,16 @@ class ImportOldParfumshopCategory extends Command
 
     private string $base = 'https://www.parfumshop.az';
 
+    /**
+     * --all: köhnə oc_product-da məhsul olmayan ID aralıqları — yoxlanmır.
+     * Mənbə: köhnə bazada boşluq sorğusu (9 oktyabr 2026; cəmi 4640 məhsul, ID 60–9020).
+     */
+    private const LEGACY_EMPTY_ID_RANGES = [
+        [1, 59],
+        [1419, 1422],
+        [1426, 5343],
+    ];
+
     public function handle(): int
     {
         if ($this->option('all')) {
@@ -99,6 +109,16 @@ class ImportOldParfumshopCategory extends Command
         for ($oldId = $from; $to === null || $oldId <= $to; $oldId++) {
             if ($to === null && $oldId > $maxKnown && $misses >= $stopAfter) {
                 $this->line('Son '.$stopAfter.' ID-də məhsul yoxdur, dayanıram (son yoxlanan: '.($oldId - 1).').');
+                break;
+            }
+
+            foreach (self::LEGACY_EMPTY_ID_RANGES as [$emptyFrom, $emptyTo]) {
+                if ($oldId >= $emptyFrom && $oldId <= $emptyTo) {
+                    $oldId = $emptyTo + 1;
+                }
+            }
+
+            if ($to !== null && $oldId > $to) {
                 break;
             }
 
