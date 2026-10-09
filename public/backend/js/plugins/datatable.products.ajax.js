@@ -24,7 +24,7 @@ class ProductsAjax {
         this._datatable = jQuery('#datatableProductsAjax').DataTable({
             scrollX: true,
             buttons: ['copy', 'excel', 'csv', 'print'],
-            info: false,
+            info: true,
             processing: true,
 
             ajax: {
@@ -35,7 +35,7 @@ class ProductsAjax {
 
             order: [],
 
-            sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row"<"col-12"p>>',
+            sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row align-items-center mt-3"<"col-12 col-md-5 text-muted text-small"i><"col-12 col-md-7"p>>',
 
             pageLength: 10,
 
@@ -54,6 +54,12 @@ class ProductsAjax {
             ],
 
             language: {
+                info: 'Cəmi _TOTAL_ məhsuldan _START_–_END_ göstərilir',
+                infoEmpty: 'Məhsul tapılmadı',
+                infoFiltered: '(ümumi _MAX_ məhsul içində axtarış)',
+                zeroRecords: 'Axtarışa uyğun məhsul tapılmadı',
+                emptyTable: 'Məhsul yoxdur',
+                processing: 'Yüklənir...',
                 paginate: {
                     previous: '<i class="cs-chevron-left"></i>',
                     next: '<i class="cs-chevron-right"></i>'
