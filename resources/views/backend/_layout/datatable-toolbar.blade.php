@@ -22,11 +22,11 @@
             <div class="dropdown-as-select d-inline-block datatable-length" data-datatable="{{ $table }}">
                 <button class="btn btn-outline-muted btn-sm dropdown-toggle" type="button"
                         data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,3">
-                    50 Nəticə
+                    20 Nəticə
                 </button>
                 <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
                     @foreach([10, 20, 50, 100] as $limit)
-                        <a class="dropdown-item {{ $limit === 50 ? 'active' : '' }}" href="#">{{ $limit }} Nəticə</a>
+                        <a class="dropdown-item {{ $limit === 20 ? 'active' : '' }}" href="#">{{ $limit }} Nəticə</a>
                     @endforeach
                 </div>
             </div>

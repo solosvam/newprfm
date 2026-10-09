@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
             buttons: ['copy', 'excel', 'csv', 'print'],
             info: true,
             order: [],
-            pageLength: 50,
+            pageLength: 20,
             sDom: '<"row"<"col-sm-12"<"table-container"t>r>><"row align-items-center mt-3"<"col-12 col-md-5 text-muted text-small"i><"col-12 col-md-7"p>>',
             language: {
                 info: `Cəmi _TOTAL_ ${nounFrom} _START_–_END_ göstərilir`,
