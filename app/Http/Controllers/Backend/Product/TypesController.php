@@ -10,7 +10,8 @@ class TypesController extends Controller
 {
     public function index()
     {
-        $types = Type::all();
+        // Növdəki məhsulların sayı (aktiv/deaktiv fərqi olmadan)
+        $types = Type::withCount('products')->get();
 
         return view('backend.product_menu.types.list',[
             'types'    => $types

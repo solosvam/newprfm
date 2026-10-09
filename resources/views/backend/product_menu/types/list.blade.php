@@ -51,6 +51,7 @@
                             <th class="text-muted text-small text-uppercase">Adı AZ</th>
                             <th class="text-muted text-small text-uppercase">Adı EN</th>
                             <th class="text-muted text-small text-uppercase">Adı RU</th>
+                            <th class="text-muted text-small text-uppercase">Məhsul sayı</th>
                             <th class="text-muted text-small text-uppercase no-sort">Əməliyyat</th>
                         </tr>
                         </thead>
@@ -61,6 +62,7 @@
                                 <td>{{ $type->name_az }}</td>
                                 <td>{{ $type->name_en }}</td>
                                 <td>{{ $type->name_ru }}</td>
+                                <td>{{ $type->products_count }}</td>
                                 <td>
                                     <a href="{{ route('admin.type.edit', $type->id) }}" class="btn btn-primary btn-sm">Edit</a>
                                 </td>
