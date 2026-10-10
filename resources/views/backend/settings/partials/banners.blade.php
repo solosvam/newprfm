@@ -8,6 +8,13 @@
         'banner_mobile_top' => 'Mobil — yuxarı',
         'banner_mobile_bottom' => 'Mobil — aşağı',
     ];
+    // Tövsiyə olunan ölçülər — xana boşaldılanda placeholder kimi görünür
+    $bannerPlaceholders = [
+        'banner_web_top' => ['width' => 1060, 'height' => 320],
+        'banner_web_bottom' => ['width' => 1060, 'height' => 220],
+        'banner_mobile_top' => ['width' => 640, 'height' => 280],
+        'banner_mobile_bottom' => ['width' => 640, 'height' => 220],
+    ];
 @endphp
 <div class="row g-4">
     {{-- ========== Sol: ölçülər ========== --}}
@@ -39,6 +46,7 @@
                                             <input id="{{ $field }}" type="number" name="{{ $field }}" min="1" max="10000" step="1"
                                                    aria-label="{{ $label }} — {{ $caption }}"
                                                    value="{{ old($field, $bannerSizes[$key][$dimension]) }}"
+                                                   placeholder="{{ $bannerPlaceholders[$key][$dimension] }}"
                                                    data-banner-size="{{ $key }}" data-banner-dimension="{{ $dimension }}"
                                                    @class(['form-control', 'is-invalid' => $errors->has($field)]) required>
                                             <span class="input-group-text">px</span>
