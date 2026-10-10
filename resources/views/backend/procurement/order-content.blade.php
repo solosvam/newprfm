@@ -106,7 +106,8 @@
                                         {{ $rows->count() }} anbardan {{ $active->count() }}-i seçildi: {{ $parts->implode('; ') }}
                                     @endif
                                 @elseif($group === 'choose')
-                                    {{ $offered->count() }} anbar təklif verib, ən ucuzu {{ number_format((float) $cheapest, 2) }} AZN
+                                    {{-- "Ən ucuzu" yalnız qiymətlər fərqlidirsə deyilir; hamısı eyni qiymət veribsə sadəcə qiymət --}}
+                                    {{ $offered->count() }} anbar təklif verib{{ $offered->unique(fn ($r) => (float) $r['offer']->unit_cost)->count() > 1 ? ', ən ucuzu' : ':' }} {{ number_format((float) $cheapest, 2) }} AZN
                                     @if($selected) · {{ $selected }} / {{ $need }} seçilib, {{ $missing }} çatışmır @endif
                                 @else
                                     {{ $rows->isEmpty() ? 'Hələ sorğu göndərilməyib' : $rows->count().' anbara sorğu göndərilib, təklif yoxdur' }}
