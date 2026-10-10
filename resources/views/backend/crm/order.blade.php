@@ -333,9 +333,16 @@
             </div>
             <div class="tab-pane fade" id="item-history" role="tabpanel" aria-labelledby="item-history-tab" tabindex="0">@include('backend.crm.partials.order-item-history')</div>
             <div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab" tabindex="0">
-                @if($payLinkUrl)<div class="border rounded p-3 mb-4">@include('backend.crm.partials.order-payment-link')</div>@endif
-                @include('backend.crm.partials.order-payments')
-                @include('backend.crm.partials.order-refunds')
+                {{-- Sol: ödəniş linki (yalnız lazım olanda); sağ: ödəniş cəhdləri və geri qaytarmalar --}}
+                <div class="row g-4">
+                    @if($payLinkUrl)
+                        <div class="col-xl-4">@include('backend.crm.partials.order-payment-link')</div>
+                    @endif
+                    <div class="{{ $payLinkUrl ? 'col-xl-8' : 'col-12' }}">
+                        @include('backend.crm.partials.order-payments')
+                        @include('backend.crm.partials.order-refunds')
+                    </div>
+                </div>
             </div>
             <div class="tab-pane fade" id="procurement" role="tabpanel" aria-labelledby="procurement-tab" tabindex="0">@include('backend.procurement.order-content')</div>
             @if(!empty($settlement))

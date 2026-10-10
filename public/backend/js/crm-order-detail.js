@@ -127,7 +127,7 @@ $(document).ready(function () {
     // Ödəniş linki: kopyala
     $(document).on('click', '[data-pay-link-copy]', function () {
         const btn = this;
-        const input = btn.closest('.input-group').querySelector('[data-pay-link-url]');
+        const input = btn.closest('[data-pay-link]').querySelector('[data-pay-link-url]');
         const done = () => {
             btn.textContent = 'Kopyalandı ✓';
             setTimeout(() => { btn.textContent = 'Kopyala'; }, 1500);
