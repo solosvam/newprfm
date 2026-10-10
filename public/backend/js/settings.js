@@ -59,6 +59,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (preview) preview.style.aspectRatio = w + ' / ' + h;
         const label = form.querySelector('[data-banner-label="' + key + '"]');
         if (label) label.textContent = w + '×' + h;
+        bannerWarning(key, w, h);
+    });
+
+    // Bannerlər: həddi aşan ölçü yazılan kimi səbəbi ilə xəbərdarlıq (server də eyni hədləri yoxlayır — Setting::bannerLimits)
+    const bannerWarning = (key, w, h) => {
+        const row = form.querySelector('[data-banner-limits="' + key + '"]');
+        const box = form.querySelector('[data-banner-warning="' + key + '"]');
+        if (!row || !box) return;
+        const d = row.dataset;
+        let text = '';
+        if (w > Number(d.maxWidth)) {
+            text = 'En ' + w + ' px çox böyükdür. Saytda bu banner ' + d.displayWidth + ' px enində göstərilir — ən çox ' + d.maxWidth + ' px yazmaq olar. Böyük şəkil keyfiyyəti artırmır, yalnız səhifəni ağırlaşdırır.';
+        } else if (w < Number(d.minWidth)) {
+            text = 'En ' + w + ' px çox kiçikdir. Saytda bu banner ' + d.displayWidth + ' px enində göstərilir — ən azı ' + d.minWidth + ' px olmalıdır, yoxsa bulanıq görünər.';
+        } else if (w / h < Number(d.minRatio)) {
+            text = 'Banner çox hündürdür — saytda ilk ekranı tutacaq. ' + w + ' px en üçün hündürlük ən çox ' + Math.floor(w / Number(d.minRatio)) + ' px ola bilər.';
+        } else if (w / h > Number(d.maxRatio)) {
+            text = 'Banner çox nazikdir. ' + w + ' px en üçün hündürlük ən azı ' + Math.ceil(w / Number(d.maxRatio)) + ' px olmalıdır.';
+        }
+        box.classList.toggle('d-none', !text);
+        box.lastElementChild.textContent = text;
+    };
+    const bannerInputs = (key) => ['width', 'height'].map((dimension) => form.querySelector('[data-banner-size="' + key + '"][data-banner-dimension="' + dimension + '"]'));
+    form.querySelectorAll('[data-banner-limits]').forEach((row) => {
+        const [w, h] = bannerInputs(row.dataset.bannerLimits);
+        if (w && h) bannerWarning(row.dataset.bannerLimits, Number(w.value) || 1, Number(h.value) || 1);
+    });
+    form.querySelector('[data-banner-reset]')?.addEventListener('click', () => {
+        form.querySelectorAll('[data-banner-size]').forEach((input) => {
+            input.value = input.placeholder;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
     });
 
 });

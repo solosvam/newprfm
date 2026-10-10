@@ -128,6 +128,29 @@ class ReferralSettingsTest extends TestCase
         $this->get('/admin/settings/unknown')->assertNotFound();
     }
 
+    public function test_banner_sizes_are_limited_to_what_the_site_can_show(): void
+    {
+        $sizes = ['banner_slide_interval' => 5];
+        foreach (Setting::BANNER_DIMENSIONS as $key => [$width, $height]) {
+            $sizes += ["{$key}_width" => $width, "{$key}_height" => $height];
+        }
+        $post = fn (array $override) => $this->actingAs($this->admin, 'admin')->post(route('admin.settings.banners.update'), $override + $sizes);
+
+        // Tövsiyə olunan ölçülər keçir
+        $post([])->assertSessionHasNoErrors();
+        $this->assertSame([2120, 640], Setting::bannerDimensions('web', 'top'));
+
+        // 6400 px en: səbəbi ilə rədd edilir, saxlanmır
+        $post(['banner_web_top_width' => 6400, 'banner_web_top_height' => 2500])->assertSessionHasErrors('banner_web_top_width');
+        $this->assertStringContainsString('1060 px enində göstərilir', session('errors')->first('banner_web_top_width'));
+        $this->assertSame([2120, 640], Setting::bannerDimensions('web', 'top'));
+
+        // Kvadrat mobil banner (ilk ekranı tutur) və çox nazik banner
+        $post(['banner_mobile_top_width' => 1280, 'banner_mobile_top_height' => 1280])->assertSessionHasErrors('banner_mobile_top_height');
+        $this->assertStringContainsString('ən çox 711 px', session('errors')->first('banner_mobile_top_height'));
+        $post(['banner_web_bottom_width' => 2120, 'banner_web_bottom_height' => 100])->assertSessionHasErrors('banner_web_bottom_height');
+    }
+
     public function test_sections_save_only_their_own_fields(): void
     {
         Setting::set('delivery_mode', 'paid');

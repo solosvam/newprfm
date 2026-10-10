@@ -21,6 +21,13 @@
                     <span class="text-muted small">Yeni bannerlər bu ölçülərə kəsiləcək</span>
                 </div>
 
+                <div class="alert alert-warning" role="note">
+                    <strong class="d-block">Bu ölçülər saytda banner blokunun formasını da müəyyən edir.</strong>
+                    Böyük rəqəm banneri keyfiyyətli etmir: veb bannerlər saytda ən çox {{ \App\Models\Setting::bannerLimits('banner_web_top')['display_width'] }} px,
+                    mobil bannerlər {{ \App\Models\Setting::bannerLimits('banner_mobile_top')['display_width'] }} px enində göstərilir. Tövsiyə olunan ölçü bunun iki mislidir
+                    (kəskin ekranlar üçün) — ondan böyük dəyər qəbul olunmur. Dəyişməzdən əvvəl dizaynerlə razılaşdırın.
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0 settings-banner-table">
                         <thead>
@@ -32,8 +39,12 @@
                         </thead>
                         <tbody>
                         @foreach ($bannerPlaces as $key => $label)
-                            <tr>
-                                <th scope="row" class="fw-medium text-nowrap pe-3">{{ $label }}</th>
+                            @php $limits = \App\Models\Setting::bannerLimits($key); @endphp
+                            <tr data-banner-limits="{{ $key }}" data-max-width="{{ $limits['max_width'] }}" data-min-width="{{ $limits['min_width'] }}"
+                                data-display-width="{{ $limits['display_width'] }}" data-min-ratio="{{ $limits['min_ratio'] }}" data-max-ratio="{{ $limits['max_ratio'] }}">
+                                <th scope="row" class="fw-medium text-nowrap pe-3">{{ $label }}
+                                    <div class="text-muted text-small fw-normal">saytda {{ $limits['display_width'] }} px · ən çox {{ $limits['max_width'] }} px</div>
+                                </th>
                                 @foreach (['width' => 'En', 'height' => 'Hündürlük'] as $dimension => $caption)
                                     @php $field = "{$key}_{$dimension}"; @endphp
                                     <td>
@@ -50,11 +61,14 @@
                                     </td>
                                 @endforeach
                             </tr>
+                            {{-- Yazarkən çıxan xəbərdarlıq (settings.js) --}}
+                            <tr class="d-none" data-banner-warning="{{ $key }}"><td></td><td colspan="2" class="text-danger text-small pt-0 border-0"></td></tr>
                         @endforeach
                         </tbody>
                     </table>
                 </div>
                 <div class="form-text mt-3">Ölçü dəyişəndə artıq yüklənmiş bannerlər yenidən kəsilmir — yalnız yeni yüklənənlərə tətbiq olunur.</div>
+                <button type="button" class="btn btn-sm btn-outline-primary mt-3" data-banner-reset>Tövsiyə olunan ölçülərə qaytar</button>
             </div>
         </div>
     </div>

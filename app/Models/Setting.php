@@ -19,6 +19,27 @@ class Setting extends Model
         'banner_mobile_bottom' => [1280, 440],
     ];
 
+    /**
+     * Banner ölçüsünün hədləri. En standartdan (saytda göstərilən enin iki misli) böyük ola bilməz — daha böyük şəkil
+     * keyfiyyəti artırmır, yalnız səhifəni ağırlaşdırır. Nisbət (en ÷ hündürlük) saytda banner blokunun formasını
+     * müəyyən edir: çox hündür banner ilk ekranı tutur, çox nazik banner oxunmur.
+     *
+     * @return array{display_width: int, max_width: int, min_width: int, min_ratio: float, max_ratio: float}
+     */
+    public static function bannerLimits(string $key): array
+    {
+        $max = self::BANNER_DIMENSIONS[$key][0];
+        $mobile = str_contains($key, 'mobile');
+
+        return [
+            'display_width' => intdiv($max, 2),
+            'max_width' => $max,
+            'min_width' => intdiv($max, 2),
+            'min_ratio' => $mobile ? 1.8 : 2.5,
+            'max_ratio' => $mobile ? 4.0 : 6.0,
+        ];
+    }
+
     public static function valueOf(string $key, mixed $default = null): mixed
     {
         return static::query()->where('key', $key)->value('value') ?? $default;

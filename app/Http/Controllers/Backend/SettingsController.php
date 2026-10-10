@@ -46,11 +46,24 @@ class SettingsController extends Controller
         ] + $this->data($section));
     }
 
+    /** Banner eninin hədd xətaları: niyə olmaz və nə qədər olar */
+    private function bannerMessages(): array
+    {
+        $messages = [];
+        foreach (array_keys(Setting::BANNER_DIMENSIONS) as $key) {
+            $limits = Setting::bannerLimits($key);
+            $messages["{$key}_width.max"] = 'En ən çox '.$limits['max_width'].' px ola bilər: saytda bu banner '.$limits['display_width'].' px enində göstərilir, daha böyük şəkil keyfiyyəti artırmır, yalnız səhifəni ağırlaşdırır.';
+            $messages["{$key}_width.min"] = 'En ən azı '.$limits['min_width'].' px olmalıdır: saytda bu banner '.$limits['display_width'].' px enində göstərilir, kiçik şəkil bulanıq görünər.';
+        }
+
+        return $messages;
+    }
+
     public function update(Request $request, string $section): RedirectResponse
     {
         abort_unless(isset(self::SECTIONS[$section]), 404);
 
-        $data = $request->validate($this->rules($section), [], $section === 'referral' ? $this->referralAttributes() : []);
+        $data = $request->validate($this->rules($section), $section === 'banners' ? $this->bannerMessages() : [], $section === 'referral' ? $this->referralAttributes() : []);
         unset($data['referral_og_image_file'], $data['referral_og_image_remove']);
 
         foreach ($data as $key => $value) {
@@ -134,10 +147,26 @@ class SettingsController extends Controller
                 'pay_link_hours' => ['required', 'integer', 'min:1', 'max:720'],
             ],
             'banners' => collect(array_keys(Setting::BANNER_DIMENSIONS))
-                ->flatMap(fn ($key) => [
-                    "{$key}_width" => ['required', 'integer', 'min:1', 'max:10000'],
-                    "{$key}_height" => ['required', 'integer', 'min:1', 'max:10000'],
-                ])
+                ->flatMap(function ($key) {
+                    // Hədlər: Setting::bannerLimits (en — saytda göstərilənin iki mislinədək; nisbət — banner blokunun forması)
+                    $limits = Setting::bannerLimits($key);
+
+                    return [
+                        "{$key}_width" => ['required', 'integer', 'min:'.$limits['min_width'], 'max:'.$limits['max_width']],
+                        "{$key}_height" => ['required', 'integer', 'min:1', function (string $attribute, mixed $value, \Closure $fail) use ($key, $limits) {
+                            $width = (int) request("{$key}_width");
+                            if ($width < 1 || (int) $value < 1) {
+                                return;
+                            }
+                            $ratio = $width / (int) $value;
+                            if ($ratio < $limits['min_ratio']) {
+                                $fail('Banner çox hündürdür: '.$width.' px en üçün hündürlük ən çox '.(int) floor($width / $limits['min_ratio']).' px ola bilər.');
+                            } elseif ($ratio > $limits['max_ratio']) {
+                                $fail('Banner çox nazikdir: '.$width.' px en üçün hündürlük ən azı '.(int) ceil($width / $limits['max_ratio']).' px olmalıdır.');
+                            }
+                        }],
+                    ];
+                })
                 // Eyni yerdə bir neçə banner olanda hər slaydın göstərilmə müddəti (saniyə)
                 ->put('banner_slide_interval', ['required', 'integer', 'min:2', 'max:60'])
                 ->all(),
