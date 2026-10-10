@@ -29,6 +29,11 @@
     // CRM sifariş səhifəsində məhsulun "⋯" menyusunda ləğv əməliyyatları da olur
     $crm = isset($customer);
     $smsProblems = $requests->filter(fn ($r) => !$r->warehouse->phone || !($smsLogs['request'][$r->id] ?? null)?->isSent())->count();
+    // Anbarların cari price listlərində bu sifarişin variantları: variant id => sətirlər (ucuzdan bahaya)
+    $listPrices = \App\Models\PriceList\WarehousePriceItem::with(['warehouse:id,name_az', 'priceList:id,created_at'])
+        ->whereIn('price_list_id', \App\Models\PriceList\WarehousePriceList::currentIds())
+        ->whereIn('product_variant_id', $order->items->pluck('product_variant_id')->filter()->unique()->all() ?: [0])
+        ->orderBy('price')->get()->groupBy('product_variant_id');
     $phoneError = fn ($log) => $log && !$log->isSent() && \Illuminate\Support\Str::contains(mb_strtolower((string) $log->error), 'nömrə');
 @endphp
 
@@ -143,6 +148,14 @@
                                 @if($editable) Anbarla qiyməti danışın və ya başqa anbardan soruşun. @endif
                             </div>
                         @endif
+                        {{-- Price listlərdəki qiymət: stok təsdiqi deyil (siyahı həftəlikdir) — ona görə siyahının tarixi də yazılır --}}
+                        @if(($listed = $listPrices[$item->product_variant_id] ?? collect())->isNotEmpty())
+                            <div class="text-muted text-small">Price listdə:
+                                @foreach($listed as $row)
+                                    <span class="text-nowrap">{{ $row->warehouse?->name_az }} <strong class="text-body">{{ number_format((float) $row->price, 2) }} AZN</strong> <span title="Siyahının yükləndiyi tarix">({{ $row->priceList?->created_at?->format('d.m') }})</span></span>@if(!$loop->last) · @endif
+                                @endforeach
+                            </div>
+                        @endif
                         @if($crm)
                             @foreach(($cancellations[$item->id] ?? []) as $c)
                                 <div class="text-danger text-small">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}</div>
@@ -239,6 +252,22 @@
     @endforeach
     </div>
 @endforeach
+
+{{-- Price listlərdə axtarış: bütün anbarların cari siyahısında mətnlə (Excel-də Ctrl+F-in əvəzi). procurement-order.js --}}
+<div class="card d-flex mb-2">
+    <div class="d-flex flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#procLists" aria-expanded="false" aria-controls="procLists">
+        <div class="card-body py-3">
+            <div class="list-item-heading">Price listlərdə axtar</div>
+            <div class="text-muted text-small">Anbarların yüklənmiş qiymət siyahılarında ad ilə axtarış</div>
+        </div>
+    </div>
+    <div id="procLists" class="collapse" data-remember-collapse="proc-lists">
+        <div class="card-body accordion-content pt-0">
+            <input type="search" class="form-control" placeholder="Məs.: eros edp 100" data-list-search="{{ route('admin.price-lists.search') }}" aria-label="Price listlərdə axtar">
+            <div class="mt-3" data-list-results><p class="text-muted mb-0">Ən azı 2 hərf yazın. Sözlərin sırası vacib deyil.</p></div>
+        </div>
+    </div>
+</div>
 
 {{-- Sorğular və anbar SMS-ləri: ikinci dərəcəli — yığılmış açılır, operatorun seçimi yadda qalır (procurement-order.js) --}}
 @if($requests->isNotEmpty())

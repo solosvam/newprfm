@@ -14,6 +14,7 @@ return [
             ['title' => 'Asan sifarişlər', 'route' => 'admin.easy-orders.index', 'permission' => 'crm'],
             ['title' => 'Kredit müraciətləri', 'route' => 'admin.credit.applications', 'permission' => 'credit.menu'],
             ['title' => 'Anbarlar', 'route' => 'admin.procurement.warehouses', 'permission' => 'crm'],
+            ['title' => 'Price listlər', 'route' => 'admin.price-lists.index', 'permission' => 'crm'],
             ['separator' => true],
             ['title' => 'Statistika', 'route' => 'admin.statistics', 'permission' => 'statistics'],
         ],

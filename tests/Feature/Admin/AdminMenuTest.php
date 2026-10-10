@@ -22,13 +22,13 @@ class AdminMenuTest extends TestCase
 
     public function test_separator_before_statistics_is_shown_with_permission(): void
     {
-        $this->assertSame(['Sifarişlər', 'Asan sifarişlər', 'Kredit müraciətləri', 'Anbarlar', '---', 'Statistika'],
+        $this->assertSame(['Sifarişlər', 'Asan sifarişlər', 'Kredit müraciətləri', 'Anbarlar', 'Price listlər', '---', 'Statistika'],
             $this->menuFor(['crm', 'credit.menu', 'statistics']));
     }
 
     public function test_trailing_separator_is_dropped(): void
     {
-        $this->assertSame(['Sifarişlər', 'Asan sifarişlər', 'Anbarlar'], $this->menuFor(['crm']));
+        $this->assertSame(['Sifarişlər', 'Asan sifarişlər', 'Anbarlar', 'Price listlər'], $this->menuFor(['crm']));
     }
 
     public function test_leading_separator_is_dropped(): void

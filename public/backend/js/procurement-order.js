@@ -92,6 +92,37 @@
     });
 })();
 
+// Price listlərdə axtarış: yazdıqca nəticə (ucuzdan bahaya), hər sətirdə anbar, qiymət və siyahının tarixi
+(() => {
+    const input = document.querySelector('[data-list-search]');
+    const box = document.querySelector('[data-list-results]');
+    if (!input || !box) return;
+    const el = (tag, cls, text) => { const node = document.createElement(tag); if (cls) node.className = cls; if (text !== undefined) node.textContent = text; return node; };
+    let timer = null;
+    let last = 0;
+    const run = () => {
+        const q = input.value.trim();
+        if (q.length < 2) { box.replaceChildren(el('p', 'text-muted mb-0', 'Ən azı 2 hərf yazın. Sözlərin sırası vacib deyil.')); return; }
+        const id = ++last;
+        fetch(input.dataset.listSearch + '?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+            .then(response => response.json())
+            .then(data => {
+                if (id !== last) return; // köhnə sorğunun cavabı
+                const items = data.items || [];
+                if (!items.length) { box.replaceChildren(el('p', 'text-muted mb-0', 'Heç bir price listdə tapılmadı.')); return; }
+                box.replaceChildren(...items.map(item => {
+                    const row = el('div', 'd-flex justify-content-between align-items-baseline gap-3 border-bottom py-2');
+                    const left = el('div');
+                    left.append(el('div', '', item.name), el('div', 'text-muted text-small', item.warehouse + ' · siyahı ' + item.date));
+                    row.append(left, el('strong', 'text-nowrap', item.price + ' AZN'));
+                    return row;
+                }));
+            })
+            .catch(() => box.replaceChildren(el('p', 'text-danger mb-0', 'Axtarış alınmadı.')));
+    };
+    input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 300); });
+})();
+
 // Yığılan bölmənin (data-remember-collapse) açıq/bağlı vəziyyəti brauzerdə yadda qalır — bütün sifarişlər üçün ortaq
 document.querySelectorAll('[data-remember-collapse]').forEach(panel => {
     const key = 'collapse:' + panel.dataset.rememberCollapse;

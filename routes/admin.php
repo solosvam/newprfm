@@ -144,6 +144,22 @@ Route::prefix('admin')
                     Route::post('/orders/{order}/requests/{warehouseRequest}/sms', 'requestSms')->name('requests.sms');
                 });
 
+            // Anbarların price listləri (Excel importu, uyğunlaşdırma, sifarişdə axtarış)
+            Route::middleware('can:crm')->controller(\App\Http\Controllers\Backend\PriceListController::class)
+                ->prefix('price-lists')->name('price-lists.')->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::post('/upload', 'upload')->name('upload');
+                    Route::get('/search', 'search')->name('search');
+                    Route::get('/map/{token}', 'map')->whereUuid('token')->name('map');
+                    Route::post('/map/{token}', 'import')->whereUuid('token')->name('import');
+                    Route::get('/items/{item}/candidates', 'candidates')->name('items.candidates');
+                    Route::post('/items/{item}/match', 'match')->name('items.match');
+                    Route::delete('/items/{item}/match', 'unmatch')->name('items.unmatch');
+                    Route::get('/{priceList}', 'show')->name('show');
+                    Route::post('/{priceList}/brands', 'matchBrand')->name('brands.match');
+                    Route::post('/{priceList}/brands/create', 'createBrand')->middleware('can:brands.menu')->name('brands.create');
+                });
+
             /*
             |--------------------------------------------------------------------------
             | Main
