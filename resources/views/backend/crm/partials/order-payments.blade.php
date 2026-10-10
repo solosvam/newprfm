@@ -5,8 +5,9 @@
                 <thead><tr><th class="text-muted text-small text-uppercase">Tarix</th><th class="text-muted text-small text-uppercase">Provayder</th><th class="text-muted text-small text-uppercase">Əməliyyat №</th><th class="text-muted text-small text-uppercase">Məbləğ</th><th class="text-muted text-small text-uppercase">Status</th></tr></thead>
                 <tbody>@forelse($order->payments as $payment)
                     <tr><td>{{ $payment->created_at?->format('d.m.Y H:i') }}</td><td>{{ strtoupper($payment->provider) }}</td><td>{{ $payment->provider_order_id ?: '—' }}</td><td>{{ number_format((float) $payment->amount, 2) }} AZN</td><td>{{ $paymentLabels[$payment->status] ?? $payment->status }}</td></tr>
-                    @if($payment->items->isNotEmpty())
-                        {{-- Ödənişə daxil olanlar: geri ödəniş bu sətirlərə bağlanır --}}
+                    @if($payment->status === \App\Models\Payment\Payment::PAID && $payment->items->isNotEmpty())
+                        {{-- Ödənişə daxil olanlar: geri ödəniş bu sətirlərə bağlanır. Yalnız ödənilmiş cəhddə göstərilir —
+                             gözləyən / uğursuz cəhdlərdə məhsullar onsuz da "Məhsullar" tabındadır. --}}
                         <tr class="od-pay-items"><td></td><td colspan="4">
                             @foreach($payment->items as $line)
                                 @php $orderItem = $line->order_item_id ? $order->items->firstWhere('id', $line->order_item_id) : null; @endphp
