@@ -9,7 +9,18 @@
                 <button type="button" class="btn btn-primary" data-pay-link-sms
                         data-url="{{ route('admin.crm.order.pay-link', [$customer, $order]) }}">SMS ilə göndər</button>
             </div>
-            <div class="form-text">Link ödəniş edilənə qədər aktivdir. SMS {{ $order->customer?->mobile ?? $customer->mobile }} nömrəsinə gedir.</div>
+            @php $payLinkExpired = !$order->pay_token_expires_at || $order->pay_token_expires_at->isPast(); @endphp
+            <div class="form-text d-flex flex-wrap align-items-center gap-2">
+                @if($payLinkExpired)
+                    <span class="text-danger">Linkin vaxtı bitib — müştəri sifarişi görmür.</span>
+                @else
+                    <span>Link {{ $order->pay_token_expires_at->timezone('Asia/Baku')->format('d.m.Y H:i') }}-dək aktivdir.</span>
+                @endif
+                {{-- SMS göndərmədən müddəti yenidən sayır (linki başqa yolla atanda) --}}
+                <button type="button" class="btn btn-link btn-sm p-0" data-pay-link-renew
+                        data-url="{{ route('admin.crm.order.pay-link-renew', [$customer, $order]) }}">Müddəti yenilə</button>
+            </div>
+            <div class="form-text">"SMS ilə göndər" müddəti də yeniləyir. SMS {{ $order->customer?->mobile ?? $customer->mobile }} nömrəsinə gedir.</div>
         </div>
     @endif
 

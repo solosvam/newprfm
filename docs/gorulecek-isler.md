@@ -53,7 +53,6 @@ Son yenilənmə: 10 oktyabr 2026.
 
 ## 4. Prod-a çıxmazdan əvvəl
 
-- [ ] **SMS ödəniş linkinə son istifadə müddəti** (`orders.pay_token`, `OrderPayLinkService` — hazırda müddətsizdir).
 - [ ] Serverdə `schedule:run` cron və queue worker (`QUEUE_CONNECTION=database`; `NotifyPriceDrop` və növbəli email-lər üçün).
   Cron olmasa `payments:check-birbank` da işləmir — bankdan qayıtmayan müştərinin ödənişi yenə "gözləyir" qalar.
 - [ ] `.env`-də `ONESIGNAL_REST_API_KEY` (olmasa push getmir).
@@ -101,6 +100,8 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Müştəri ehtiyat nömrəsini (`mobile_2`) saytda görmür və dəyişmir.
 - Öz kreditimizlə (hissə-hissə) alışda məhsul endirimi tətbiq olunmur. Birbank taksitində tətbiq olunur. Birbank taksiti "hissə-hissə" sayılmır.
 - Promo kod endirimli məhsullara tətbiq olunmur.
+- SMS ödəniş linkinin müddəti var: admin ayarı (Ayarlar → Sifariş və çatdırılma, standart 72 saat). Müddət link yarananda başlayır,
+  SMS göndəriləndə və ya CRM-də "Müddəti yenilə" basılanda yenidən sayılır. Vaxtı bitmiş link sifarişin məlumatını göstərmir.
 - Gözləyən Birbank ödənişi öz vaxt həddimizlə ləğv edilmir: `payments:check-birbank` hər 5 dəqiqədən bir bankdan soruşur,
   ödənilməyən sifarişi bank özü `Expired` edir. Bankda hələ açıq olan ödənişi ləğv saysaq, müştəri iki dəfə ödəyə bilər.
 - ps-side üçün Instagram skripti olmayacaq (8 oktyabr qərarı).

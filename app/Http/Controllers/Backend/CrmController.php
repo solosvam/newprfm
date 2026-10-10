@@ -697,4 +697,23 @@ class CrmController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Ödəniş linki müştəriyə SMS ilə göndərildi.']);
     }
+
+    /** Sifariş detalı → "Müddəti yenilə": SMS göndərmədən ödəniş linkinin müddətini yenidən sayır */
+    public function renewPayLink(Customer $customer, Order $order, OrderPayLinkService $payLink): JsonResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+
+        $order->loadMissing('paymentMethod', 'status');
+        if (!$order->canStartOnlinePayment()) {
+            return response()->json(['success' => false, 'message' => 'Bu sifariş üçün ödəniş linki aktiv deyil.'], 422);
+        }
+
+        $payLink->ensureToken($order);
+        $payLink->renew($order);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Link '.$order->pay_token_expires_at->timezone('Asia/Baku')->format('d.m.Y H:i').'-dək aktivdir.',
+        ]);
+    }
 }

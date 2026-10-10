@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
 use App\Models\Payment\Payment;
 use App\Services\BonusService;
+use App\Services\ContactInfo;
+use App\Services\OrderPayLinkService;
 use App\Services\Payment\Birbank;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,9 +22,22 @@ class PayLinkController extends Controller
     /** Callback-dən sonra müştəri bu səhifəyə qayıtsın deyə (BirbankPaymentController::callback) */
     public const SESSION_KEY = 'pay_link_order';
 
-    public function show(string $token): Response
+    /** Bankdan qayıdan müştəri: link bu arada bitsə də nəticə səhifəsi bir dəfə açılır (+ sifariş ID) */
+    public const SESSION_RETURN_KEY = 'pay_link_return_';
+
+    public function show(Request $request, string $token, OrderPayLinkService $payLink): Response
     {
         $order = $this->find($token);
+
+        // Vaxtı bitmiş link sifarişin heç bir məlumatını göstərmir. İstisna: müştəri bu linkdən ödənişə başlayıb və
+        // bankdan indi qayıdır (callback sessiyanı artıq götürüb yönləndirib) — nəticəni görməlidir.
+        if ($payLink->isExpired($order) && !$request->session()->pull(self::SESSION_RETURN_KEY.$order->id)) {
+            return response()
+                ->view('frontend.pay-link-expired', ['contact' => app(ContactInfo::class)], 410)
+                ->header('X-Robots-Tag', 'noindex, nofollow')
+                ->header('Cache-Control', 'no-store, private');
+        }
+
         $order->load([
             'items.product.brand',
             'items.product.images',
@@ -58,11 +73,11 @@ class PayLinkController extends Controller
             ->header('Cache-Control', 'no-store, private');
     }
 
-    public function start(Request $request, string $token, Birbank $birbank): RedirectResponse
+    public function start(Request $request, string $token, Birbank $birbank, OrderPayLinkService $payLink): RedirectResponse
     {
         $order = $this->find($token);
 
-        if (!$order->canStartOnlinePayment()) {
+        if ($payLink->isExpired($order) || !$order->canStartOnlinePayment()) {
             return redirect()->route('pay.link', $token);
         }
 

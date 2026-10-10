@@ -74,4 +74,34 @@
     </div>
 </div>
     </div>
+    <div class="col-xl-6">
+{{-- SMS ödəniş linki (OrderPayLinkService) --}}
+<div class="card">
+    <div class="card-body">
+        <div class="settings-card-head">
+            <h5 class="mb-0">Ödəniş linki</h5>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-sm-6">
+                <label for="pay_link_hours" class="form-label">Ödəniş linkinin müddəti</label>
+                <div class="input-group has-validation">
+                    <input id="pay_link_hours" name="pay_link_hours" type="number" min="1" max="720" step="1"
+                           value="{{ old('pay_link_hours', $payLinkHours) }}"
+                        @class(['form-control', 'is-invalid' => $errors->has('pay_link_hours')])>
+                    <span class="input-group-text">saat</span>
+                    @error('pay_link_hours')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-text">
+                    Operatorun müştəriyə SMS ilə göndərdiyi ödəniş linki bu müddətdən sonra bağlanır: müştəri sifarişi görmür,
+                    "linkin vaxtı bitib" yazısı çıxır. Müddət link yarananda başlayır, SMS təkrar göndəriləndə və ya
+                    sifarişdə "Müddəti yenilə" basılanda yenidən sayılır. Dəyişiklik bundan sonra yaranan və yenilənən linklərə aiddir.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
 </div>

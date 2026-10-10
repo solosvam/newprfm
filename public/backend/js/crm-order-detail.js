@@ -152,4 +152,13 @@ $(document).ready(function () {
             .always(() => btn.prop('disabled', false).text(label));
     });
 
+    // Ödəniş linki: müddəti yenilə (CrmController::renewPayLink) — yeni vaxt görünsün deyə səhifə yenilənir
+    $(document).on('click', '[data-pay-link-renew]', function () {
+        const btn = $(this);
+        btn.prop('disabled', true);
+        $.post(btn.data('url'))
+            .done(res => { window.checkResponse(res); setTimeout(() => window.location.reload(), 800); })
+            .fail(xhr => { window.checkError(xhr); btn.prop('disabled', false); });
+    });
+
 });

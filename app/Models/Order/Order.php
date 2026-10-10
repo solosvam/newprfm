@@ -18,7 +18,8 @@ class Order extends Model {
             'discount'=>'decimal:2',
             'referral_discount'=>'decimal:2',
             'bonus_percent'=>'decimal:2',
-            'total'=>'decimal:2'
+            'total'=>'decimal:2',
+            'pay_token_expires_at'=>'datetime',
         ];
     }
     /** Bank səhifəsində ödənilən üsullar (SMS ödəniş linki də yalnız bunlarda işləyir) */

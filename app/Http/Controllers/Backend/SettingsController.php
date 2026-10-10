@@ -93,6 +93,7 @@ class SettingsController extends Controller
                 'freeDeliveryFrom' => Setting::valueOf('free_delivery_from', 0),
                 'giftWrapMode' => Setting::valueOf('gift_wrap_mode', 'free'),
                 'giftWrapFee' => Setting::valueOf('gift_wrap_fee', 0),
+                'payLinkHours' => Setting::valueOf('pay_link_hours', \App\Services\OrderPayLinkService::DEFAULT_HOURS),
             ],
             'banners' => [
                 'bannerSizes' => collect(Setting::BANNER_DIMENSIONS)->map(fn ($size, $key) => [
@@ -129,6 +130,8 @@ class SettingsController extends Controller
                 'free_delivery_from' => ['required_if:delivery_mode,threshold', 'nullable', 'numeric', 'min:0.01'],
                 'gift_wrap_mode' => ['required', 'in:free,paid'],
                 'gift_wrap_fee' => ['required_if:gift_wrap_mode,paid', 'nullable', 'numeric', 'min:0'],
+                // SMS ödəniş linkinin müddəti (saat): 1 saatdan 30 günədək
+                'pay_link_hours' => ['required', 'integer', 'min:1', 'max:720'],
             ],
             'banners' => collect(array_keys(Setting::BANNER_DIMENSIONS))
                 ->flatMap(fn ($key) => [

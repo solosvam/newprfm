@@ -48,6 +48,8 @@ class BirbankPaymentController extends Controller
         if ((int) $request->session()->pull(PayLinkController::SESSION_KEY) === (int) $payment->order_id) {
             $token = Order::whereKey($payment->order_id)->value('pay_token');
             if ($token) {
+                $request->session()->put(PayLinkController::SESSION_RETURN_KEY.$payment->order_id, true);
+
                 return redirect()->route('pay.link', $token);
             }
         }
