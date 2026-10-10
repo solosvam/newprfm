@@ -65,23 +65,22 @@ class BrandsController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(Request $request, int $id)
     {
+        // Brend ünvandakı {id}-dən tapılır: formada "id" sahəsi yoxdur, ona görə onu tələb etmək hər saxlamada xəta verirdi
+        $brand = Brand::findOrFail($id);
+
         $request->validate([
-            'id'     => 'required',
             'name'   => 'required|string|max:255',
-            'slug'   => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('brands', 'slug')->ignore($request->id)],
+            'slug'   => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('brands', 'slug')->ignore($brand->id)],
             'image'  => 'nullable|image|max:10240',
             'active' => 'required',
         ], [
-            'id.required'     => 'Brend ID tapılmadı.',
             'name.required'   => 'Brend adı daxil edilməlidir.',
             'image.image'     => 'Yüklənən fayl şəkil formatında olmalıdır.',
             'image.max'       => 'Şəklin həcmi maksimum 10 MB ola bilər.',
             'active.required' => 'Status seçilməlidir.',
         ]);
-
-        $brand = Brand::findOrFail($request->id);
 
         $brand->name   = $request->name;
         if ($request->filled('slug')) {
