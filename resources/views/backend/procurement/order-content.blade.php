@@ -96,7 +96,7 @@
                                         $isCheapest = $active->count() === 1 && $cheapest !== null && (float) $active->first()->unit_cost <= (float) $cheapest;
                                     @endphp
                                     @if($active->count() === 1)
-                                        {{ $rows->count() }} anbardan {{ $isCheapest && $rows->count() > 1 ? 'ən ucuz təklif verən ' : '' }}{{ $active->first()->warehouse->name_az }} seçildi — təklif {{ $active->first()->quantity }} × {{ number_format((float) $active->first()->unit_cost, 2) }} AZN
+                                        {{ $rows->count() }} anbardan {{ $isCheapest && $rows->count() > 1 ? '<ins>ən ucuz</ins> təklif verən ' : '' }}{{ $active->first()->warehouse->name_az }} seçildi — təklif {{ $active->first()->quantity }} × {{ number_format((float) $active->first()->unit_cost, 2) }} AZN
                                     @else
                                         {{ $rows->count() }} anbardan {{ $active->count() }}-i seçildi: {{ $parts->implode('; ') }}
                                     @endif
