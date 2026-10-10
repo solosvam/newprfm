@@ -3,7 +3,7 @@
 Layihə üzrə **yeganə** görüləcək işlər sənədi. Yeni iş əlavə olunanda, iş bitəndə və ya qərar veriləndə yalnız bu fayl yenilənir.
 Əvvəlki `docs/order-fulfillment-plan.md` və `docs/backlog.md` bu fayla birləşdirilib silinib.
 
-Son yenilənmə: 9 oktyabr 2026.
+Son yenilənmə: 10 oktyabr 2026.
 
 ---
 
@@ -53,12 +53,9 @@ Son yenilənmə: 9 oktyabr 2026.
 
 ## 4. Prod-a çıxmazdan əvvəl
 
-- [ ] **Birbank ödənişlərini yoxlayan job.** Müştəri callback-ə qayıtmasa, ödəniş həmişəlik "gözləyir" qalır
-  (`BirbankPaymentController::callback` yeganə yoxlamadır), `hasPendingPayment()` ləğv/təkrar ödənişi bloklayır.
-  Job `Birbank::verify()` ilə gözləyən ödənişləri yoxlamalı və callback-dəki eyni yeniləməni etməlidir (ortaq servisə çıxarmaq).
-  Repoda Birbank status sənədləri yoxdur (yalnız FullyPaid / Cancelled / Declined / Refused).
 - [ ] **SMS ödəniş linkinə son istifadə müddəti** (`orders.pay_token`, `OrderPayLinkService` — hazırda müddətsizdir).
 - [ ] Serverdə `schedule:run` cron və queue worker (`QUEUE_CONNECTION=database`; `NotifyPriceDrop` və növbəli email-lər üçün).
+  Cron olmasa `payments:check-birbank` da işləmir — bankdan qayıtmayan müştərinin ödənişi yenə "gözləyir" qalar.
 - [ ] `.env`-də `ONESIGNAL_REST_API_KEY` (olmasa push getmir).
 - [ ] Migrasiyaları işə salmaq.
 - [ ] `php artisan brands:optimize-logos` — serverdəki brend loqolarını kiçiltmək (lokalda edilib).
@@ -104,6 +101,8 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Müştəri ehtiyat nömrəsini (`mobile_2`) saytda görmür və dəyişmir.
 - Öz kreditimizlə (hissə-hissə) alışda məhsul endirimi tətbiq olunmur. Birbank taksitində tətbiq olunur. Birbank taksiti "hissə-hissə" sayılmır.
 - Promo kod endirimli məhsullara tətbiq olunmur.
+- Gözləyən Birbank ödənişi öz vaxt həddimizlə ləğv edilmir: `payments:check-birbank` hər 5 dəqiqədən bir bankdan soruşur,
+  ödənilməyən sifarişi bank özü `Expired` edir. Bankda hələ açıq olan ödənişi ləğv saysaq, müştəri iki dəfə ödəyə bilər.
 - ps-side üçün Instagram skripti olmayacaq (8 oktyabr qərarı).
 - ps-side axtarışında mənbə nişanları (qısaltma / adi / hər ikisi) hələlik qalır.
 

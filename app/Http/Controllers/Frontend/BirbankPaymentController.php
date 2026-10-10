@@ -3,15 +3,12 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Mail\OrderCreatedMail;
 use App\Models\Order\Order;
 use App\Models\Payment\Payment;
-use App\Models\PromoCode;
 use App\Services\Payment\Birbank;
+use App\Services\Payment\BirbankPaymentSync;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class BirbankPaymentController extends Controller
 {
@@ -41,28 +38,11 @@ class BirbankPaymentController extends Controller
         return redirect()->away($result['url']);
     }
 
-    public function callback(Request $request, Payment $payment, Birbank $birbank): RedirectResponse
+    public function callback(Request $request, Payment $payment, BirbankPaymentSync $sync): RedirectResponse
     {
         // Bank verification is authoritative; never trust the redirect STATUS.
-        $payment = $birbank->verify($payment);
-        DB::transaction(function () use ($payment) {
-            $order = Order::whereKey($payment->order_id)->lockForUpdate()->firstOrFail();
-            if ($payment->status === Payment::PAID && $order->payment_status !== 'paid') {
-                $order->update(['payment_status' => 'paid']);
-                if ($order->promo_code_id) PromoCode::whereKey($order->promo_code_id)->increment('used_count');
-                // Kassa: Müştəri → Onlayn ödənişlər (xəta ödənişi pozmasın)
-                rescue(fn () => app(\App\Services\FinanceService::class)->recordOnlinePayment($payment));
-                if (filter_var($order->customer->email, FILTER_VALIDATE_EMAIL)) {
-                    Mail::to($order->customer->email)->queue(
-                        (new OrderCreatedMail($order, app()->getLocale()))->afterCommit()
-                    );
-                }
-            } elseif ($payment->status === Payment::FAILED && $order->payment_status !== 'paid') {
-                $order->update(['payment_status' => 'failed']);
-            } elseif ($payment->status === Payment::CANCELLED && $order->payment_status !== 'paid') {
-                $order->update(['payment_status' => 'cancelled']);
-            }
-        });
+        // Eyni yol payments:check-birbank əmrində də işləyir (müştəri bura qayıtmasa).
+        $payment = $sync->sync($payment, app()->getLocale());
 
         // SMS linkindən ödəyib: login istəmədən həmin səhifəyə qayıdır, nəticəni orada görür
         if ((int) $request->session()->pull(PayLinkController::SESSION_KEY) === (int) $payment->order_id) {

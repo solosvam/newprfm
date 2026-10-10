@@ -185,11 +185,12 @@ class Birbank
             }
 
             // FullyPaid is the documented successful status. Unknown or
-            // intermediate statuses remain pending until another verification.
+            // intermediate statuses (Preparing, Authorized …) remain pending until another verification.
+            // Expired: müştəri ödəmədən bankın vaxtı bitib; Rejected: bank (PSP) sifarişi rədd edib.
             $status = match ($bankStatus) {
                 'FullyPaid' => Payment::PAID,
-                'Cancelled' => Payment::CANCELLED,
-                'Declined', 'Refused' => Payment::FAILED,
+                'Cancelled', 'Expired' => Payment::CANCELLED,
+                'Declined', 'Refused', 'Rejected' => Payment::FAILED,
                 default => Payment::PENDING,
             };
 

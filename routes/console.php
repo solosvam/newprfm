@@ -12,3 +12,6 @@ Artisan::command('inspire', function () {
 
 // Bonusun müddəti bitməzdən 3 gün əvvəl SMS (BonusService::remindExpiring) — gündə bir dəfə, səhər (Bakı vaxtı)
 \Illuminate\Support\Facades\Schedule::command('bonus:remind-expiring')->dailyAt('11:00')->timezone('Asia/Baku')->withoutOverlapping();
+
+// Müştəri bankdan sayta qayıtmayanda gözləyən Birbank ödənişlərinin nəticəsi (callback-in əvəzi)
+\Illuminate\Support\Facades\Schedule::command('payments:check-birbank')->everyFiveMinutes()->withoutOverlapping();
