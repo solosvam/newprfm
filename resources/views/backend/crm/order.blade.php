@@ -311,11 +311,28 @@
                     <div class="card-body d-flex flex-column">
                         <div class="od-steps-box">
                         <ol class="od-steps scroll-out" aria-label="Sifarişin status tarixçəsi">
+                            @php
+                                // Əvvəlki statusdan bu statusa keçənə qədər nə qədər vaxt keçib
+                                $prevAt = null;
+                                $elapsed = function ($from, $to) {
+                                    $secs = (int) $from->diffInSeconds($to);
+                                    [$d, $h, $m] = [intdiv($secs, 86400), intdiv($secs % 86400, 3600), intdiv($secs % 3600, 60)];
+
+                                    return trim(($d ? $d.' gün ' : '').($h ? $h.' saat ' : '').($m && !$d ? $m.' dəq' : '')) ?: $secs.' san';
+                                };
+                            @endphp
                             @foreach($steps as $step)
-                                @php $log = $timelineLogs->get($step->id); @endphp
+                                @php
+                                    $log = $timelineLogs->get($step->id);
+                                    $took = $log?->created_at && $prevAt && $log->created_at->gte($prevAt) ? $elapsed($prevAt, $log->created_at) : null;
+                                    $prevAt = $log?->created_at ?? $prevAt;
+                                @endphp
                                 <li class="{{ $log ? 'is-done' : '' }} {{ $step->id === $currentStatusId ? 'is-current' : '' }} {{ $step->code === 'cancelled' ? 'is-cancel' : '' }}">
                                     <span class="od-steps__dot"></span>
-                                    <div class="od-steps__title">{{ $step->name_az }}</div>
+                                    <div class="d-flex justify-content-between align-items-baseline gap-2">
+                                        <div class="od-steps__title">{{ $step->name_az }}</div>
+                                        @if($took)<span class="text-muted text-small text-nowrap" title="Əvvəlki statusdan bu statusa qədər keçən vaxt">{{ $took }} sonra</span>@endif
+                                    </div>
                                     @if($log)
                                         <div class="od-steps__meta">{{ $log->created_at?->format('d.m.Y H:i') }}@if($log->user) · {{ $log->user->full_name }}@endif</div>
                                         {{-- bu statusdakı bütün qeydlər (kuryer bildirişləri yuxarıda ayrıca da görünür) --}}
