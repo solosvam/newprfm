@@ -1,4 +1,4 @@
-{{-- Bir anbarın bir məhsula cavabı (cədvəl sətri). order-content.blade.php-dən çağırılır: $row, $item, $rows, $cheapest, $missing. --}}
+{{-- Bir anbarın bir məhsula cavabı (cədvəl sətri). order-content.blade.php-dən çağırılır: $row, $item, $rows, $cheapest, $cheapestUnique, $missing. --}}
 @php
     $offer = $row['offer'];
     $canTake = $offer ? min($offer->available_quantity - $row['taken'], $missing) : 0;
@@ -17,7 +17,7 @@
     <td class="text-end text-nowrap">
         @if($offer?->unit_cost !== null && $offer->available_quantity)
             {{ number_format((float) $offer->unit_cost, 2) }} AZN
-            @if($rows->count() > 1 && (float) $offer->unit_cost === $cheapest)<span class="badge bg-success proc-best">ən ucuz</span>@endif
+            @if($rows->count() > 1 && $cheapestUnique && (float) $offer->unit_cost === $cheapest)<span class="badge bg-success proc-best">ən ucuz</span>@endif
         @else <span class="text-muted">—</span> @endif
     </td>
     <td>@if($offer){{ $sources[$offer->source] ?? $offer->source }}<span class="proc-sub">{{ $offer->created_at->format('d.m H:i') }}@if($who($offer->recorded_by)) · {{ $who($offer->recorded_by) }}@endif</span>@else<span class="text-muted">—</span>@endif</td>

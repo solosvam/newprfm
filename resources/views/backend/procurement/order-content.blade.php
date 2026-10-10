@@ -63,6 +63,8 @@
                 return $row + ['offer' => $offer, 'taken' => $taken, 'answers' => $row['ri']->offers->count()];
             });
             $cheapest = $rows->filter(fn ($r) => $r['offer']?->available_quantity && $r['offer']->unit_cost !== null)->min(fn ($r) => (float) $r['offer']->unit_cost);
+            // "Ən ucuz" yalnız tək anbar ən aşağı qiyməti veribsə deyilir; eyni qiymətə bir neçə anbar varsa heç biri "ən ucuz" deyil
+            $cheapestUnique = $cheapest !== null && $rows->filter(fn ($r) => $r['offer']?->available_quantity && $r['offer']->unit_cost !== null && (float) $r['offer']->unit_cost === $cheapest)->count() === 1;
             // Təklif verənlər ucuzdan bahaya; cavab verməyən / "yoxdur" deyənlər ayrıca (yığılmış)
             $offered = $rows->filter(fn ($r) => $r['offer']?->available_quantity)->sortBy(fn ($r) => (float) $r['offer']->unit_cost)->values();
             // Təklifsizlər: cavab gözləyən əvvəl (hələ cavab daxil etmək olar), "yoxdur" deyən sonra
@@ -93,7 +95,7 @@
                                 @if($group === 'selected')
                                     @php
                                         $parts = $active->map(fn ($a) => $a->warehouse->name_az.':'.$a->quantity.' × '.number_format((float) $a->unit_cost, 2).' AZN');
-                                        $isCheapest = $active->count() === 1 && $cheapest !== null && (float) $active->first()->unit_cost <= (float) $cheapest;
+                                        $isCheapest = $active->count() === 1 && $cheapestUnique && (float) $active->first()->unit_cost <= (float) $cheapest;
                                     @endphp
                                     @if($active->count() === 1)
                                         {{ $rows->count() }} anbardan @if($isCheapest && $rows->count() > 1)<ins>ən ucuz</ins> təklif verən @endif{{ $active->first()->warehouse->name_az }} seçildi : {{ number_format((float) $active->first()->unit_cost, 2) }} AZN
