@@ -257,7 +257,7 @@
 
             // Ölçü seçimi: axtarışlı select2. Klonlamadan əvvəl söküb sonra yenidən qoşuruq (ikiqat konteyner olmasın).
             function initSizeSelect(select) {
-                jQuery(select).select2({width: '100%', placeholder: ''});
+                jQuery(select).select2({theme: 'bootstrap4', width: '100%', placeholder: ''});
             }
 
             variantArea.querySelectorAll('.variant-size').forEach(initSizeSelect);

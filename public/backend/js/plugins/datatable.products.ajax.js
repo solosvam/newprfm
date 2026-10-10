@@ -204,7 +204,8 @@ class ProductsAjax {
             this._datatable.ajax.url(baseUrl + (params.length ? (baseUrl.includes('?') ? '&' : '?') + params.join('&') : '')).load();
         };
         filters.each(function () {
-            jQuery(this).select2({width: '100%', allowClear: true, placeholder: this.dataset.placeholder});
+            // theme açıq yazılır: Acorn-un standart teması (common.js) bu skriptdən sonra qoşula bilir — onsuz select2 öz çılpaq görünüşündə çıxır
+            jQuery(this).select2({theme: 'bootstrap4', width: '100%', allowClear: true, placeholder: this.dataset.placeholder});
         });
         filters.on('change', reload);
         clear.on('click', () => {

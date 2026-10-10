@@ -59,8 +59,9 @@
         <div class="row g-2 mb-3" data-product-filters>
             @foreach($filters as $key => [$label, $options])
                 <div class="col-6 col-md-3 col-xl-2">
-                    <select class="form-select" data-product-filter="{{ $key }}" data-placeholder="{{ $label }}" aria-label="{{ $label }}">
-                        <option value=""></option>
+                    {{-- Acorn "Select2 / Basic Single": sinifsiz select + boş option; görünüşü select2-nin bootstrap4 teması verir --}}
+                    <select data-product-filter="{{ $key }}" data-placeholder="{{ $label }}" aria-label="{{ $label }}">
+                        <option label="&nbsp;"></option>
                         @foreach($options as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach
                     </select>
                 </div>
