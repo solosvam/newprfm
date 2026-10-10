@@ -28,6 +28,8 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **CRM sifariş səhifəsi — "Proses" tabının davamı** (10 oktyabr yenidən quruldu: nazik zolaq, "növbəti addım", qruplar, yığılan kartlar):
   proddə real sifarişlərlə (10 məhsul × 10 anbar) baxıb düzəltmək; "Təxmini qazanc" yalnız seçilmiş məhsulların alışını çıxır —
   alışı bilinməyən məhsullar varsa rəqəm şişir, düzəldilməlidir; düymə adlarını birləşdirmək ("Yenilə" nəyi yeniləyir).
+  Proses tabındakı qazanc xəbərdarlığı ("Qazanc yoxdur" / "Zərərlə") hələlik çatdırılma xərcini və bank komissiyasını
+  saymır — "Təxmini qazanc" düzələndə ikisi eyni düsturdan istifadə etməlidir.
 - [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
@@ -146,3 +148,6 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Mərkəzin anbara birbaşa ödənişi kuryerin balansına yazılmır.
 - Nağd kassa, bank, sahibkarla və kuryerlə hesablaşmalar ayrıdır. Pul transferi təkrar xərc sayılmır.
 - Status ID-ləri başqa mənalarla əvəz edilmir.
+- Məhsulun qazancı xalis satışdan hesablanır: vahid qiymət − məhsula düşən promokod payı (endirim məhsullara proporsional
+  bölünür — ödəniş sətirləri və məhsul ləğvi ilə eyni paylama, `PaymentItemsBuilder::itemShares`). Məhsul ləğv ediləndə
+  promokod yenidən hesablanmır. Alış satışdan baha olan anbarı seçmək qadağan deyil, amma operatordan təsdiq soruşulur.

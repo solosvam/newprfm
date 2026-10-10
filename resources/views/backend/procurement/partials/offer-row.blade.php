@@ -10,6 +10,9 @@
         : ($o->available_quantity >= $requested
             ? ['bg-outline-success', $requested > 1 ? 'Tam var · '.$o->available_quantity.' ədəd' : 'Var']
             : ['bg-outline-warning', 'Qismən · '.$o->available_quantity.' ədəd']);
+    // Bu təkliflə 1 ədəddən qazanc (xalis satış − alış); satış qiyməti bilinmirsə göstərilmir
+    $rowMargin = $offer && $offer->available_quantity && $offer->unit_cost !== null && $saleUnit !== null
+        ? round($saleUnit - (float) $offer->unit_cost, 2) : null;
     $history = $row['answers'] > 1 ? $row['ri']->offers->sortByDesc('id')->values() : collect();
 @endphp
 <tr>
@@ -28,13 +31,17 @@
         @if($offer?->unit_cost !== null && $offer->available_quantity)
             {{ number_format((float) $offer->unit_cost, 2) }} AZN
             @if($rows->count() > 1 && $cheapestUnique && (float) $offer->unit_cost === $cheapest)<span class="badge bg-success proc-best">ən ucuz</span>@endif
+            @if($rowMargin !== null)
+                <span class="proc-sub {{ $rowMargin < 0 ? 'text-danger' : ($rowMargin == 0 ? 'text-warning' : '') }}">{{ $rowMargin < 0 ? 'zərər −'.number_format(abs($rowMargin), 2) : 'qazanc '.($rowMargin > 0 ? '+' : '').number_format($rowMargin, 2) }}</span>
+            @endif
         @else <span class="text-muted">—</span> @endif
     </td>
     <td>@if($offer){{ $sources[$offer->source] ?? $offer->source }}<span class="proc-sub">{{ $offer->created_at->format('d.m H:i') }}@if($who($offer->recorded_by)) · {{ $who($offer->recorded_by) }}@endif</span>@else<span class="text-muted">—</span>@endif</td>
     <td class="text-end">
         <div class="proc-actions">
             @if($editable && $canTake > 0)
-                <form method="POST" action="{{ route('admin.procurement.allocations.store', $order) }}" class="proc-pick">
+                <form method="POST" action="{{ route('admin.procurement.allocations.store', $order) }}" class="proc-pick"
+                      @if($rowMargin !== null && $rowMargin < 0) data-confirm="Bu anbarın qiyməti satışdan bahadır: 1 ədəddə {{ number_format(abs($rowMargin), 2) }} AZN zərər. Yenə də seçilsin?" @endif>
                     @csrf
                     <input type="hidden" name="offer_id" value="{{ $offer->id }}">
                     <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">

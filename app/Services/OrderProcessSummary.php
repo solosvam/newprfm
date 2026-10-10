@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Procurement\OrderItemAllocation;
+use App\Services\Payment\PaymentItemsBuilder;
 use Illuminate\Support\Collection;
 
 /**
@@ -23,15 +24,16 @@ class OrderProcessSummary
         'selected' => 'Anbar seçilib',
     ];
 
-    public function __construct(private WarehouseNotifier $notifier)
+    public function __construct(private WarehouseNotifier $notifier, private PaymentItemsBuilder $shares)
     {
     }
 
     /**
      * @param  Collection<int, \App\Models\Procurement\WarehouseRequest>  $requests  (items.offers yüklənmiş)
      * @return array{
-     *   items: array<int, array{group: string, problem: bool, sms_failed: bool, has_request: bool, missing: int}>,
-     *   order: list<int>, counts: array<string, int>,
+     *   items: array<int, array{group: string, problem: bool, sms_failed: bool, has_request: bool, missing: int,
+     *     sale_unit: ?float, promo_unit: float, margin: ?float, margin_basis: ?string}>,
+     *   order: list<int>, counts: array<string, int>, no_margin: int,
      *   tone: string, headline: string, detail: ?string, last: ?array{at: \Illuminate\Support\Carbon, by: ?string, text: string}
      * }
      */
@@ -44,6 +46,9 @@ class OrderProcessSummary
         // order_item_id => sorğu sətirləri
         $requestItems = $requests->flatMap->items->groupBy('order_item_id');
 
+        // Xalis satış: vahid qiymət − məhsula düşən promo payı (ödəniş sətirləri və ləğv ilə eyni paylama)
+        $shares = collect($this->shares->itemShares($order))->keyBy(fn ($row) => $row['item']->id);
+
         $items = [];
         foreach ($order->items as $item) {
             if ($item->activeQuantity() <= 0) {
@@ -52,11 +57,25 @@ class OrderProcessSummary
             $active = $item->allocations->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE);
             $missing = max(0, $item->activeQuantity() - (int) $active->sum('quantity'));
             $rows = $requestItems->get($item->id, collect());
-            $usable = $rows->contains(function ($requestItem) {
+            $costs = $rows->map(function ($requestItem) {
                 $offer = $requestItem->offers->sortByDesc('id')->first();
 
-                return $offer && $offer->available_quantity > 0 && $offer->unit_cost !== null;
-            });
+                return $offer && $offer->available_quantity > 0 && $offer->unit_cost !== null ? (float) $offer->unit_cost : null;
+            })->filter(fn ($cost) => $cost !== null);
+            $usable = $costs->isNotEmpty();
+
+            // Qazanc: anbar seçilibsə seçilən hissələrin cəmi, seçilməyibsə ən ucuz təklifin 1 ədədi üzrə.
+            // Çatdırılma xərci və bank komissiyası hesaba girmir.
+            $share = $shares->get($item->id);
+            $saleUnit = $share && $share['goods'] > 0 ? ($share['goods'] - $share['promo']) / $share['quantity'] / 100 : null;
+            $margin = $basis = null;
+            if ($saleUnit !== null && $active->isNotEmpty()) {
+                $margin = round($active->sum(fn (OrderItemAllocation $a) => ($saleUnit - (float) $a->unit_cost) * $a->quantity), 2);
+                $basis = 'selected';
+            } elseif ($saleUnit !== null && $usable) {
+                $margin = round($saleUnit - $costs->min(), 2);
+                $basis = 'offer';
+            }
             $smsFailed = $active->contains(fn (OrderItemAllocation $a) => $a->status === OrderItemAllocation::SELECTED
                 && ($log = $sms['allocation'][$a->id] ?? null) && !$log->isSent());
 
@@ -66,6 +85,10 @@ class OrderProcessSummary
                 'sms_failed' => $smsFailed,
                 'has_request' => $rows->isNotEmpty(),
                 'missing' => $missing,
+                'sale_unit' => $saleUnit,
+                'promo_unit' => $share ? $share['promo'] / $share['quantity'] / 100 : 0.0,
+                'margin' => $margin,
+                'margin_basis' => $basis,
             ];
         }
 
@@ -88,6 +111,7 @@ class OrderProcessSummary
             'items' => $items,
             'order' => $order_,
             'counts' => $counts,
+            'no_margin' => count(array_filter($items, fn ($i) => $i['margin'] !== null && $i['margin'] <= 0)),
             'last' => $this->lastAction($order, $requests, $staff),
         ] + $this->headline($order, $items, $counts, $courierBlock, $startBlock);
     }

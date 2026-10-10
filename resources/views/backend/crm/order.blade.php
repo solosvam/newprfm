@@ -175,6 +175,7 @@
     <div class="alert {{ $processTones[$process['tone']] ?? 'alert-info' }} mb-3" role="status">
         <strong class="d-block">{{ $process['headline'] }}</strong>
         @if($process['detail'])<div class="text-small">{{ $process['detail'] }}</div>@endif
+        @if($process['no_margin'] && !$order->isCancelled())<div class="text-small">{{ $process['no_margin'] }} məhsulda alış qiyməti satışdan aşağı deyil — qazanc yoxdur və ya zərərlədir.</div>@endif
         @if($process['last'])
             <div class="text-small mt-1">Son əməliyyat: {{ $process['last']['by'] ?? 'Sistem' }}, {{ $process['last']['at']->format('d.m H:i') }} — {{ $process['last']['text'] }}</div>
         @endif

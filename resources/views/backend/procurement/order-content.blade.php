@@ -81,6 +81,9 @@
             $cancelledParts = $item->allocations->where('status', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
             $liveParts = $item->allocations->where('status', '!=', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
             $itemTitle = $itemName($item).($itemSize($item) ? ' · '.$itemSize($item) : '');
+            // Xalis satış (promo payı çıxılmış) və qazanc — OrderProcessSummary
+            $saleUnit = $state['sale_unit'];
+            $margin = $state['margin'];
         @endphp
         {{-- Acorn "Accordion Cards": başlığa klik cavabları açır/yığır; seçimlər (mərhələ xətti, növbəti düymə) həmişə görünür --}}
         <div class="card d-flex mb-2 {{ $alert ? 'border border-danger' : '' }}">
@@ -113,7 +116,22 @@
                             @if($cheaper)
                                 <span class="badge bg-danger">Daha ucuzu var</span>
                             @endif
+                            @if($margin !== null && $margin < 0)
+                                <span class="badge bg-danger">Zərərlə: −{{ number_format(abs($margin), 2) }} AZN</span>
+                            @elseif($margin !== null && $margin == 0)
+                                <span class="badge bg-warning">Qazanc yoxdur</span>
+                            @endif
                         </div>
+                        @if($margin !== null && $margin <= 0)
+                            {{-- Rəqəmin haradan gəldiyi: satış, promo payı, alış --}}
+                            <div class="{{ $margin < 0 ? 'text-danger' : 'text-warning' }} text-small">
+                                {{ 'Satış '.number_format($saleUnit + $state['promo_unit'], 2).' AZN'.($state['promo_unit'] > 0 ? ', promokod payı −'.number_format($state['promo_unit'], 2).' AZN, xalis '.number_format($saleUnit, 2).' AZN' : '').';' }}
+                                @if($state['margin_basis'] === 'selected') seçilmiş alış {{ $active->map(fn ($a) => number_format((float) $a->unit_cost, 2))->unique()->implode(' / ') }} AZN
+                                @else ən ucuz alış {{ number_format((float) $cheapest, 2) }} AZN @endif
+                                — {{ $margin < 0 ? 'zərərlədir' : 'qazanc yoxdur' }}.
+                                @if($editable) Anbarla qiyməti danışın və ya başqa anbardan soruşun. @endif
+                            </div>
+                        @endif
                         @if($crm)
                             @foreach(($cancellations[$item->id] ?? []) as $c)
                                 <div class="text-danger text-small">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}</div>

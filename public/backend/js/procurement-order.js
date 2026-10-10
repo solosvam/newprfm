@@ -10,6 +10,11 @@
         form.addEventListener('submit', () => form.querySelectorAll('button:not([type="button"])').forEach(b => { b.disabled = true; }));
     });
 
+    // Zərərli anbar seçimi (data-confirm): operator təsdiqləməsə göndərilmir
+    document.querySelectorAll('form[data-confirm]').forEach(form => {
+        form.addEventListener('submit', event => { if (!window.confirm(form.dataset.confirm)) event.preventDefault(); });
+    });
+
     const offerModal = document.getElementById('procOfferModal');
     if (offerModal) {
         const form = offerModal.querySelector('form');
