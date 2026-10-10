@@ -20,18 +20,12 @@ Son yenilənmə: 10 oktyabr 2026.
   alışı bilinməyən məhsullar varsa rəqəm şişir, düzəldilməlidir; düymə adlarını birləşdirmək ("Yenilə" nəyi yeniləyir).
   Proses tabındakı qazanc xəbərdarlığı ("Qazanc yoxdur" / "Zərərlə") hələlik çatdırılma xərcini və bank komissiyasını
   saymır — "Təxmini qazanc" düzələndə ikisi eyni düsturdan istifadə etməlidir.
-- [ ] **Anbar price listlərinin importu** (10 oktyabr danışıldı, nümunə Excel gözlənilir; 2–3 anbar, hər həftə yenilənir, formatlar fərqlidir, qiymətlər AZN):
-  - import: anbar seçilir, Excel yüklənir, operator sütunları özü göstərir (hansı sütun ad, ölçü, qiymət); seçim anbar üzrə yadda qalır;
-  - siyahının bütün sətirləri saxlanır; bizim varianta (məhsul + ölçü) uyğunlaşan sətir bağlanır, uyğunlaşmayan yalnız axtarışla tapılır;
-  - təsdiqlənmiş uyğunluq yadda qalır — növbəti həftəki importda eyni ad avtomatik bağlanır;
-  - sifarişdə (Proses tabı): məhsul kartında "hansı anbarda neçəyə" (siyahının tarixi ilə) və bütün price listlərdə mətnlə axtarış (Ctrl+F əvəzi);
-  - operator siyahıdakı qiymətlə anbarı birbaşa seçir (aşağıdakı "Sorğusuz birbaşa təminat" ilə eyni iş);
-  - nümunə fayl baxıldı (`storage/app/pricelist-numune.xls`, 1C çıxarışı): 2 sütun (ad, AZN), brend qrup başlığıdır, ad qaydası
-    "BREND AD NÖV CİNS HƏCM (TESTER/SET/NEW)". Uyğunlaşdırma ad + növ + cins + həcm + tester üzrə aparılır;
-    tester sətirləri bizim tester məhsullarına, dəst və miniatürlər bizdə varsa onlara bağlanır; qiymət 2 onluğa yuvarlaqlaşdırılır (alış qiymətimizdir);
-  - brend adları: saytda brendin rəsmi yazılışı olmalıdır; siyahıdakı qısaltmalar (YSL və s.) üçün brend uyğunluğu yadda saxlanır.
-    Lokalda düzəldiləsi tapılanlar: "Van Cleef &amp; Arpels" (HTML kodu qalıb), "Victorias Secret", "Tiffany Co", "Viktor Rolf", "BOND No9";
-  - müqayisə hesabatı: əvvəlki siyahıya görə yeni gələn, çıxan, qiyməti dəyişən; saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir.
+- [ ] **Anbar price listləri — qalanlar** (11 oktyabr: import, sütun seçimi, avtomatik və əl ilə uyğunlaşdırma, brend bağlama / yaratma,
+  Proses tabında qiymət və axtarış hazırdır — Satışlar → Price listlər):
+  - siyahıdakı qiymətlə anbarı birbaşa seçmək (aşağıdakı "Sorğusuz birbaşa təminat" ilə eyni iş);
+  - müqayisə hesabatı: əvvəlki siyahıya görə yeni gələn, çıxan, qiyməti dəyişən; saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir;
+  - digər anbarların faylları ilə sınamaq (indiyə qədər yalnız bir anbarın 1C çıxarışı ilə yoxlanıb: 1677 sətirdən 834-ü avtomatik bağlandı);
+  - brend adlarını rəsmi yazılışa gətirmək: "Van Cleef &amp; Arpels" (HTML kodu qalıb), "Victorias Secret", "Tiffany Co", "Viktor Rolf", "BOND No9", "Mont Blanc".
 - [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
@@ -71,6 +65,7 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] `.env`-də `ONESIGNAL_REST_API_KEY` (olmasa push getmir).
 - [ ] `.env`-də `SHORT_URL=https://paf.az` (sonra `php artisan config:cache`). Olmasa ödəniş, referal və anbar linkləri əsas domenlə gedir.
 - [ ] Migrasiyaları işə salmaq.
+- [ ] `composer install` (price list importu üçün `phpoffice/phpspreadsheet` əlavə olunub).
 - [ ] Cron `sms:check-delivery`-ni də işlədir (5 dəqiqədən bir): göndərilən SMS-lərin çatdırılma statusu.
 - [ ] **Test rejimində yoxlamaq:** Birbank ödəniş səhifəsini bağlayıb "Ödənişə davam et" ilə eyni səhifənin açıldığını (bank eyni sifarişi təkrar açmağa icazə verirmi)
   və ödənilməyən sifarişin bankda nə vaxt `Expired` olduğunu (rəsmi sənəddə — pg.kapitalbank.az/docs — müddət yazılmayıb;
@@ -161,3 +156,6 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - SMS şablonlarında müştəriyə müraciət `{name}` (ad) ilədir; `{fullname}` (ad və soyad) də işləyir — kod hər ikisini doldurur.
 - Anbar cavabının mənbəyi yalnız "Operator - Telefon", "Operator - Digər" və ya "Anbar - link" ola bilər. WhatsApp və Telegram
   ləğv olunub (10 oktyabr); köhnə cavablar silinmir, tarixçədə öz adı ilə görünür.
+- Price list: sətir bizim varianta (məhsul + ölçü) bağlanır; avtomatik yalnız tək namizəd olanda (brend + ad + növ + tester + həcm, cins yalnız
+  seçim üçün). Operatorun seçimi anbar üzrə, brend bağlantısı bütün anbarlar üçün yadda qalır. Qiymət alış qiymətidir, 2 onluğa yuvarlaqlaşdırılır.
+  Siyahıdakı qiymət stok təsdiqi deyil — sifarişdə siyahının tarixi ilə göstərilir.
