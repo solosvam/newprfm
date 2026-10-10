@@ -30,6 +30,9 @@ Son yenilənmə: 10 oktyabr 2026.
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
   Anbara SMS/link getmir. Tarixçədə operator, mənbə (telefon / WhatsApp / digər) və vaxt qalır.
+- [ ] **Birbank taksit: ay sayı banka göndərilmir (yoxlanmalıdır).** `Birbank::createOrder` taksit ayını (2 / 3 / 6) qəbul edib yoxlayır,
+  amma bank sorğusuna yazmır — `description` yalnız sifariş nömrəsidir. Suret Kargo-da taksit `description: "TAKSIT=N"` ilə göndərilir.
+  Belədirsə, saytda "Birbank taksit" seçən müştəri adi, birdəfəlik ödəniş edir. Bankdan / test rejimində dəqiqləşdirib düzəltmək.
 - [ ] **Qeyri-müəyyən bank əməliyyatlarının uzlaşdırılması:** kimin ödədiyi bilinməyən köçürməni sifarişə bağlamaq.
 
 ## 2. Sayt — səbət və push bildirişləri

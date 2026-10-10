@@ -83,42 +83,17 @@ class Birbank
         ]);
 
         try {
-            $response = $this->http()->post($this->endpoint().'/order', [
-                'order' => [
-                    'typeRid' => 'Order_SMS',
-                    'amount' => $amount,
-                    'currency' => 'AZN',
-                    'language' => in_array($language, ['az', 'en', 'ru'], true) ? $language : 'az',
-                    'title' => 'Parfumshop',
-                    'description' => (string) $order->order_no,
-                    'hppRedirectUrl' => route('payment.birbank.return', ['payment' => $payment->id]),
-                ],
+            $bankOrder = $this->createBankOrder([
+                'typeRid' => 'Order_SMS',
+                'amount' => $amount,
+                'currency' => 'AZN',
+                'language' => in_array($language, ['az', 'en', 'ru'], true) ? $language : 'az',
+                'title' => 'Parfumshop',
+                'description' => (string) $order->order_no,
+                'hppRedirectUrl' => route('payment.birbank.return', ['payment' => $payment->id]),
             ]);
-
-            if (!$response->successful()) {
-                throw new RuntimeException('Birbank order creation failed (HTTP '.$response->status().').');
-            }
-
-            $bankOrder = $response->json('order');
-            if (!is_array($bankOrder)
-                || empty($bankOrder['id'])
-                || empty($bankOrder['password'])
-                || empty($bankOrder['hppUrl'])) {
-                throw new RuntimeException('Birbank returned an incomplete order.');
-            }
-
-            $hppUrl = rtrim((string) $bankOrder['hppUrl'], '/');
-            if (!str_ends_with(parse_url($hppUrl, PHP_URL_PATH) ?: '', '/flex')) {
-                $hppUrl .= '/flex';
-            }
-
-            // Only accept the HPP URL supplied by the configured bank host.
-            $apiHost = parse_url($this->endpoint(), PHP_URL_HOST);
-            $hppHost = parse_url($hppUrl, PHP_URL_HOST);
-            if (!str_starts_with($hppUrl, 'https://') || !$hppHost
-                || !($hppHost === $apiHost || str_ends_with($hppHost, '.kapitalbank.az'))) {
-                throw new RuntimeException('Birbank returned an unexpected payment page URL.');
-            }
+            // Səhifənin ünvanı (sorğu sətri olmadan) saxlanır — "Ödənişə davam et" eyni səhifəni yenidən açır (resumeUrl)
+            $hppUrl = $this->hppBase($bankOrder['hppUrl'] ?? null);
 
             $payment->update([
                 'provider_order_id' => (string) $bankOrder['id'],
@@ -128,10 +103,7 @@ class Birbank
 
             return [
                 'payment_id' => $payment->id,
-                'url' => $hppUrl.'?'.http_build_query([
-                    'id' => $bankOrder['id'],
-                    'password' => $bankOrder['password'],
-                ], '', '&', PHP_QUERY_RFC3986),
+                'url' => $this->hppUrl($bankOrder),
             ];
         } catch (\Throwable $exception) {
             // An HTTP timeout is ambiguous: the bank might have created an order.
@@ -497,9 +469,21 @@ class Birbank
         return $order;
     }
 
+    /** Ödəniş səhifəsinin tam ünvanı: yoxlanmış əsas ünvan + sifarişin id və parolu */
     private function hppUrl(array $order): string
     {
-        $url = rtrim((string) ($order['hppUrl'] ?? ''), '/');
+        return $this->hppBase($order['hppUrl'] ?? null).'?'.http_build_query([
+            'id' => $order['id'], 'password' => $order['password'],
+        ], '', '&', PHP_QUERY_RFC3986);
+    }
+
+    /**
+     * Bankın qaytardığı səhifə ünvanı: sonunda /flex olmalıdır (bank bəzən özü əlavə edir — iki dəfə yazılmır)
+     * və yalnız bankın öz hostundan qəbul olunur.
+     */
+    private function hppBase(mixed $hppUrl): string
+    {
+        $url = rtrim((string) $hppUrl, '/');
         if (!str_ends_with(parse_url($url, PHP_URL_PATH) ?: '', '/flex')) {
             $url .= '/flex';
         }
@@ -509,9 +493,8 @@ class Birbank
                 || str_ends_with($host, '.kapitalbank.az'))) {
             throw new RuntimeException('Unexpected Birbank HPP URL.');
         }
-        return $url.'?'.http_build_query([
-            'id' => $order['id'], 'password' => $order['password'],
-        ], '', '&', PHP_QUERY_RFC3986);
+
+        return $url;
     }
 
     private function bankPost(string $path, array $data): array
