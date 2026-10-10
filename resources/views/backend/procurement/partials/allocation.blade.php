@@ -25,30 +25,17 @@
         @if($isCancelled)<span>{{ $allocation->quantity }} ədəd × {{ number_format((float) $allocation->unit_cost, 2) }} AZN</span>@endif
     </div>
     @unless($isCancelled)
-        <ol class="proc-steps" aria-label="Təminat mərhələləri">
-            @foreach($flow as $i => $step)
-                @php $done = $reached !== false && $i <= $reached; @endphp
-                <li class="{{ $done ? 'is-done' : '' }}">{{ \App\Models\Procurement\OrderItemAllocation::LABELS[$step] }}
-                    {{-- Mərhələnin vaxtı: seçim — yaranma anı, qalanları — həmin mərhələyə keçid --}}
-                    @if($done && ($stepAt[$step] ?? null))<span class="d-block fw-normal text-muted">{{ $stepAt[$step]->format('d.m H:i') }}</span>@endif
-                </li>
-            @endforeach
-        </ol>
-    @endunless
-    @if($status === 'problem')
-        <div class="proc-alloc__problem">⚠ {{ $lastLog?->note ?? 'Problem' }}</div>
-    @endif
-    {{-- SMS yalnız alınmayanda göstərilir (uğurlu SMS "Anbara bildirilib" mərhələsinin özüdür) --}}
-    @if($allocSms && !$allocSms->isSent() && !$isCancelled)
-        <div class="proc-alloc__sms is-bad">✕ SMS getmədi: {{ $allocSms->error }}</div>
-    @endif
-    <div class="proc-alloc__foot">
-        {{-- Adi axında vəziyyəti mərhələ xətti göstərir; nişan və qeyd yalnız axından kənar hallarda (ləğv, qaytarma, problem) --}}
-        @if(!in_array($status, $flow, true))
-            <span class="badge {{ ['cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger', 'picked' => 'bg-success', 'reserved' => 'bg-outline-success', 'returning' => 'bg-warning', 'returned' => 'bg-outline-muted'][$status] ?? 'bg-outline-primary' }}">{{ $allocation->label() }}</span>
-            @if($lastLog)<span class="text-muted small">{{ $lastLog->created_at->format('d.m H:i') }}@if($who($lastLog->user_id)) · {{ $who($lastLog->user_id) }}@endif @if($isCancelled && $lastLog->note) · {{ $lastLog->note }}@endif</span>@endif
-        @endif
-
+        {{-- Mərhələ xətti solda, növbəti addımın düymələri sağda — eyni sətirdə --}}
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <ol class="proc-steps flex-grow-1" aria-label="Təminat mərhələləri">
+                @foreach($flow as $i => $step)
+                    @php $done = $reached !== false && $i <= $reached; @endphp
+                    <li class="{{ $done ? 'is-done' : '' }}">{{ \App\Models\Procurement\OrderItemAllocation::LABELS[$step] }}
+                        {{-- Mərhələnin vaxtı: seçim — yaranma anı, qalanları — həmin mərhələyə keçid --}}
+                        @if($done && ($stepAt[$step] ?? null))<span class="d-block fw-normal text-muted">{{ $stepAt[$step]->format('d.m H:i') }}</span>@endif
+                    </li>
+                @endforeach
+            </ol>
         @if($flowEditable && !$isCancelled && $status !== 'picked')
             <div class="proc-alloc__actions">
                 @if($status === 'selected' && $hasPhone && $badPhone)
@@ -91,5 +78,20 @@
                 </div>
             </div>
         @endif
-    </div>
+        </div>
+    @endunless
+    @if($status === 'problem')
+        <div class="proc-alloc__problem">⚠ {{ $lastLog?->note ?? 'Problem' }}</div>
+    @endif
+    {{-- SMS yalnız alınmayanda göstərilir (uğurlu SMS "Anbara bildirilib" mərhələsinin özüdür) --}}
+    @if($allocSms && !$allocSms->isSent() && !$isCancelled)
+        <div class="proc-alloc__sms is-bad">✕ SMS getmədi: {{ $allocSms->error }}</div>
+    @endif
+    {{-- Adi axında vəziyyəti mərhələ xətti göstərir; nişan və qeyd yalnız axından kənar hallarda (ləğv, qaytarma, problem) --}}
+    @if(!in_array($status, $flow, true))
+        <div class="proc-alloc__foot">
+            <span class="badge {{ ['cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger', 'picked' => 'bg-success', 'reserved' => 'bg-outline-success', 'returning' => 'bg-warning', 'returned' => 'bg-outline-muted'][$status] ?? 'bg-outline-primary' }}">{{ $allocation->label() }}</span>
+            @if($lastLog)<span class="text-muted small">{{ $lastLog->created_at->format('d.m H:i') }}@if($who($lastLog->user_id)) · {{ $who($lastLog->user_id) }}@endif @if($isCancelled && $lastLog->note) · {{ $lastLog->note }}@endif</span>@endif
+        </div>
+    @endif
 </div>
