@@ -69,6 +69,11 @@
             $silent = $rows->reject(fn ($r) => $r['offer']?->available_quantity)->sortBy(fn ($r) => $r['offer'] ? 1 : 0)->values();
             $silentWaiting = $silent->filter(fn ($r) => !$r['offer'])->count();
             $silentNone = $silent->count() - $silentWaiting;
+            // Seçilmiş ən bahalı hissədən ucuz, hələ boş miqdarı olan təklif (anbar seçimi hələ dəyişdirilə bilirsə)
+            $dearest = $active->max(fn ($a) => (float) $a->unit_cost);
+            $cheaper = $editable && $active->isNotEmpty()
+                ? $offered->first(fn ($r) => (float) $r['offer']->unit_cost < $dearest && $r['offer']->available_quantity - $r['taken'] > 0)
+                : null;
             $open = $group !== 'selected';
             $alert = $state['problem'] || $state['sms_failed'];
             $cancelledParts = $item->allocations->where('status', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
@@ -84,8 +89,7 @@
                         <div class="list-item-heading d-flex flex-wrap align-items-center gap-2">
                             <span>{{ $itemName($item) }}@if($itemSize($item))<span class="text-muted fw-normal"> · {{ $itemSize($item) }}</span>@endif</span>
                             {{-- Xülasə: məhsul hansı vəziyyətdədir (kart yığılı olanda da görünür) --}}
-                            <span class="badge rounded-pill bg-outline-info">
-                                <i data-acorn-icon="info-circle" data-acorn-size="14"></i>
+                            <span class="text-alternate fw-normal">
                                 @if($group === 'selected')
                                     @php
                                         $parts = $active->map(fn ($a) => $a->warehouse->name_az.' — təklif '.$a->quantity.' × '.number_format((float) $a->unit_cost, 2).' AZN');
@@ -103,6 +107,10 @@
                                     {{ $rows->isEmpty() ? 'Hələ sorğu göndərilməyib' : $rows->count().' anbara sorğu göndərilib, təklif yoxdur' }}
                                 @endif
                             </span>
+                            {{-- Seçilən anbardan ucuz, hələ götürülə bilən təklif var (operator bilərəkdən bahalını seçə bilər — xəbərdarlıqdır, xəta deyil) --}}
+                            @if($cheaper)
+                                <span class="badge bg-outline-warning">Daha ucuz təklif var: {{ $cheaper['req']->warehouse->name_az }} — {{ number_format((float) $cheaper['offer']->unit_cost, 2) }} AZN</span>
+                            @endif
                         </div>
                         @if($crm)
                             @foreach(($cancellations[$item->id] ?? []) as $c)
