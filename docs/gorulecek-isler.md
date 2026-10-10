@@ -26,6 +26,11 @@ Son yenilənmə: 10 oktyabr 2026.
   - təsdiqlənmiş uyğunluq yadda qalır — növbəti həftəki importda eyni ad avtomatik bağlanır;
   - sifarişdə (Proses tabı): məhsul kartında "hansı anbarda neçəyə" (siyahının tarixi ilə) və bütün price listlərdə mətnlə axtarış (Ctrl+F əvəzi);
   - operator siyahıdakı qiymətlə anbarı birbaşa seçir (aşağıdakı "Sorğusuz birbaşa təminat" ilə eyni iş);
+  - nümunə fayl baxıldı (`storage/app/pricelist-numune.xls`, 1C çıxarışı): 2 sütun (ad, AZN), brend qrup başlığıdır, ad qaydası
+    "BREND AD NÖV CİNS HƏCM (TESTER/SET/NEW)". Uyğunlaşdırma ad + növ + cins + həcm + tester üzrə aparılır;
+    tester sətirləri bizim tester məhsullarına, dəst və miniatürlər bizdə varsa onlara bağlanır; qiymət 2 onluğa yuvarlaqlaşdırılır (alış qiymətimizdir);
+  - brend adları: saytda brendin rəsmi yazılışı olmalıdır; siyahıdakı qısaltmalar (YSL və s.) üçün brend uyğunluğu yadda saxlanır.
+    Lokalda düzəldiləsi tapılanlar: "Van Cleef &amp; Arpels" (HTML kodu qalıb), "Victorias Secret", "Tiffany Co", "Viktor Rolf", "BOND No9";
   - müqayisə hesabatı: əvvəlki siyahıya görə yeni gələn, çıxan, qiyməti dəyişən; saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir.
 - [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
