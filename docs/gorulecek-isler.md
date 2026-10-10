@@ -92,11 +92,7 @@ Meta tərəfi hazırdır, Instagram girişi testdən keçib. Laravel-də hələ 
   Domen artıq yönləndirici kimi işləyir (`App\Support\ShortUrl`, `RedirectShortDomain`): influencer linkləri eyni domenə əlavə olunacaq.
 - [ ] Live-a keçid: tətbiqi düzgün Business portfolio-ya köçürmək, Business Verification, App Review.
 
-## 7. Git
-
-- [ ] Köhnə `fix/banner-product-cls` branch-ı (28 sentyabr, 5 commit, main-ə birləşdirilməyib). Banner və məhsul şəkillərinin ölçüləri artıq main-də başqa yolla yazılıb, ona görə branch-a ehtiyac görünmür — yoxlayıb silmək olar.
-
-## 8. Köhnə saytdan gələn məhsulların təmizlənməsi
+## 7. Köhnə saytdan gələn məhsulların təmizlənməsi
 
 Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9 oktyabr, yarımçıq importdan sonra); prodda tam importdan sonra yenidən sayılmalıdır.
 
