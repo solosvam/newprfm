@@ -134,6 +134,17 @@ class PriceListImportTest extends TestCase
         $this->import();
 
         $this->assertSame(52, WarehousePriceItem::where('raw_name', 'AZZARO CHROME EDT M 100ML')->value('product_variant_id'));
+
+        // Uyğunlaşdırma pəncərəsində hər namizədin cinsi və sətrlə uyğunluğu görünür
+        Permission::create(['name' => 'crm', 'guard_name' => 'admin']);
+        Role::create(['name' => 'Admin', 'guard_name' => 'admin'])->givePermissionTo('crm');
+        $admin = User::forceCreate(['name' => 'Rufat']);
+        $admin->assignRole('Admin');
+        $item = WarehousePriceItem::where('raw_name', 'AZZARO CHROME EDT M 100ML')->sole();
+        $candidates = collect($this->actingAs($admin, 'admin')->getJson(route('admin.price-lists.items.candidates', $item))->json('items'))->keyBy('id');
+        $this->assertSame([['Kişi'], true], [$candidates[52]['genders'], $candidates[52]['same_gender']]);
+        $this->assertSame([['Qadın'], false], [$candidates[62]['genders'], $candidates[62]['same_gender']]);
+        $this->assertSame(52, $candidates->keys()->first(), 'cinsi uyğun gələn yuxarıda');
     }
 
     public function test_operator_matches_are_remembered_for_the_next_import_and_brands_can_be_created(): void

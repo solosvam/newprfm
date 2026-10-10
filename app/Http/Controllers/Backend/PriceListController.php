@@ -212,8 +212,13 @@ class PriceListController extends Controller
         }
 
         $rows = $search->orderByRaw('p.active desc')->orderBy('p.name')->limit(60)
-            ->get(['v.id', 'p.name', 'p.active', 'b.name as brand', 't.name_az as type', 's.name_az as size', 'v.price']);
+            ->get(['v.id', 'v.product_id', 'p.name', 'p.active', 'b.name as brand', 't.name_az as type', 's.name_az as size', 'v.price']);
         $volume = $parsed['volume'];
+        // Məhsulun cinsi: eyni adlı kişi və qadın ətirlərini ayırmaq üçün (sətrin cinsi addakı L / M / UNISEX-dən)
+        $genderNames = DB::table('product_genders as pg')->join('genders as g', 'g.id', '=', 'pg.gender_id')
+            ->whereIn('pg.product_id', $rows->pluck('product_id')->unique())->get(['pg.product_id', 'g.name_az'])
+            ->groupBy('product_id')->map(fn ($group) => $group->pluck('name_az')->map(fn ($name) => trim(str_replace('üçün', '', $name)))->unique()->values());
+        $wanted = ['L' => 'QAD', 'M' => 'KIS', 'U' => 'UNISEX'][$parsed['gender']] ?? null;
 
         return response()->json(['items' => $rows->map(fn ($row) => [
             'id' => $row->id,
@@ -224,7 +229,10 @@ class PriceListController extends Controller
             'active' => (bool) $row->active,
             'exact' => in_array($row->id, $ids, true),
             'same_size' => $volume !== null && (float) $row->size === (float) $volume,
-        ])->sortByDesc(fn ($row) => [$row['exact'], $row['same_size'], $row['active']])->values()]);
+            'genders' => ($names = $genderNames[$row->product_id] ?? collect())->all(),
+            // true — sətrin cinsi ilə eyni, false — fərqli, null — müqayisə etmək olmur
+            'same_gender' => $wanted && $names->isNotEmpty() ? $names->contains(fn ($name) => str_contains(PriceListNameParser::key($name), $wanted)) : null,
+        ])->sortByDesc(fn ($row) => [$row['exact'], $row['same_size'], $row['same_gender'] !== false, $row['active']])->values()]);
     }
 
     /** Operatorun seçimi: sətir varianta bağlanır və yadda qalır (növbəti importda avtomatik) */

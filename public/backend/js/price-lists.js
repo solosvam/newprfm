@@ -35,7 +35,9 @@
             const name = el('div', item.active ? '' : 'text-muted', item.label + ' · ' + item.size);
             if (item.exact) name.append(' ', el('span', 'badge bg-success', 'eyni ad və ölçü'));
             else if (item.same_size) name.append(' ', el('span', 'badge bg-outline-primary', 'eyni ölçü'));
-            info.append(name, el('div', 'text-muted text-small', [item.type, 'satış ' + item.price + ' AZN', item.active ? null : 'deaktiv'].filter(Boolean).join(' · ')));
+            // Cins: sətrin cinsi ilə eynidirsə yaşıl, fərqlidirsə qırmızı (eyni adlı kişi / qadın ətirlərini qarışdırmamaq üçün)
+            (item.genders || []).forEach(gender => name.append(' ', el('span', 'badge ' + (item.same_gender === true ? 'bg-outline-success' : item.same_gender === false ? 'bg-outline-danger' : 'bg-outline-muted'), gender)));
+            info.append(name, el('div', 'text-muted text-small', [item.type, 'satış ' + item.price + ' AZN', item.active ? null : 'deaktiv', item.same_gender === false ? 'cinsi fərqlidir' : null].filter(Boolean).join(' · ')));
             const pick = el('button', 'btn btn-sm btn-primary text-nowrap', 'Seç');
             pick.type = 'button';
             pick.addEventListener('click', () => {
