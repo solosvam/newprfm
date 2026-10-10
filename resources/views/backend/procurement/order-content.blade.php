@@ -220,8 +220,9 @@
 @endforeach
 
 <h2 class="small-title mt-5">Sorğular</h2>
+<div class="card"><div class="card-body">
 @if($requests->isEmpty())
-    <p class="text-muted">Hələ sorğu yaradılmayıb.</p>
+    <p class="text-muted mb-0">Hələ sorğu yaradılmayıb.</p>
 @else
     <div class="table-responsive"><table class="table proc-table">
         <thead><tr><th>Sorğu</th><th>Anbar</th><th>Məhsullar</th><th>Yaradılıb</th><th>Cavab</th><th>Giriş linki</th></tr></thead>
@@ -240,6 +241,7 @@
         </tbody>
     </table></div>
 @endif
+</div></div>
 
 @if($editable)
     {{-- Yeni sorğu: seçilən məhsullar hər seçilən anbara ayrıca sorğu kimi gedir --}}

@@ -23,8 +23,9 @@
 </div>
 
 <h2 class="small-title">Anbarlarla hesablaşma</h2>
+<div class="card"><div class="card-body">
 @if($parts->isEmpty())
-    <p class="text-muted">Hələ anbar seçimi yoxdur.</p>
+    <p class="text-muted mb-0">Hələ anbar seçimi yoxdur.</p>
 @else
     <div class="table-responsive"><table class="table od-table">
         <thead><tr><th>Məhsul</th><th>Anbar</th><th class="od-num">Say × alış</th><th>Mərhələ</th><th class="od-num">Dəyər</th><th class="od-num">Ödənilib</th><th class="od-num">Qalıq</th><th></th></tr></thead>
@@ -62,8 +63,10 @@
         </tbody>
     </table></div>
 @endif
+</div></div>
 
 <h2 class="small-title mt-5">Sifarişə aid pul hərəkətləri</h2>
+<div class="card"><div class="card-body">
 @if($settlement['movements']->isEmpty())
     <p class="text-muted mb-0">Hələ pul hərəkəti yoxdur.</p>
 @else
@@ -89,6 +92,7 @@
         </tbody>
     </table></div>
 @endif
+</div></div>
 
 {{-- Anbara ödəniş: alan hesab serverdə təminat hissəsinin anbarıdır --}}
 <div class="modal modal-right fade" id="warehousePayModal" tabindex="-1" aria-labelledby="warehousePayTitle" aria-hidden="true">

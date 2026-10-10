@@ -66,9 +66,6 @@
             </div>
             <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-start justify-content-md-end">
                 <a class="btn btn-outline-primary btn-icon btn-icon-start" href="{{ route('admin.crm.customer', $customer) }}"><i data-acorn-icon="user" data-acorn-size="16"></i><span>Müştəri</span></a>
-                @if($payLinkUrl)
-                    <a class="btn btn-outline-primary btn-icon btn-icon-start" href="#payments" data-order-tab-link><i data-acorn-icon="link" data-acorn-size="16"></i><span>Ödəniş linki</span></a>
-                @endif
                 {{-- Sifarişin tam ləğvi (ləğv edilmiş / təhvil verilmiş sifarişdə görünmür) --}}
                 @if($canCancelOrder)
                     @if($orderCancelBlock)
@@ -239,9 +236,7 @@
         </a>
     </div>
 
-    {{-- Tablar --}}
-    <div class="card mb-5">
-        <div class="card-header border-0 pb-0">
+    {{-- Tablar: kartdan kənarda (fonun üstündə); hər tabın məzmunu öz kartlarındadır — kart içində kart yoxdur --}}
             @php
                 $tabs = [
                 'products' => ['Məhsullar', $order->items->count(), false],
@@ -251,14 +246,14 @@
             ];
             if (!empty($settlement)) $tabs['settlements'] = ['Hesablaşmalar', null, false];
             @endphp
-            <ul class="nav nav-tabs nav-tabs-line card-header-tabs order-detail-tabs" role="tablist" aria-label="Sifariş bölmələri">
+            <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title order-detail-tabs" role="tablist" aria-label="Sifariş bölmələri">
                 @foreach($tabs as $key => [$label, $count, $warn])
                     <li class="nav-item" role="presentation"><button class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $key }}-tab" data-bs-toggle="tab" data-bs-target="#{{ $key }}" type="button" role="tab" aria-controls="{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $label }}@if($count)<span class="od-tab-count {{ $warn ? 'is-warn' : '' }}">{{ $count }}</span>@endif</button></li>
                 @endforeach
             </ul>
-        </div>
-        <div class="card-body tab-content p-3">
+        <div class="tab-content mb-5">
             <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="0">
+                <div class="card"><div class="card-body">
                 @if($cancelBlock && $order->items->contains(fn ($i) => $i->activeQuantity() > 0))
                     <div class="text-muted small mb-2">Məhsul ləğvi: {{ $cancelBlock }}</div>
                 @endif
@@ -330,8 +325,11 @@
                     @endif
                 </div>
                 @include('backend.crm.partials.order-confirm')
+                </div></div>
             </div>
-            <div class="tab-pane fade" id="item-history" role="tabpanel" aria-labelledby="item-history-tab" tabindex="0">@include('backend.crm.partials.order-item-history')</div>
+            <div class="tab-pane fade" id="item-history" role="tabpanel" aria-labelledby="item-history-tab" tabindex="0">
+                <div class="card"><div class="card-body">@include('backend.crm.partials.order-item-history')</div></div>
+            </div>
             <div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab" tabindex="0">
                 {{-- Sol: ödəniş linki (yalnız lazım olanda); sağ: ödəniş cəhdləri və geri qaytarmalar --}}
                 <div class="row g-4">
@@ -349,7 +347,6 @@
                 <div class="tab-pane fade" id="settlements" role="tabpanel" aria-labelledby="settlements-tab" tabindex="0">@include('backend.crm.partials.order-settlements')</div>
             @endif
         </div>
-    </div>
 
     @if(empty($courierBlock) && in_array($order->status?->code, ['warehouses_assigned', 'courier_assigned'], true))
         {{-- Kuryer təyini: "Kuryer" rolundakı aktiv əməkdaşlar --}}

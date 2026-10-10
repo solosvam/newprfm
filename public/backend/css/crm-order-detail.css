@@ -35,14 +35,19 @@
 .order-workspace .od-kpi .progress { height: 4px; margin-top: 8px; }
 
 /* Tablar */
-.order-workspace .order-detail-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+/* Tema tab sətrində mənfi alt boşluq işlədir — overflow kəsməsin deyə dar ekranda tablar sətrə keçir */
+.order-workspace .order-detail-tabs { flex-wrap: wrap; margin-top: 8px; margin-bottom: 20px; }
 .order-workspace .order-detail-tabs .nav-link { white-space: nowrap; }
 .order-workspace .od-tab-count {
     display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px;
     border-radius: 9px; font-size: 11px; background: var(--separator); color: var(--body);
 }
 .order-workspace .od-tab-count.is-warn { background: var(--warning); color: #fff; }
-.order-workspace .tab-pane > div > .card { box-shadow: none; }
+/* Tablar kartdan kənardadır: məzmun fonun üstündə ayrı kartlardır (kart içində kart yoxdur) */
+.order-workspace .tab-content .small-title { margin-bottom: 12px; }
+.order-workspace .tab-content .proc-item { border: 0; background: var(--foreground); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-deep, 0 4px 6px rgba(0, 0, 0, .04)); }
+.order-workspace .tab-content .proc-sms { border: 0; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-deep, 0 4px 6px rgba(0, 0, 0, .04)); }
+.order-workspace .tab-content .settle-stat { background: var(--foreground); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-deep, 0 4px 6px rgba(0, 0, 0, .04)); }
 
 /* Cədvəllər */
 .order-workspace .od-table th { color: var(--muted); font-size: 12px; font-weight: 400; text-transform: uppercase; white-space: nowrap; }
