@@ -109,7 +109,7 @@
                             </span>
                             {{-- Seçilən anbardan ucuz, hələ götürülə bilən təklif var (operator bilərəkdən bahalını seçə bilər — xəbərdarlıqdır, xəta deyil) --}}
                             @if($cheaper)
-                                <span class="badge bg-warning">Daha ucuz təklif var: {{ number_format((float) $cheaper['offer']->unit_cost, 2) }} AZN</span>
+                                <span class="badge bg-danger">Daha ucuz təklif var: {{ number_format((float) $cheaper['offer']->unit_cost, 2) }} AZN</span>
                             @endif
                         </div>
                         @if($crm)
