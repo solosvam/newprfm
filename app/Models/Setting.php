@@ -8,11 +8,15 @@ class Setting extends Model
 {
     protected $fillable = ['key', 'value'];
 
+    /**
+     * Bannerlərin standart ölçüsü (ayar saxlanmayıbsa). Saytda göstərilən ölçünün iki mislidir — yüksək sıxlıqlı
+     * ekranlar üçün: veb 1060×320 / 1060×220, mobil 640×280 / 640×220.
+     */
     public const BANNER_DIMENSIONS = [
-        'banner_web_top' => [1920, 370],
-        'banner_web_bottom' => [1920, 300],
-        'banner_mobile_top' => [790, 300],
-        'banner_mobile_bottom' => [790, 220],
+        'banner_web_top' => [2120, 640],
+        'banner_web_bottom' => [2120, 440],
+        'banner_mobile_top' => [1280, 560],
+        'banner_mobile_bottom' => [1280, 440],
     ];
 
     public static function valueOf(string $key, mixed $default = null): mixed
