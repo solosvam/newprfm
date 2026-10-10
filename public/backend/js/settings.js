@@ -73,9 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const left = Number(d.screenViewport) - Number(d.screenAbove) - banner;
         const visible = Math.max(0, Math.min(100, Math.round(left / Number(d.screenCard) * 100)));
         const over = visible < Number(d.screenLimit);
-        info.textContent = 'banner ' + Math.round(banner) + ' px · ilk ekranda məhsul kartının ' + visible + '%-i görünür';
-        info.classList.toggle('text-danger', over);
-        info.classList.toggle('text-muted', !over);
+        // Rəqəmlər qalın; faiz rənglidir: yaşıl — yaxşı, narıncı — həddə yaxın, qırmızı — həddən az (dəyərlər ədəddir, HTML təhlükəsizdir)
+        const tone = over ? 'text-danger' : (visible < Number(d.screenLimit) * 2 ? 'text-warning' : 'text-success');
+        info.innerHTML = 'banner <strong class="text-body">' + Math.round(banner) + ' px</strong> · ilk ekranda məhsul kartının <strong class="' + tone + '">' + visible + '%</strong>-i görünür';
         form.querySelector('[data-banner-device="' + key + '"]')?.classList.toggle('is-over', over);
     };
 
