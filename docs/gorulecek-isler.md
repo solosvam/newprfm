@@ -47,6 +47,10 @@ Son yenilənmə: 10 oktyabr 2026.
   - statistika: son 10 gündə, 1 ayda və s. sayta girməyən müştərilərin sayı;
   - ayrıca səhifə: həmin müştərilərin siyahısı, müddətə görə filtr, seçilənlərə push və ya SMS göndərmək.
   Push üçün müştərini abunəsinə bağlamaq lazımdır (`push_subscriptions` hələ yoxdur — yuxarıdakı push bəndi ilə əlaqəli).
+- [ ] **Tester ətirlərin işarələnməsi.** Ətir testerdirsə (hazırda "Tester" kateqoriyası və ya adında "Tester" sözü ilə bilinir):
+  - məhsul şəklinin üstündə, yuxarı sağ və ya sol küncdə yumru nişan ("Tester") — məhsul kartında və məhsul səhifəsində;
+  - adına "Tester" avtomatik əlavə olunur (operator əl ilə yazmır). Qərar verilməlidir: tester ayrıca işarə (sahə) kimi saxlansın,
+    yoxsa kateqoriyadan götürülsün; köhnə adlardakı "Tester" / "TESTER" / "L EDP Tester" yazılışları necə təmizlənsin.
 - [ ] **Email abunəliyi (yeniliklərdən xəbərdar olmaq):**
   - qonaqlar saytda email yazıb abunə olur;
   - yazılan email köhnə (mövcud) müştəriyə aiddirsə, həmin müştəri avtomatik abunə sayılır;
