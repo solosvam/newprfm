@@ -2,7 +2,7 @@
 @php
     $staff = $staff ?? collect();
     $who = fn ($id) => $id ? ($staff[$id] ?? 'Əməkdaş #'.$id) : null;
-    $sources = ['phone' => 'Telefon', 'whatsapp' => 'WhatsApp', 'telegram' => 'Telegram', 'manual' => 'Digər'];
+    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Operator - Telegram', 'manual' => 'Operator - Digər', 'link' => 'Anbar - link'];
     $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul').($item?->variant?->size?->name_az ? ' · '.$item->variant->size->name_az : '');
     $events = collect();
     foreach ($requests as $req) {

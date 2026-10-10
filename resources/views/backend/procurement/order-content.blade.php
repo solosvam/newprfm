@@ -12,7 +12,8 @@
     // user_id 0 — anbarın özü (portal linki ilə)
     $who = fn ($id) => $id === 0 || $id === '0' ? 'Anbar (link)' : ($id ? ($staff[$id] ?? 'Əməkdaş #'.$id) : null);
     $smsLogs = app(\App\Services\WarehouseNotifier::class)->lastLogs($requests->pluck('id'), $order->items->flatMap->allocations->pluck('id'));
-    $sources = ['phone' => 'Telefon', 'whatsapp' => 'WhatsApp', 'telegram' => 'Telegram', 'manual' => 'Digər', 'link' => 'Anbar linki'];
+    // Mənbə: cavabı kim daxil edib — operator (hansı yolla) və ya anbar özü (link ilə)
+    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Operator - Telegram', 'manual' => 'Operator - Digər', 'link' => 'Anbar - link'];
     $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul');
     $itemSize = fn ($item) => $item?->variant?->size?->name_az;
     // order_item_id => [sorğu sətri + onun sorğusu]
