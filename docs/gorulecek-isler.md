@@ -20,6 +20,13 @@ Son yenilənmə: 10 oktyabr 2026.
   alışı bilinməyən məhsullar varsa rəqəm şişir, düzəldilməlidir; düymə adlarını birləşdirmək ("Yenilə" nəyi yeniləyir).
   Proses tabındakı qazanc xəbərdarlığı ("Qazanc yoxdur" / "Zərərlə") hələlik çatdırılma xərcini və bank komissiyasını
   saymır — "Təxmini qazanc" düzələndə ikisi eyni düsturdan istifadə etməlidir.
+- [ ] **Anbar price listlərinin importu** (10 oktyabr danışıldı, nümunə Excel gözlənilir; 2–3 anbar, hər həftə yenilənir, formatlar fərqlidir, qiymətlər AZN):
+  - import: anbar seçilir, Excel yüklənir, operator sütunları özü göstərir (hansı sütun ad, ölçü, qiymət); seçim anbar üzrə yadda qalır;
+  - siyahının bütün sətirləri saxlanır; bizim varianta (məhsul + ölçü) uyğunlaşan sətir bağlanır, uyğunlaşmayan yalnız axtarışla tapılır;
+  - təsdiqlənmiş uyğunluq yadda qalır — növbəti həftəki importda eyni ad avtomatik bağlanır;
+  - sifarişdə (Proses tabı): məhsul kartında "hansı anbarda neçəyə" (siyahının tarixi ilə) və bütün price listlərdə mətnlə axtarış (Ctrl+F əvəzi);
+  - operator siyahıdakı qiymətlə anbarı birbaşa seçir (aşağıdakı "Sorğusuz birbaşa təminat" ilə eyni iş);
+  - müqayisə hesabatı: əvvəlki siyahıya görə yeni gələn, çıxan, qiyməti dəyişən; saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir.
 - [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
