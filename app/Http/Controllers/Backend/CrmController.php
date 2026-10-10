@@ -711,7 +711,7 @@ class CrmController extends Controller
         $order->loadMissing('customer');
         $mobile = $order->customer?->mobile;
         $text = \App\Models\SmsTemplate::message('crm_order_cancelled', [
-            'fullname' => $order->customer?->fullname ?? '', 'order_no' => $order->order_no,
+            'name' => $order->customer?->name ?? '', 'fullname' => $order->customer?->fullname ?? '', 'order_no' => $order->order_no,
         ]);
         if (!$mobile || !$text) {
             return null;

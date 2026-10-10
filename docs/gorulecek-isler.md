@@ -15,8 +15,8 @@ Son yenilənmə: 10 oktyabr 2026.
   `backend/procurement/order-content` və `backend/crm/partials/order-item-history` görünüşləri.
   Köhnə "telegram" mənbəli cavablar silinmir, tarixçədə əvvəlki kimi görünür.
 - [ ] **SMS — qalan qərarlar və yoxlamalar** (10 oktyabr: jurnal, çatdırılma statusu, balans, "Yola çıxdım" SMS-i və "SMS" səhifəsi hazırdır):
-  - `crm_order_accepted` və `website_order_accepted` şablonları bazada var, amma heç bir hadisəyə qoşulmayıb (səhifədə "Qoşulmayıb").
-    Qərar: "sifariş qəbul olundu" və "təhvil verildi" SMS-ləri göndərilsinmi, yoxsa şablonlar silinsin.
+  - `crm_order_accepted` ("CRM-dən operator sifariş qəbul etdikdə") şablonu bazada var, amma heç bir hadisəyə qoşulmayıb (səhifədə "Qoşulmayıb").
+    Qərar: göndərilsinmi, yoxsa silinsin. "Təhvil verildi" SMS-i də qərarsızdır. (`website_order_accepted` 10 oktyabrda silindi.)
   - Şablonsuz, kodda yazılmış mətnlər: təsdiq kodu (OTP) və CRM "yeni şifrə" SMS-i. Sonuncuda ə/ş hərfləri var — 1 SMS 70 simvol sayılır;
     şablona keçirilsinmi.
   - `bonus:remind-expiring` cədvəli `routes/console.php`-də söndürülüb — `bonus_expiring` SMS-i hazırda getmir.
@@ -151,3 +151,4 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
   promokod yenidən hesablanmır. Alış satışdan baha olan anbarı seçmək qadağan deyil, amma operatordan təsdiq soruşulur.
 - Göndərilən hər SMS `sms_logs` jurnalına yazılır (`SmsLog::deliver`); təsdiq kodu və şifrə jurnalda `***` ilə gizlədilir.
   Çatdırılma statusu lsim hesabatından 5 dəqiqədən bir yoxlanır, ən çox 2 gün. "Yola çıxdım" SMS-i sifarişə bir dəfə gedir.
+- SMS şablonlarında müştəriyə müraciət `{name}` (ad) ilədir; `{fullname}` (ad və soyad) də işləyir — kod hər ikisini doldurur.

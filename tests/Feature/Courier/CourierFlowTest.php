@@ -114,6 +114,7 @@ class CourierFlowTest extends TestCase
         (require database_path('migrations/2026_09_21_150000_create_sms_templates_table.php'))->up();
         (require database_path('migrations/2026_09_30_100000_create_sms_logs_and_warehouse_sms.php'))->up();
         (require database_path('migrations/2026_10_10_180000_add_delivery_status_to_sms_logs.php'))->up();
+        (require database_path('migrations/2026_10_10_200000_sms_templates_name_variable.php'))->up();
         DB::table('customers')->insert(['id' => 1, 'name' => 'Aysel', 'surname' => 'Quliyeva', 'mobile' => '0501234567', 'bonus_balance' => 7.5]);
         config(['services.parfumshop_sms.login' => 'login', 'services.parfumshop_sms.password' => 'secret']);
         \Illuminate\Support\Facades\Http::fake(['apps.lsim.az/*' => \Illuminate\Support\Facades\Http::response(['obj' => 9, 'errorCode' => 0])]);
@@ -128,7 +129,7 @@ class CourierFlowTest extends TestCase
 
         $log = \App\Models\SmsLog::where('context', 'order_sent')->sole();
         $this->assertSame('994501234567', preg_replace('/\D/', '', '994'.ltrim($log->msisdn, '0')));
-        $this->assertStringContainsString('Hormetli Aysel Quliyeva,', $log->message);
+        $this->assertStringContainsString('Hormetli Aysel,', $log->message);
         $this->assertStringContainsString('120.00', $log->message);
         $this->assertSame((string) $order->id, (string) $log->subject_id);
         \Illuminate\Support\Facades\Http::assertSentCount(1);

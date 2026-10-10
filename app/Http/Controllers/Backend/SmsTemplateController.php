@@ -17,7 +17,6 @@ class SmsTemplateController extends Controller
      */
     public const USAGE = [
         'crm_order_accepted' => null,
-        'website_order_accepted' => null,
         'order_sent' => 'Kuryer "Yola çıxdım" basanda müştəriyə (sifarişə bir dəfə)',
         'crm_order_cancelled' => 'Operator CRM-də sifarişi ləğv edəndə müştəriyə',
         'easy_order_registration_bonus' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (qeydiyyat bonusu varsa)',

@@ -59,10 +59,20 @@ class SmsPageTest extends TestCase
             preg_match_all("/'code'\\s*=>\\s*'([a-z_]+)'|'(warehouse_[a-z]+)'\\s*=>\\s*\\[/", $source, $m);
             $codes = array_merge($codes, array_filter($m[1]), array_filter($m[2]));
         }
-        $codes = array_unique($codes);
+        // Sonradan silinən şablon (2026_10_10_200000_sms_templates_name_variable)
+        $codes = array_diff(array_unique($codes), ['website_order_accepted']);
 
-        $this->assertGreaterThanOrEqual(12, count($codes));
+        $this->assertGreaterThanOrEqual(11, count($codes));
         $this->assertSame([], array_values(array_diff($codes, array_keys(SmsTemplateController::USAGE))), 'Yeni şablon əlavə olunub — SmsTemplateController::USAGE-ə yazın');
+    }
+
+    public function test_name_migration_drops_the_unused_template_and_switches_to_the_name_variable(): void
+    {
+        (require database_path('migrations/2026_10_10_200000_sms_templates_name_variable.php'))->up();
+
+        $this->assertFalse(DB::table('sms_templates')->where('code', 'website_order_accepted')->exists());
+        $this->assertSame(0, DB::table('sms_templates')->where('template', 'like', '%{fullname}%')->count());
+        $this->assertStringStartsWith('Hormetli {name},', DB::table('sms_templates')->where('code', 'order_sent')->value('template'));
     }
 
     public function test_problems_tab_lists_only_failed_and_undelivered_messages(): void

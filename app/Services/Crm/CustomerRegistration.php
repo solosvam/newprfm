@@ -72,7 +72,7 @@ class CustomerRegistration
         if ($sendPassword) {
             try {
                 // Şablon "SMS şablonları"ndan; deaktivdirsə və ya {password} silinibsə — standart mətn (şifrə mütləq getməlidir)
-                $text = SmsTemplate::message('crm_customer_created', ['fullname' => $customer->fullname, 'password' => $password]);
+                $text = SmsTemplate::message('crm_customer_created', ['name' => $customer->name, 'fullname' => $customer->fullname, 'password' => $password]);
                 if ($text === null || !str_contains($text, $password)) {
                     $text = "Hormetli {$customer->fullname}, Parfumshop hesabiniz yaradildi. Sifreniz: {$password}";
                 }

@@ -212,7 +212,7 @@ class OrderStatusService
                 return;
             }
             $text = \App\Models\SmsTemplate::message('order_sent', [
-                'fullname' => $customer->fullname, 'order_no' => $order->order_no,
+                'name' => $customer->name, 'fullname' => $customer->fullname, 'order_no' => $order->order_no,
                 'total' => number_format((float) $order->total, 2, '.', ''),
                 'total_bonus' => number_format((float) $customer->bonus_balance, 2, '.', ''),
             ]);

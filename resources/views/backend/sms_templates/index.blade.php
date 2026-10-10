@@ -1,15 +1,14 @@
 @php
     $title = 'SMS';
-    // Hər şablonda istifadə oluna bilən dəyişənlər
+    // Hər şablonda istifadə oluna bilən dəyişənlər ({name} — ad, {fullname} — ad və soyad; ikisi də işləyir)
     $variables = [
-        'crm_order_accepted' => ['fullname', 'bonus'],
-        'website_order_accepted' => ['fullname', 'bonus'],
-        'order_sent' => ['fullname', 'order_no', 'total', 'total_bonus'],
-        'crm_order_cancelled' => ['fullname', 'order_no'],
+        'crm_order_accepted' => ['name', 'fullname', 'bonus'],
+        'order_sent' => ['name', 'fullname', 'order_no', 'total', 'total_bonus'],
+        'crm_order_cancelled' => ['name', 'fullname', 'order_no'],
         'easy_order_registration_bonus' => ['bonus'],
         'easy_order_registration' => [],
         'order_payment_link' => ['order_no', 'link'],
-        'crm_customer_created' => ['fullname', 'password'],
+        'crm_customer_created' => ['name', 'fullname', 'password'],
         'warehouse_request' => ['count', 'link', 'warehouse'],
         'warehouse_selected' => ['product', 'quantity', 'link', 'warehouse'],
         'warehouse_cancelled' => ['product', 'quantity', 'warehouse'],
@@ -71,9 +70,9 @@
                     <div class="d-flex flex-wrap align-items-center gap-3 mt-2 small mt-auto pt-2">
                         <span>Simvol: <strong class="sms-char-count">0</strong></span>
                         <span>SMS: <strong class="sms-part-count">1</strong></span>
-                        @if($variables[$template->code] ?? ['fullname'])
+                        @if($variables[$template->code] ?? ['name'])
                             <span class="text-muted">
-                                @foreach($variables[$template->code] ?? ['fullname'] as $variable)<code>{{ '{'.$variable.'}' }}</code> @endforeach
+                                @foreach($variables[$template->code] ?? ['name'] as $variable)<code>{{ '{'.$variable.'}' }}</code> @endforeach
                             </span>
                         @endif
                         <button class="btn btn-primary btn-sm ms-auto" type="submit">Yadda saxla</button>
