@@ -12,7 +12,8 @@
     // user_id 0 — anbarın özü (portal linki ilə)
     $who = fn ($id) => $id === 0 || $id === '0' ? 'Anbar (link)' : ($id ? ($staff[$id] ?? 'Əməkdaş #'.$id) : null);
     $smsLogs = app(\App\Services\WarehouseNotifier::class)->lastLogs($requests->pluck('id'), $order->items->flatMap->allocations->pluck('id'));
-    // Mənbə: cavabı kim daxil edib — operator (hansı yolla) və ya anbar özü (link ilə)
+    // Mənbə: cavabı kim daxil edib — operator (hansı yolla) və ya anbar özü (link ilə).
+    // WhatsApp / Telegram artıq seçilmir (ləğv olunub) — adları yalnız köhnə cavabların tarixçəsi üçün qalır
     $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Operator - Telegram', 'manual' => 'Operator - Digər', 'link' => 'Anbar - link'];
     $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul');
     $itemSize = fn ($item) => $item?->variant?->size?->name_az;
@@ -343,7 +344,7 @@
                     <div class="col-6" data-offer-cost><label class="form-label" for="procCost">1 ədəd, AZN</label><input id="procCost" type="number" name="unit_cost" min="0.01" step="0.01" class="form-control"></div>
                 </div>
                 <div class="mb-3"><label class="form-label" for="procSource">Cavabın mənbəyi</label>
-                    <select id="procSource" name="source" class="form-select">@foreach(array_diff_key($sources, ['link' => true]) as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select></div>
+                    <select id="procSource" name="source" class="form-select">@foreach(array_intersect_key($sources, ['phone' => true, 'manual' => true]) as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select></div>
                 <div><label class="form-label" for="procNote">Qeyd</label><input id="procNote" name="note" maxlength="2000" class="form-control" placeholder="İstəyə bağlı"></div>
                 <div class="form-text mt-3">Əvvəlki cavab silinmir — tarixçəyə yeni cavab kimi əlavə olunur.</div>
             </div>

@@ -102,7 +102,8 @@ class ProcurementController extends Controller
         $data = $request->validate([
             'available_quantity' => ['required', 'integer', 'min:0', 'max:9999'],
             'unit_cost' => ['nullable', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999999.99'],
-            'source' => ['required', 'in:phone,whatsapp,telegram,manual'],
+            // WhatsApp və Telegram ləğv olunub: operator cavabı telefonla alır, anbar özü isə linkdən yazır
+            'source' => ['required', 'in:phone,manual'],
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
         $service->recordOffer($order, $requestItem, $data, (int) auth('admin')->id());

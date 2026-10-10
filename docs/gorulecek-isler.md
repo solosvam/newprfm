@@ -9,11 +9,6 @@ Son yenilənmə: 10 oktyabr 2026.
 
 ## 1. Sifariş təminatı (CRM / anbar / kuryer)
 
-- [ ] **Anbarlar üçün Telegram ləğv olunur.** Anbar sorğuya yalnız göndərilən linkdən cavab verir.
-  Operatorun cavab daxil etməsində "Mənbə" seçimindən Telegram çıxarılır:
-  `ProcurementController::recordOffer` validasiyası (`in:phone,whatsapp,telegram,manual`),
-  `backend/procurement/order-content` və `backend/crm/partials/order-item-history` görünüşləri.
-  Köhnə "telegram" mənbəli cavablar silinmir, tarixçədə əvvəlki kimi görünür.
 - [ ] **SMS — qalan qərarlar və yoxlamalar** (10 oktyabr: jurnal, çatdırılma statusu, balans, "Yola çıxdım" SMS-i və "SMS" səhifəsi hazırdır):
   - `crm_order_accepted` ("CRM-dən operator sifariş qəbul etdikdə") şablonu bazada var, amma heç bir hadisəyə qoşulmayıb (səhifədə "Qoşulmayıb").
     Qərar: göndərilsinmi, yoxsa silinsin. "Təhvil verildi" SMS-i də qərarsızdır. (`website_order_accepted` 10 oktyabrda silindi.)
@@ -152,3 +147,5 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Göndərilən hər SMS `sms_logs` jurnalına yazılır (`SmsLog::deliver`); təsdiq kodu və şifrə jurnalda `***` ilə gizlədilir.
   Çatdırılma statusu lsim hesabatından 5 dəqiqədən bir yoxlanır, ən çox 2 gün. "Yola çıxdım" SMS-i sifarişə bir dəfə gedir.
 - SMS şablonlarında müştəriyə müraciət `{name}` (ad) ilədir; `{fullname}` (ad və soyad) də işləyir — kod hər ikisini doldurur.
+- Anbar cavabının mənbəyi yalnız "Operator - Telefon", "Operator - Digər" və ya "Anbar - link" ola bilər. WhatsApp və Telegram
+  ləğv olunub (10 oktyabr); köhnə cavablar silinmir, tarixçədə öz adı ilə görünür.
