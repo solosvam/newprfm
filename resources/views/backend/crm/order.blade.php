@@ -338,6 +338,10 @@
                                     @if($log)
                                         <div class="od-steps__meta">{{ $log->created_at?->format('d.m.Y H:i') }}</div>
                                         @if($log->user)<div class="od-steps__meta">Əməkdaş: {{ $log->user->full_name }}</div>@endif
+                                        {{-- Sifariş nə qədərdir bu statusdadır (bitmiş sifarişdə yazılmır) --}}
+                                        @if($step->id === $currentStatusId && $log->created_at && !$order->isCancelled() && $step->code !== 'delivered')
+                                            <div class="od-steps__meta text-primary">Bu statusda: {{ $elapsed($log->created_at, now()) }}</div>
+                                        @endif
                                         {{-- bu statusdakı bütün qeydlər (kuryer bildirişləri yuxarıda ayrıca da görünür) --}}
                                         @foreach($logsByStatus->get($step->id, collect())->filter(fn ($l) => $l->note) as $noteLog)
                                             <div class="od-steps__note">@if($logsByStatus->get($step->id)->count() > 1)<span class="text-muted">{{ $noteLog->created_at?->format('H:i') }}</span> @endif{{ $noteLog->note }}</div>
