@@ -51,6 +51,12 @@ Son yenilənmə: 10 oktyabr 2026.
   - statistika: son 10 gündə, 1 ayda və s. sayta girməyən müştərilərin sayı;
   - ayrıca səhifə: həmin müştərilərin siyahısı, müddətə görə filtr, seçilənlərə push və ya SMS göndərmək.
   Push üçün müştərini abunəsinə bağlamaq lazımdır (`push_subscriptions` hələ yoxdur — yuxarıdakı push bəndi ilə əlaqəli).
+- [ ] **Email abunəliyi (yeniliklərdən xəbərdar olmaq):**
+  - qonaqlar saytda email yazıb abunə olur;
+  - yazılan email köhnə (mövcud) müştəriyə aiddirsə, həmin müştəri avtomatik abunə sayılır;
+  - qeydiyyat formasında abunəlik checkbox-u;
+  - admin paneldə abunə olanların siyahısı;
+  - admin paneldən abunəçilərə email bildirişlərinin göndərilməsi.
 
 ## 3. Brauzer extension-ları
 
