@@ -92,11 +92,12 @@
                             <span class="text-alternate fw-normal">
                                 @if($group === 'selected')
                                     @php
-                                        $parts = $active->map(fn ($a) => $a->warehouse->name_az.' — təklif '.$a->quantity.' × '.number_format((float) $a->unit_cost, 2).' AZN');
+                                        $parts = $active->map(fn ($a) => $a->warehouse->name_az.':'.$a->quantity.' × '.number_format((float) $a->unit_cost, 2).' AZN');
                                         $isCheapest = $active->count() === 1 && $cheapest !== null && (float) $active->first()->unit_cost <= (float) $cheapest;
                                     @endphp
                                     @if($active->count() === 1)
-                                        {{ $rows->count() }} anbardan {{ $isCheapest && $rows->count() > 1 ? '<ins>ən ucuz</ins> təklif verən ' : '' }}{{ $active->first()->warehouse->name_az }} seçildi — təklif {{ $active->first()->quantity }} × {{ number_format((float) $active->first()->unit_cost, 2) }} AZN
+                                        {{-- HTML teqi {{ }} içində yazılanda mətn kimi çıxır (təhlükəsizlik üçün qaçırılır) — teq şərtin içində, kənarda yazılır --}}
+                                        {{ $rows->count() }} anbardan @if($isCheapest && $rows->count() > 1)<ins>ən ucuz</ins> təklif verən @endif{{ $active->first()->warehouse->name_az }} seçildi : {{ number_format((float) $active->first()->unit_cost, 2) }} AZN
                                     @else
                                         {{ $rows->count() }} anbardan {{ $active->count() }}-i seçildi: {{ $parts->implode('; ') }}
                                     @endif
