@@ -122,7 +122,7 @@ class ReferralSettingsTest extends TestCase
     public function test_settings_root_redirects_and_each_section_renders(): void
     {
         $this->actingAs($this->admin, 'admin')->get(route('admin.settings.index'))->assertRedirect(route('admin.settings.bonuses'));
-        foreach (['bonuses' => 'Bonusun istifadə müddəti', 'referral' => 'Dostunu dəvət et', 'orders' => 'Çatdırılma qaydası', 'banners' => 'Nisbət önizləməsi'] as $section => $text) {
+        foreach (['bonuses' => 'Bonusun istifadə müddəti', 'referral' => 'Dostunu dəvət et', 'orders' => 'Çatdırılma qaydası', 'banners' => 'Saytda necə görünəcək'] as $section => $text) {
             $this->get(route('admin.settings.'.$section))->assertOk()->assertSee($text);
         }
         $this->get('/admin/settings/unknown')->assertNotFound();

@@ -1,5 +1,5 @@
 {{--
-  Ayarlar → Bannerlər. Sol: hər yer üçün kəsilmə ölçüsü; sağ: slayd keçidi və ölçülərin nisbət önizləməsi.
+  Ayarlar → Bannerlər. Sol: hər yer üçün kəsilmə ölçüsü; sağ: slayd keçidi və saytın sxemi (kompüter və telefon ekranında banner).
 --}}
 @php
     $bannerPlaces = [
@@ -93,18 +93,50 @@
 
                 <hr class="settings-divider">
 
-                <div class="text-muted small mb-3">Nisbət önizləməsi (dizayner üçün)</div>
-                @foreach ($bannerPlaces as $key => $label)
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>{{ $label }}</span>
-                            <span class="text-muted" data-banner-label="{{ $key }}">{{ $bannerSizes[$key]['width'] }}×{{ $bannerSizes[$key]['height'] }}</span>
-                        </div>
-                        <div class="settings-banner-preview {{ str_contains($key, 'mobile') ? 'is-mobile' : '' }}"
-                             data-banner-preview="{{ $key }}"
-                             style="aspect-ratio: {{ max(1, (int) $bannerSizes[$key]['width']) }} / {{ max(1, (int) $bannerSizes[$key]['height']) }}"></div>
+                {{-- Saytın sxemi: banner ölçüsü dəyişdikcə səhifəni necə tutduğu görünür (settings.js). Çərçivə — ilk ekran;
+                     içində sürüşdürmək olur (aşağı banner məhsulların altındadır). Ölçülər real saytla eyni nisbətdədir:
+                     kompüter 1440×900, məzmun 1060 px; telefon 390×844, məzmun 350 px. --}}
+                <div class="text-muted small mb-3">Saytda necə görünəcək</div>
+                @php
+                    $ratio = fn ($key) => max(1, (int) $bannerSizes[$key]['width']).' / '.max(1, (int) $bannerSizes[$key]['height']);
+                @endphp
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Kompüter</span>
+                        <span class="text-muted" data-banner-screen="banner_web_top" data-screen-width="1060" data-screen-height="900" data-screen-limit="45"></span>
                     </div>
-                @endforeach
+                    <div class="bn-device bn-device--desktop" data-banner-device="banner_web_top">
+                        <div class="bn-screen"><div class="bn-page">
+                            <div class="bn-bar"></div>
+                            <div class="bn-nav"><i></i><i></i><i></i><i></i><i></i></div>
+                            <div class="bn-banner is-top" data-banner-preview="banner_web_top" style="aspect-ratio: {{ $ratio('banner_web_top') }}"><span>Yuxarı banner · <b data-banner-label="banner_web_top">{{ $bannerSizes['banner_web_top']['width'] }}×{{ $bannerSizes['banner_web_top']['height'] }}</b></span></div>
+                            <div class="bn-brands">@for($i = 0; $i < 8; $i++)<i></i>@endfor</div>
+                            <div class="bn-body">
+                                <div class="bn-side"><i></i><i></i><i class="is-tall"></i></div>
+                                <div class="bn-grid">@for($i = 0; $i < 6; $i++)<i></i>@endfor</div>
+                            </div>
+                            <div class="bn-banner" data-banner-preview="banner_web_bottom" style="aspect-ratio: {{ $ratio('banner_web_bottom') }}"><span>Aşağı banner · <b data-banner-label="banner_web_bottom">{{ $bannerSizes['banner_web_bottom']['width'] }}×{{ $bannerSizes['banner_web_bottom']['height'] }}</b></span></div>
+                            <div class="bn-bar is-footer"></div>
+                        </div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Telefon</span>
+                        <span class="text-muted" data-banner-screen="banner_mobile_top" data-screen-width="350" data-screen-height="844" data-screen-limit="35"></span>
+                    </div>
+                    <div class="bn-device bn-device--phone" data-banner-device="banner_mobile_top">
+                        <div class="bn-screen"><div class="bn-page">
+                            <div class="bn-bar"></div>
+                            <div class="bn-banner is-top" data-banner-preview="banner_mobile_top" style="aspect-ratio: {{ $ratio('banner_mobile_top') }}"><span>Yuxarı · <b data-banner-label="banner_mobile_top">{{ $bannerSizes['banner_mobile_top']['width'] }}×{{ $bannerSizes['banner_mobile_top']['height'] }}</b></span></div>
+                            <div class="bn-brands">@for($i = 0; $i < 3; $i++)<i></i>@endfor</div>
+                            <div class="bn-grid">@for($i = 0; $i < 4; $i++)<i></i>@endfor</div>
+                            <div class="bn-banner" data-banner-preview="banner_mobile_bottom" style="aspect-ratio: {{ $ratio('banner_mobile_bottom') }}"><span>Aşağı · <b data-banner-label="banner_mobile_bottom">{{ $bannerSizes['banner_mobile_bottom']['width'] }}×{{ $bannerSizes['banner_mobile_bottom']['height'] }}</b></span></div>
+                            <div class="bn-bar is-footer"></div>
+                        </div></div>
+                    </div>
+                </div>
+                <div class="form-text mt-3">Çərçivə saytın ilk ekranıdır; içində sürüşdürmək olur.</div>
             </div>
         </div>
     </div>

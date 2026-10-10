@@ -9,10 +9,36 @@
 #settingsForm .form-switch .form-check-input { width: 2.25em; height: 1.2em; cursor: pointer; }
 .settings-og-preview { width: 160px; aspect-ratio: 1200 / 630; object-fit: cover; }
 .settings-terms { font-size: 13px; line-height: 1.55; resize: vertical; }
-.settings-banner-preview {
-    width: 75%;
-    border-radius: 8px;
-    border: 1px dashed var(--primary);
-    background: rgba(var(--primary-rgb), .08);
+/* Bannerlər: saytın sxemi kompüter və telefon ekranında. Bütün ölçülər ekranın eninə nisbətlədir (cqw) —
+   çərçivə neçə piksel olursa olsun, nisbətlər real saytla eynidir (kompüter 1440×900 / məzmun 1060; telefon 390×844 / məzmun 350). */
+.bn-device { border: 5px solid var(--alternate); border-radius: 10px; background: var(--foreground); overflow: hidden; }
+.bn-device--desktop { aspect-ratio: 1440 / 900; }
+.bn-device--phone { width: 38%; aspect-ratio: 390 / 844; border-radius: 18px; }
+.bn-device.is-over { border-color: var(--danger); }
+.bn-screen { height: 100%; overflow-y: auto; container-type: inline-size; scrollbar-width: thin; }
+.bn-page { display: flex; flex-direction: column; gap: 1.2cqw; padding: 1.2cqw 13.2cqw; }
+.bn-device--phone .bn-page { gap: 3cqw; padding: 3cqw 5.1cqw; }
+.bn-page i { display: block; border-radius: .8cqw; background: var(--separator); }
+.bn-bar { aspect-ratio: 1060 / 56; border-radius: 3cqw; background: var(--separator); }
+.bn-bar.is-footer { aspect-ratio: 1060 / 160; border-radius: .8cqw; }
+.bn-device--phone .bn-bar { aspect-ratio: 350 / 44; border-radius: 6cqw; }
+.bn-device--phone .bn-bar.is-footer { aspect-ratio: 350 / 160; border-radius: 2cqw; }
+.bn-nav { display: flex; gap: 2cqw; }
+.bn-nav i { width: 7cqw; height: 1.2cqw; }
+.bn-banner {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    border-radius: 1.2cqw; border: 1px dashed var(--primary); background: rgba(var(--primary-rgb), .14);
+    color: var(--primary); font-size: max(9px, 1.6cqw); line-height: 1.2; overflow: hidden;
 }
-.settings-banner-preview.is-mobile { width: 35%; }
+.bn-device--phone .bn-banner { border-radius: 4cqw; font-size: max(8px, 5cqw); }
+.bn-device.is-over .bn-banner.is-top { border-color: var(--danger); background: rgba(var(--danger-rgb), .12); color: var(--danger); }
+.bn-brands { display: grid; grid-template-columns: repeat(8, 1fr); gap: 1cqw; }
+.bn-brands i { aspect-ratio: 130 / 62; }
+.bn-device--phone .bn-brands { grid-template-columns: repeat(3, 1fr); gap: 2.5cqw; }
+.bn-body { display: grid; grid-template-columns: 21cqw 1fr; gap: 2.5cqw; align-items: start; }
+.bn-side { display: flex; flex-direction: column; gap: 1.2cqw; }
+.bn-side i { aspect-ratio: 300 / 60; }
+.bn-side i.is-tall { aspect-ratio: 300 / 260; }
+.bn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; }
+.bn-grid i { aspect-ratio: 3 / 4; }
+.bn-device--phone .bn-grid { grid-template-columns: repeat(2, 1fr); gap: 3cqw; }

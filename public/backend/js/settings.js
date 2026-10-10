@@ -60,7 +60,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const label = form.querySelector('[data-banner-label="' + key + '"]');
         if (label) label.textContent = w + '×' + h;
         bannerWarning(key, w, h);
+        bannerScreen(key, w, h);
     });
+
+    // Bannerlər: yuxarı bannerin saytın ilk ekranında tutduğu yer (sxemin başlığında); yarıya yaxınlaşanda çərçivə qırmızı olur
+    const bannerScreen = (key, w, h) => {
+        const info = form.querySelector('[data-banner-screen="' + key + '"]');
+        if (!info) return;
+        const share = Math.round(Number(info.dataset.screenWidth) * h / w / Number(info.dataset.screenHeight) * 100);
+        const over = share > Number(info.dataset.screenLimit);
+        info.textContent = 'ilk ekranda bannerin payı: ' + share + '%' + (over ? ' — çoxdur' : '');
+        info.classList.toggle('text-danger', over);
+        info.classList.toggle('text-muted', !over);
+        form.querySelector('[data-banner-device="' + key + '"]')?.classList.toggle('is-over', over);
+    };
 
     // Bannerlər: həddi aşan ölçü yazılan kimi səbəbi ilə xəbərdarlıq (server də eyni hədləri yoxlayır — Setting::bannerLimits)
     const bannerWarning = (key, w, h) => {
@@ -84,7 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const bannerInputs = (key) => ['width', 'height'].map((dimension) => form.querySelector('[data-banner-size="' + key + '"][data-banner-dimension="' + dimension + '"]'));
     form.querySelectorAll('[data-banner-limits]').forEach((row) => {
         const [w, h] = bannerInputs(row.dataset.bannerLimits);
-        if (w && h) bannerWarning(row.dataset.bannerLimits, Number(w.value) || 1, Number(h.value) || 1);
+        if (!w || !h) return;
+        bannerWarning(row.dataset.bannerLimits, Number(w.value) || 1, Number(h.value) || 1);
+        bannerScreen(row.dataset.bannerLimits, Number(w.value) || 1, Number(h.value) || 1);
     });
     form.querySelector('[data-banner-reset]')?.addEventListener('click', () => {
         form.querySelectorAll('[data-banner-size]').forEach((input) => {
