@@ -19,8 +19,6 @@ Son yenilənmə: 10 oktyabr 2026.
     Qərar: "sifariş qəbul olundu" və "təhvil verildi" SMS-ləri göndərilsinmi, yoxsa şablonlar silinsin.
   - Şablonsuz, kodda yazılmış mətnlər: təsdiq kodu (OTP) və CRM "yeni şifrə" SMS-i. Sonuncuda ə/ş hərfləri var — 1 SMS 70 simvol sayılır;
     şablona keçirilsinmi.
-  - Proddə yoxlamaq: lsim "report" cavabının formatı sənəddə yazılmayıb (`SmsService::deliveryStatus` `obj`-u status kodu kimi oxuyur) —
-    ilk real SMS-lərdən sonra jurnalda "Çatdırılma" sütununun dolduğuna baxmaq; dolmursa `php artisan sms:check-delivery` çıxışına görə düzəltmək.
   - `bonus:remind-expiring` cədvəli `routes/console.php`-də söndürülüb — `bonus_expiring` SMS-i hazırda getmir.
 - [ ] **CRM sifariş səhifəsi — "Proses" tabının davamı** (10 oktyabr yenidən quruldu: nazik zolaq, "növbəti addım", qruplar, yığılan kartlar):
   proddə real sifarişlərlə (10 məhsul × 10 anbar) baxıb düzəltmək; "Təxmini qazanc" yalnız seçilmiş məhsulların alışını çıxır —

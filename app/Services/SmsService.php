@@ -94,7 +94,8 @@ class SmsService
             throw new RuntimeException('SMS hesabatı alınmadı (HTTP '.$response->status().').');
         }
 
-        // Cavabın formatı sənəddə yazılmayıb: ya tək rəqəm ("101", xətada "-106"), ya da göndərişdəki kimi JSON ({"obj": 101, "errorCode": 0})
+        // Cavabın formatı sənəddə yazılmayıb; proddə yoxlanıb (10.10.2026) — aşağıdakı oxunuşla statuslar düzgün gəlir.
+        // Həm tək rəqəm ("101", xətada "-106"), həm də göndərişdəki kimi JSON ({"obj": 101, "errorCode": 0}) qəbul olunur.
         $data = $response->json();
         if (is_array($data)) {
             $error = (int) ($data['errorCode'] ?? 0);
