@@ -86,7 +86,7 @@
                 <div class="d-flex flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#procItem{{ $item->id }}"
                      aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="procItem{{ $item->id }}">
                     <div class="card-body py-3">
-                        <div class="list-item-heading d-flex flex-wrap align-items-center gap-2">
+                        <div class="list-item-heading justify-content-between d-flex flex-wrap align-items-center gap-2">
                             <span>{{ $itemName($item) }}@if($itemSize($item))<span class="text-muted fw-normal"> · {{ $itemSize($item) }}</span>@endif</span>
                             {{-- Xülasə: məhsul hansı vəziyyətdədir (kart yığılı olanda da görünür) --}}
                             <span class="text-alternate fw-normal">
