@@ -9,6 +9,16 @@
                 <button type="button" class="btn btn-primary" data-pay-link-sms
                         data-url="{{ route('admin.crm.order.pay-link', [$customer, $order]) }}">SMS ilə göndər</button>
             </div>
+            @php $pendingPayment = $order->payments->firstWhere('status', \App\Models\Payment\Payment::PENDING); @endphp
+            @if($pendingPayment)
+                {{-- Yarımçıq cəhd: müştəri linkdən eyni bank səhifəsinə davam edə bilər; nəticəni operator dərhal yoxlaya bilər --}}
+                <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 py-2 mt-2 mb-0">
+                    <span>Bankda nəticəsi bəlli olmayan ödəniş var ({{ $pendingPayment->created_at?->timezone('Asia/Baku')->format('d.m.Y H:i') }}).
+                        Müştəri linkə keçib həmin ödənişə davam edə bilər.</span>
+                    <button type="button" class="btn btn-sm btn-outline-dark" data-payment-check
+                            data-url="{{ route('admin.crm.order.payment-check', [$customer, $order]) }}">Bankdan yoxla</button>
+                </div>
+            @endif
             @php $payLinkExpired = !$order->pay_token_expires_at || $order->pay_token_expires_at->isPast(); @endphp
             <div class="form-text d-flex flex-wrap align-items-center gap-2">
                 @if($payLinkExpired)

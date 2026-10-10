@@ -328,6 +328,7 @@ Route::prefix('admin')
                         ->middleware(['can:refund', 'throttle:10,1'])->name('order.cancellation.refund');
                     Route::post('/customer/{customer}/order/{order}/pay-link', 'sendPayLink')->middleware('throttle:10,1')->name('order.pay-link');
                     Route::post('/customer/{customer}/order/{order}/pay-link/renew', 'renewPayLink')->middleware('throttle:20,1')->name('order.pay-link-renew');
+                    Route::post('/customer/{customer}/order/{order}/payment-check', 'checkPendingPayment')->middleware('throttle:20,1')->name('order.payment-check');
                     Route::post('/customer/{customer}', 'update')->name('update');
                     Route::post('/customer/{customer}/address/{address}', 'updateAddress')->whereNumber('address')->name('address.update');
                     Route::post('/customer/{customer}/credit-profile/ocr', 'creditProfileOcr')->middleware('throttle:10,1')->name('credit-profile.ocr');

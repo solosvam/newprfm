@@ -73,7 +73,7 @@ class OrderPayLinkService
     public function sendSms(Order $order): void
     {
         $order->loadMissing(['paymentMethod', 'customer']);
-        if (!$order->canStartOnlinePayment()) {
+        if (!$order->payLinkAvailable()) {
             throw new RuntimeException('Bu sifariş üçün ödəniş linki aktiv deyil.');
         }
         $mobile = $order->customer?->mobile;

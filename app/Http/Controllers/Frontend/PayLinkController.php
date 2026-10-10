@@ -9,6 +9,7 @@ use App\Services\BonusService;
 use App\Services\ContactInfo;
 use App\Services\OrderPayLinkService;
 use App\Services\Payment\Birbank;
+use App\Services\Payment\BirbankPaymentSync;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -73,11 +74,27 @@ class PayLinkController extends Controller
             ->header('Cache-Control', 'no-store, private');
     }
 
-    public function start(Request $request, string $token, Birbank $birbank, OrderPayLinkService $payLink): RedirectResponse
+    public function start(Request $request, string $token, Birbank $birbank, OrderPayLinkService $payLink, BirbankPaymentSync $sync): RedirectResponse
     {
         $order = $this->find($token);
 
-        if ($payLink->isExpired($order) || !$order->canStartOnlinePayment()) {
+        if ($payLink->isExpired($order)) {
+            return redirect()->route('pay.link', $token);
+        }
+
+        // Yarımçıq qalmış cəhd: bankda hələ açıqdırsa eyni bank səhifəsinə qayıdır (yeni ödəniş yaranmır)
+        $pending = $sync->resumePending($order, app()->getLocale());
+        if ($pending['state'] === 'resume') {
+            $request->session()->put(self::SESSION_KEY, $order->id);
+
+            return redirect()->away($pending['url']);
+        }
+        if (in_array($pending['state'], ['paid', 'blocked'], true)) {
+            return redirect()->route('pay.link', $token);
+        }
+        $order = $this->find($token);
+
+        if (!$order->canStartOnlinePayment()) {
             return redirect()->route('pay.link', $token);
         }
 

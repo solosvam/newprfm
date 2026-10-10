@@ -147,6 +147,11 @@
                 </p>
             </form>
         @elseif($state === 'checking')
+            {{-- Yarımçıq ödəniş: bankda hələ açıqdırsa eyni bank səhifəsinə qayıdır (PayLinkController::start) --}}
+            <form method="POST" action="{{ route('pay.link.start', $token) }}" class="paylink__bar">
+                @csrf
+                <button type="submit" class="btn btn-dark paylink__btn">{{ __('orders_payment_continue') }} · {{ number_format($total, 2) }} ₼</button>
+            </form>
             <a href="{{ route('pay.link', $token) }}" class="btn btn-outline paylink__btn">{{ __('paylink_refresh') }}</a>
         @endif
     </main>

@@ -23,12 +23,13 @@ class Payment extends Model
         'provider_order_id',
         'amount',
         'session_id',
+        'hpp_url',
         'card_pan',
         'response_text',
         'status',
     ];
 
-    protected $hidden = ['session_id'];
+    protected $hidden = ['session_id', 'hpp_url'];
 
     /**
      * Ödəniş yarananda ona daxil olanlar (məhsullar, çatdırılma, qablaşdırma) həmin anın vəziyyəti ilə saxlanır.

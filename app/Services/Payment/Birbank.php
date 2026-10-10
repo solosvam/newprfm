@@ -123,6 +123,7 @@ class Birbank
             $payment->update([
                 'provider_order_id' => (string) $bankOrder['id'],
                 'session_id' => (string) $bankOrder['password'],
+                'hpp_url' => $hppUrl,
             ]);
 
             return [
@@ -259,11 +260,13 @@ class Birbank
                 'hppRedirectUrl' => route('payment.birbank.return', ['payment' => $payment->id]),
                 'hppCofCapturePurposes' => ['UnspecifiedMit', 'Cit', 'Recurring'],
             ]);
+            $url = $this->hppUrl($bankOrder);
             $payment->update([
                 'provider_order_id' => (string) $bankOrder['id'],
                 'session_id' => (string) $bankOrder['password'],
+                'hpp_url' => strtok($url, '?'),
             ]);
-            return ['payment_id' => $payment->id, 'url' => $this->hppUrl($bankOrder)];
+            return ['payment_id' => $payment->id, 'url' => $url];
         } catch (\Throwable $e) {
             $payment->update(['response_text' => 'Bank creation outcome requires reconciliation.']);
             throw $e;
@@ -397,11 +400,13 @@ class Birbank
             'description' => (string) $order->order_no,
             'hppRedirectUrl' => route('payment.birbank.return', ['payment' => $payment->id]),
         ]);
+        $url = $this->hppUrl($bankOrder);
         $payment->update([
             'provider_order_id' => (string) $bankOrder['id'],
             'session_id' => (string) $bankOrder['password'],
+            'hpp_url' => strtok($url, '?'),
         ]);
-        return ['payment_id' => $payment->id, 'url' => $this->hppUrl($bankOrder)];
+        return ['payment_id' => $payment->id, 'url' => $url];
     }
 
     public function clearPreauthorization(Payment $payment, ?string $amount = null, ?string $key = null): PaymentOperation
@@ -415,6 +420,27 @@ class Birbank
             $tran['amount'] = $this->limitedAmount($amount, $payment->amount);
         }
         return $this->execute($payment, 'clearing', $tran, $key);
+    }
+
+    /**
+     * Yarımçıq ödənişin bank səhifəsi: eyni bank sifarişi (id + password) — yeni ödəniş yaranmır.
+     * Yalnız ünvanı saxlanmış və bank hostuna aid ödənişlər üçün; əks halda null.
+     */
+    public function resumeUrl(Payment $payment): ?string
+    {
+        if ($payment->provider !== 'birbank' || !$payment->provider_order_id || !$payment->session_id || !$payment->hpp_url) {
+            return null;
+        }
+
+        try {
+            return $this->hppUrl([
+                'hppUrl' => $payment->hpp_url,
+                'id' => $payment->provider_order_id,
+                'password' => $payment->session_id,
+            ]);
+        } catch (RuntimeException) {
+            return null;
+        }
     }
 
     /**

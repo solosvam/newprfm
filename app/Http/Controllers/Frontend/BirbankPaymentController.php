@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class BirbankPaymentController extends Controller
 {
-    public function start(Request $request, Order $order, Birbank $birbank): RedirectResponse
+    public function start(Request $request, Order $order, Birbank $birbank, BirbankPaymentSync $sync): RedirectResponse
     {
         abort_unless((int) $order->customer_id === (int) $request->user()->id, 403);
 
@@ -21,11 +21,21 @@ class BirbankPaymentController extends Controller
             return redirect()->route('checkout.success', $order);
         }
 
-        // Qayda Order::canStartOnlinePayment()-dədir (SMS ödəniş linki də onu istifadə edir)
-        if ($order->hasPendingPayment()) {
+        // Yarımçıq qalmış cəhd: bankdan soruşulur — açıqdırsa müştəri eyni bank səhifəsinə qayıdır, bağlanıbsa yenisi başlayır
+        $pending = $sync->resumePending($order, app()->getLocale());
+        if ($pending['state'] === 'paid') {
+            return redirect()->route('checkout.success', $order);
+        }
+        if ($pending['state'] === 'resume') {
+            return redirect()->away($pending['url']);
+        }
+        if ($pending['state'] === 'blocked') {
             return redirect()->route('order.details', $order)
                 ->with('error', 'Əvvəlki ödənişin nəticəsi hələ dəqiqləşməyib.');
         }
+        $order->refresh();
+
+        // Qayda Order::canStartOnlinePayment()-dədir (SMS ödəniş linki də onu istifadə edir)
         if (!$order->canStartOnlinePayment()) {
             return redirect()->route('order.details', $order)
                 ->with('error', 'Bu sifariş üçün təkrar ödəniş hazırda mümkün deyil.');

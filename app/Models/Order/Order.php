@@ -59,6 +59,19 @@ class Order extends Model {
     }
 
     /**
+     * Ödəniş linki müştəriyə lazımdırmı: ödənişə başlamaq olar və ya yarımçıq qalmış cəhd var
+     * (müştəri linkdən eyni bank səhifəsinə davam edir). CRM-də link bloku və SMS göndərişi bu qaydaya baxır.
+     */
+    public function payLinkAvailable(): bool
+    {
+        if (!$this->isOnlinePayment() || $this->payment_status === 'paid' || $this->isCancelled()) {
+            return false;
+        }
+
+        return $this->canStartOnlinePayment() || $this->hasPendingPayment();
+    }
+
+    /**
      * Onlayn ödənişli (kart / Birbank taksit) sifariş hələ heç ödənilməyə cəhd olunmayıb:
      * operator (CRM, asan sifariş) yaradıb, müştəri "Sifarişlərim"-dən ödəməlidir.
      * Siyahıda N+1 olmasın deyə withCount('payments') istifadə edin.

@@ -54,6 +54,8 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] `.env`-də `ONESIGNAL_REST_API_KEY` (olmasa push getmir).
 - [ ] `.env`-də `SHORT_URL=https://paf.az` (sonra `php artisan config:cache`). Olmasa ödəniş, referal və anbar linkləri əsas domenlə gedir.
 - [ ] Migrasiyaları işə salmaq.
+- [ ] **Test rejimində yoxlamaq:** Birbank ödəniş səhifəsini bağlayıb "Ödənişə davam et" ilə eyni səhifənin açıldığını (bank eyni sifarişi təkrar açmağa icazə verirmi)
+  və ödənilməyən sifarişin bankda nə vaxt `Expired` olduğunu.
 - [ ] `php artisan brands:optimize-logos` — serverdəki brend loqolarını kiçiltmək (lokalda edilib).
 - [ ] `php artisan seo:robots` (robots.txt-ə sitemap sətri) və sitemap-i Google Search Console-a göndərmək.
 
@@ -98,6 +100,8 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Müştəri ehtiyat nömrəsini (`mobile_2`) saytda görmür və dəyişmir.
 - Öz kreditimizlə (hissə-hissə) alışda məhsul endirimi tətbiq olunmur. Birbank taksitində tətbiq olunur. Birbank taksiti "hissə-hissə" sayılmır.
 - Promo kod endirimli məhsullara tətbiq olunmur.
+- Yarımçıq qalmış Birbank ödənişi: müştəri "Ödənişə davam et" basanda bankdan soruşulur — sifariş bankda hələ açıqdırsa
+  (`Preparing`) eyni bank səhifəsinə qaytarılır (yeni ödəniş yaranmır), bağlanıbsa yeni ödəniş başlayır. CRM-də "Bankdan yoxla" eyni yoxlamanı edir.
 - Müştəriyə və anbara göndərilən linklər qısa domenlədir (`paf.az`): SMS ödəniş linki, referal linki, anbar portalı linki.
   `paf.az` yalnız yönləndiricidir — eyni yolu əsas sayta ötürür; səhifələr, sessiya və bankın geri qaytarması əsas saytdadır.
 - SMS ödəniş linkinin müddəti var: admin ayarı (Ayarlar → Sifariş və çatdırılma, standart 72 saat). Müddət link yarananda başlayır,

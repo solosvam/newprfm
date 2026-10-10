@@ -54,6 +54,54 @@ class BirbankPaymentSync
         return $payment;
     }
 
+    /**
+     * Sifarişin gözləyən ödənişlərini bankdan yoxlayır və müştərinin nə edə biləcəyini qaytarır:
+     *  - none     — gözləyən ödəniş yoxdur;
+     *  - paid     — ödəniş bankda tamamlanıb (sifariş artıq "ödənilib");
+     *  - released — əvvəlki cəhd bağlanıb (uğursuz / ləğv / vaxtı bitib), yeni ödənişə başlamaq olar;
+     *  - resume   — ödəniş bankda hələ açıqdır: müştəri EYNİ bank səhifəsinə qaytarılır (url), yeni ödəniş yaranmır;
+     *  - blocked  — nəticə bəlli deyil (bank cavab vermir və ya əməliyyat icradadır), gözləmək lazımdır.
+     *
+     * @return array{state: string, url?: string}
+     */
+    public function resumePending(Order $order, string $locale = 'az'): array
+    {
+        $pending = $order->payments()->where('provider', 'birbank')->where('status', Payment::PENDING)->orderBy('id')->get();
+
+        if ($pending->isEmpty()) {
+            return ['state' => 'none'];
+        }
+
+        $open = null;
+        $unknown = false;
+
+        foreach ($pending as $payment) {
+            try {
+                $result = $payment->provider_order_id ? $this->sync($payment, $locale) : $this->failUnstarted($payment);
+            } catch (\Throwable $exception) {
+                report($exception);
+                $unknown = true;
+                continue;
+            }
+
+            if ($result->status === Payment::PAID) {
+                return ['state' => 'paid'];
+            }
+            if ($result->status === Payment::PENDING) {
+                $open = $result;
+            }
+        }
+
+        if ($open === null) {
+            return ['state' => $unknown ? 'blocked' : 'released'];
+        }
+
+        // "Preparing" — bankda hələ heç bir əməliyyat aparılmayıb; yalnız bu halda eyni səhifəyə qayıtmaq təhlükəsizdir
+        $url = $open->response_text === 'Preparing' ? $this->birbank->resumeUrl($open) : null;
+
+        return $url ? ['state' => 'resume', 'url' => $url] : ['state' => 'blocked'];
+    }
+
     public function applyToOrder(Payment $payment, string $locale = 'az'): void
     {
         DB::transaction(function () use ($payment, $locale) {

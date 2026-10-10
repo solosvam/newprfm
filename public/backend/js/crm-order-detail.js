@@ -152,6 +152,16 @@ $(document).ready(function () {
             .always(() => btn.prop('disabled', false).text(label));
     });
 
+    // Gözləyən ödəniş: nəticəni bankdan indi yoxla (CrmController::checkPendingPayment) — sonra səhifə yenilənir
+    $(document).on('click', '[data-payment-check]', function () {
+        const btn = $(this);
+        const label = btn.text();
+        btn.prop('disabled', true).text('Yoxlanılır…');
+        $.post(btn.data('url'))
+            .done(res => { window.checkResponse(res); setTimeout(() => window.location.reload(), 1500); })
+            .fail(xhr => { window.checkError(xhr); btn.prop('disabled', false).text(label); });
+    });
+
     // Ödəniş linki: müddəti yenilə (CrmController::renewPayLink) — yeni vaxt görünsün deyə səhifə yenilənir
     $(document).on('click', '[data-pay-link-renew]', function () {
         const btn = $(this);

@@ -24,6 +24,9 @@
         $paymentFailed = $isOnlinePayment && in_array($order->payment_status, ['failed', 'cancelled'], true);
         // CRM-dən (operator) yaradılıb, müştəri hələ ödəməyə cəhd etməyib
         $paymentAwaiting = $order->isAwaitingPayment();
+        // Müştəri bank səhifəsini bağlayıb: yarımçıq cəhd var, "Ödənişə davam et" eyni bank səhifəsinə qaytarır
+        $paymentPending = $isOnlinePayment && $order->payment_status === 'pending' && !$paymentAwaiting
+            && !$order->isCancelled() && $order->hasPendingPayment();
         $paymentLabels = [
             'paid'      => __('orders_payment_paid'),
             'failed'    => __('orders_payment_failed_short'),
@@ -61,6 +64,17 @@
                             <button type="submit" class="btn btn-dark od-alert__btn">
                                 {{ $paymentAwaiting ? __('orders_payment_pay') . ' · ' . number_format((float) $order->total, 2) . ' ₼' : __('orders_payment_retry') }}
                             </button>
+                        </form>
+                    </div>
+                @elseif($paymentPending)
+                    <div class="od-alert od-alert--awaiting" role="alert">
+                        <div class="od-alert__text">
+                            <strong>{{ __('orders_payment_unfinished') }}</strong>
+                            <span>{{ __('orders_payment_unfinished_hint') }}</span>
+                        </div>
+                        <form method="POST" action="{{ route('payment.birbank.start', $order) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-dark od-alert__btn">{{ __('orders_payment_continue') }}</button>
                         </form>
                     </div>
                 @endif

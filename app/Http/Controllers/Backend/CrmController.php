@@ -296,8 +296,8 @@ class CrmController extends Controller
             'payments.operations', 'payments.items.refundItems.operation', 'itemCancellations.user', 'itemCancellations.orderItem.product',
         ]);
 
-        // Ödəniş linki yalnız ödənişə başlamaq mümkün olanda (onlayn üsul, ödənilməyib, ləğv deyil)
-        $payLinkUrl = $order->canStartOnlinePayment() ? app(OrderPayLinkService::class)->url($order) : null;
+        // Ödəniş linki: ödənişə başlamaq mümkündür və ya yarımçıq cəhd var (Order::payLinkAvailable)
+        $payLinkUrl = $order->payLinkAvailable() ? app(OrderPayLinkService::class)->url($order) : null;
 
         $requests = \App\Models\Procurement\WarehouseRequest::where('order_id', $order->id)
             ->with(['warehouse', 'items.offers', 'items.orderItem.product', 'items.orderItem.variant.size'])->latest('id')->get();
@@ -698,13 +698,32 @@ class CrmController extends Controller
         return response()->json(['success' => true, 'message' => 'Ödəniş linki müştəriyə SMS ilə göndərildi.']);
     }
 
+    /** Sifariş detalı → "Bankdan yoxla": gözləyən ödənişin nəticəsini cron-u gözləmədən bankdan soruşur */
+    public function checkPendingPayment(Customer $customer, Order $order, \App\Services\Payment\BirbankPaymentSync $sync): JsonResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+
+        $state = $sync->resumePending($order)['state'];
+
+        return response()->json([
+            'success' => true,
+            'message' => match ($state) {
+                'none' => 'Gözləyən ödəniş yoxdur.',
+                'paid' => 'Ödəniş bankda tamamlanıb — sifariş ödənilib.',
+                'released' => 'Əvvəlki cəhd bankda bağlanıb (uğursuz, ləğv və ya vaxtı bitib). Müştəri yenidən ödəyə bilər.',
+                'resume' => 'Ödəniş bankda hələ açıqdır: müştəri linkə keçib eyni ödənişə davam edə bilər.',
+                default => 'Bankdan nəticə alınmadı və ya əməliyyat icradadır. Bir az sonra yenidən yoxlayın.',
+            },
+        ]);
+    }
+
     /** Sifariş detalı → "Müddəti yenilə": SMS göndərmədən ödəniş linkinin müddətini yenidən sayır */
     public function renewPayLink(Customer $customer, Order $order, OrderPayLinkService $payLink): JsonResponse
     {
         abort_unless($order->customer_id === $customer->id, 404);
 
         $order->loadMissing('paymentMethod', 'status');
-        if (!$order->canStartOnlinePayment()) {
+        if (!$order->payLinkAvailable()) {
             return response()->json(['success' => false, 'message' => 'Bu sifariş üçün ödəniş linki aktiv deyil.'], 422);
         }
 
