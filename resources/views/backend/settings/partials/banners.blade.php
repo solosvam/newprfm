@@ -23,9 +23,13 @@
 
                 <div class="alert alert-info" role="note">
                     <strong class="d-block">Bu ölçülər saytda banner blokunun formasını da müəyyən edir.</strong>
-                    Böyük rəqəm banneri keyfiyyətli etmir: veb bannerlər saytda ən çox {{ \App\Models\Setting::bannerLimits('banner_web_top')['display_width'] }} px,
-                    mobil bannerlər {{ \App\Models\Setting::bannerLimits('banner_mobile_top')['display_width'] }} px enində göstərilir. Tövsiyə olunan ölçü bunun iki mislidir
-                    (kəskin ekranlar üçün) — ondan böyük dəyər qəbul olunmur. Dəyişməzdən əvvəl dizaynerlə razılaşdırın.
+                    Banner saytda həmişə eyni yerdə və eyni böyüklükdə görünür: veb bannerlər {{ \App\Models\Setting::bannerLimits('banner_web_top')['display_width'] }} px,
+                    mobil bannerlər {{ \App\Models\Setting::bannerLimits('banner_mobile_top')['display_width'] }} px enində. Buradakı rəqəm onu ekranda böyütmür — yalnız şəkil
+                    faylının neçə pikseldən ibarət olduğunu bildirir. Fayl göstərilən ölçünün iki misli hazırlanır
+                    ({{ \App\Models\Setting::bannerLimits('banner_web_top')['max_width'] }} və {{ \App\Models\Setting::bannerLimits('banner_mobile_top')['max_width'] }} px) ki, yeni telefon və
+                    noutbukların kəskin ekranında bulanıq görünməsin; banner yenə {{ \App\Models\Setting::bannerLimits('banner_web_top')['display_width'] }} px yer tutur.
+                    Bundan böyük fayl gözlə seçilən fərq vermir, yalnız səhifəni ağırlaşdırır — ona görə qəbul olunmur.
+                    Saytda bannerin formasını dəyişən isə enin hündürlüyə nisbətidir. Dəyişməzdən əvvəl dizaynerlə razılaşdırın.
                     <div class="mt-2">
                         <strong>Sayt açılanda ilk ekranda məhsullar görünməlidir.</strong> Böyük banner iki tərəfdən zərər verir:
                         <ul class="mb-0 mt-1 ps-3">
