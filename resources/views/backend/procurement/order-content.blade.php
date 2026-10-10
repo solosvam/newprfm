@@ -114,7 +114,7 @@
                                 @endif
                             </span>
 
-                            {{-- Seçimin qiymət müqayisəsi: yalnız anbar seçiləndə və müqayisə üçün ən azı iki təklif olanda --}}
+                            {{-- Seçimin qiymət müqayisəsi: yalnız anbar seçiləndə; müqayisə üçün ikinci təklif yoxdursa "Tək təklif" --}}
                             @if($cheaper)
                                 <span class="badge bg-danger">Daha ucuzu var</span>
                             @elseif($active->isNotEmpty() && $offered->count() > 1 && (float) $dearest <= (float) $cheapest)
@@ -123,6 +123,8 @@
                                 @else
                                     <span class="badge bg-outline-primary">Daha ucuzu yoxdur</span>
                                 @endif
+                            @elseif($active->isNotEmpty() && $offered->count() === 1)
+                                <span class="badge bg-outline-primary">Tək təklif</span>
                             @endif
                             @if($margin !== null && $margin < 0)
                                 <span class="badge bg-danger">Zərərlə: −{{ number_format(abs($margin), 2) }} AZN</span>
