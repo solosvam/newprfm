@@ -21,11 +21,17 @@
                     <span class="text-muted small">Yeni bannerlər bu ölçülərə kəsiləcək</span>
                 </div>
 
-                <div class="alert alert-warning" role="note">
+                <div class="alert alert-info" role="note">
                     <strong class="d-block">Bu ölçülər saytda banner blokunun formasını da müəyyən edir.</strong>
                     Böyük rəqəm banneri keyfiyyətli etmir: veb bannerlər saytda ən çox {{ \App\Models\Setting::bannerLimits('banner_web_top')['display_width'] }} px,
                     mobil bannerlər {{ \App\Models\Setting::bannerLimits('banner_mobile_top')['display_width'] }} px enində göstərilir. Tövsiyə olunan ölçü bunun iki mislidir
                     (kəskin ekranlar üçün) — ondan böyük dəyər qəbul olunmur. Dəyişməzdən əvvəl dizaynerlə razılaşdırın.
+                    <div class="mt-2">
+                        <strong>Sayt açılanda ilk ekranda məhsullar görünməlidir.</strong> Müştəri sürüşdürmədən məhsul görmürsə, mağazaya yox, reklama baxdığını
+                        düşünür və çıxır. Google da səhifəni ilk ekrana və onun yüklənmə sürətinə görə qiymətləndirir: banner ilk ekranın ən böyük şəklidir,
+                        o nə qədər böyük və ağırdırsa, səhifə o qədər gec açılır və axtarışda mövqeyə mənfi təsir edir. Sağdakı sxem banner böyüdükcə
+                        məhsulların ekrandan necə çıxdığını göstərir.
+                    </div>
                 </div>
 
                 <div class="table-responsive">
