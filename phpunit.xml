@@ -19,6 +19,8 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Testlər lokal .env-dəki qısa domendən (paf.az) asılı olmasın; lazım olan test özü config ilə təyin edir -->
+        <env name="SHORT_URL" value="" force="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
