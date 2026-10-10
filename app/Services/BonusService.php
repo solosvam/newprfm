@@ -119,7 +119,7 @@ class BonusService {
    $message = \App\Models\SmsTemplate::message('bonus_expiring', $values)
     ?? "Parfumshop: hesabinizdaki {$values['amount']} AZN bonusun muddeti {$values['date']} tarixinde bitir. Istifade etmeyi unutmayin!";
    try {
-    $sms->send($customer->mobile, $message);
+    \App\Models\SmsLog::deliver($sms, $customer->mobile, $message, 'bonus_expiring', $customer);
     $sent++;
    } catch (\Throwable $e) {
     report($e); // bir müştərinin SMS xətası digərlərini dayandırmasın

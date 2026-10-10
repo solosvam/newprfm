@@ -10,3 +10,6 @@ use Illuminate\Support\Facades\Schedule;
 
 // Müştəri bankdan sayta qayıtmayanda gözləyən Birbank ödənişlərinin nəticəsi (callback-in əvəzi)
 Schedule::command('payments:check-birbank')->everyMinute()->withoutOverlapping();
+
+// Göndərilmiş SMS-lərin çatdırılma statusu (lsim hesabatı) — SMS səhifəsindəki "çatmayanlar" üçün
+Schedule::command('sms:check-delivery')->everyFiveMinutes()->withoutOverlapping();

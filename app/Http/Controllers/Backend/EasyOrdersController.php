@@ -143,7 +143,7 @@ class EasyOrdersController extends Controller
             ]);
             if ($message !== null) {
                 try {
-                    app(SmsService::class)->send($data['mobile'], $message);
+                    \App\Models\SmsLog::deliver(app(SmsService::class), $data['mobile'], $message, $templateCode, $customer, auth('admin')->id());
                 } catch (\Throwable $e) {
                     Log::error('Asan sifariş qeydiyyat SMS-i göndərilmədi', [
                         'customer_id' => $customer->id, 'order_id' => $order->id,

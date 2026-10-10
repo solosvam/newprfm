@@ -76,7 +76,7 @@ class CustomerRegistration
                 if ($text === null || !str_contains($text, $password)) {
                     $text = "Hormetli {$customer->fullname}, Parfumshop hesabiniz yaradildi. Sifreniz: {$password}";
                 }
-                $this->sms->send($customer->mobile, $text);
+                \App\Models\SmsLog::deliver($this->sms, $customer->mobile, $text, 'crm_customer_created', $customer, auth('admin')->id(), [$password]);
                 $sms = true;
             } catch (\Throwable $e) {
                 report($e);

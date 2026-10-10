@@ -229,11 +229,11 @@ class CrmController extends Controller
             'password' => bcrypt($newPassword),
         ]);
 
-        $sms = new SmsService();
-
-        $sms->send(
+        \App\Models\SmsLog::deliver(
+            app(SmsService::class),
             $customer->mobile,
-            "Hörmətli {$customer->fullname}, yeni şifrəniz: {$newPassword}"
+            "Hörmətli {$customer->fullname}, yeni şifrəniz: {$newPassword}",
+            'crm_password_reset', $customer, auth('admin')->id(), [$newPassword]
         );
 
         return response()->json(['success' => true]);
@@ -718,7 +718,7 @@ class CrmController extends Controller
         }
 
         try {
-            app(\App\Services\SmsService::class)->send($mobile, $text);
+            \App\Models\SmsLog::deliver(app(\App\Services\SmsService::class), $mobile, $text, 'crm_order_cancelled', $order, auth('admin')->id());
 
             return true;
         } catch (\Throwable $e) {

@@ -14,17 +14,14 @@ Son yenilənmə: 10 oktyabr 2026.
   `ProcurementController::recordOffer` validasiyası (`in:phone,whatsapp,telegram,manual`),
   `backend/procurement/order-content` və `backend/crm/partials/order-item-history` görünüşləri.
   Köhnə "telegram" mənbəli cavablar silinmir, tarixçədə əvvəlki kimi görünür.
-- [ ] **Kuryer "Yola çıxdım" basanda müştəriyə SMS.** `CourierController::start` → `OrderStatusService::startDelivery`.
-  Mətn admin paneldəki SMS şablonlarından redaktə olunur (bazada `order_sent` şablonu var, amma heç yerdə göndərilmir).
-  Kuryer düyməni təkrar bassa, ikinci SMS getməməlidir.
-  Qeyd: 6 oktyabrda digər statuslar üçün də SMS (qəbul olundu, təhvil verildi, ləğv edildi) danışılıb, qərar verilməyib.
-- [ ] **Bütün SMS şablonlarının yoxlanması.** Admin paneldəki hər SMS şablonuna baxıb kodda harada istifadə olunduğunu
-  (hansı hadisədə göndərildiyini) və ümumiyyətlə qoşulub-qoşulmadığını müəyyən etmək. Bilinən nümunə: `order_sent`
-  bazada var, amma heç yerdə göndərilmir (yuxarıdakı bənd).
-- [ ] **SMS jurnalı və çatdırılma statusu.** Göndərilən hər SMS bazaya yazılır (kimə, mətn, şablon, nə vaxt, nəticə)
-  və lsim API ilə statusu mütəmadi yoxlanılır (çatdı / çatmadı / gözləyir).
-- [ ] **"SMS şablonları" səhifəsi "SMS ayarları"na çevrilir** (ad dəqiqləşəcək): şablonlarla yanaşı lsim API-dən SMS balansı göstərilir.
-- [ ] **SMS xətaları bir yerdə görünsün:** göndərilməyən, xəta verən, çatmayan mesajlar həmin səhifədə siyahı ilə.
+- [ ] **SMS — qalan qərarlar və yoxlamalar** (10 oktyabr: jurnal, çatdırılma statusu, balans, "Yola çıxdım" SMS-i və "SMS" səhifəsi hazırdır):
+  - `crm_order_accepted` və `website_order_accepted` şablonları bazada var, amma heç bir hadisəyə qoşulmayıb (səhifədə "Qoşulmayıb").
+    Qərar: "sifariş qəbul olundu" və "təhvil verildi" SMS-ləri göndərilsinmi, yoxsa şablonlar silinsin.
+  - Şablonsuz, kodda yazılmış mətnlər: təsdiq kodu (OTP) və CRM "yeni şifrə" SMS-i. Sonuncuda ə/ş hərfləri var — 1 SMS 70 simvol sayılır;
+    şablona keçirilsinmi.
+  - Proddə yoxlamaq: lsim "report" cavabının formatı sənəddə yazılmayıb (`SmsService::deliveryStatus` `obj`-u status kodu kimi oxuyur) —
+    ilk real SMS-lərdən sonra jurnalda "Çatdırılma" sütununun dolduğuna baxmaq; dolmursa `php artisan sms:check-delivery` çıxışına görə düzəltmək.
+  - `bonus:remind-expiring` cədvəli `routes/console.php`-də söndürülüb — `bonus_expiring` SMS-i hazırda getmir.
 - [ ] **CRM sifariş səhifəsi — "Proses" tabının davamı** (10 oktyabr yenidən quruldu: nazik zolaq, "növbəti addım", qruplar, yığılan kartlar):
   proddə real sifarişlərlə (10 məhsul × 10 anbar) baxıb düzəltmək; "Təxmini qazanc" yalnız seçilmiş məhsulların alışını çıxır —
   alışı bilinməyən məhsullar varsa rəqəm şişir, düzəldilməlidir; düymə adlarını birləşdirmək ("Yenilə" nəyi yeniləyir).
@@ -69,6 +66,7 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] `.env`-də `ONESIGNAL_REST_API_KEY` (olmasa push getmir).
 - [ ] `.env`-də `SHORT_URL=https://paf.az` (sonra `php artisan config:cache`). Olmasa ödəniş, referal və anbar linkləri əsas domenlə gedir.
 - [ ] Migrasiyaları işə salmaq.
+- [ ] Cron `sms:check-delivery`-ni də işlədir (5 dəqiqədən bir): göndərilən SMS-lərin çatdırılma statusu.
 - [ ] **Test rejimində yoxlamaq:** Birbank ödəniş səhifəsini bağlayıb "Ödənişə davam et" ilə eyni səhifənin açıldığını (bank eyni sifarişi təkrar açmağa icazə verirmi)
   və ödənilməyən sifarişin bankda nə vaxt `Expired` olduğunu (rəsmi sənəddə — pg.kapitalbank.az/docs — müddət yazılmayıb;
   status adları oradan təsdiqlənib: Preparing, Cancelled, Rejected, Refused, Expired, Authorized, PartPaid, FullyPaid, Funded, Declined, Voided, Refunded, Closed).
@@ -153,3 +151,5 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Məhsulun qazancı xalis satışdan hesablanır: vahid qiymət − məhsula düşən promokod payı (endirim məhsullara proporsional
   bölünür — ödəniş sətirləri və məhsul ləğvi ilə eyni paylama, `PaymentItemsBuilder::itemShares`). Məhsul ləğv ediləndə
   promokod yenidən hesablanmır. Alış satışdan baha olan anbarı seçmək qadağan deyil, amma operatordan təsdiq soruşulur.
+- Göndərilən hər SMS `sms_logs` jurnalına yazılır (`SmsLog::deliver`); təsdiq kodu və şifrə jurnalda `***` ilə gizlədilir.
+  Çatdırılma statusu lsim hesabatından 5 dəqiqədən bir yoxlanır, ən çox 2 gün. "Yola çıxdım" SMS-i sifarişə bir dəfə gedir.

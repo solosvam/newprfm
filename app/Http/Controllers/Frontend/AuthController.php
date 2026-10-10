@@ -308,7 +308,7 @@ class AuthController extends Controller
         Cache::put($this->otpKey($mobile), ['code' => Hash::make($code), 'attempts' => 0, 'expires' => $expires->timestamp], $expires);
         Cache::put($throttleKey, true, now()->addSeconds(60));
 
-        $sms->send($mobile, 'ParfumShop.az tesdiq kodunuz: '.$code);
+        \App\Models\SmsLog::deliver($sms, $mobile, 'ParfumShop.az tesdiq kodunuz: '.$code, 'otp', null, null, [$code]);
     }
 
     private function normalizeMobile(?string $mobile): string

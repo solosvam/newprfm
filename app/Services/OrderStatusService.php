@@ -185,13 +185,45 @@ class OrderStatusService
 
     public function startDelivery(Order $order, int $actor): void
     {
-        DB::transaction(function () use ($order, $actor) {
+        $started = DB::transaction(function () use ($order, $actor) {
             $locked = $this->courierOrder($order, $actor);
-            if ($locked->status?->code === 'sent') return; // təkrar klik
+            if ($locked->status?->code === 'sent') return null; // təkrar klik
             $this->ensure($locked->status?->code === 'courier_assigned', 'Bu mərhələdə çatdırılmaya başlamaq olmaz.');
             $this->ensure(($block = $this->deliveryBlock($locked)) === null, (string) $block);
-            $this->set($locked, 'sent', $actor);
+
+            return $this->set($locked, 'sent', $actor) ? $locked : null;
         });
+        if ($started) {
+            $this->notifySent($started, $actor);
+        }
+    }
+
+    /**
+     * Kuryer yola çıxanda müştəriyə SMS ("order_sent" şablonu; söndürülübsə getmir). Sifarişə yalnız bir dəfə:
+     * sifariş yenidən "yola çıxdı" olsa (problemdən sonra), ikinci SMS getmir. SMS xətası kuryerin əməliyyatını pozmur.
+     */
+    private function notifySent(Order $order, int $actor): void
+    {
+        try {
+            $customer = $order->customer;
+            $mobile = $customer?->mobile;
+            if (!$mobile || \App\Models\SmsLog::where('context', 'order_sent')->where('subject_type', $order->getMorphClass())
+                ->where('subject_id', $order->id)->where('status', \App\Models\SmsLog::SENT)->exists()) {
+                return;
+            }
+            $text = \App\Models\SmsTemplate::message('order_sent', [
+                'fullname' => $customer->fullname, 'order_no' => $order->order_no,
+                'total' => number_format((float) $order->total, 2, '.', ''),
+                'total_bonus' => number_format((float) $customer->bonus_balance, 2, '.', ''),
+            ]);
+            if ($text !== null) {
+                \App\Models\SmsLog::deliver(app(SmsService::class), $mobile, $text, 'order_sent', $order, $actor);
+            }
+        } catch (\Throwable $e) {
+            if (!app()->runningUnitTests()) {
+                report($e);
+            }
+        }
     }
 
     public function arrive(Order $order, int $actor): void

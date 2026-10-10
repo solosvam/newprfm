@@ -88,7 +88,7 @@ return [
                     ['title' => 'Şərtlər və qaydalar', 'route' => 'admin.credit.terms', 'permission' => 'credit.menu'],
                 ],
             ],
-            ['title' => 'SMS şablonları', 'route' => 'admin.sms-template.index', 'permission' => 'system.sms'],
+            ['title' => 'SMS', 'route' => 'admin.sms-template.index', 'permission' => 'system.sms'],
             [
                 'title'    => 'İstifadəçilər',
                 'id'       => 'usersMenu',

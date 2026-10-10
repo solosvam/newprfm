@@ -25,7 +25,7 @@ class RegistrationOtpService
         $code = (string) random_int(100000, 999999);
 
         try {
-            $sms->send($customer->mobile, 'ParfumShop.az tesdiq kodunuz: '.$code);
+            \App\Models\SmsLog::deliver($sms, $customer->mobile, 'ParfumShop.az tesdiq kodunuz: '.$code, 'otp', $customer, null, [$code]);
         } catch (Throwable $e) {
             Cache::forget($key);
             report($e);

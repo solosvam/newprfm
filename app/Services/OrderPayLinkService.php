@@ -95,7 +95,7 @@ class OrderPayLinkService
             ?? "Parfumshop: {$values['order_no']} sifarisiniz ucun odenis linki: {$values['link']}";
 
         try {
-            $this->sms->send($mobile, $message);
+            \App\Models\SmsLog::deliver($this->sms, $mobile, $message, 'order_payment_link', $order, auth('admin')->id());
         } catch (\Throwable $e) {
             Cache::forget($key);
             throw $e;

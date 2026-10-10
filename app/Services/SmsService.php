@@ -15,9 +15,11 @@ class SmsService
         -103 => 'Göndərən adı yanlışdır',
         -104 => 'SMS balansı bitib',
         -105 => 'Nömrə qara siyahıdadır',
+        -106 => 'Yanlış tranzaksiya nömrəsi',
         -107 => 'IP ünvanına icazə yoxdur',
         -108 => 'Yanlış hash',
         -109 => 'Host yoxdur',
+        -110 => 'Hesabat sorğularının dəqiqəlik limiti dolub',
         -500 => 'SMS provayderində daxili xəta',
     ];
 
@@ -63,6 +65,72 @@ class SmsService
         }
 
         return is_array($data) && isset($data['obj']) ? (string) $data['obj'] : null;
+    }
+
+    /**
+     * Hesabdakı SMS balansı (lsim "balance"; açar = md5(md5(parol) + login)).
+     *
+     * @throws RuntimeException
+     */
+    public function balance(): float
+    {
+        [$login, $password] = $this->credentials();
+        $data = $this->call(Http::timeout(10)->get($this->endpoint('balance'), ['login' => $login, 'key' => md5(md5($password).$login)]), 'SMS balansı alınmadı');
+
+        return (float) ($data['obj'] ?? 0);
+    }
+
+    /**
+     * Göndərilmiş SMS-in çatdırılma statusu (SmsLog::DELIVERY kodu) — lsim "report", tranzaksiya nömrəsinə görə.
+     * Limit: dəqiqədə 150 sorğu (aşılanda -110).
+     *
+     * @throws RuntimeException
+     */
+    public function deliveryStatus(string $transactionId): ?int
+    {
+        [$login] = $this->credentials();
+        $data = $this->call(Http::timeout(10)->get($this->endpoint('report'), ['login' => $login, 'trans_id' => $transactionId]), 'SMS hesabatı alınmadı');
+        $status = $data['obj'] ?? null;
+        if (is_array($status)) {
+            $status = $status['status'] ?? null;
+        }
+
+        return is_numeric($status) ? (int) $status : null;
+    }
+
+    /** @return array{0: string, 1: string} */
+    private function credentials(): array
+    {
+        $login = (string) config('services.parfumshop_sms.login');
+        $password = (string) config('services.parfumshop_sms.password');
+        if (!$login || !$password) {
+            throw new RuntimeException('SMS service konfiqurasiyası tamamlanmayıb.');
+        }
+
+        return [$login, $password];
+    }
+
+    /** Göndəriş ünvanının yanındakı digər lsim ünvanları (…/quicksms/v1/balance, …/report) */
+    private function endpoint(string $name): string
+    {
+        return preg_replace('~/[^/]+$~', '/'.$name, (string) config('services.parfumshop_sms.url'));
+    }
+
+    private function call(\Illuminate\Http\Client\Response $response, string $what): array
+    {
+        if (!$response->successful()) {
+            throw new RuntimeException($what.' (HTTP '.$response->status().').');
+        }
+        $data = $response->json();
+        if (!is_array($data)) {
+            throw new RuntimeException($what.': cavab düzgün formatda deyil.');
+        }
+        $code = (int) ($data['errorCode'] ?? 0);
+        if ($code < 0) {
+            throw new RuntimeException($what.': '.(self::ERRORS[$code] ?? ($data['errorMessage'] ?? 'xəta '.$code)).'.', $code);
+        }
+
+        return $data;
     }
 
     /** GSM 03.38 əsas əlifbası ilə yazılıbmı (unicode lazım deyil) */
