@@ -11,6 +11,8 @@
 
 @section('css')
     <link rel="stylesheet" href="{{ asset('backend/css/vendor/datatables.min.css') }}"/>
+    <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2.min.css') }}"/>
+    <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2-bootstrap4.min.css') }}"/>
 @endsection
 
 @section('js_page')
@@ -52,6 +54,21 @@
                 </a>
             </li>
         </ul>
+
+        {{-- Filtrlər: seçim dəyişən kimi siyahı yenidən yüklənir (datatable.products.ajax.js); axtarışlı select2 --}}
+        <div class="row g-2 mb-3" data-product-filters>
+            @foreach($filters as $key => [$label, $options])
+                <div class="col-6 col-md-3 col-xl-2">
+                    <select class="form-select" data-product-filter="{{ $key }}" data-placeholder="{{ $label }}" aria-label="{{ $label }}">
+                        <option value=""></option>
+                        @foreach($options as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach
+                    </select>
+                </div>
+            @endforeach
+            <div class="col-auto d-flex align-items-center">
+                <button type="button" class="btn btn-sm btn-link px-1 d-none" data-product-filters-clear>Filtrləri təmizlə</button>
+            </div>
+        </div>
 
         <div class="data-table-rows slim">
             <div class="row">

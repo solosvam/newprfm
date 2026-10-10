@@ -51,6 +51,8 @@ Son yenilənmə: 10 oktyabr 2026.
   - məhsul şəklinin üstündə, yuxarı sağ və ya sol küncdə yumru nişan ("Tester") — məhsul kartında və məhsul səhifəsində;
   - adına "Tester" avtomatik əlavə olunur (operator əl ilə yazmır). Qərar verilməlidir: tester ayrıca işarə (sahə) kimi saxlansın,
     yoxsa kateqoriyadan götürülsün; köhnə adlardakı "Tester" / "TESTER" / "L EDP Tester" yazılışları necə təmizlənsin.
+- [ ] **Saytda filtrdə qiymət əl ilə də yazıla bilsin.** Qiymət aralığı indi yalnız sürgü (slider) ilə seçilir;
+  sürgü ilə yanaşı "min" və "max" rəqəm xanaları olsun, ikisi bir-biri ilə sinxron işləsin.
 - [ ] **Email abunəliyi (yeniliklərdən xəbərdar olmaq):**
   - qonaqlar saytda email yazıb abunə olur;
   - yazılan email köhnə (mövcud) müştəriyə aiddirsə, həmin müştəri avtomatik abunə sayılır;

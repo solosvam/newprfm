@@ -33,6 +33,13 @@ class ProductsController extends Controller
                 'active' => Product::where('active', 1)->count(),
                 'inactive' => Product::where('active', '!=', 1)->count(),
             ],
+            // Filtrlər: yalnız məhsulu olan brend / ölçülər (boş nəticə verən seçim olmasın)
+            'filters' => [
+                'brand' => ['Brend', Brand::whereIn('id', Product::select('brand_id'))->orderBy('name')->pluck('name', 'id')->map(fn ($name) => html_entity_decode($name))],
+                'category' => ['Kateqoriya', Category::orderBy('id')->pluck('name_az', 'id')],
+                'type' => ['Tip', Type::orderBy('name_az')->pluck('name_az', 'id')],
+                'size' => ['Ölçü', Size::whereIn('id', DB::table('product_variants')->select('size_id'))->pluck('name_az', 'id')->sort(SORT_NATURAL)],
+            ],
         ]);
     }
 
@@ -449,6 +456,11 @@ class ProductsController extends Controller
             'categories',
         ])
             ->where('active', $this->listStatus($request) === 'inactive' ? '!=' : '=', 1)
+            // Siyahının üstündəki filtrlər (brend, kateqoriya, tip, ölçü) — hamısı birlikdə tətbiq olunur
+            ->when($request->filled('brand'), fn ($q) => $q->where('brand_id', (int) $request->query('brand')))
+            ->when($request->filled('type'), fn ($q) => $q->where('type_id', (int) $request->query('type')))
+            ->when($request->filled('category'), fn ($q) => $q->whereHas('categories', fn ($c) => $c->where('categories.id', (int) $request->query('category'))))
+            ->when($request->filled('size'), fn ($q) => $q->whereHas('variants', fn ($v) => $v->where('size_id', (int) $request->query('size'))))
             ->withCount('ingredients')
             ->orderByDesc('id')
             ->get();

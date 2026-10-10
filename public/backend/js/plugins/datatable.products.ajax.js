@@ -193,6 +193,24 @@ class ProductsAjax {
 
             window.location.href = this.href;
         });
+
+        // Filtrlər (brend, kateqoriya, tip, ölçü): seçim dəyişən kimi siyahı serverdən həmin şərtlərlə yenidən yüklənir
+        const filters = jQuery('[data-product-filter]');
+        const clear = jQuery('[data-product-filters-clear]');
+        const baseUrl = table.data('url');
+        const reload = () => {
+            const params = filters.toArray().filter(el => el.value !== '').map(el => encodeURIComponent(el.dataset.productFilter) + '=' + encodeURIComponent(el.value));
+            clear.toggleClass('d-none', params.length === 0);
+            this._datatable.ajax.url(baseUrl + (params.length ? (baseUrl.includes('?') ? '&' : '?') + params.join('&') : '')).load();
+        };
+        filters.each(function () {
+            jQuery(this).select2({width: '100%', allowClear: true, placeholder: this.dataset.placeholder});
+        });
+        filters.on('change', reload);
+        clear.on('click', () => {
+            filters.val('').trigger('change.select2'); // hər select üçün ayrıca yükləmə olmasın
+            reload();
+        });
     }
 
     _extend() {
