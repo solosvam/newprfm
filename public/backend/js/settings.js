@@ -63,13 +63,17 @@ document.addEventListener('DOMContentLoaded', () => {
         bannerScreen(key, w, h);
     });
 
-    // Bannerlər: yuxarı bannerin saytın ilk ekranında tutduğu yer (sxemin başlığında); yarıya yaxınlaşanda çərçivə qırmızı olur
+    // Bannerlər: ilk ekranda (brauzerin öz zolaqlarından sonra qalan yerdə) birinci sıra məhsul kartının nə qədəri görünür.
+    // Banner böyüdükcə kartlar aşağı düşür; kartın görünən hissəsi həddən azalanda çərçivə qırmızı olur.
     const bannerScreen = (key, w, h) => {
         const info = form.querySelector('[data-banner-screen="' + key + '"]');
         if (!info) return;
-        const share = Math.round(Number(info.dataset.screenWidth) * h / w / Number(info.dataset.screenHeight) * 100);
-        const over = share > Number(info.dataset.screenLimit);
-        info.textContent = 'ilk ekranda bannerin payı: ' + share + '%' + (over ? ' — çoxdur' : '');
+        const d = info.dataset;
+        const banner = Number(d.screenWidth) * h / w;
+        const left = Number(d.screenViewport) - Number(d.screenAbove) - banner;
+        const visible = Math.max(0, Math.min(100, Math.round(left / Number(d.screenCard) * 100)));
+        const over = visible < Number(d.screenLimit);
+        info.textContent = 'banner ' + Math.round(banner) + ' px · ilk ekranda məhsul kartının ' + visible + '%-i görünür';
         info.classList.toggle('text-danger', over);
         info.classList.toggle('text-muted', !over);
         form.querySelector('[data-banner-device="' + key + '"]')?.classList.toggle('is-over', over);

@@ -9,36 +9,60 @@
 #settingsForm .form-switch .form-check-input { width: 2.25em; height: 1.2em; cursor: pointer; }
 .settings-og-preview { width: 160px; aspect-ratio: 1200 / 630; object-fit: cover; }
 .settings-terms { font-size: 13px; line-height: 1.55; resize: vertical; }
-/* Bannerlər: saytın sxemi kompüter və telefon ekranında. Bütün ölçülər ekranın eninə nisbətlədir (cqw) —
-   çərçivə neçə piksel olursa olsun, nisbətlər real saytla eynidir (kompüter 1440×900 / məzmun 1060; telefon 390×844 / məzmun 350). */
-.bn-device { border: 5px solid var(--alternate); border-radius: 10px; background: var(--foreground); overflow: hidden; }
+/* Bannerlər: saytın sxemi kompüter və telefon ekranında. Bütün ölçülər çərçivənin eninə nisbətlədir (cqw) və real ekrandan
+   götürülüb: kompüter 1440×900 (1cqw = 14.4 px), telefon 390×844 (1cqw = 3.9 px) — rəqəmlərin mənbəyi banners.blade.php-də. */
+.bn-device { display: flex; flex-direction: column; border: 5px solid var(--alternate); border-radius: 10px; background: var(--foreground); overflow: hidden; container-type: inline-size; }
 .bn-device--desktop { aspect-ratio: 1440 / 900; }
 .bn-device--phone { width: 38%; aspect-ratio: 390 / 844; border-radius: 18px; }
 .bn-device.is-over { border-color: var(--danger); }
-.bn-screen { height: 100%; overflow-y: auto; container-type: inline-size; scrollbar-width: thin; }
-.bn-page { display: flex; flex-direction: column; gap: 1.2cqw; padding: 1.2cqw 13.2cqw; }
-.bn-device--phone .bn-page { gap: 3cqw; padding: 3cqw 5.1cqw; }
-.bn-page i { display: block; border-radius: .8cqw; background: var(--separator); }
-.bn-bar { aspect-ratio: 1060 / 56; border-radius: 3cqw; background: var(--separator); }
-.bn-bar.is-footer { aspect-ratio: 1060 / 160; border-radius: .8cqw; }
-.bn-device--phone .bn-bar { aspect-ratio: 350 / 44; border-radius: 6cqw; }
-.bn-device--phone .bn-bar.is-footer { aspect-ratio: 350 / 160; border-radius: 2cqw; }
-.bn-nav { display: flex; gap: 2cqw; }
-.bn-nav i { width: 7cqw; height: 1.2cqw; }
+.bn-device i { display: block; border-radius: .6cqw; background: var(--separator); }
+/* Brauzerin özü (tablar + ünvan sətri): sayta aid deyil, amma ekranda yer tutur */
+.bn-chrome { flex: 0 0 auto; height: 7.64cqw; padding: .7cqw 1.4cqw; background: var(--separator); display: flex; flex-direction: column; justify-content: space-between; }
+.bn-tabs { display: flex; gap: .6cqw; }
+.bn-tabs i { width: 11cqw; height: 2cqw; background: var(--foreground); opacity: .6; }
+.bn-url { height: 2.6cqw; border-radius: 2cqw; background: var(--foreground); }
+.bn-device--phone .bn-chrome { height: 12cqw; padding: 0; }
+.bn-device--phone .bn-chrome.is-bottom { height: 21.8cqw; padding: 3cqw 5cqw; justify-content: flex-start; }
+.bn-device--phone .bn-url { height: 10cqw; border-radius: 3cqw; }
+.bn-screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+.bn-page { padding: 0 13.2cqw 2cqw; }
+.bn-head { height: 4.86cqw; display: flex; align-items: center; }
+.bn-head i { flex: 1; height: 2.8cqw; border-radius: 2cqw; }
+.bn-nav { height: 3.13cqw; display: flex; align-items: center; gap: 2cqw; margin: 0 -13.2cqw .76cqw; padding: 0 13.2cqw; border-bottom: 1px solid var(--separator); }
+.bn-nav i { width: 6cqw; height: 1cqw; }
 .bn-banner {
     display: flex; align-items: center; justify-content: center; text-align: center;
-    border-radius: 1.2cqw; border: 1px dashed var(--primary); background: rgba(var(--primary-rgb), .14);
+    border-radius: 1.1cqw; border: 1px dashed var(--primary); background: rgba(var(--primary-rgb), .14);
     color: var(--primary); font-size: max(9px, 1.6cqw); line-height: 1.2; overflow: hidden;
 }
-.bn-device--phone .bn-banner { border-radius: 4cqw; font-size: max(8px, 5cqw); }
 .bn-device.is-over .bn-banner.is-top { border-color: var(--danger); background: rgba(var(--danger-rgb), .12); color: var(--danger); }
-.bn-brands { display: grid; grid-template-columns: repeat(8, 1fr); gap: 1cqw; }
-.bn-brands i { aspect-ratio: 130 / 62; }
-.bn-device--phone .bn-brands { grid-template-columns: repeat(3, 1fr); gap: 2.5cqw; }
-.bn-body { display: grid; grid-template-columns: 21cqw 1fr; gap: 2.5cqw; align-items: start; }
+.bn-brands { display: grid; grid-template-columns: repeat(8, 1fr); gap: 1.2cqw; margin: 1.04cqw 0 1.74cqw; }
+.bn-brands i { height: 4.38cqw; }
+.bn-body { display: grid; grid-template-columns: 15.28cqw 1fr; gap: 2cqw; align-items: start; }
 .bn-side { display: flex; flex-direction: column; gap: 1.2cqw; }
-.bn-side i { aspect-ratio: 300 / 60; }
-.bn-side i.is-tall { aspect-ratio: 300 / 260; }
-.bn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; }
-.bn-grid i { aspect-ratio: 3 / 4; }
-.bn-device--phone .bn-grid { grid-template-columns: repeat(2, 1fr); gap: 3cqw; }
+.bn-side i { height: 3.5cqw; }
+.bn-side i.is-tall { height: 20cqw; }
+.bn-result { height: 2.57cqw; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1cqw; }
+.bn-result i { width: 7cqw; height: 1cqw; }
+.bn-result i:last-child { width: 14cqw; height: 2.57cqw; }
+.bn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.32cqw; }
+.bn-grid i { aspect-ratio: 257 / 420; }
+.bn-bar.is-footer { height: 12cqw; margin-top: 2cqw; border-radius: .6cqw; background: var(--separator); }
+.bn-page > .bn-banner:not(.is-top) { margin-top: 2cqw; }
+/* Telefon: başlıq 60, kateqoriya zolağı 44, brendlər 60, "nəticə" 40 px; kart 165×300 */
+.bn-device--phone i { border-radius: 2cqw; }
+.bn-device--phone .bn-page { padding: 0 5.1cqw 5cqw; }
+.bn-device--phone .bn-head { height: 15.4cqw; }
+.bn-device--phone .bn-head i { height: 10cqw; border-radius: 6cqw; }
+.bn-device--phone .bn-nav { height: 11.3cqw; gap: 4cqw; margin: 0 -5.1cqw 2.6cqw; padding: 0 5.1cqw; }
+.bn-device--phone .bn-nav i { width: 20cqw; height: 3cqw; }
+.bn-device--phone .bn-banner { border-radius: 4cqw; font-size: max(8px, 5cqw); }
+.bn-device--phone .bn-brands { grid-template-columns: repeat(3, 1fr); gap: 2.5cqw; margin: 3.1cqw 0 4.1cqw; }
+.bn-device--phone .bn-brands i { height: 15.4cqw; }
+.bn-device--phone .bn-result { height: 10.3cqw; margin-bottom: 3.1cqw; }
+.bn-device--phone .bn-result i { width: 22cqw; height: 3cqw; }
+.bn-device--phone .bn-result i:last-child { width: 34cqw; height: 9cqw; }
+.bn-device--phone .bn-grid { grid-template-columns: repeat(2, 1fr); gap: 5.1cqw; }
+.bn-device--phone .bn-grid i { aspect-ratio: 165 / 300; }
+.bn-device--phone .bn-bar.is-footer { height: 40cqw; margin-top: 5cqw; }
+.bn-device--phone .bn-page > .bn-banner:not(.is-top) { margin-top: 5cqw; }
