@@ -2,6 +2,7 @@
 
 namespace App\Services\Referral;
 
+use App\Support\ShortUrl;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerReferral;
 use App\Models\Order\Order;
@@ -50,7 +51,8 @@ class ReferralService
 
     public function linkFor(Customer $customer): string
     {
-        return route('referral.track', $this->codeFor($customer));
+        // Müştərinin paylaşdığı link qısa domenlədir (paf.az) — App\Support\ShortUrl
+        return ShortUrl::route('referral.track', $this->codeFor($customer));
     }
 
     public function normalize(?string $code): ?string

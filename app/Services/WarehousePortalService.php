@@ -29,7 +29,8 @@ class WarehousePortalService
             'created_by' => $actor, 'expires_at' => now()->addDays(7),
         ]);
 
-        return route('warehouse.portal', ['token' => $token]);
+        // Anbara SMS ilə gedən link qısa domenlədir (paf.az) — App\Support\ShortUrl
+        return \App\Support\ShortUrl::route('warehouse.portal', ['token' => $token]);
     }
 
     public function resolve(string $token): WarehouseAccessLink

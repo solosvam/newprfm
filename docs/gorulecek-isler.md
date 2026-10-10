@@ -34,10 +34,6 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **Web push (OneSignal): abunəçilərin niyə görünmədiyini yoxlamaq** (App ID və domen).
 - [ ] **Push üçün teqlər, `push_subscriptions` cədvəli, admin statistikası, "test push" düyməsi.** Heç biri yoxdur.
 - [ ] **Tərk edilmiş səbət və endirimlər üçün push.** Hazırda push yalnız "Qiymət enəndə xəbər ver" üçün gedir.
-- [ ] **Referal linki `paf.az` üzərindən olmalıdır.** Müştərinin kabinetdə (`/profile/referral`) kopyalayıb paylaşdığı dəvət linki
-  hazırda saytın öz domenindədir (`/r/{code}`, `ReferralService::linkFor`). Link `paf.az/...` formasında olmalı,
-  açılanda indiki `referral.track` məntiqi ilə işləməlidir (kod cookie-yə yazılır, qeydiyyata yönləndirilir).
-  Influencer proqramındakı `paf.az` qısa link sistemi ilə ortaq qurulmalıdır (bölmə 6).
 - [ ] **Müştərinin son aktivliyi və passiv müştərilər.** Müştərilər `remember_token` ilə daxil qalır, logout olmurlar,
   ona görə yalnız login anını saxlamaq kifayət deyil. `customers` cədvəlinə son aktivlik vaxtı (`last_seen_at`) əlavə olunur:
   login olmuş müştərinin sayta hər girişində yenilənir, amma gündə ən çox bir dəfə (son yazılandan 1 gündən çox keçibsə).
@@ -56,6 +52,7 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] Serverdə `schedule:run` cron və queue worker (`QUEUE_CONNECTION=database`; `NotifyPriceDrop` və növbəli email-lər üçün).
   Cron olmasa `payments:check-birbank` da işləmir — bankdan qayıtmayan müştərinin ödənişi yenə "gözləyir" qalar.
 - [ ] `.env`-də `ONESIGNAL_REST_API_KEY` (olmasa push getmir).
+- [ ] `.env`-də `SHORT_URL=https://paf.az` (sonra `php artisan config:cache`). Olmasa ödəniş, referal və anbar linkləri əsas domenlə gedir.
 - [ ] Migrasiyaları işə salmaq.
 - [ ] `php artisan brands:optimize-logos` — serverdəki brend loqolarını kiçiltmək (lokalda edilib).
 - [ ] `php artisan seo:robots` (robots.txt-ə sitemap sətri) və sitemap-i Google Search Console-a göndərmək.
@@ -74,6 +71,7 @@ Meta tərəfi hazırdır, Instagram girişi testdən keçib. Laravel-də hələ 
 - [ ] Portal: landing, müraciət forması, panel, linklər, endirim kodları, admin hissəsi.
 - [ ] Brend faizləri, influencerə xüsusi əlavə faiz, komissiyalar.
 - [ ] `paf.az` qısa link sistemi və cookie ilə izləmə. Cookie müddəti admin ayarı olacaq (referal ayarları tabında).
+  Domen artıq yönləndirici kimi işləyir (`App\Support\ShortUrl`, `RedirectShortDomain`): influencer linkləri eyni domenə əlavə olunacaq.
 - [ ] Live-a keçid: tətbiqi düzgün Business portfolio-ya köçürmək, Business Verification, App Review.
 
 ## 7. Git
@@ -100,6 +98,8 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Müştəri ehtiyat nömrəsini (`mobile_2`) saytda görmür və dəyişmir.
 - Öz kreditimizlə (hissə-hissə) alışda məhsul endirimi tətbiq olunmur. Birbank taksitində tətbiq olunur. Birbank taksiti "hissə-hissə" sayılmır.
 - Promo kod endirimli məhsullara tətbiq olunmur.
+- Müştəriyə və anbara göndərilən linklər qısa domenlədir (`paf.az`): SMS ödəniş linki, referal linki, anbar portalı linki.
+  `paf.az` yalnız yönləndiricidir — eyni yolu əsas sayta ötürür; səhifələr, sessiya və bankın geri qaytarması əsas saytdadır.
 - SMS ödəniş linkinin müddəti var: admin ayarı (Ayarlar → Sifariş və çatdırılma, standart 72 saat). Müddət link yarananda başlayır,
   SMS göndəriləndə və ya CRM-də "Müddəti yenilə" basılanda yenidən sayılır. Vaxtı bitmiş link sifarişin məlumatını göstərmir.
 - Gözləyən Birbank ödənişi öz vaxt həddimizlə ləğv edilmir: `payments:check-birbank` hər 5 dəqiqədən bir bankdan soruşur,

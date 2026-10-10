@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\ShortUrl;
 use App\Models\Order\Order;
 use App\Models\Setting;
 use App\Models\SmsTemplate;
@@ -61,7 +62,8 @@ class OrderPayLinkService
 
     public function url(Order $order): string
     {
-        return route('pay.link', $this->ensureToken($order));
+        // Müştəriyə gedən link qısa domenlədir (paf.az) — App\Support\ShortUrl
+        return ShortUrl::route('pay.link', $this->ensureToken($order));
     }
 
     /**

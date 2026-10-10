@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Qısa linklərin domeni (məs. https://paf.az) — App\Support\ShortUrl. Boşdursa linklər APP_URL ilə yaranır.
+    'short_url' => env('SHORT_URL'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
