@@ -20,8 +20,6 @@
 @endphp
 <div class="proc-alloc proc-alloc--{{ $status }}">
     <div class="proc-alloc__main">
-        <span>Anbar: <strong>{{ $allocation->warehouse->name_az }}</strong>@if($allocation->warehouse->phone) — <a href="tel:{{ $allocation->warehouse->phone }}">{{ $allocation->warehouse->phone }}</a>@endif</span>
-        {{-- Qiymət kartın başlığındakı xülasədədir; ləğv olunmuş seçimdə burada qalır (xülasədə yoxdur) --}}
         @if($isCancelled)<span>{{ $allocation->quantity }} ədəd × {{ number_format((float) $allocation->unit_cost, 2) }} AZN</span>@endif
     </div>
     @unless($isCancelled)
