@@ -160,6 +160,8 @@ class PriceListImportTest extends TestCase
         // Namizədlər: iki eyni "Chrome" — operator birini seçir
         $candidates = $this->actingAs($admin, 'admin')->getJson(route('admin.price-lists.items.candidates', $chrome))->assertOk()->json('items');
         $this->assertEqualsCanonicalizing([52, 62], array_column(array_filter($candidates, fn ($c) => $c['exact']), 'id'));
+        // Siyahıda pəncərəni açmadan görünür: iki eyni namizəd var; bizdə olmayan "Eros Flame"ın oxşarı yoxdur
+        $this->get(route('admin.price-lists.show', $list))->assertOk()->assertSee('2 eyni ad və ölçü')->assertSee('oxşarı yoxdur');
         $this->postJson(route('admin.price-lists.items.match', $chrome), ['variant_id' => 62])->assertOk();
         $this->assertSame('manual', $chrome->fresh()->matched_by);
 

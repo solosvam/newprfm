@@ -122,7 +122,7 @@ class PriceListController extends Controller
         return redirect()->route('admin.price-lists.show', $list)->with('success', 'Price list yükləndi: '.$list->rows_count.' sətir.');
     }
 
-    public function show(Request $request, WarehousePriceList $priceList): View
+    public function show(Request $request, WarehousePriceList $priceList, PriceListMatcher $matcher): View
     {
         $tab = in_array($request->query('tab'), ['matched', 'all'], true) ? $request->query('tab') : 'unmatched';
         $items = $priceList->items()
@@ -133,12 +133,22 @@ class PriceListController extends Controller
             ->with(['variant.product.brand', 'variant.size'])
             ->orderBy('row_no')->paginate(50)->withQueryString();
 
+        // Bağlanmamış sətirlərin neçə namizədi var (pəncərəni açmadan görünsün): [hamısı, eyni ad və ölçü, eyni ölçü]
+        $similar = [];
+        foreach ($items as $item) {
+            if (!$item->product_variant_id) {
+                $found = $this->findCandidates($item, '', $matcher);
+                $similar[$item->id] = [$found->count(), $found->where('exact', true)->count(), $found->where('same_size', true)->count()];
+            }
+        }
+
         $counts = $priceList->items()->selectRaw('count(*) as total, sum(case when product_variant_id is null then 0 else 1 end) as matched')->first();
 
         return view('backend.price_lists.show', [
             'list' => $priceList->load('warehouse'),
             'tab' => $tab,
             'items' => $items,
+            'similar' => $similar,
             'total' => (int) $counts->total,
             'matched' => (int) $counts->matched,
             // Bizim brendə bağlanmayan brendlər: bunların sətirləri avtomatik uyğunlaşa bilmir
@@ -187,12 +197,21 @@ class PriceListController extends Controller
         return back()->with('success', ($brand->wasRecentlyCreated ? '"'.$brand->name.'" brendi yaradıldı' : '"'.$brand->name.'" brendi artıq var idi').' və bağlandı. Məhsulları hələ yoxdur — loqo və məhsulları Kataloq bölməsindən əlavə edin.');
     }
 
-    /** Sətir üçün namizədlər: əvvəl eyni brend + ad + həcm, sonra mətnlə axtarış (bizim məhsullarda) */
+    /** Sətir üçün namizədlər (uyğunlaşdırma pəncərəsi) */
     public function candidates(Request $request, WarehousePriceItem $item, PriceListMatcher $matcher): JsonResponse
+    {
+        return response()->json(['items' => $this->findCandidates($item, trim((string) $request->query('q', '')), $matcher)]);
+    }
+
+    /**
+     * Namizədlər: axtarış boşdursa — eyni brenddə adın bütün sözləri keçən variantlar; axtarış yazılıbsa — bütün məhsullarda.
+     * Eyni ad + həcm ("exact") yuxarıda, sonra eyni ölçü, cinsi uyğun gələn, aktiv olan.
+     * Siyahı səhifəsindəki "N oxşar" sayı da buradan gəlir — pəncərədə görünənlə eyni olsun deyə.
+     */
+    private function findCandidates(WarehousePriceItem $item, string $q, PriceListMatcher $matcher): \Illuminate\Support\Collection
     {
         $parsed = PriceListNameParser::parse($item->raw_name, $item->brand_raw);
         $ids = array_column($matcher->candidates($item->brand_id, $parsed, false), 'variant_id');
-        $q = trim((string) $request->query('q', ''));
 
         $search = DB::table('product_variants as v')
             ->join('products as p', 'p.id', '=', 'v.product_id')
@@ -206,9 +225,9 @@ class PriceListController extends Controller
         foreach ($words as $word) {
             $search->where(fn ($w) => $w->where('p.name', 'like', '%'.$word.'%')->orWhere('b.name', 'like', '%'.$word.'%')->orWhere('s.name_az', 'like', $word.'%'));
         }
-        // Mətnlə heç nə tapılmasa — brendin eyni həcmli bütün variantları
+        // Nə söz, nə brend var — axtarmağa heç nə yoxdur
         if (!$words && !$item->brand_id) {
-            return response()->json(['items' => []]);
+            return collect();
         }
 
         $rows = $search->orderByRaw('p.active desc')->orderBy('p.name')->limit(60)
@@ -220,9 +239,9 @@ class PriceListController extends Controller
             ->groupBy('product_id')->map(fn ($group) => $group->pluck('name_az')->map(fn ($name) => trim(str_replace('üçün', '', $name)))->unique()->values());
         $wanted = ['L' => 'QAD', 'M' => 'KIS', 'U' => 'UNISEX'][$parsed['gender']] ?? null;
 
-        return response()->json(['items' => $rows->map(fn ($row) => [
+        return $rows->map(fn ($row) => [
             'id' => $row->id,
-            'label' => trim(($row->brand ?? '').' '.$row->name),
+            'label' => trim(html_entity_decode($row->brand ?? '').' '.$row->name),
             'type' => $row->type,
             'size' => $row->size,
             'price' => number_format((float) $row->price, 2),
@@ -232,7 +251,7 @@ class PriceListController extends Controller
             'genders' => ($names = $genderNames[$row->product_id] ?? collect())->all(),
             // true — sətrin cinsi ilə eyni, false — fərqli, null — müqayisə etmək olmur
             'same_gender' => $wanted && $names->isNotEmpty() ? $names->contains(fn ($name) => str_contains(PriceListNameParser::key($name), $wanted)) : null,
-        ])->sortByDesc(fn ($row) => [$row['exact'], $row['same_size'], $row['same_gender'] !== false, $row['active']])->values()]);
+        ])->sortByDesc(fn ($row) => [$row['exact'], $row['same_size'], $row['same_gender'] !== false, $row['active']])->values();
     }
 
     /** Operatorun seçimi: sətir varianta bağlanır və yadda qalır (növbəti importda avtomatik) */

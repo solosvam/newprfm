@@ -27,7 +27,8 @@ class PriceListNameParser
     public static function key(?string $value): string
     {
         $value = html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5);
-        $value = str_replace(['&', "'", '`', '’'], [' AND ', '', '', ''], $value);
+        // "№ 2" / "N°2" = "No 2"
+        $value = str_replace(['&', "'", '`', '’', '№', 'N°', 'n°'], [' AND ', '', '', '', ' No ', ' No ', ' No '], $value);
 
         return trim(preg_replace('/[^A-Z0-9]+/', ' ', Str::upper(Str::ascii($value))));
     }

@@ -121,7 +121,12 @@
                             @elseif($item->product_variant_id)
                                 <span class="text-danger">Bağlandığı variant silinib</span>
                             @else
-                                <span class="text-muted">—</span>
+                                {{-- Namizədlərin sayı: "Uyğunlaşdır" basmadan oxşarı olub-olmadığı görünsün --}}
+                                @php [$all, $exact, $sameSize] = $similar[$item->id] ?? [0, 0, 0]; @endphp
+                                @if($exact)<span class="badge bg-success">{{ $exact }} eyni ad və ölçü</span>
+                                @elseif($sameSize)<span class="badge bg-outline-primary">{{ $sameSize }} oxşar · eyni ölçü</span>@if($all > $sameSize) <span class="text-muted text-small">+{{ $all - $sameSize }} başqa ölçü</span>@endif
+                                @elseif($all)<span class="badge bg-outline-muted">{{ $all }} oxşar · başqa ölçü</span>
+                                @else<span class="text-muted text-small">oxşarı yoxdur</span>@endif
                             @endif
                         </td>
                         <td class="text-end text-nowrap">
