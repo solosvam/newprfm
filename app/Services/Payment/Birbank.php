@@ -89,7 +89,9 @@ class Birbank
                 'currency' => 'AZN',
                 'language' => in_array($language, ['az', 'en', 'ru'], true) ? $language : 'az',
                 'title' => 'Parfumshop',
-                'description' => (string) $order->order_no,
+                // Bank taksiti yalnız təsvirdəki "TAKSIT=N" ilə tanıyır (bankın sənədi: "Taksit əməliyyatları üçün təsvir sahəsinə ayları bu formatda
+                // göndərməlisiniz: TAKSIT=6") — onsuz ödəniş adi, birdəfəlik olur. Sifariş bizdə bankın sifariş nömrəsi ilə tapılır, təsvirlə yox.
+                'description' => $installmentMonths ? 'TAKSIT='.$installmentMonths : (string) $order->order_no,
                 'hppRedirectUrl' => route('payment.birbank.return', ['payment' => $payment->id]),
             ]);
             // Səhifənin ünvanı (sorğu sətri olmadan) saxlanır — "Ödənişə davam et" eyni səhifəni yenidən açır (resumeUrl)

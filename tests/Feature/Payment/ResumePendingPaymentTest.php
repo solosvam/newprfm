@@ -63,6 +63,28 @@ class ResumePendingPaymentTest extends TestCase
         return app(BirbankPaymentSync::class)->resumePending(Order::findOrFail(1));
     }
 
+    /** Bank taksiti təsvirdəki "TAKSIT=N" ilə tanıyır; adi kart ödənişində təsvir sifariş nömrəsidir */
+    public function test_installment_months_are_sent_to_the_bank_in_the_description(): void
+    {
+        DB::table('payment_methods')->insert(['id' => 2, 'code' => 'birbank_installment']);
+        // Ödəniş yarananda sətirləri də yazılır (Payment::booted) — bu test üçün lazım olan cədvəllər
+        Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->integer('quantity')->default(1),
+            $t->integer('cancelled_quantity')->default(0), $t->decimal('unit_price', 12, 2)->default(0), $t->decimal('list_price', 12, 2)->nullable(), $t->timestamps()]);
+        Schema::create('payment_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('payment_id'), $t->unsignedBigInteger('order_item_id')->nullable(),
+            $t->string('type'), $t->integer('quantity')->default(1), $t->decimal('unit_price', 12, 2), $t->decimal('amount', 12, 2), $t->timestamps()]);
+        Http::fake(fn () => Http::response(['order' => ['id' => 'B7', 'password' => 'pw', 'hppUrl' => 'https://txpgtst.kapitalbank.az/flex']]));
+        $birbank = app(\App\Services\Payment\Birbank::class);
+
+        $card = $birbank->createOrder(Order::findOrFail(1));
+        DB::table('orders')->where('id', 1)->update(['payment_method_id' => 2]);
+        $installment = $birbank->createOrder(Order::findOrFail(1), 'az', 6);
+
+        $sent = collect(Http::recorded())->map(fn ($pair) => $pair[0]['order']['description'])->all();
+        $this->assertSame(['PS1', 'TAKSIT=6'], $sent);
+        $this->assertSame('https://txpgtst.kapitalbank.az/flex?id=B7&password=pw', $installment['url']);
+        $this->assertSame('https://txpgtst.kapitalbank.az/flex', DB::table('payments')->where('id', $card['payment_id'])->value('hpp_url'));
+    }
+
     public function test_no_pending_payment(): void
     {
         $this->assertSame(['state' => 'none'], $this->resume());

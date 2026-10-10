@@ -30,9 +30,6 @@ Son yenilənmə: 10 oktyabr 2026.
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
   Anbara SMS/link getmir. Tarixçədə operator, mənbə (telefon / WhatsApp / digər) və vaxt qalır.
-- [ ] **Birbank taksit: ay sayı banka göndərilmir (yoxlanmalıdır).** `Birbank::createOrder` taksit ayını (2 / 3 / 6) qəbul edib yoxlayır,
-  amma bank sorğusuna yazmır — `description` yalnız sifariş nömrəsidir. Suret Kargo-da taksit `description: "TAKSIT=N"` ilə göndərilir.
-  Belədirsə, saytda "Birbank taksit" seçən müştəri adi, birdəfəlik ödəniş edir. Bankdan / test rejimində dəqiqləşdirib düzəltmək.
 - [ ] **Qeyri-müəyyən bank əməliyyatlarının uzlaşdırılması:** kimin ödədiyi bilinməyən köçürməni sifarişə bağlamaq.
 
 ## 2. Sayt — səbət və push bildirişləri
@@ -76,6 +73,7 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] Migrasiyaları işə salmaq.
 - [ ] `composer install` (price list importu üçün `phpoffice/phpspreadsheet` əlavə olunub).
 - [ ] Cron `sms:check-delivery`-ni də işlədir (5 dəqiqədən bir): göndərilən SMS-lərin çatdırılma statusu.
+- [ ] **Test rejimində yoxlamaq:** Birbank taksit seçəndə bankın səhifəsində ayların (2 / 3 / 6) göründüyünü — 11 oktyabrdan ay `description: "TAKSIT=N"` ilə göndərilir, əvvəl göndərilmirdi.
 - [ ] **Test rejimində yoxlamaq:** Birbank ödəniş səhifəsini bağlayıb "Ödənişə davam et" ilə eyni səhifənin açıldığını (bank eyni sifarişi təkrar açmağa icazə verirmi)
   və ödənilməyən sifarişin bankda nə vaxt `Expired` olduğunu (rəsmi sənəddə — pg.kapitalbank.az/docs — müddət yazılmayıb;
   status adları oradan təsdiqlənib: Preparing, Cancelled, Rejected, Refused, Expired, Authorized, PartPaid, FullyPaid, Funded, Declined, Voided, Refunded, Closed).
