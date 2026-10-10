@@ -73,9 +73,10 @@ class ProductsController extends Controller
                 'old_id'     => $request->old_id,
                 'name'       => $request->name,
                 'slug'       => $request->filled('slug') ? $request->slug : null,
-                'content_az' => $request->content_az,
-                'content_en' => $request->content_en,
-                'content_ru' => $request->content_ru,
+                // Boş təsvir null kimi gəlir, sütunlar isə NULL qəbul etmir — boş mətn yazılır
+                'content_az' => $request->content_az ?? '',
+                'content_en' => $request->content_en ?? '',
+                'content_ru' => $request->content_ru ?? '',
                 'active'     => 1,
             ]);
 
@@ -311,9 +312,9 @@ class ProductsController extends Controller
                 'type_id'    => $request->type_id,
                 'old_id'     => $request->old_id,
                 'name'       => $request->name,
-                'content_az' => $request->content_az,
-                'content_en' => $request->content_en,
-                'content_ru' => $request->content_ru,
+                'content_az' => $request->content_az ?? '',
+                'content_en' => $request->content_en ?? '',
+                'content_ru' => $request->content_ru ?? '',
                 // Forma həmişə active göndərir (hidden 0 + checkbox 1); köhnə formada yoxdursa dəyişmir
                 'active'     => $request->has('active') ? $request->boolean('active') : $product->active,
             ]);
