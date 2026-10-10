@@ -270,54 +270,66 @@
                 @if($cancelBlock && $order->items->contains(fn ($i) => $i->activeQuantity() > 0))
                     <div class="text-muted small mb-2">Məhsul ləğvi: {{ $cancelBlock }}</div>
                 @endif
-                <div class="table-responsive"><table class="table od-table">
-                    <thead><tr><th>Məhsul</th><th class="od-num">Sifariş</th><th class="od-num">Ləğv</th><th class="od-num">Qalan</th><th class="od-num">Satış qiyməti</th><th class="od-num">Məbləğ</th><th>Təminat</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach($order->items as $item)
-                        @php
-                            $got = $supply[$item->id];
-                            $active = $item->activeQuantity();
-                            $itemTitle = ($item->product?->name ?? 'Silinmiş məhsul').($item->variant?->size ? ' · '.$item->variant->size->name_az : '');
-                        @endphp
-                        <tr class="{{ $active === 0 ? 'od-row-cancelled' : '' }}">
-                            <td>
-                                <span class="od-name">{{ $item->product?->name ?? 'Silinmiş məhsul' }}</span>
-                                <span class="od-sub">{{ collect([$item->product?->brand?->name, $item->variant?->size?->name_az])->filter()->implode(' · ') }}</span>
-                                @foreach($cancellations[$item->id] ?? [] as $c)
-                                    <span class="od-sub text-danger">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}@if($c->user) · {{ $c->user->full_name }}@endif</span>
-                                @endforeach
-                            </td>
-                            <td class="od-num">{{ $item->quantity }}</td>
-                            <td class="od-num {{ $item->cancelled_quantity ? 'text-danger' : 'text-muted' }}">{{ $item->cancelled_quantity ?: '—' }}</td>
-                            <td class="od-num">{{ $active }}</td>
-                            <td class="od-num">@if($item->list_price > $item->unit_price)<s class="text-muted small">{{ number_format((float) $item->list_price, 2) }}</s> @endif{{ number_format((float) $item->unit_price, 2) }} AZN</td>
-                            <td class="od-num">{{ number_format((float) $item->total, 2) }} AZN</td>
-                            <td>
-                                @php
-                                    $supplyStatus = $item->supplyStatus();
-                                    $supplyBadge = ['pending' => 'bg-outline-muted', 'cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger',
-                                        'partly_allocated' => 'bg-outline-warning', 'partly_picked' => 'bg-outline-warning',
-                                        'allocated' => 'bg-outline-primary', 'reserved' => 'bg-outline-success', 'picked' => 'bg-success'][$supplyStatus];
-                                @endphp
-                                <span class="badge {{ $supplyBadge }}">{{ $item->supplyLabel() }}@if(in_array($supplyStatus, ['partly_allocated'], true)) · {{ $got }}/{{ $active }}@endif</span>
-                            </td>
-                            <td class="text-end">
-                                @if(!$doorBlock && $item->activeQuantity() > 0 && $needTotal > 1)
-                                    <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" data-bs-toggle="modal" data-bs-target="#doorRefuseModal"
-                                            data-action="{{ route('admin.crm.order.item.refuse', [$customer, $order, $item]) }}"
-                                            data-title="{{ $itemTitle }}" data-active="{{ $active }}">Qapıda imtina</button>
-                                @endif
-                                @if(isset($cancelPreviews[$item->id]))
-                                    <button type="button" class="btn btn-sm btn-outline-danger text-nowrap" data-bs-toggle="modal" data-bs-target="#cancelItemModal"
-                                            data-action="{{ route('admin.crm.order.item.cancel', [$customer, $order, $item]) }}"
-                                            data-title="{{ $itemTitle }}" data-active="{{ $active }}"
-                                            data-previews='@json($cancelPreviews[$item->id])'>Ləğv et</button>
-                                @endif
-                            </td>
+                <div class="table-responsive">
+                    <table class="table od-table">
+                        <thead>
+                        <tr>
+                            <th>Məhsul</th>
+                            <th class="od-num">SİFARİŞ</th>
+                            <th class="od-num">Ləğv</th>
+                            <th class="od-num">Qalan</th>
+                            <th class="od-num">Satış QİYMƏTİ</th>
+                            <th class="od-num">Məbləğ</th>
+                            <th>TƏMİNAT</th>
+                            <th></th>
                         </tr>
-                    @endforeach
-                    </tbody>
-                </table></div>
+                        </thead>
+                        <tbody>
+                        @foreach($order->items as $item)
+                            @php
+                                $got = $supply[$item->id];
+                                $active = $item->activeQuantity();
+                                $itemTitle = ($item->product?->name ?? 'Silinmiş məhsul').($item->variant?->size ? ' · '.$item->variant->size->name_az : '');
+                            @endphp
+                            <tr class="{{ $active === 0 ? 'od-row-cancelled' : '' }}">
+                                <td>
+                                    <span class="od-name">{{ collect([$item->product?->brand?->name, $item->product?->name ?? 'Silinmiş məhsul' , $item->variant?->size?->name_az])->filter()->implode(' · ') }} </span>
+                                    @foreach($cancellations[$item->id] ?? [] as $c)
+                                        <span class="od-sub text-danger">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}@if($c->user) · {{ $c->user->full_name }}@endif</span>
+                                    @endforeach
+                                </td>
+                                <td class="od-num">{{ $item->quantity }}</td>
+                                <td class="od-num {{ $item->cancelled_quantity ? 'text-danger' : 'text-muted' }}">{{ $item->cancelled_quantity ?: '—' }}</td>
+                                <td class="od-num">{{ $active }}</td>
+                                <td class="od-num">@if($item->list_price > $item->unit_price)<s class="text-muted small">{{ number_format((float) $item->list_price, 2) }}</s> @endif{{ number_format((float) $item->unit_price, 2) }} AZN</td>
+                                <td class="od-num">{{ number_format((float) $item->total, 2) }} AZN</td>
+                                <td>
+                                    @php
+                                        $supplyStatus = $item->supplyStatus();
+                                        $supplyBadge = ['pending' => 'bg-outline-muted', 'cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger',
+                                            'partly_allocated' => 'bg-outline-warning', 'partly_picked' => 'bg-outline-warning',
+                                            'allocated' => 'bg-outline-primary', 'reserved' => 'bg-outline-success', 'picked' => 'bg-success'][$supplyStatus];
+                                    @endphp
+                                    <span class="badge {{ $supplyBadge }}">{{ $item->supplyLabel() }}@if(in_array($supplyStatus, ['partly_allocated'], true)) · {{ $got }}/{{ $active }}@endif</span>
+                                </td>
+                                <td class="text-end">
+                                    @if(!$doorBlock && $item->activeQuantity() > 0 && $needTotal > 1)
+                                        <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" data-bs-toggle="modal" data-bs-target="#doorRefuseModal"
+                                                data-action="{{ route('admin.crm.order.item.refuse', [$customer, $order, $item]) }}"
+                                                data-title="{{ $itemTitle }}" data-active="{{ $active }}">Qapıda imtina</button>
+                                    @endif
+                                    @if(isset($cancelPreviews[$item->id]))
+                                        <button type="button" class="btn btn-sm btn-outline-danger text-nowrap" data-bs-toggle="modal" data-bs-target="#cancelItemModal"
+                                                data-action="{{ route('admin.crm.order.item.cancel', [$customer, $order, $item]) }}"
+                                                data-title="{{ $itemTitle }}" data-active="{{ $active }}"
+                                                data-previews='@json($cancelPreviews[$item->id])'>Ləğv et</button>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
                 <div class="od-summary mt-3">
                     {{-- Məhsullar − Endirim + Çatdırılma + Qablaşdırma − Ləğv olunan = Yekun (Order::totalsBreakdown) --}}
                     @php $sum = $order->totalsBreakdown(); @endphp
