@@ -22,10 +22,6 @@ class PriceListMatcher
         'PARFUM' => 'PARFUM',
     ];
 
-    /** genders.id → kod (1, 8 — kişi; 2, 9 — qadın; 3 — unisex) */
-    private const GENDERS = [1 => 'M', 8 => 'M', 2 => 'L', 9 => 'L', 3 => 'U'];
-
-    private const TESTER_CATEGORY = 7;
 
     /** @var array<int, array<string, list<array>>>|null brand_id → ad açarı → məhsullar */
     private ?array $catalog = null;
@@ -136,9 +132,17 @@ class PriceListMatcher
     private function loadCatalog(): array
     {
         $types = DB::table('types')->pluck('name_az', 'id')->map(fn ($name) => self::TYPE_KINDS[PriceListNameParser::key($name)] ?? null);
+        // Cins və "Tester" kateqoriyası ada görə tanınır — id-lər bazadan bazaya fərqlənir ("Kişi" / "Kişi üçün" ayrı sətirlərdir)
+        $genderCodes = DB::table('genders')->pluck('name_az', 'id')->map(fn ($name) => match (true) {
+            str_contains(PriceListNameParser::key($name), 'UNISEX') => 'U',
+            str_contains(PriceListNameParser::key($name), 'QAD') => 'L',
+            str_contains(PriceListNameParser::key($name), 'KIS') => 'M',
+            default => null,
+        });
         $genders = DB::table('product_genders')->get()->groupBy('product_id')
-            ->map(fn ($rows) => $rows->map(fn ($r) => self::GENDERS[$r->gender_id] ?? null)->filter()->unique()->values()->all());
-        $testers = DB::table('product_categories')->where('category_id', self::TESTER_CATEGORY)->pluck('product_id')->flip();
+            ->map(fn ($rows) => $rows->map(fn ($r) => $genderCodes[$r->gender_id] ?? null)->filter()->unique()->values()->all());
+        $testerCategories = DB::table('categories')->pluck('name_az', 'id')->filter(fn ($name) => PriceListNameParser::key($name) === 'TESTER')->keys();
+        $testers = DB::table('product_categories')->whereIn('category_id', $testerCategories)->pluck('product_id')->flip();
         $variants = DB::table('product_variants as v')->join('sizes as s', 's.id', '=', 'v.size_id')
             ->get(['v.id', 'v.product_id', 's.name_az'])->groupBy('product_id');
 

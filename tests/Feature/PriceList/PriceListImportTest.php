@@ -36,6 +36,8 @@ class PriceListImportTest extends TestCase
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->integer('size_id'), $t->decimal('price', 10, 2)->default(0), $t->boolean('active')->default(true)]);
         Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
         Schema::create('product_categories', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->integer('category_id')]);
+        Schema::create('genders', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('categories', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::create('search_aliases', fn (Blueprint $t) => [$t->id(), $t->string('alias'), $t->string('type'), $t->integer('brand_id')->nullable()]);
         (require database_path('migrations/2026_10_11_100000_create_warehouse_price_lists.php'))->up();
         (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
@@ -44,6 +46,9 @@ class PriceListImportTest extends TestCase
         $this->warehouse = Warehouse::create(['name_az' => 'Aksin']);
         DB::table('brands')->insert([['id' => 1, 'name' => 'Versace'], ['id' => 2, 'name' => 'Yves Saint Laurent'], ['id' => 3, 'name' => 'Azzaro']]);
         DB::table('search_aliases')->insert(['alias' => 'ysl', 'type' => 'brand', 'brand_id' => 2]);
+        // Cinslərin id-si bazadan asılıdır (proddə 8 — Qadın, 9 — Kişi) — adla tanınmalıdır
+        DB::table('genders')->insert([['id' => 8, 'name_az' => 'Qadın'], ['id' => 9, 'name_az' => 'Kişi'], ['id' => 3, 'name_az' => 'Unisex']]);
+        DB::table('categories')->insert([['id' => 7, 'name_az' => 'Tester']]);
         DB::table('types')->insert([['id' => 1, 'name_az' => 'Eau De Parfum'], ['id' => 2, 'name_az' => 'Eau De Toilette']]);
         DB::table('sizes')->insert([['id' => 1, 'name_az' => '50 ml'], ['id' => 2, 'name_az' => '100 ml']]);
         // id => [brend, növ, ad]; hər məhsulun 50 və 100 ml variantı: variant id = məhsul id × 10 + ölçü id
@@ -119,6 +124,16 @@ class PriceListImportTest extends TestCase
         $this->assertNull($items['VERSACE EROS FLAME EDP M 100ML']->product_variant_id);
         $this->assertNull($items['AZZARO CHROME EDT M 100ML']->product_variant_id);
         $this->assertNull($items['ROJA ELYSIUM EDP M 100ML']->brand_id);
+    }
+
+    public function test_gender_picks_between_two_products_with_the_same_name(): void
+    {
+        // Eyni adlı iki "Chrome": 5 — kişi, 6 — qadın. Siyahıdakı "M" kişi olanı seçməlidir.
+        DB::table('product_genders')->insert([['product_id' => 5, 'gender_id' => 9], ['product_id' => 6, 'gender_id' => 8]]);
+
+        $this->import();
+
+        $this->assertSame(52, WarehousePriceItem::where('raw_name', 'AZZARO CHROME EDT M 100ML')->value('product_variant_id'));
     }
 
     public function test_operator_matches_are_remembered_for_the_next_import_and_brands_can_be_created(): void
