@@ -254,7 +254,7 @@
                             <div><dt>Ödəniş vəziyyəti</dt><dd><span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span></dd></div>
                         </dl>
                         {{-- Yekun hesab: ayrıca kart deyil, sifariş məlumatlarının davamı --}}
-                    <div class="od-summary mw-100 border-top pt-3 mt-auto">
+                    <div class="od-summary border-top pt-3 mt-auto">
                         {{-- Məhsullar − Endirim + Çatdırılma + Qablaşdırma − Ləğv olunan = Yekun (Order::totalsBreakdown) --}}
                         @php $sum = $order->totalsBreakdown(); @endphp
                         <div><span>Məhsullar</span><span>{{ number_format($sum['goods'], 2) }} AZN</span></div>
@@ -309,6 +309,7 @@
                 <h2 class="small-title">Status tarixçəsi</h2>
                 <div class="card flex-grow-1">
                     <div class="card-body d-flex flex-column">
+                        <div class="od-steps-box">
                         <ol class="od-steps scroll-out" aria-label="Sifarişin status tarixçəsi">
                             @foreach($steps as $step)
                                 @php $log = $timelineLogs->get($step->id); @endphp
@@ -325,6 +326,7 @@
                                 </li>
                             @endforeach
                         </ol>
+                        </div>
                     </div>
                 </div>
             </div>
