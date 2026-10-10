@@ -55,7 +55,8 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] `.env`-də `SHORT_URL=https://paf.az` (sonra `php artisan config:cache`). Olmasa ödəniş, referal və anbar linkləri əsas domenlə gedir.
 - [ ] Migrasiyaları işə salmaq.
 - [ ] **Test rejimində yoxlamaq:** Birbank ödəniş səhifəsini bağlayıb "Ödənişə davam et" ilə eyni səhifənin açıldığını (bank eyni sifarişi təkrar açmağa icazə verirmi)
-  və ödənilməyən sifarişin bankda nə vaxt `Expired` olduğunu.
+  və ödənilməyən sifarişin bankda nə vaxt `Expired` olduğunu (rəsmi sənəddə — pg.kapitalbank.az/docs — müddət yazılmayıb;
+  status adları oradan təsdiqlənib: Preparing, Cancelled, Rejected, Refused, Expired, Authorized, PartPaid, FullyPaid, Funded, Declined, Voided, Refunded, Closed).
 - [ ] `php artisan brands:optimize-logos` — serverdəki brend loqolarını kiçiltmək (lokalda edilib).
 - [ ] `php artisan seo:robots` (robots.txt-ə sitemap sətri) və sitemap-i Google Search Console-a göndərmək.
 
