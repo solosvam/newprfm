@@ -43,7 +43,7 @@ class CheckSmsDelivery extends Command
                 }
                 continue;
             }
-            $log->update(['delivery_status' => $status ?? $log->delivery_status, 'delivery_checked_at' => now()]);
+            $log->update(['delivery_status' => $status, 'delivery_checked_at' => now()]);
             $counts[$status === SmsLog::DELIVERED ? 'delivered' : (in_array($status, SmsLog::DELIVERY_FAILED, true) ? 'failed' : 'pending')]++;
         }
 

@@ -86,16 +86,33 @@ class SmsService
      *
      * @throws RuntimeException
      */
-    public function deliveryStatus(string $transactionId): ?int
+    public function deliveryStatus(string $transactionId): int
     {
         [$login] = $this->credentials();
-        $data = $this->call(Http::timeout(10)->get($this->endpoint('report'), ['login' => $login, 'trans_id' => $transactionId]), 'SMS hesabatı alınmadı');
-        $status = $data['obj'] ?? null;
-        if (is_array($status)) {
-            $status = $status['status'] ?? null;
+        $response = Http::timeout(10)->get($this->endpoint('report'), ['login' => $login, 'trans_id' => $transactionId]);
+        if (!$response->successful()) {
+            throw new RuntimeException('SMS hesabatı alınmadı (HTTP '.$response->status().').');
         }
 
-        return is_numeric($status) ? (int) $status : null;
+        // Cavabın formatı sənəddə yazılmayıb: ya tək rəqəm ("101", xətada "-106"), ya da göndərişdəki kimi JSON ({"obj": 101, "errorCode": 0})
+        $data = $response->json();
+        if (is_array($data)) {
+            $error = (int) ($data['errorCode'] ?? 0);
+            $status = $data['obj'] ?? $data['status'] ?? null;
+            $status = is_array($status) ? ($status['status'] ?? null) : $status;
+            $status = $error < 0 ? $error : $status;
+        } else {
+            $status = trim($response->body());
+        }
+        if (!is_numeric($status)) {
+            throw new RuntimeException('SMS hesabatı alınmadı: gözlənilməz cavab "'.\Illuminate\Support\Str::limit(trim($response->body()), 120).'".');
+        }
+        $status = (int) $status;
+        if ($status < 0) {
+            throw new RuntimeException('SMS hesabatı alınmadı: '.(self::ERRORS[$status] ?? 'xəta '.$status).'.', $status);
+        }
+
+        return $status;
     }
 
     /** @return array{0: string, 1: string} */

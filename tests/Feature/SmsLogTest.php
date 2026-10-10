@@ -67,6 +67,22 @@ class SmsLogTest extends TestCase
         $this->artisan('sms:check-delivery')->assertSuccessful();
     }
 
+    public function test_delivery_report_may_be_a_bare_status_code(): void
+    {
+        Http::fake(['apps.lsim.az/quicksms/v1/report*' => Http::sequence()->push('101')->push('-106')->push('<html>oops</html>')]);
+        $sms = app(SmsService::class);
+
+        $this->assertSame(101, $sms->deliveryStatus('1'));
+        try {
+            $sms->deliveryStatus('2');
+            $this->fail('Xəta kodu atılmalı idi');
+        } catch (\RuntimeException $e) {
+            $this->assertSame(-106, $e->getCode());
+        }
+        $this->expectExceptionMessage('gözlənilməz cavab "<html>oops</html>"');
+        $sms->deliveryStatus('3');
+    }
+
     public function test_balance_is_read_from_the_provider(): void
     {
         Http::fake(['apps.lsim.az/quicksms/v1/balance*' => Http::response(['obj' => 1543, 'errorCode' => 0])]);
