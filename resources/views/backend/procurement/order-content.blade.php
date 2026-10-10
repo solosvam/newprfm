@@ -96,7 +96,6 @@
                                         $isCheapest = $active->count() === 1 && $cheapest !== null && (float) $active->first()->unit_cost <= (float) $cheapest;
                                     @endphp
                                     @if($active->count() === 1)
-                                        {{-- HTML teqi {{ }} içində yazılanda mətn kimi çıxır (təhlükəsizlik üçün qaçırılır) — teq şərtin içində, kənarda yazılır --}}
                                         {{ $rows->count() }} anbardan @if($isCheapest && $rows->count() > 1)<ins>ən ucuz</ins> təklif verən @endif{{ $active->first()->warehouse->name_az }} seçildi : {{ number_format((float) $active->first()->unit_cost, 2) }} AZN
                                     @else
                                         {{ $rows->count() }} anbardan {{ $active->count() }}-i seçildi: {{ $parts->implode('; ') }}
@@ -108,9 +107,9 @@
                                     {{ $rows->isEmpty() ? 'Hələ sorğu göndərilməyib' : $rows->count().' anbara sorğu göndərilib, təklif yoxdur' }}
                                 @endif
                             </span>
-                            {{-- Seçilən anbardan ucuz, hələ götürülə bilən təklif var (operator bilərəkdən bahalını seçə bilər — xəbərdarlıqdır, xəta deyil) --}}
+
                             @if($cheaper)
-                                <span class="badge bg-danger">Daha ucuz təklif var: {{ number_format((float) $cheaper['offer']->unit_cost, 2) }} AZN</span>
+                                <span class="badge bg-danger">Daha ucuzu var</span>
                             @endif
                         </div>
                         @if($crm)
