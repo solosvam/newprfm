@@ -140,16 +140,7 @@
             </table></div>
         </div></div>
 
-        @if($items->hasPages())
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted text-small">{{ $items->firstItem() }}–{{ $items->lastItem() }} / {{ $items->total() }}</span>
-                <ul class="pagination mb-0">
-                    <li class="page-item {{ $items->onFirstPage() ? 'disabled' : '' }}"><a class="page-link" href="{{ $items->previousPageUrl() ?? '#' }}">Əvvəlki</a></li>
-                    <li class="page-item disabled"><span class="page-link">{{ $items->currentPage() }} / {{ $items->lastPage() }}</span></li>
-                    <li class="page-item {{ $items->hasMorePages() ? '' : 'disabled' }}"><a class="page-link" href="{{ $items->nextPageUrl() ?? '#' }}">Növbəti</a></li>
-                </ul>
-            </div>
-        @endif
+        @include('backend._layout.simple-pagination', ['paginator' => $items])
     </div>
 
     {{-- Uyğunlaşdırma: namizədlər (eyni brend və ad) və bizim məhsullarda axtarış --}}

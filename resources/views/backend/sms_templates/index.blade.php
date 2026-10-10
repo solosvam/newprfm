@@ -131,17 +131,7 @@
                 </tbody>
             </table></div>
         </div></div>
-        {{-- Səhifələmə: Acorn-da standart Bootstrap "pagination" --}}
-        @if($logs->hasPages())
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted text-small">{{ $logs->firstItem() }}–{{ $logs->lastItem() }} / {{ $logs->total() }}</span>
-                <ul class="pagination mb-0">
-                    <li class="page-item {{ $logs->onFirstPage() ? 'disabled' : '' }}"><a class="page-link" href="{{ $logs->previousPageUrl() ?? '#' }}">Əvvəlki</a></li>
-                    <li class="page-item disabled"><span class="page-link">{{ $logs->currentPage() }} / {{ $logs->lastPage() }}</span></li>
-                    <li class="page-item {{ $logs->hasMorePages() ? '' : 'disabled' }}"><a class="page-link" href="{{ $logs->nextPageUrl() ?? '#' }}">Növbəti</a></li>
-                </ul>
-            </div>
-        @endif
+        @include('backend._layout.simple-pagination', ['paginator' => $logs])
     @endif
 </div>
 @endsection
