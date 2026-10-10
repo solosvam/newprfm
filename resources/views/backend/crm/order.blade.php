@@ -52,6 +52,7 @@
 @endsection
 
 @section('js_page')
+    <script src="{{ asset('backend/js/cs/responsivetab.js') }}"></script>
     <script src="{{ asset_v('backend/js/crm-order-detail.js') }}"></script>
     <script src="{{ asset_v('backend/js/finance.js') }}"></script>
 @endsection
@@ -246,10 +247,17 @@
             ];
             if (!empty($settlement)) $tabs['settlements'] = ['Hesablaşmalar', null, false];
             @endphp
-            <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title order-detail-tabs" role="tablist" aria-label="Sifariş bölmələri">
+            {{-- Acorn "Responsive Tabs with Line Title": link kimi tablar; sığmayanlar "…" menyusuna düşür (responsivetab.js) --}}
+            <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title responsive-tabs order-detail-tabs" role="tablist" aria-label="Sifariş bölmələri">
                 @foreach($tabs as $key => [$label, $count, $warn])
-                    <li class="nav-item" role="presentation"><button class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $key }}-tab" data-bs-toggle="tab" data-bs-target="#{{ $key }}" type="button" role="tab" aria-controls="{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $label }}@if($count)<span class="od-tab-count {{ $warn ? 'is-warn' : '' }}">{{ $count }}</span>@endif</button></li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $key }}-tab" data-bs-toggle="tab" href="#{{ $key }}" data-bs-target="#{{ $key }}" role="tab" aria-controls="{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $label }}@if($count)<span class="od-tab-count {{ $warn ? 'is-warn' : '' }}">{{ $count }}</span>@endif</a>
+                    </li>
                 @endforeach
+                <li class="nav-item dropdown ms-auto pe-0 d-none responsive-tab-dropdown">
+                    <a class="btn btn-icon btn-icon-only btn-background pt-0 bg-transparent pe-0" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i data-acorn-icon="more-horizontal"></i></a>
+                    <ul class="dropdown-menu mt-2 dropdown-menu-end"></ul>
+                </li>
             </ul>
         <div class="tab-content mb-5">
             <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="0">

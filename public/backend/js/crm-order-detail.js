@@ -1,6 +1,11 @@
 $(document).ready(function () {
     const workspace = document.querySelector('[data-order-workspace]');
     if (workspace) {
+        // Acorn responsive tablar: sığmayan tablar "…" menyusuna keçir
+        if (typeof ResponsiveTab !== 'undefined') {
+            workspace.querySelectorAll('.responsive-tabs').forEach(el => new ResponsiveTab(el));
+        }
+
         const storageKey = 'order-tab:' + window.location.pathname;
         const tabs = Array.from(workspace.querySelectorAll('[data-bs-toggle="tab"]'));
         const openTab = (target) => {

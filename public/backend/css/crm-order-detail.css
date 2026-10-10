@@ -35,8 +35,9 @@
 .order-workspace .od-kpi .progress { height: 4px; margin-top: 8px; }
 
 /* Tablar */
-/* Tema tab sətrində mənfi alt boşluq işlədir — overflow kəsməsin deyə dar ekranda tablar sətrə keçir */
-.order-workspace .order-detail-tabs { flex-wrap: wrap; margin-top: 8px; margin-bottom: 20px; }
+/* Tablar: Acorn "Line Title" üslubu olduğu kimi; yalnız yuxarıdan boşluq və sayğacın düzlənməsi */
+.order-workspace .order-detail-tabs { margin-top: 16px; }
+.order-workspace .order-detail-tabs + .tab-content { padding-top: 14px; }
 .order-workspace .order-detail-tabs .nav-link { white-space: nowrap; }
 .order-workspace .od-tab-count {
     display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px;
