@@ -247,6 +247,24 @@
                         </section>
                     </aside>
                 </div>
+
+                {{-- Sifarişdən imtina: ilk mərhələlərdə müştəri özü, sonra yalnız operator (OrdersController::cancel) --}}
+                @if($cancelState === 'allowed')
+                    <form method="POST" action="{{ route('order.cancel', $order) }}" class="od-cancel"
+                          onsubmit="return confirm(@js(__('orders_cancel_confirm')))">
+                        @csrf
+                        <span>{{ __('orders_cancel_hint') }}</span>
+                        <button type="submit" class="btn btn-outline od-cancel__btn">{{ __('orders_cancel_button') }}</button>
+                    </form>
+                @elseif($cancelState === 'contact')
+                    @php $contact = app(\App\Services\ContactInfo::class); @endphp
+                    <div class="od-cancel">
+                        <span>{{ __('orders_cancel_contact') }}</span>
+                        @if($contact->phoneUrl())
+                            <a href="{{ $contact->phoneUrl() }}" class="btn btn-outline od-cancel__btn">{{ __('paylink_expired_call') }}</a>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
     </main>

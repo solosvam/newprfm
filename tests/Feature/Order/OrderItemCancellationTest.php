@@ -54,6 +54,7 @@ class OrderItemCancellationTest extends TestCase
         (require database_path('migrations/2026_09_29_160000_create_order_item_cancellations_table.php'))->up();
         (require database_path('migrations/2026_10_06_203155_add_fee_type_to_order_item_cancellations.php'))->up();
         (require database_path('migrations/2026_09_29_190000_add_supply_flow_to_order_item_allocations.php'))->up();
+        (require database_path('migrations/2026_10_10_160000_make_order_item_cancellations_created_by_nullable.php'))->up();
 
         DB::table('order_statuses')->insert(['id' => 2, 'code' => 'courier']);
         $this->orderStatusFixtures();
@@ -306,5 +307,64 @@ class OrderItemCancellationTest extends TestCase
         $service->cancelOrder($order, 'not_in_stock', null, 7);
         $this->expectException(ValidationException::class);
         $service->cancelOrder($order->fresh(), 'not_in_stock', null, 7);
+    }
+
+    // ---- Müştərinin saytdan öz imtinası ----
+
+    public function test_customer_can_cancel_only_in_early_stages(): void
+    {
+        $service = app(OrderItemCancellationService::class);
+
+        foreach ([11 => 'allowed', 1 => 'allowed', 12 => 'allowed', 13 => 'contact', 14 => 'contact', 15 => 'contact', 17 => 'none', 18 => 'none'] as $status => $state) {
+            $this->assertSame($state, $service->customerCancelState($this->order(['order_status_id' => $status])), 'status '.$status);
+        }
+
+        // Öz kreditimizlə (hissə-hissə) sifariş — yalnız operator
+        $this->assertSame('contact', $service->customerCancelState($this->order(['order_status_id' => 11, 'payment_method_id' => 4])));
+    }
+
+    public function test_customer_cannot_cancel_once_a_warehouse_is_selected(): void
+    {
+        $order = $this->order(['payment_status' => 'pending', 'bonus_earned' => 0]);
+        $procurement = app(ProcurementService::class);
+        $procurement->createRequests($order, [Warehouse::create(['name_az' => 'A'])->id], [$order->items[0]->id], 7);
+        $offer = $procurement->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 2, 'unit_cost' => '50', 'source' => 'phone'], 7);
+        $procurement->allocate($order, $offer->id, 1, 7);
+        // Status hələ erkən mərhələdə olsa belə (qismən seçim), anbar seçilibsə müştəri özü ləğv edə bilmir
+        DB::table('orders')->where('id', $order->id)->update(['order_status_id' => 12]);
+        $service = app(OrderItemCancellationService::class);
+
+        $this->assertSame('contact', $service->customerCancelState($order->fresh()));
+        $this->expectException(ValidationException::class);
+        $service->cancelByCustomer($order->fresh());
+    }
+
+    public function test_customer_cancel_of_paid_order_marks_card_refund_without_staff_actor(): void
+    {
+        $order = $this->order(['order_status_id' => 11]); // onlayn ödənilib, 395 AZN
+
+        $result = app(OrderItemCancellationService::class)->cancelByCustomer($order);
+
+        $order->refresh();
+        $this->assertSame('cancelled', $this->statusCode($order));
+        $this->assertEquals(0, $order->total);
+        $cancellations = collect($result['cancellations']);
+        $this->assertEquals(395, $cancellations->sum('amount'));
+        $this->assertTrue($cancellations->every(fn ($c) => $c->refund_status === OrderItemCancellation::REFUND_PENDING
+            && $c->reason === 'customer_refused' && $c->created_by === null));
+
+        $log = DB::table('order_status_logs')->where('order_id', $order->id)->latest('id')->first();
+        $this->assertNull($log->user_id);
+        $this->assertStringContainsString(OrderItemCancellationService::CUSTOMER_NOTE, $log->note);
+    }
+
+    public function test_customer_cancel_of_unpaid_order_needs_no_refund(): void
+    {
+        $order = $this->order(['order_status_id' => 11, 'payment_status' => 'failed', 'bonus_earned' => 0]);
+
+        $result = app(OrderItemCancellationService::class)->cancelByCustomer($order);
+
+        $this->assertSame('cancelled', $this->statusCode($order));
+        $this->assertTrue(collect($result['cancellations'])->every(fn ($c) => $c->refund_status === null));
     }
 }

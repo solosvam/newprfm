@@ -32,6 +32,15 @@ class OrderItemCancellationService
     /** Kuryer təyin edilməzdən əvvəlki mərhələlər */
     public const EDITABLE_STATUSES = ['new', 'confirmed', 'preparing', 'warehouse_requested', 'warehouses_assigned'];
 
+    /**
+     * Müştərinin saytdan özü imtina edə bildiyi mərhələlər: hələ heç bir anbar mal ayırmayıb.
+     * "Anbarlar təyin olundu"dan sonra — yalnız operator (müştəriyə "əlaqə saxlayın" göstərilir).
+     */
+    public const CUSTOMER_STATUSES = ['new', 'confirmed', 'preparing', 'warehouse_requested'];
+
+    /** Müştərinin öz imtinasının tarixçədəki qeydi */
+    public const CUSTOMER_NOTE = 'Müştəri saytdan özü imtina etdi';
+
     /** Qapıda imtina — kuryer yoldadır / ünvandadır */
     public const DOOR_STATUSES = ['sent', 'at_address'];
 
@@ -123,6 +132,43 @@ class OrderItemCancellationService
     }
 
     /**
+     * Müştəri saytdan özü imtina edə bilərmi:
+     *  - allowed — bəli ("Sifarişdən imtina et" düyməsi);
+     *  - contact — bu mərhələdə / bu ödəniş üsulunda yalnız operator ləğv edir ("bizimlə əlaqə saxlayın");
+     *  - none    — sifariş artıq ləğv edilib və ya təhvil verilib (heç nə göstərilmir).
+     * Bankda nəticəsi bəlli olmayan ödəniş burada "allowed" sayılır — imtina anında bankdan yoxlanır.
+     */
+    public function customerCancelState(Order $order): string
+    {
+        $order->loadMissing(['status', 'paymentMethod', 'items.allocations']);
+
+        if ($order->isCancelled() || $order->status?->code === 'delivered') {
+            return 'none';
+        }
+        if ($order->paymentMethod?->code === 'installment' || !in_array($order->status?->code, self::CUSTOMER_STATUSES, true)) {
+            return 'contact';
+        }
+        // Operator artıq anbar seçibsə (mal ayrılır) — yalnız operator ləğv edir
+        $reserved = $order->items->flatMap->allocations
+            ->contains(fn (OrderItemAllocation $allocation) => !in_array($allocation->status, OrderItemAllocation::SUPPLY_INACTIVE, true));
+
+        return $reserved ? 'contact' : 'allowed';
+    }
+
+    /**
+     * Müştərinin saytdan öz imtinası: operatorun tam ləğvi ilə eyni hesab (bonus, karta/bonusa qaytarma),
+     * səbəb "Müştəri imtina etdi", əməkdaş yoxdur (created_by = NULL).
+     *
+     * @return array{cancellations: list<OrderItemCancellation>, notify: list<int>}
+     */
+    public function cancelByCustomer(Order $order): array
+    {
+        $this->ensure($this->customerCancelState($order->fresh()) === 'allowed', 'Bu mərhələdə sifarişdən yalnız operator vasitəsilə imtina etmək olar.');
+
+        return $this->cancelOrder($order, 'customer_refused', self::CUSTOMER_NOTE, null);
+    }
+
+    /**
      * Sifarişin tam ləğvinin nəticəsi (bazaya yazmadan) — təsdiq pəncərəsi üçün.
      *
      * @return array{items: float, fees: float, total: float, refund: ?string, bonus: float, returning: int, notify: int}
@@ -153,7 +199,7 @@ class OrderItemCancellationService
      *
      * @return array{cancellations: list<OrderItemCancellation>, notify: list<int>}
      */
-    public function cancelOrder(Order $order, string $reason, ?string $note, int $actor): array
+    public function cancelOrder(Order $order, string $reason, ?string $note, ?int $actor): array
     {
         return DB::transaction(function () use ($order, $reason, $note, $actor) {
             $order = Order::with(['items.product', 'status', 'paymentMethod', 'customer'])->lockForUpdate()->findOrFail($order->id);
@@ -234,7 +280,7 @@ class OrderItemCancellationService
      *
      * @param  list<int>  $notify  anbara "rezerv lazım deyil" SMS-i göndəriləcək seçimlər (order rejimi)
      */
-    private function applyLocked(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor, string $mode, array &$notify = []): OrderItemCancellation
+    private function applyLocked(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, ?int $actor, string $mode, array &$notify = []): OrderItemCancellation
     {
         $result = $this->preview($order, $item, $quantity);
 
@@ -352,7 +398,7 @@ class OrderItemCancellationService
      *
      * @param  list<int>  $notify
      */
-    private function releaseAllAllocations(OrderItem $item, int $actor, array &$notify): void
+    private function releaseAllAllocations(OrderItem $item, ?int $actor, array &$notify): void
     {
         $parts = OrderItemAllocation::where('order_item_id', $item->id)
             ->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)->lockForUpdate()->orderBy('id')->get();
@@ -381,7 +427,7 @@ class OrderItemCancellationService
         }
     }
 
-    private function refundToBonus(Order $order, float $amount, string $subject, int $actor): void
+    private function refundToBonus(Order $order, float $amount, string $subject, ?int $actor): void
     {
         DB::table('customers')->where('id', $order->customer_id)->increment('bonus_balance', $amount);
         $order->customer->bonusTransactions()->create([

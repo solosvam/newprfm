@@ -616,7 +616,11 @@ class CrmController extends Controller
         $refund = $cancellations->whereIn('refund_status', [OrderItemCancellation::REFUND_PENDING])->sum('amount');
         $bonus = $cancellations->where('refund_status', OrderItemCancellation::REFUND_BONUS)->sum('amount');
 
+        // Müştəriyə SMS (şablon: crm_order_cancelled) — xəta ləğvi pozmur
+        $customerSms = $this->notifyCustomerOrderCancelled($order);
+
         $message = 'Sifariş ləğv edildi.';
+        $message .= $customerSms === true ? ' Müştəriyə SMS göndərildi.' : ($customerSms === false ? ' Müştəriyə SMS göndərilmədi.' : '');
         $message .= $refund > 0 ? ' '.number_format($refund, 2).' AZN müştərinin kartına qaytarılmalıdır ("Ödənişlər" bölməsi).' : '';
         $message .= $bonus > 0 ? ' '.number_format($bonus, 2).' AZN bonus balansına qaytarıldı.' : '';
         $message .= $sms->isNotEmpty() ? ' '.WarehouseNotifier::summary($sms) : '';
@@ -696,6 +700,32 @@ class CrmController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => 'Ödəniş linki müştəriyə SMS ilə göndərildi.']);
+    }
+
+    /**
+     * Operator sifarişi ləğv edəndə müştəriyə SMS. true — göndərildi, false — alınmadı,
+     * null — şablon söndürülüb və ya nömrə yoxdur.
+     */
+    private function notifyCustomerOrderCancelled(Order $order): ?bool
+    {
+        $order->loadMissing('customer');
+        $mobile = $order->customer?->mobile;
+        $text = \App\Models\SmsTemplate::message('crm_order_cancelled', [
+            'fullname' => $order->customer?->fullname ?? '', 'order_no' => $order->order_no,
+        ]);
+        if (!$mobile || !$text) {
+            return null;
+        }
+
+        try {
+            app(\App\Services\SmsService::class)->send($mobile, $text);
+
+            return true;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
     }
 
     /** Sifariş detalı → "Bankdan yoxla": gözləyən ödənişin nəticəsini cron-u gözləmədən bankdan soruşur */

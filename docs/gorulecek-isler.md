@@ -21,6 +21,10 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **Bütün SMS şablonlarının yoxlanması.** Admin paneldəki hər SMS şablonuna baxıb kodda harada istifadə olunduğunu
   (hansı hadisədə göndərildiyini) və ümumiyyətlə qoşulub-qoşulmadığını müəyyən etmək. Bilinən nümunə: `order_sent`
   bazada var, amma heç yerdə göndərilmir (yuxarıdakı bənd).
+- [ ] **SMS jurnalı və çatdırılma statusu.** Göndərilən hər SMS bazaya yazılır (kimə, mətn, şablon, nə vaxt, nəticə)
+  və lsim API ilə statusu mütəmadi yoxlanılır (çatdı / çatmadı / gözləyir).
+- [ ] **"SMS şablonları" səhifəsi "SMS ayarları"na çevrilir** (ad dəqiqləşəcək): şablonlarla yanaşı lsim API-dən SMS balansı göstərilir.
+- [ ] **SMS xətaları bir yerdə görünsün:** göndərilməyən, xəta verən, çatmayan mesajlar həmin səhifədə siyahı ilə.
 - [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
@@ -101,6 +105,10 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Müştəri ehtiyat nömrəsini (`mobile_2`) saytda görmür və dəyişmir.
 - Öz kreditimizlə (hissə-hissə) alışda məhsul endirimi tətbiq olunmur. Birbank taksitində tətbiq olunur. Birbank taksiti "hissə-hissə" sayılmır.
 - Promo kod endirimli məhsullara tətbiq olunmur.
+- Müştəri sifarişdən saytdan özü imtina edə bilir: yalnız "Sifariş verildi", "Hazırlanır", "Anbarlara sorğu göndərildi" mərhələlərində
+  və hələ heç bir anbar seçilməyibsə. Ödənilmiş sifarişdə pul avtomatik qayıtmır — "Karta qaytarılacaq" yaranır, operator qaytarır
+  (bonusla ödənilibsə bonus dərhal qayıdır). Sonrakı mərhələlərdə və öz kreditimizlə sifarişdə — "bizimlə əlaqə saxlayın".
+- Operator sifarişi ləğv edəndə müştəriyə SMS gedir (`crm_order_cancelled`); müştəri özü imtina edəndə SMS getmir.
 - Yarımçıq qalmış Birbank ödənişi: müştəri "Ödənişə davam et" basanda bankdan soruşulur — sifariş bankda hələ açıqdırsa
   (`Preparing`) eyni bank səhifəsinə qaytarılır (yeni ödəniş yaranmır), bağlanıbsa yeni ödəniş başlayır. CRM-də "Bankdan yoxla" eyni yoxlamanı edir.
 - Müştəriyə və anbara göndərilən linklər qısa domenlədir (`paf.az`): SMS ödəniş linki, referal linki, anbar portalı linki.

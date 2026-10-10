@@ -40,7 +40,7 @@
             'text' => ($c->fee_type ? $c->subjectLabel().' ləğv edildi' : $c->quantity.' ədəd ləğv edildi').' · '.$c->reasonLabel().' · '.number_format((float) $c->amount, 2).' AZN'
                 .((float) $c->bonus_adjustment > 0 ? ' · bonus −'.number_format((float) $c->bonus_adjustment, 2) : '')
                 .($c->customer_agreed ? ' · müştəri razıdır' : ''),
-            'by' => $who($c->created_by), 'note' => $c->note]);
+            'by' => $who($c->created_by) ?? 'Müştəri (sayt)', 'note' => $c->note]);
     }
     $events = $events->sortByDesc('at')->values();
     $items = $order->items->keyBy('id');

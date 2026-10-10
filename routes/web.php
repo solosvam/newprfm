@@ -243,6 +243,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(OrdersController::class)->group(function () {
         Route::get('/orders', 'index')->name('orders');
         Route::get('/order/{order}', 'details')->name('order.details');
+        Route::post('/order/{order}/cancel', 'cancel')->middleware('throttle:5,1')->name('order.cancel');
     });
 
     Route::post('/credit/applications', [CreditApplicationController::class, 'store'])

@@ -73,6 +73,11 @@
                         <span class="d-inline-block" tabindex="0" title="{{ $orderCancelBlock }}" data-bs-toggle="tooltip">
                             <button type="button" class="btn btn-outline-danger" disabled>Sifarişi ləğv et</button>
                         </span>
+                        @if($order->hasPendingPayment())
+                            {{-- Ləğvə bankda açıq ödəniş mane olur: nəticəni dərhal yoxlamaq üçün --}}
+                            <button type="button" class="btn btn-outline-secondary" data-payment-check
+                                    data-url="{{ route('admin.crm.order.payment-check', [$customer, $order]) }}">Bankdan yoxla</button>
+                        @endif
                     @else
                         <button type="button" class="btn btn-outline-danger btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                             <i data-acorn-icon="close" data-acorn-size="16"></i><span>Sifarişi ləğv et</span>
