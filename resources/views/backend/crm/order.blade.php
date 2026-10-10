@@ -43,6 +43,10 @@
     $logsByStatus = $order->statusLogs->sortBy('id')->groupBy('status_id'); // bir statusda bir neçə qeyd ola bilər
     $currentStatusId = $order->statusLogs->sortBy('id')->last()?->status_id ?? $order->order_status_id;
     $steps = $timelineStatuses->filter(fn ($s) => $s->code !== 'cancelled' || $timelineLogs->has($s->id));
+
+    // "Proses" tabı: məhsulların qrupu/sırası və "növbəti addım" zolağı (OrderProcessSummary)
+    $process = app(\App\Services\OrderProcessSummary::class)->for($order, $requests, $staff, $courierBlock ?? null, $order->status?->code === 'new' ? ($startBlock ?? null) : null);
+    $processTones = ['warning' => 'alert-warning', 'danger' => 'alert-danger', 'success' => 'alert-success', 'info' => 'alert-info', 'muted' => 'alert-secondary'];
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
@@ -66,24 +70,27 @@
                 @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
             </div>
             <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-start justify-content-md-end">
-                <a class="btn btn-outline-primary btn-icon btn-icon-start" href="{{ route('admin.crm.customer', $customer) }}"><i data-acorn-icon="user" data-acorn-size="16"></i><span>Müştəri</span></a>
-                {{-- Sifarişin tam ləğvi (ləğv edilmiş / təhvil verilmiş sifarişdə görünmür) --}}
-                @if($canCancelOrder)
-                    @if($orderCancelBlock)
-                        <span class="d-inline-block" tabindex="0" title="{{ $orderCancelBlock }}" data-bs-toggle="tooltip">
-                            <button type="button" class="btn btn-outline-danger" disabled>Sifarişi ləğv et</button>
-                        </span>
-                        @if($order->hasPendingPayment())
-                            {{-- Ləğvə bankda açıq ödəniş mane olur: nəticəni dərhal yoxlamaq üçün --}}
-                            <button type="button" class="btn btn-outline-secondary" data-payment-check
-                                    data-url="{{ route('admin.crm.order.payment-check', [$customer, $order]) }}">Bankdan yoxla</button>
+                {{-- İkinci dərəcəli əməliyyatlar: müştəri kartı, bank yoxlaması, sifarişin tam ləğvi --}}
+                <div class="dropdown">
+                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Digər</button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{{ route('admin.crm.customer', $customer) }}">Müştərinin səhifəsi</a>
+                        @if($order->payments->contains('status', \App\Models\Payment\Payment::PENDING))
+                            <button type="button" class="dropdown-item" data-payment-check
+                                    data-url="{{ route('admin.crm.order.payment-check', [$customer, $order]) }}">Ödənişi bankdan yoxla</button>
                         @endif
-                    @else
-                        <button type="button" class="btn btn-outline-danger btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
-                            <i data-acorn-icon="close" data-acorn-size="16"></i><span>Sifarişi ləğv et</span>
-                        </button>
-                    @endif
-                @endif
+                        {{-- Sifarişin tam ləğvi (ləğv edilmiş / təhvil verilmiş sifarişdə görünmür) --}}
+                        @if($canCancelOrder)
+                            <div class="dropdown-divider"></div>
+                            @if($orderCancelBlock)
+                                <span class="dropdown-item disabled" aria-disabled="true">Sifarişi ləğv et</span>
+                                <span class="dropdown-item-text text-muted text-small">{{ $orderCancelBlock }}</span>
+                            @else
+                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">Sifarişi ləğv et</button>
+                            @endif
+                        @endif
+                    </div>
+                </div>
                 {{-- Növbəti addım: İcraya götür → (anbarlar) → Kuryer təyin et --}}
                 @if($order->status?->code === 'new')
                     @if($startBlock ?? null)
@@ -102,12 +109,6 @@
                     </button>
                 @endif
             </div>
-            @if(($courierBlock ?? null) && $order->status?->code !== 'new' && in_array($order->status?->code, [...\App\Services\OrderStatusService::PROCUREMENT, 'courier_assigned'], true))
-                <div class="col-12 text-md-end small text-muted">{{ $courierBlock }}</div>
-            @endif
-            @if($order->status?->code === 'new' && ($startBlock ?? null))
-                <div class="col-12"><div class="alert alert-warning mb-0">{{ $startBlock }}</div></div>
-            @endif
         </div>
     </div>
     @include('backend.procurement.feedback')
@@ -141,116 +142,48 @@
         </div></div>
     @endif
 
-    {{-- Üst kartlar --}}
-    <div class="row g-3 mb-3">
-        <div class="col-12 col-md-6 col-xl-4 d-flex flex-column">
-            <h2 class="small-title">Sifariş məlumatları</h2>
-            <div class="card flex-grow-1">
-                <div class="card-body d-flex flex-column">
-                    <dl class="od-facts">
-                        <div><dt>Nömrə</dt><dd>{{ $order->order_no }}</dd></div>
-                        <div><dt>Tarix</dt><dd>{{ $order->created_at?->format('d.m.Y H:i') ?? '—' }}</dd></div>
-                        <div><dt>Status</dt><dd><span class="badge bg-outline-primary">{{ $order->status?->name_az ?? '—' }}</span></dd></div>
-                        <div><dt>Mənbə</dt><dd>{{ $sourceLabels[$order->source] ?? ($order->source ?: '—') }}@if($order->created_by && $staff->has($order->created_by)) · {{ $staff[$order->created_by] }}@endif</dd></div>
-                        <div><dt>Ödəniş üsulu</dt><dd>{{ $order->paymentMethod?->name_az ?? '—' }}@if($order->birbank_installment_months) · {{ $order->birbank_installment_months }} ay @endif</dd></div>
-                        <div><dt>Ödəniş vəziyyəti</dt><dd><span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span></dd></div>
-                    </dl>
-                    <div class="od-total mt-auto">
-                        <span class="text-muted">Yekun məbləğ</span>
-                        <strong class="h3 mb-0">{{ number_format((float) $order->total, 2) }} <small>AZN</small></strong>
-                    </div>
+    {{-- Nazik zolaq: operatorun iş zamanı daim baxdığı məlumat (qalanı "Məlumat" tabındadır) --}}
+    <div class="card mb-2">
+        <div class="card-body py-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-6 col-md-3">
+                    <div class="text-small text-muted mb-1">STATUS</div>
+                    <span class="badge bg-outline-primary">{{ $order->status?->name_az ?? '—' }}</span>
                 </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4 d-flex flex-column">
-            <h2 class="small-title">Müştəri və çatdırılma</h2>
-            <div class="card flex-grow-1">
-                <div class="card-body d-flex flex-column">
-                    <dl class="od-facts">
-                        <div><dt>Müştəri</dt><dd><a href="{{ route('admin.crm.customer', $customer) }}">#{{ $customer->id }} {{ $customer->name }} {{ $customer->surname }}</a></dd></div>
-                        <div><dt>Telefon</dt><dd>@if($customer->mobile)<a href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile) }}">{{ $customer->mobile }}</a>@else — @endif</dd></div>
-                        @if($customer->mobile_2)
-                            <div><dt>Ehtiyat telefon</dt><dd><a href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile_2) }}">{{ $customer->mobile_2 }}</a></dd></div>
-                        @endif
-                        <div class="od-facts__wide"><dt>Ünvan</dt><dd>
-                            {{ $order->address?->label ?: 'Ünvan dəqiqləşdirilməyib' }}
-                            @if($order->address)
-                                <a href="{{ $order->address->mapsUrl() }}" target="_blank" rel="noopener" class="ms-1 {{ $order->address->hasLocation() ? 'text-success' : 'text-muted' }}" title="{{ $order->address->hasLocation() ? 'Müştəri xəritədə nöqtə seçib' : 'Nöqtə seçilməyib — ünvan mətni ilə axtarış' }}">
-                                    <i data-acorn-icon="pin" data-acorn-size="14"></i> xəritə
-                                </a>
-                            @endif
-                        </dd></div>
-                        <div><dt>Qablaşdırma</dt><dd>@if($order->gift_wrap)<span class="badge bg-outline-primary">Hədiyyəlik</span>@else Standart @endif</dd></div>
-                        <div><dt>Kuryer</dt><dd>
-                            @if($order->courier)
-                                {{ $order->courier->full_name }}@if($order->courier->mobile)<a class="d-block small" href="tel:{{ $order->courier->mobile }}">{{ $order->courier->mobile }}</a>@endif
-                            @else<span class="text-muted">Təyin edilməyib</span>@endif
-                        </dd></div>
-                        <div class="od-facts__wide"><dt>Müştərinin qeydi</dt><dd>{{ $order->customer_note ?: '—' }}</dd></div>
-                    </dl>
+                <div class="col-6 col-md-3">
+                    <div class="text-small text-muted mb-1">MÜŞTƏRİ</div>
+                    <a href="{{ route('admin.crm.customer', $customer) }}">{{ $customer->name }} {{ $customer->surname }}</a>
+                    @if($customer->mobile)<a class="d-block text-small" href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile) }}">{{ $customer->mobile }}</a>@endif
                 </div>
-            </div>
-        </div>
-        <div class="col-12 col-xl-4 d-flex flex-column">
-            <h2 class="small-title">Status tarixçəsi</h2>
-            <div class="card flex-grow-1">
-                <div class="card-body d-flex flex-column">
-                    <ol class="od-steps scroll-out" aria-label="Sifarişin status tarixçəsi">
-                        @foreach($steps as $step)
-                            @php $log = $timelineLogs->get($step->id); @endphp
-                            <li class="{{ $log ? 'is-done' : '' }} {{ $step->id === $currentStatusId ? 'is-current' : '' }} {{ $step->code === 'cancelled' ? 'is-cancel' : '' }}">
-                                <span class="od-steps__dot"></span>
-                                <div class="od-steps__title">{{ $step->name_az }}</div>
-                                @if($log)
-                                    <div class="od-steps__meta">{{ $log->created_at?->format('d.m.Y H:i') }}@if($log->user) · {{ $log->user->full_name }}@endif</div>
-                                    {{-- bu statusdakı bütün qeydlər (kuryer bildirişləri yuxarıda ayrıca da görünür) --}}
-                                    @foreach($logsByStatus->get($step->id, collect())->filter(fn ($l) => $l->note) as $noteLog)
-                                        <div class="od-steps__note">@if($logsByStatus->get($step->id)->count() > 1)<span class="text-muted">{{ $noteLog->created_at?->format('H:i') }}</span> @endif{{ $noteLog->note }}</div>
-                                    @endforeach
-                                @endif
-                            </li>
-                        @endforeach
-                    </ol>
+                <div class="col-6 col-md-3">
+                    <div class="text-small text-muted mb-1">YEKUN</div>
+                    <div class="cta-3 text-primary">{{ number_format((float) $order->total, 2) }} AZN</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="text-small text-muted mb-1">ÖDƏNİŞ</div>
+                    <div>{{ $order->paymentMethod?->name_az ?? '—' }}</div>
+                    <span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Xülasə: klik → müvafiq tab --}}
-    <div class="od-kpis mb-3">
-        <a class="od-kpi" href="#procurement" data-order-tab-link>
-            <div class="od-kpi__label">Təminat</div>
-            <div class="od-kpi__value">{{ $supplyTotal }} / {{ $needTotal }} ədəd seçilib</div>
-            <div class="progress"><div class="progress-bar {{ $supplyPercent >= 100 ? 'bg-success' : 'bg-warning' }}" style="width: {{ $supplyPercent }}%"></div></div>
-        </a>
-        <a class="od-kpi" href="#procurement" data-order-tab-link>
-            <div class="od-kpi__label">Anbar sorğuları</div>
-            <div class="od-kpi__value">
-                @if($requests->isEmpty()) Sorğu yoxdur
-                @else {{ $requests->count() }} sorğu @if($awaitingAnswers)· <span class="text-warning">{{ $awaitingAnswers }} cavab gözlənilir</span>@else· hamısı cavablanıb @endif
-                @endif
-            </div>
-        </a>
-        <a class="od-kpi" href="#procurement" data-order-tab-link>
-            <div class="od-kpi__label">Toplama</div>
-            <div class="od-kpi__value">{{ $pickedTotal }} / {{ $needTotal }} ədəd götürülüb @if($problemCount)· <span class="text-danger">{{ $problemCount }} problem</span>@endif</div>
-            <div class="progress"><div class="progress-bar bg-success" style="width: {{ $needTotal ? round($pickedTotal / $needTotal * 100) : 0 }}%"></div></div>
-        </a>
-        <a class="od-kpi" href="#payments" data-order-tab-link>
-            <div class="od-kpi__label">Ödəniş</div>
-            <div class="od-kpi__value">{{ $paymentLabels[$order->payment_status] ?? '—' }} · {{ number_format((float) $order->total, 2) }} AZN</div>
-        </a>
+    {{-- Növbəti addım: sifariş hansı mərhələdədir, indi nə etmək lazımdır, son əməliyyatı kim edib --}}
+    <div class="alert {{ $processTones[$process['tone']] ?? 'alert-info' }} mb-3" role="status">
+        <strong class="d-block">{{ $process['headline'] }}</strong>
+        @if($process['detail'])<div class="text-small">{{ $process['detail'] }}</div>@endif
+        @if($process['last'])
+            <div class="text-small mt-1">Son əməliyyat: {{ $process['last']['by'] ?? 'Sistem' }}, {{ $process['last']['at']->format('d.m H:i') }} — {{ $process['last']['text'] }}</div>
+        @endif
     </div>
 
     {{-- Tablar: kartdan kənarda (fonun üstündə); hər tabın məzmunu öz kartlarındadır — kart içində kart yoxdur --}}
             @php
-                $tabs = [
-                'products' => ['Məhsullar', $order->items->count(), false],
-                'item-history' => ['Məhsulların tarixçəsi', null, false],
-                'procurement' => ['Anbar sorğuları', $awaitingAnswers ?: null, $awaitingAnswers > 0],
-                'payments' => ['Ödənişlər', $order->payments->count() ?: null, false],
-            ];
-            if (!empty($settlement)) $tabs['settlements'] = ['Hesablaşmalar', null, false];
+                $tabs = ['process' => ['Proses', $process['counts']['choose'] ?: null, $process['counts']['choose'] > 0],
+                    'payments' => ['Ödənişlər', $order->payments->count() ?: null, false]];
+                if (!empty($settlement)) $tabs['settlements'] = ['Hesablaşmalar', null, false];
+                $tabs['item-history'] = ['Tarixçə', null, false];
+                $tabs['info'] = ['Məlumat', null, false];
             @endphp
             {{-- Acorn "Responsive Tabs with Line Title": link kimi tablar; sığmayanlar "…" menyusuna düşür (responsivetab.js) --}}
             <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title responsive-tabs order-detail-tabs" role="tablist" aria-label="Sifariş bölmələri">
@@ -265,92 +198,27 @@
                 </li>
             </ul>
         <div class="tab-content mb-5">
-            <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab" tabindex="0">
-                <div class="card"><div class="card-body">
+            <div class="tab-pane fade show active" id="process" role="tabpanel" aria-labelledby="process-tab" tabindex="0">
                 @if($cancelBlock && $order->items->contains(fn ($i) => $i->activeQuantity() > 0))
-                    <div class="text-muted small mb-2">Məhsul ləğvi: {{ $cancelBlock }}</div>
+                    <div class="text-muted text-small mb-2">Məhsul ləğvi: {{ $cancelBlock }}</div>
                 @endif
-                <div class="table-responsive">
-                    <table class="table od-table">
-                        <thead>
-                        <tr>
-                            <th>Məhsul</th>
-                            <th class="od-num">SİFARİŞ</th>
-                            <th class="od-num">Ləğv</th>
-                            <th class="od-num">Qalan</th>
-                            <th class="od-num">Satış QİYMƏTİ</th>
-                            <th class="od-num">Məbləğ</th>
-                            <th>TƏMİNAT</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($order->items as $item)
-                            @php
-                                $got = $supply[$item->id];
-                                $active = $item->activeQuantity();
-                                $itemTitle = ($item->product?->name ?? 'Silinmiş məhsul').($item->variant?->size ? ' · '.$item->variant->size->name_az : '');
-                            @endphp
-                            <tr class="{{ $active === 0 ? 'od-row-cancelled' : '' }}">
-                                <td>
-                                    <span class="od-name">{{ collect([$item->product?->brand?->name, $item->product?->name ?? 'Silinmiş məhsul' , $item->variant?->size?->name_az])->filter()->implode(' · ') }} </span>
-                                    @foreach($cancellations[$item->id] ?? [] as $c)
-                                        <span class="od-sub text-danger">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}@if($c->user) · {{ $c->user->full_name }}@endif</span>
-                                    @endforeach
-                                </td>
-                                <td class="od-num">{{ $item->quantity }}</td>
-                                <td class="od-num {{ $item->cancelled_quantity ? 'text-danger' : 'text-muted' }}">{{ $item->cancelled_quantity ?: '—' }}</td>
-                                <td class="od-num">{{ $active }}</td>
-                                <td class="od-num">@if($item->list_price > $item->unit_price)<s class="text-muted small">{{ number_format((float) $item->list_price, 2) }}</s> @endif{{ number_format((float) $item->unit_price, 2) }} AZN</td>
-                                <td class="od-num">{{ number_format((float) $item->total, 2) }} AZN</td>
-                                <td>
-                                    @php
-                                        $supplyStatus = $item->supplyStatus();
-                                        $supplyBadge = ['pending' => 'bg-outline-muted', 'cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger',
-                                            'partly_allocated' => 'bg-outline-warning', 'partly_picked' => 'bg-outline-warning',
-                                            'allocated' => 'bg-outline-primary', 'reserved' => 'bg-outline-success', 'picked' => 'bg-success'][$supplyStatus];
-                                    @endphp
-                                    <span class="badge {{ $supplyBadge }}">{{ $item->supplyLabel() }}@if(in_array($supplyStatus, ['partly_allocated'], true)) · {{ $got }}/{{ $active }}@endif</span>
-                                </td>
-                                <td class="text-end">
-                                    @if(!$doorBlock && $item->activeQuantity() > 0 && $needTotal > 1)
-                                        <button type="button" class="btn btn-sm btn-outline-warning text-nowrap" data-bs-toggle="modal" data-bs-target="#doorRefuseModal"
-                                                data-action="{{ route('admin.crm.order.item.refuse', [$customer, $order, $item]) }}"
-                                                data-title="{{ $itemTitle }}" data-active="{{ $active }}">Qapıda imtina</button>
-                                    @endif
-                                    @if(isset($cancelPreviews[$item->id]))
-                                        <button type="button" class="btn btn-sm btn-outline-danger text-nowrap" data-bs-toggle="modal" data-bs-target="#cancelItemModal"
-                                                data-action="{{ route('admin.crm.order.item.cancel', [$customer, $order, $item]) }}"
-                                                data-title="{{ $itemTitle }}" data-active="{{ $active }}"
-                                                data-previews='@json($cancelPreviews[$item->id])'>Ləğv et</button>
-                                    @endif
-                                </td>
-                            </tr>
+                @include('backend.procurement.order-content')
+                {{-- Tam ləğv olunmuş məhsullar: proses yoxdur, yalnız qeyd --}}
+                @php $cancelledItems = $order->items->filter(fn ($i) => $i->activeQuantity() === 0); @endphp
+                @if($cancelledItems->isNotEmpty())
+                    <h2 class="small-title mt-4">Ləğv edilən məhsullar <span class="text-muted">· {{ $cancelledItems->count() }}</span></h2>
+                    <div class="card"><div class="card-body py-3">
+                        @foreach($cancelledItems as $item)
+                            <div class="{{ $loop->last ? '' : 'border-bottom pb-2 mb-2' }}">
+                                <span class="text-muted text-decoration-line-through">{{ collect([$item->product?->brand?->name, $item->product?->name ?? 'Silinmiş məhsul', $item->variant?->size?->name_az])->filter()->implode(' · ') }}</span>
+                                @foreach($cancellations[$item->id] ?? [] as $c)
+                                    <div class="text-danger text-small">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}@if($c->user) · {{ $c->user->full_name }}@endif</div>
+                                @endforeach
+                            </div>
                         @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="od-summary mt-3">
-                    {{-- Məhsullar − Endirim + Çatdırılma + Qablaşdırma − Ləğv olunan = Yekun (Order::totalsBreakdown) --}}
-                    @php $sum = $order->totalsBreakdown(); @endphp
-                    <div><span>Məhsullar</span><span>{{ number_format($sum['goods'], 2) }} AZN</span></div>
-                    @if($sum['discount'] > 0)<div><span>Endirim</span><span class="text-success">−{{ number_format($sum['discount'], 2) }} AZN</span></div>@endif
-                    @if($sum['referral'] > 0)<div><span>Dəvət endirimi</span><span class="text-success">−{{ number_format($sum['referral'], 2) }} AZN</span></div>@endif
-                    <div><span>Çatdırılma</span><span>{{ (float) $order->delivery_fee > 0 ? number_format((float) $order->delivery_fee, 2).' AZN' : 'Pulsuz' }}</span></div>
-                    @if($order->gift_wrap)<div><span>Hədiyyəlik qablaşdırma</span><span>{{ (float) $order->gift_wrap_fee > 0 ? number_format((float) $order->gift_wrap_fee, 2).' AZN' : 'Pulsuz' }}</span></div>@endif
-                    @if($sum['cancelled'] > 0)<div><span>Ləğv olunan</span><span class="text-danger">−{{ number_format($sum['cancelled'], 2) }} AZN</span></div>@endif
-                    <div class="od-summary__grand"><span>Yekun</span><span>{{ number_format((float) $order->total, 2) }} AZN</span></div>
-                    @if((float) $order->bonus_earned > 0)<div><span>Qazandığı bonus</span><span class="text-success">+{{ number_format((float) $order->bonus_earned, 2) }} AZN</span></div>
-                    @elseif(($pendingBonus = app(\App\Services\BonusService::class)->pendingFor($order)) > 0)<div><span>Təhvil veriləndə bonus</span><span class="text-muted">+{{ number_format($pendingBonus, 2) }} AZN</span></div>@endif
-                    @if($pendingRefund > 0)
-                        <div><span>Karta qaytarılacaq</span><a href="#payments" data-order-tab-link class="text-warning">{{ number_format($pendingRefund, 2) }} AZN · gözləyir</a></div>
-                    @endif
-                    @if($refundedToCard > 0)
-                        <div><span>Karta qaytarılıb</span><span>{{ number_format($refundedToCard, 2) }} AZN</span></div>
-                    @endif
-                </div>
+                    </div></div>
+                @endif
                 @include('backend.crm.partials.order-confirm')
-                </div></div>
             </div>
             <div class="tab-pane fade" id="item-history" role="tabpanel" aria-labelledby="item-history-tab" tabindex="0">
                 <div class="card"><div class="card-body">@include('backend.crm.partials.order-item-history')</div></div>
@@ -367,7 +235,105 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="procurement" role="tabpanel" aria-labelledby="procurement-tab" tabindex="0">@include('backend.procurement.order-content')</div>
+            <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab" tabindex="0">
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-6 col-xl-4 d-flex flex-column">
+                <h2 class="small-title">Sifariş məlumatları</h2>
+                <div class="card flex-grow-1">
+                    <div class="card-body d-flex flex-column">
+                        <dl class="od-facts">
+                            <div><dt>Nömrə</dt><dd>{{ $order->order_no }}</dd></div>
+                            <div><dt>Tarix</dt><dd>{{ $order->created_at?->format('d.m.Y H:i') ?? '—' }}</dd></div>
+                            <div><dt>Status</dt><dd><span class="badge bg-outline-primary">{{ $order->status?->name_az ?? '—' }}</span></dd></div>
+                            <div><dt>Mənbə</dt><dd>{{ $sourceLabels[$order->source] ?? ($order->source ?: '—') }}@if($order->created_by && $staff->has($order->created_by)) · {{ $staff[$order->created_by] }}@endif</dd></div>
+                            <div><dt>Ödəniş üsulu</dt><dd>{{ $order->paymentMethod?->name_az ?? '—' }}@if($order->birbank_installment_months) · {{ $order->birbank_installment_months }} ay @endif</dd></div>
+                            <div><dt>Ödəniş vəziyyəti</dt><dd><span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span></dd></div>
+                        </dl>
+                        <div class="od-total mt-auto">
+                            <span class="text-muted">Yekun məbləğ</span>
+                            <strong class="h3 mb-0">{{ number_format((float) $order->total, 2) }} <small>AZN</small></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4 d-flex flex-column">
+                <h2 class="small-title">Müştəri və çatdırılma</h2>
+                <div class="card flex-grow-1">
+                    <div class="card-body d-flex flex-column">
+                        <dl class="od-facts">
+                            <div><dt>Müştəri</dt><dd><a href="{{ route('admin.crm.customer', $customer) }}">#{{ $customer->id }} {{ $customer->name }} {{ $customer->surname }}</a></dd></div>
+                            <div><dt>Telefon</dt><dd>@if($customer->mobile)<a href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile) }}">{{ $customer->mobile }}</a>@else — @endif</dd></div>
+                            @if($customer->mobile_2)
+                                <div><dt>Ehtiyat telefon</dt><dd><a href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile_2) }}">{{ $customer->mobile_2 }}</a></dd></div>
+                            @endif
+                            <div class="od-facts__wide"><dt>Ünvan</dt><dd>
+                                {{ $order->address?->label ?: 'Ünvan dəqiqləşdirilməyib' }}
+                                @if($order->address)
+                                    <a href="{{ $order->address->mapsUrl() }}" target="_blank" rel="noopener" class="ms-1 {{ $order->address->hasLocation() ? 'text-success' : 'text-muted' }}" title="{{ $order->address->hasLocation() ? 'Müştəri xəritədə nöqtə seçib' : 'Nöqtə seçilməyib — ünvan mətni ilə axtarış' }}">
+                                        <i data-acorn-icon="pin" data-acorn-size="14"></i> xəritə
+                                    </a>
+                                @endif
+                            </dd></div>
+                            <div><dt>Qablaşdırma</dt><dd>@if($order->gift_wrap)<span class="badge bg-outline-primary">Hədiyyəlik</span>@else Standart @endif</dd></div>
+                            <div><dt>Kuryer</dt><dd>
+                                @if($order->courier)
+                                    {{ $order->courier->full_name }}@if($order->courier->mobile)<a class="d-block small" href="tel:{{ $order->courier->mobile }}">{{ $order->courier->mobile }}</a>@endif
+                                @else<span class="text-muted">Təyin edilməyib</span>@endif
+                            </dd></div>
+                            <div class="od-facts__wide"><dt>Müştərinin qeydi</dt><dd>{{ $order->customer_note ?: '—' }}</dd></div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4 d-flex flex-column">
+                <h2 class="small-title">Status tarixçəsi</h2>
+                <div class="card flex-grow-1">
+                    <div class="card-body d-flex flex-column">
+                        <ol class="od-steps scroll-out" aria-label="Sifarişin status tarixçəsi">
+                            @foreach($steps as $step)
+                                @php $log = $timelineLogs->get($step->id); @endphp
+                                <li class="{{ $log ? 'is-done' : '' }} {{ $step->id === $currentStatusId ? 'is-current' : '' }} {{ $step->code === 'cancelled' ? 'is-cancel' : '' }}">
+                                    <span class="od-steps__dot"></span>
+                                    <div class="od-steps__title">{{ $step->name_az }}</div>
+                                    @if($log)
+                                        <div class="od-steps__meta">{{ $log->created_at?->format('d.m.Y H:i') }}@if($log->user) · {{ $log->user->full_name }}@endif</div>
+                                        {{-- bu statusdakı bütün qeydlər (kuryer bildirişləri yuxarıda ayrıca da görünür) --}}
+                                        @foreach($logsByStatus->get($step->id, collect())->filter(fn ($l) => $l->note) as $noteLog)
+                                            <div class="od-steps__note">@if($logsByStatus->get($step->id)->count() > 1)<span class="text-muted">{{ $noteLog->created_at?->format('H:i') }}</span> @endif{{ $noteLog->note }}</div>
+                                        @endforeach
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <h2 class="small-title mt-4">Yekun hesab</h2>
+                <div class="card"><div class="card-body">
+                    <div class="od-summary">
+                        {{-- Məhsullar − Endirim + Çatdırılma + Qablaşdırma − Ləğv olunan = Yekun (Order::totalsBreakdown) --}}
+                        @php $sum = $order->totalsBreakdown(); @endphp
+                        <div><span>Məhsullar</span><span>{{ number_format($sum['goods'], 2) }} AZN</span></div>
+                        @if($sum['discount'] > 0)<div><span>Endirim</span><span class="text-success">−{{ number_format($sum['discount'], 2) }} AZN</span></div>@endif
+                        @if($sum['referral'] > 0)<div><span>Dəvət endirimi</span><span class="text-success">−{{ number_format($sum['referral'], 2) }} AZN</span></div>@endif
+                        <div><span>Çatdırılma</span><span>{{ (float) $order->delivery_fee > 0 ? number_format((float) $order->delivery_fee, 2).' AZN' : 'Pulsuz' }}</span></div>
+                        @if($order->gift_wrap)<div><span>Hədiyyəlik qablaşdırma</span><span>{{ (float) $order->gift_wrap_fee > 0 ? number_format((float) $order->gift_wrap_fee, 2).' AZN' : 'Pulsuz' }}</span></div>@endif
+                        @if($sum['cancelled'] > 0)<div><span>Ləğv olunan</span><span class="text-danger">−{{ number_format($sum['cancelled'], 2) }} AZN</span></div>@endif
+                        <div class="od-summary__grand"><span>Yekun</span><span>{{ number_format((float) $order->total, 2) }} AZN</span></div>
+                        @if((float) $order->bonus_earned > 0)<div><span>Qazandığı bonus</span><span class="text-success">+{{ number_format((float) $order->bonus_earned, 2) }} AZN</span></div>
+                        @elseif(($pendingBonus = app(\App\Services\BonusService::class)->pendingFor($order)) > 0)<div><span>Təhvil veriləndə bonus</span><span class="text-muted">+{{ number_format($pendingBonus, 2) }} AZN</span></div>@endif
+                        @if($pendingRefund > 0)
+                            <div><span>Karta qaytarılacaq</span><a href="#payments" data-order-tab-link class="text-warning">{{ number_format($pendingRefund, 2) }} AZN · gözləyir</a></div>
+                        @endif
+                        @if($refundedToCard > 0)
+                            <div><span>Karta qaytarılıb</span><span>{{ number_format($refundedToCard, 2) }} AZN</span></div>
+                        @endif
+                    </div>
+
+                </div></div>
+            </div>
             @if(!empty($settlement))
                 <div class="tab-pane fade" id="settlements" role="tabpanel" aria-labelledby="settlements-tab" tabindex="0">@include('backend.crm.partials.order-settlements')</div>
             @endif

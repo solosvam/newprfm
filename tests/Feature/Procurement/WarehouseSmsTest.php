@@ -175,7 +175,7 @@ class WarehouseSmsTest extends TestCase
         $this->assertSame(OrderItemAllocation::NOTIFIED, $allocation->status);
 
         $this->post(route('admin.procurement.allocations.sms', [$order, $allocation]))->assertSessionHas('success', 'Anbar A: SMS göndərildi.');
-        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Anbar SMS bildirişləri')->assertSee('✓ SMS');
+        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Sorğular və anbar SMS-ləri')->assertSee('✓ SMS');
         $this->post(route('admin.procurement.allocations.cancel', [$order, $allocation]), ['note' => 'müştəri imtina etdi'])->assertSessionHasNoErrors()->assertSessionHas('success', fn ($m) => str_contains($m, 'SMS 1'));
         $this->assertSame('warehouse_cancelled', SmsLog::latest('id')->value('context'));
     }

@@ -86,3 +86,17 @@
         form.addEventListener('submit', () => form.querySelectorAll('button:not([type="button"])').forEach(b => { b.disabled = true; }));
     });
 })();
+
+// Yığılan bölmənin (data-remember-collapse) açıq/bağlı vəziyyəti brauzerdə yadda qalır — bütün sifarişlər üçün ortaq
+document.querySelectorAll('[data-remember-collapse]').forEach(panel => {
+    const key = 'collapse:' + panel.dataset.rememberCollapse;
+    const toggler = document.querySelector('[data-bs-target="#' + panel.id + '"]');
+    let saved = null;
+    try { saved = localStorage.getItem(key); } catch (_) {}
+    if (saved === 'open') {
+        panel.classList.add('show');
+        toggler?.setAttribute('aria-expanded', 'true');
+    }
+    panel.addEventListener('shown.bs.collapse', () => { try { localStorage.setItem(key, 'open'); } catch (_) {} });
+    panel.addEventListener('hidden.bs.collapse', () => { try { localStorage.setItem(key, 'closed'); } catch (_) {} });
+});

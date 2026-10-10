@@ -1,5 +1,6 @@
 {{--
-  Anbar təminatı — məhsul mərkəzli: hər məhsul bir kart (tələb/seçilib/çatışmır, anbar cavabları, seçimlər).
+  Anbar təminatı — məhsul mərkəzli: məhsullar qruplara bölünür (cavab gəlib → cavab gözləyir → anbar seçilib),
+  hər məhsul yığılan kartdır (Acorn "Accordion Cards"): cavablar açılır/yığılır, seçimlər həmişə görünür.
   İstifadə: backend/crm/order.blade.php və backend/procurement/order.blade.php.
   Formalar ProcurementController-ə gedir; "Yeni sorğu", "Cavab daxil et", "Seçimi ləğv et" — yan modallar.
 --}}
@@ -19,14 +20,22 @@
 @endphp
 <link rel="stylesheet" href="{{ asset_v('backend/css/procurement-order.css') }}">
 
-@if($order->status?->code === 'new')
-    <div class="alert alert-warning">Anbar sorğusu göndərmək üçün əvvəlcə sifarişi icraya götürün — yuxarıdakı <strong>"İcraya götür"</strong> düyməsi.</div>
-@elseif(!$editable)
-    <div class="alert alert-info">Bu mərhələdə anbar seçimi dəyişdirilmir{{ $flowEditable ? ' — yalnız götürmə mərhələləri qeyd olunur' : '' }}.</div>
-@endif
+@php
+    // Məhsulların qrupu və sırası (cavab gəlib → cavab gözləyir → anbar seçilib) — OrderProcessSummary
+    $process = $process ?? app(\App\Services\OrderProcessSummary::class)->for($order, $requests, $staff);
+    $itemsById = $order->items->keyBy('id');
+    // CRM sifariş səhifəsində məhsulun "⋯" menyusunda ləğv əməliyyatları da olur
+    $crm = isset($customer);
+    $smsProblems = $requests->filter(fn ($r) => !$r->warehouse->phone || !($smsLogs['request'][$r->id] ?? null)?->isSent())->count();
+    $phoneError = fn ($log) => $log && !$log->isSent() && \Illuminate\Support\Str::contains(mb_strtolower((string) $log->error), 'nömrə');
+@endphp
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <div class="text-muted small">Anbar seçimi rezervasiya təsdiqi deyil. Müştərinin satış qiyməti dəyişmir.</div>
+    <div class="text-muted text-small">
+        @if($order->status?->code === 'new') Anbar sorğusu sifariş icraya götürüləndən sonra göndərilir.
+        @elseif(!$editable) Bu mərhələdə anbar seçimi dəyişdirilmir{{ $flowEditable ? ' — yalnız götürmə mərhələləri qeyd olunur' : '' }}.
+        @else Anbar seçimi rezervasiya təsdiqi deyil. Müştərinin satış qiyməti dəyişmir. @endif
+    </div>
     @if($editable)
         <button type="button" class="btn btn-primary btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#procRequestModal" @disabled($warehouses->isEmpty())>
             <i data-acorn-icon="plus" data-acorn-size="16"></i><span>Yeni sorğu</span>
@@ -34,214 +43,191 @@
     @endif
 </div>
 
-@if($editable && $requests->isNotEmpty())
-    <details class="proc-sms" @if($requests->contains(fn ($r) => !$r->warehouse->phone || !($smsLogs['request'][$r->id] ?? null)?->isSent())) open @endif>
-        <summary>Anbar SMS bildirişləri</summary>
-        @foreach($requests as $req)
-            @php
-                $log = $smsLogs['request'][$req->id] ?? null;
-            @endphp
-            <div class="proc-sms__row">
-                <span><b>{{ $req->warehouse->name_az }}</b> · Sorğu #{{ $req->id }}</span>
-                <span class="proc-sms__state {{ $log?->isSent() ? 'is-ok' : ($log || !$req->warehouse->phone ? 'is-bad' : '') }}">
-                    @if(!$req->warehouse->phone) Telefon yazılmayıb — linki əllə göndərin
-                    @elseif(!$log) SMS göndərilməyib
-                    @elseif($log->isSent()) ✓ SMS {{ $log->created_at->format('d.m H:i') }}
-                    @else ✕ {{ $log->error }} @endif
-                </span>
-                @if($req->warehouse->phone)
-                    <form method="POST" action="{{ route('admin.procurement.requests.sms', [$order, $req->id]) }}" data-once>@csrf
-                        <button class="btn btn-sm btn-link p-0">{{ $log ? 'Təkrar göndər' : 'SMS göndər' }}</button>
-                    </form>
-                @endif
+@foreach(\App\Services\OrderProcessSummary::GROUPS as $group => $groupLabel)
+    @php $groupIds = array_values(array_filter($process['order'], fn ($id) => $process['items'][$id]['group'] === $group)); @endphp
+    @continue(!$groupIds)
+    <h2 class="small-title">{{ $groupLabel }} <span class="text-muted">· {{ count($groupIds) }}</span></h2>
+    <div class="mb-4">
+    @foreach($groupIds as $itemId)
+        @php
+            $item = $itemsById[$itemId];
+            $state = $process['items'][$itemId];
+            $need = $item->activeQuantity(); // ləğv olunan miqdar təmin edilmir
+            $active = $item->allocations->whereNotIn('status', \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE);
+            $selected = (int) $active->sum('quantity');
+            $missing = max(0, $need - $selected);
+            $rows = ($requestRows[$item->id] ?? collect())->map(function ($row) use ($active) {
+                $offer = $row['ri']->offers->sortByDesc('id')->first();
+                $taken = $offer ? (int) $active->where('warehouse_offer_id', $offer->id)->sum('quantity') : 0;
+                return $row + ['offer' => $offer, 'taken' => $taken, 'answers' => $row['ri']->offers->count()];
+            });
+            $cheapest = $rows->filter(fn ($r) => $r['offer']?->available_quantity && $r['offer']->unit_cost !== null)->min(fn ($r) => (float) $r['offer']->unit_cost);
+            // Təklif verənlər ucuzdan bahaya; cavab verməyən / "yoxdur" deyənlər ayrıca (yığılmış)
+            $offered = $rows->filter(fn ($r) => $r['offer']?->available_quantity)->sortBy(fn ($r) => (float) $r['offer']->unit_cost)->values();
+            $silent = $rows->reject(fn ($r) => $r['offer']?->available_quantity)->values();
+            $open = $group !== 'selected';
+            $alert = $state['problem'] || $state['sms_failed'];
+            $cancelledParts = $item->allocations->where('status', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
+            $liveParts = $item->allocations->where('status', '!=', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
+            $itemTitle = $itemName($item).($itemSize($item) ? ' · '.$itemSize($item) : '');
+        @endphp
+        {{-- Acorn "Accordion Cards": başlığa klik cavabları açır/yığır; seçimlər (mərhələ xətti, növbəti düymə) həmişə görünür --}}
+        <div class="card d-flex mb-2 {{ $alert ? 'border border-danger' : '' }}">
+            <div class="d-flex align-items-center">
+                <div class="d-flex flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#procItem{{ $item->id }}"
+                     aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="procItem{{ $item->id }}">
+                    <div class="card-body py-3">
+                        <div class="list-item-heading">{{ $itemName($item) }}@if($itemSize($item))<span class="text-muted fw-normal"> · {{ $itemSize($item) }}</span>@endif</div>
+                        <div class="text-muted text-small">
+                            @if($group === 'selected')
+                                {{ $rows->count() }} anbardan —
+                                {{ $active->map(fn ($a) => $a->warehouse->name_az.' · '.$a->quantity.' × '.number_format((float) $a->unit_cost, 2).' AZN')->implode('; ') }}
+                            @elseif($group === 'choose')
+                                {{ $offered->count() }} anbar təklif verib, ən ucuzu {{ number_format((float) $cheapest, 2) }} AZN
+                                @if($selected) · {{ $selected }} / {{ $need }} seçilib, {{ $missing }} çatışmır @endif
+                            @else
+                                {{ $rows->isEmpty() ? 'Bu məhsul üçün hələ sorğu göndərilməyib' : $rows->count().' anbara sorğu göndərilib, təklif yoxdur' }}
+                            @endif
+                        </div>
+                        @if($crm)
+                            @foreach(($cancellations[$item->id] ?? []) as $c)
+                                <div class="text-danger text-small">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}</div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 pe-3 text-nowrap">
+                    <span class="text-muted text-small">{{ $need }} ədəd{{ $crm ? ' · '.number_format((float) $item->total, 2).' AZN' : '' }}</span>
+                    @if($crm && ((!($doorBlock ?? 'x') && $need > 0 && $needTotal > 1) || isset($cancelPreviews[$item->id])))
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Məhsul əməliyyatları">
+                                <i data-acorn-icon="more-horizontal" data-acorn-size="16"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                @if(!($doorBlock ?? 'x') && $need > 0 && $needTotal > 1)
+                                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#doorRefuseModal"
+                                            data-action="{{ route('admin.crm.order.item.refuse', [$customer, $order, $item]) }}"
+                                            data-title="{{ $itemTitle }}" data-active="{{ $need }}">Qapıda imtina</button>
+                                @endif
+                                @if(isset($cancelPreviews[$item->id]))
+                                    <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelItemModal"
+                                            data-action="{{ route('admin.crm.order.item.cancel', [$customer, $order, $item]) }}"
+                                            data-title="{{ $itemTitle }}" data-active="{{ $need }}"
+                                            data-previews='@json($cancelPreviews[$item->id])'>Məhsulu ləğv et</button>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
-        @endforeach
-    </details>
-@endif
 
-@foreach($order->items->filter(fn ($i) => $i->activeQuantity() > 0) as $item)
-    @php
-        $need = $item->activeQuantity(); // ləğv olunan miqdar təmin edilmir
-        $active = $item->allocations->whereNotIn('status', \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE);
-        $selected = (int) $active->sum('quantity');
-        $missing = max(0, $need - $selected);
-        $percent = $need ? min(100, round($selected / $need * 100)) : 0;
-        $rows = ($requestRows[$item->id] ?? collect())->map(function ($row) use ($active) {
-            $offer = $row['ri']->offers->sortByDesc('id')->first();
-            $taken = $offer ? (int) $active->where('warehouse_offer_id', $offer->id)->sum('quantity') : 0;
-            return $row + ['offer' => $offer, 'taken' => $taken, 'answers' => $row['ri']->offers->count()];
-        });
-        $cheapest = $rows->filter(fn ($r) => $r['offer']?->available_quantity && $r['offer']->unit_cost !== null)->min(fn ($r) => (float) $r['offer']->unit_cost);
-    @endphp
-    <section class="proc-item">
-        <header class="proc-item__head">
-            <div class="proc-item__title">{{ $itemName($item) }}@if($itemSize($item))<span> · {{ $itemSize($item) }}</span>@endif</div>
-            <div class="proc-item__need">
-                Tələb <b>{{ $need }}</b>@if($item->cancelled_quantity)<span class="text-danger"> ({{ $item->cancelled_quantity }} ləğv)</span>@endif · Seçilib <b>{{ $selected }}</b> · Çatışmır <b class="{{ $missing ? 'text-danger' : '' }}">{{ $missing }}</b>
-                <div class="progress"><div class="progress-bar {{ $missing ? 'bg-warning' : 'bg-success' }}" style="width: {{ $percent }}%"></div></div>
+            @if($liveParts->isNotEmpty())
+                <div class="card-body pt-0 pb-3">
+                    @foreach($liveParts as $allocation)
+                        @include('backend.procurement.partials.allocation')
+                    @endforeach
+                </div>
+            @endif
+
+            <div id="procItem{{ $item->id }}" class="collapse {{ $open ? 'show' : '' }}">
+                <div class="card-body accordion-content pt-0">
+                    @if($rows->isEmpty())
+                        <p class="text-muted mb-0">Bu məhsul üçün hələ sorğu yoxdur — "Yeni sorğu" ilə anbarlardan soruşun.</p>
+                    @else
+                        @if($offered->isNotEmpty())
+                            <div class="table-responsive"><table class="table proc-table">
+                                <thead><tr><th>Anbar</th><th>Cavab</th><th class="text-end">Vahid alış</th><th>Mənbə</th><th class="text-end">Seçim</th></tr></thead>
+                                <tbody>
+                                @foreach($offered as $row)
+                                    @include('backend.procurement.partials.offer-row')
+                                @endforeach
+                                </tbody>
+                            </table></div>
+                        @endif
+                        @if($silent->isNotEmpty())
+                            {{-- Təklifi olmayan anbarlar: təklif verən varsa yığılır (uzun siyahı səhifəni doldurmasın) --}}
+                            @if($offered->isNotEmpty())
+                                <a class="d-inline-block text-small mt-2" data-bs-toggle="collapse" href="#procSilent{{ $item->id }}" role="button" aria-expanded="false" aria-controls="procSilent{{ $item->id }}">
+                                    {{ $silent->count() }} anbar cavab verməyib və ya "yoxdur" deyib · göstər
+                                </a>
+                            @endif
+                            <div id="procSilent{{ $item->id }}" class="collapse {{ $offered->isEmpty() ? 'show' : '' }}">
+                                <div class="table-responsive"><table class="table proc-table">
+                                    @if($offered->isEmpty())
+                                        <thead><tr><th>Anbar</th><th>Cavab</th><th class="text-end">Vahid alış</th><th>Mənbə</th><th class="text-end">Seçim</th></tr></thead>
+                                    @endif
+                                    <tbody>
+                                    @foreach($silent as $row)
+                                        @include('backend.procurement.partials.offer-row')
+                                    @endforeach
+                                    </tbody>
+                                </table></div>
+                            </div>
+                        @endif
+                    @endif
+                    @foreach($cancelledParts as $allocation)
+                        @include('backend.procurement.partials.allocation')
+                    @endforeach
+                </div>
             </div>
-        </header>
-        <div class="proc-item__body">
-            @if($rows->isEmpty())
-                <p class="text-muted mb-0 py-2">Bu məhsul üçün hələ sorğu yoxdur.</p>
-            @else
+        </div>
+    @endforeach
+    </div>
+@endforeach
+
+{{-- Sorğular və anbar SMS-ləri: ikinci dərəcəli — yığılmış açılır, operatorun seçimi yadda qalır (procurement-order.js) --}}
+@if($requests->isNotEmpty())
+    <div class="card d-flex mb-2">
+        <div class="d-flex flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#procMore" aria-expanded="false" aria-controls="procMore">
+            <div class="card-body py-3">
+                <div class="list-item-heading">Sorğular və anbar SMS-ləri
+                    @if($smsProblems)<span class="badge bg-danger ms-2">{{ $smsProblems }} xəta</span>@endif
+                </div>
+                <div class="text-muted text-small">{{ $requests->count() }} sorğu · anbar linkləri və SMS vəziyyəti</div>
+            </div>
+        </div>
+        <div id="procMore" class="collapse" data-remember-collapse="proc-more">
+            <div class="card-body accordion-content pt-0">
                 <div class="table-responsive"><table class="table proc-table">
-                    <thead><tr><th>Anbar</th><th>Cavab</th><th class="text-end">Vahid alış</th><th>Mənbə</th><th class="text-end">Seçim</th></tr></thead>
+                    <thead><tr><th>Sorğu</th><th>Anbar</th><th>Məhsullar</th><th>Yaradılıb</th><th>Cavab</th><th>SMS</th><th></th></tr></thead>
                     <tbody>
-                    @foreach($rows as $row)
+                    @foreach($requests as $req)
                         @php
-                            $offer = $row['offer'];
-                            $canTake = $offer ? min($offer->available_quantity - $row['taken'], $missing) : 0;
-                            $offerUrl = route('admin.procurement.offers.store', [$order, $row['ri']]);
-                            $offerTitle = $itemName($item).($itemSize($item) ? ' · '.$itemSize($item) : '').' — '.$row['req']->warehouse->name_az;
+                            $answered = $req->items->filter(fn ($ri) => $ri->offers->isNotEmpty())->count();
+                            $log = $smsLogs['request'][$req->id] ?? null;
                         @endphp
                         <tr>
-                            <td>{{ $row['req']->warehouse->name_az }}<span class="proc-sub">Sorğu #{{ $row['req']->id }} · {{ $row['req']->created_at->format('d.m H:i') }}</span></td>
-                            <td>
-                                @if(!$offer)<span class="badge bg-outline-muted">Cavab gözlənilir</span>
-                                @elseif(!$offer->available_quantity)<span class="badge bg-outline-danger">Yoxdur</span>
-                                @elseif($offer->available_quantity >= $row['ri']->requested_quantity)<span class="badge bg-outline-success">Tam var · {{ $offer->available_quantity }} ədəd</span>
-                                @else<span class="badge bg-outline-warning">Qismən · {{ $offer->available_quantity }} ədəd</span>@endif
-                                @if($row['answers'] > 1)<span class="proc-sub">{{ $row['answers'] }} cavab — sonuncu göstərilir</span>@endif
+                            <td>#{{ $req->id }}</td>
+                            <td>{{ $req->warehouse->name_az }}@if($req->warehouse->phone)<span class="proc-sub"><a href="tel:{{ $req->warehouse->phone }}">{{ $req->warehouse->phone }}</a></span>@endif</td>
+                            <td>{{ $req->items->map(fn ($ri) => $itemName($ri->orderItem).' ×'.$ri->requested_quantity)->implode(', ') }}</td>
+                            <td>{{ $req->created_at->format('d.m.Y H:i') }}@if($who($req->created_by))<span class="proc-sub">{{ $who($req->created_by) }}</span>@endif</td>
+                            <td><span class="badge {{ $answered === $req->items->count() ? 'bg-outline-success' : 'bg-outline-warning' }}">{{ $answered }}/{{ $req->items->count() }}</span></td>
+                            <td class="{{ $log?->isSent() ? 'text-success' : ($log || !$req->warehouse->phone ? 'text-danger' : 'text-muted') }}">
+                                @if(!$req->warehouse->phone) Telefon yazılmayıb
+                                @elseif(!$log) Göndərilməyib
+                                @elseif($log->isSent()) ✓ {{ $log->created_at->format('d.m H:i') }}
+                                @else ✕ {{ $log->error }} @endif
                             </td>
-                            <td class="text-end text-nowrap">
-                                @if($offer?->unit_cost !== null && $offer->available_quantity)
-                                    {{ number_format((float) $offer->unit_cost, 2) }} AZN
-                                    @if($rows->count() > 1 && (float) $offer->unit_cost === $cheapest)<span class="badge bg-success proc-best">ən ucuz</span>@endif
-                                @else <span class="text-muted">—</span> @endif
-                            </td>
-                            <td>@if($offer){{ $sources[$offer->source] ?? $offer->source }}<span class="proc-sub">{{ $offer->created_at->format('d.m H:i') }}@if($who($offer->recorded_by)) · {{ $who($offer->recorded_by) }}@endif</span>@else<span class="text-muted">—</span>@endif</td>
                             <td class="text-end">
                                 <div class="proc-actions">
-                                    @if($row['taken'])<span class="text-success text-nowrap">{{ $row['taken'] }} seçilib</span>@endif
-                                    @if($editable && $canTake > 0)
-                                        <form method="POST" action="{{ route('admin.procurement.allocations.store', $order) }}" class="proc-pick">
-                                            @csrf
-                                            <input type="hidden" name="offer_id" value="{{ $offer->id }}">
-                                            <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
-                                            <input type="number" name="quantity" min="1" max="{{ $canTake }}" value="{{ $canTake }}" class="form-control form-control-sm" aria-label="Seçilən miqdar" required>
-                                            <button class="btn btn-sm btn-primary">Seç</button>
+                                    @if($editable && (!$req->warehouse->phone || $phoneError($log)))
+                                        <a class="btn btn-sm btn-primary text-nowrap" href="{{ route('admin.procurement.warehouses.edit', $req->warehouse) }}">Nömrəni düzəlt</a>
+                                    @elseif($editable && $req->warehouse->phone)
+                                        <form method="POST" action="{{ route('admin.procurement.requests.sms', [$order, $req->id]) }}" data-once>@csrf
+                                            <button class="btn btn-sm btn-outline-primary text-nowrap">{{ $log ? 'SMS-i təkrar göndər' : 'SMS göndər' }}</button>
                                         </form>
                                     @endif
-                                    @if($editable)
-                                        <button type="button" class="btn btn-sm {{ $offer ? 'btn-link px-1' : 'btn-outline-primary' }}" data-bs-toggle="modal" data-bs-target="#procOfferModal"
-                                                data-action="{{ $offerUrl }}" data-title="{{ $offerTitle }}" data-requested="{{ $row['ri']->requested_quantity }}">
-                                            {{ $offer ? 'Yenilə' : 'Cavab daxil et' }}
-                                        </button>
-                                    @endif
+                                    <form method="POST" action="{{ route('admin.procurement.warehouses.link', $req->warehouse) }}">@csrf<button class="btn btn-sm btn-outline-primary text-nowrap" @disabled(!$req->warehouse->active)>Link yarat</button></form>
                                 </div>
                             </td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table></div>
-            @endif
-
-            @foreach($item->allocations->sortBy(fn ($a) => $a->status === 'cancelled') as $allocation)
-                @php
-                    $status = $allocation->status;
-                    $isCancelled = $status === \App\Models\Procurement\OrderItemAllocation::CANCELLED;
-                    $flow = \App\Models\Procurement\OrderItemAllocation::FLOW;
-                    $reached = array_search($status === 'problem' ? ($allocation->logs->where('to_status', 'problem')->last()?->from_status ?? 'selected') : $status, $flow, true);
-                    $lastLog = $allocation->logs->last();
-                    $statusUrl = route('admin.procurement.allocations.status', [$order, $allocation]);
-                    $allocTitle = $itemName($item).' — '.$allocation->warehouse->name_az.', '.$allocation->quantity.' ədəd';
-                    // Növbəti addım: bir düymə (əsas), qalanları menyuda
-                    $next = ['selected' => ['notified', 'Anbara bildirildi'], 'notified' => ['reserved', 'Anbar ayırdı'], 'reserved' => ['picked', 'Götürüldü']][$status] ?? null;
-                    // Telefonu olan anbara "bildirmək" = SMS (status özü "Anbara bildirildi" olur)
-                    $hasPhone = (bool) $allocation->warehouse->phone;
-                    $smsUrl = route('admin.procurement.allocations.sms', [$order, $allocation]);
-                    $allocSms = $smsLogs['allocation'][$allocation->id] ?? null;
-                @endphp
-                <div class="proc-alloc proc-alloc--{{ $status }}">
-                    <div class="proc-alloc__main">
-                        <strong>{{ $allocation->warehouse->name_az }}</strong>
-                        <span>{{ $allocation->quantity }} ədəd × {{ number_format((float) $allocation->unit_cost, 2) }} AZN</span>
-                        @if($allocation->warehouse->phone)<a href="tel:{{ $allocation->warehouse->phone }}" class="text-muted">{{ $allocation->warehouse->phone }}</a>@endif
-                    </div>
-                    @unless($isCancelled)
-                        <ol class="proc-steps" aria-label="Təminat mərhələləri">
-                            @foreach($flow as $i => $step)
-                                <li class="{{ $reached !== false && $i <= $reached ? 'is-done' : '' }}">{{ \App\Models\Procurement\OrderItemAllocation::LABELS[$step] }}</li>
-                            @endforeach
-                        </ol>
-                    @endunless
-                    @if($status === 'problem')
-                        <div class="proc-alloc__problem">⚠ {{ $lastLog?->note ?? 'Problem' }}</div>
-                    @endif
-                    @if($allocSms && !$isCancelled)
-                        <div class="proc-alloc__sms {{ $allocSms->isSent() ? 'is-ok' : 'is-bad' }}">{{ $allocSms->isSent() ? '✓ SMS '.$allocSms->created_at->format('d.m H:i') : '✕ SMS getmədi: '.$allocSms->error }}</div>
-                    @endif
-                    <div class="proc-alloc__foot">
-                        <span class="badge {{ ['cancelled' => 'bg-outline-muted', 'problem' => 'bg-danger', 'picked' => 'bg-success', 'reserved' => 'bg-outline-success', 'returning' => 'bg-warning', 'returned' => 'bg-outline-muted'][$status] ?? 'bg-outline-primary' }}">{{ $allocation->label() }}</span>
-                        @if($lastLog)<span class="text-muted small">{{ $lastLog->created_at->format('d.m H:i') }}@if($who($lastLog->user_id)) · {{ $who($lastLog->user_id) }}@endif @if($isCancelled && $lastLog->note) · {{ $lastLog->note }}@endif</span>@endif
-
-                        @if($flowEditable && !$isCancelled && $status !== 'picked')
-                            <div class="proc-alloc__actions">
-                                @if($status === 'selected' && $hasPhone)
-                                    <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="btn btn-sm btn-primary">{{ $allocSms ? 'SMS-i təkrar göndər' : 'Anbara SMS göndər' }}</button></form>
-                                @elseif($next)
-                                    <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="{{ $next[0] }}"><button class="btn btn-sm btn-primary">{{ $next[1] }}</button></form>
-                                @endif
-                                @if($status === 'problem')
-                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#procResumeModal"
-                                            data-action="{{ $statusUrl }}" data-title="{{ $allocTitle }}" data-price="{{ $allocation->problem_type === 'price_changed' ? number_format((float) $allocation->unit_cost, 2, '.', '') : '' }}">Həll edildi, davam et</button>
-                                @endif
-                                <div class="dropdown">
-                                    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">Digər</button>
-                                    <div class="dropdown-menu dropdown-menu-end">
-                                        @if($status === 'notified' && $hasPhone)
-                                            <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="dropdown-item">SMS-i təkrar göndər</button></form>
-                                        @endif
-                                        @if($status === 'selected' && $hasPhone)
-                                            <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="notified"><button class="dropdown-item">Bildirildi (SMS-siz, telefonla)</button></form>
-                                        @endif
-                                        @foreach(['reserved' => 'Anbar ayırdı (telefonla)', 'picked' => 'Götürüldü'] as $to => $label)
-                                            @if($status !== 'problem' && array_search($to, $flow, true) > array_search($status, $flow, true) && ($next[0] ?? null) !== $to)
-                                                <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="{{ $to }}"><button class="dropdown-item">{{ $label }}</button></form>
-                                            @endif
-                                        @endforeach
-                                        @if($status !== 'problem')
-                                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#procProblemModal" data-action="{{ $statusUrl }}" data-title="{{ $allocTitle }}">Problem bildir</button>
-                                        @endif
-@if($editable)
-                                        <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#procCancelModal"
-                                                data-action="{{ route('admin.procurement.allocations.cancel', [$order, $allocation]) }}" data-title="{{ $allocTitle }}">Seçimi ləğv et</button>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endforeach
+            </div>
         </div>
-    </section>
-@endforeach
-
-<h2 class="small-title mt-5">Sorğular</h2>
-<div class="card"><div class="card-body">
-@if($requests->isEmpty())
-    <p class="text-muted mb-0">Hələ sorğu yaradılmayıb.</p>
-@else
-    <div class="table-responsive"><table class="table proc-table">
-        <thead><tr><th>Sorğu</th><th>Anbar</th><th>Məhsullar</th><th>Yaradılıb</th><th>Cavab</th><th>Giriş linki</th></tr></thead>
-        <tbody>
-        @foreach($requests as $req)
-            @php $answered = $req->items->filter(fn ($ri) => $ri->offers->isNotEmpty())->count(); @endphp
-            <tr>
-                <td>#{{ $req->id }}</td>
-                <td>{{ $req->warehouse->name_az }}@if($req->warehouse->phone)<span class="proc-sub"><a href="tel:{{ $req->warehouse->phone }}">{{ $req->warehouse->phone }}</a></span>@endif</td>
-                <td>{{ $req->items->map(fn ($ri) => $itemName($ri->orderItem).' ×'.$ri->requested_quantity)->implode(', ') }}</td>
-                <td>{{ $req->created_at->format('d.m.Y H:i') }}@if($who($req->created_by))<span class="proc-sub">{{ $who($req->created_by) }}</span>@endif</td>
-                <td><span class="badge {{ $answered === $req->items->count() ? 'bg-outline-success' : 'bg-outline-warning' }}">{{ $answered }}/{{ $req->items->count() }}</span></td>
-                <td><form method="POST" action="{{ route('admin.procurement.warehouses.link', $req->warehouse) }}">@csrf<button class="btn btn-sm btn-outline-primary text-nowrap" @disabled(!$req->warehouse->active)>Link yarat</button></form></td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table></div>
+    </div>
 @endif
-</div></div>
 
 @if($editable)
     {{-- Yeni sorğu: seçilən məhsullar hər seçilən anbara ayrıca sorğu kimi gedir --}}

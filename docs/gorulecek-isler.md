@@ -25,6 +25,9 @@ Son yenilənmə: 10 oktyabr 2026.
   və lsim API ilə statusu mütəmadi yoxlanılır (çatdı / çatmadı / gözləyir).
 - [ ] **"SMS şablonları" səhifəsi "SMS ayarları"na çevrilir** (ad dəqiqləşəcək): şablonlarla yanaşı lsim API-dən SMS balansı göstərilir.
 - [ ] **SMS xətaları bir yerdə görünsün:** göndərilməyən, xəta verən, çatmayan mesajlar həmin səhifədə siyahı ilə.
+- [ ] **CRM sifariş səhifəsi — "Proses" tabının davamı** (10 oktyabr yenidən quruldu: nazik zolaq, "növbəti addım", qruplar, yığılan kartlar):
+  proddə real sifarişlərlə (10 məhsul × 10 anbar) baxıb düzəltmək; "Təxmini qazanc" yalnız seçilmiş məhsulların alışını çıxır —
+  alışı bilinməyən məhsullar varsa rəqəm şişir, düzəldilməlidir; düymə adlarını birləşdirmək ("Yenilə" nəyi yeniləyir).
 - [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
   (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
   anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
@@ -105,6 +108,9 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Müştəri ehtiyat nömrəsini (`mobile_2`) saytda görmür və dəyişmir.
 - Öz kreditimizlə (hissə-hissə) alışda məhsul endirimi tətbiq olunmur. Birbank taksitində tətbiq olunur. Birbank taksiti "hissə-hissə" sayılmır.
 - Promo kod endirimli məhsullara tətbiq olunmur.
+- CRM sifariş səhifəsi iş axınına görə qurulub: "Proses" tabında məhsullar bu sıra ilə gəlir — cavab gəlib (seçim gözləyir) →
+  cavab gözləyir → anbar seçilib (yığılır, problemlilər qrupun əvvəlində). Dəyişməyən məlumat "Məlumat" tabındadır.
+  Admin görünüşlərində Acorn şablonunun hazır komponentləri işlədilir (`~/PhpstormProjects/acorn`), əlavə CSS yazılmır.
 - Müştəri sifarişdən saytdan özü imtina edə bilir: yalnız "Sifariş verildi", "Hazırlanır", "Anbarlara sorğu göndərildi" mərhələlərində
   və hələ heç bir anbar seçilməyibsə. Ödənilmiş sifarişdə pul avtomatik qayıtmır — "Karta qaytarılacaq" yaranır, operator qaytarır
   (bonusla ödənilibsə bonus dərhal qayıdır). Sonrakı mərhələlərdə və öz kreditimizlə sifarişdə — "bizimlə əlaqə saxlayın".
