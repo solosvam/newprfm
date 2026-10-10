@@ -162,7 +162,10 @@
                 <div class="col-6 col-md-3">
                     <div class="text-small text-muted mb-1">ÖDƏNİŞ</div>
                     <div>{{ $order->paymentMethod?->name_az ?? '—' }}</div>
-                    <span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span>
+                    {{-- Qapıda ödənişdə vəziyyət üsulun adını təkrarlayır ("Qapıda ödəniş") — nişan yalnız fərqli olanda --}}
+                    @if(($paymentLabels[$order->payment_status] ?? null) && $paymentLabels[$order->payment_status] !== $order->paymentMethod?->name_az)
+                        <span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] }}</span>
+                    @endif
                 </div>
             </div>
         </div>
