@@ -27,10 +27,13 @@
                     mobil bannerlər {{ \App\Models\Setting::bannerLimits('banner_mobile_top')['display_width'] }} px enində göstərilir. Tövsiyə olunan ölçü bunun iki mislidir
                     (kəskin ekranlar üçün) — ondan böyük dəyər qəbul olunmur. Dəyişməzdən əvvəl dizaynerlə razılaşdırın.
                     <div class="mt-2">
-                        <strong>Sayt açılanda ilk ekranda məhsullar görünməlidir.</strong> Müştəri sürüşdürmədən məhsul görmürsə, mağazaya yox, reklama baxdığını
-                        düşünür və çıxır. Google da səhifəni ilk ekrana və onun yüklənmə sürətinə görə qiymətləndirir: banner ilk ekranın ən böyük şəklidir,
-                        o nə qədər böyük və ağırdırsa, səhifə o qədər gec açılır və axtarışda mövqeyə mənfi təsir edir. Sağdakı sxem banner böyüdükcə
-                        məhsulların ekrandan necə çıxdığını göstərir.
+                        <strong>Sayt açılanda ilk ekranda məhsullar görünməlidir.</strong> Böyük banner iki tərəfdən zərər verir:
+                        <ul class="mb-0 mt-1 ps-3">
+                            <li><strong>Müştərini saytdan qaçırır.</strong> Sürüşdürmədən məhsul görməyən müştəri mağazaya yox, reklama baxdığını düşünür və çıxır.</li>
+                            <li><strong>Google botlarına mənfi təsir edir.</strong> Google səhifəni ilk ekrana və onun yüklənmə sürətinə görə qiymətləndirir. Banner ilk ekranın
+                                ən böyük şəklidir: o nə qədər böyük və ağırdırsa, səhifə o qədər gec açılır və sayt axtarışda aşağı düşür.</li>
+                        </ul>
+                        <div class="mt-1">Sağdakı sxem banner böyüdükcə məhsulların ekrandan necə çıxdığını göstərir.</div>
                     </div>
                 </div>
 
