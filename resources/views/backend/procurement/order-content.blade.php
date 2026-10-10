@@ -65,7 +65,10 @@
             $cheapest = $rows->filter(fn ($r) => $r['offer']?->available_quantity && $r['offer']->unit_cost !== null)->min(fn ($r) => (float) $r['offer']->unit_cost);
             // Təklif verənlər ucuzdan bahaya; cavab verməyən / "yoxdur" deyənlər ayrıca (yığılmış)
             $offered = $rows->filter(fn ($r) => $r['offer']?->available_quantity)->sortBy(fn ($r) => (float) $r['offer']->unit_cost)->values();
-            $silent = $rows->reject(fn ($r) => $r['offer']?->available_quantity)->values();
+            // Təklifsizlər: cavab gözləyən əvvəl (hələ cavab daxil etmək olar), "yoxdur" deyən sonra
+            $silent = $rows->reject(fn ($r) => $r['offer']?->available_quantity)->sortBy(fn ($r) => $r['offer'] ? 1 : 0)->values();
+            $silentWaiting = $silent->filter(fn ($r) => !$r['offer'])->count();
+            $silentNone = $silent->count() - $silentWaiting;
             $open = $group !== 'selected';
             $alert = $state['problem'] || $state['sms_failed'];
             $cancelledParts = $item->allocations->where('status', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
@@ -78,17 +81,28 @@
                 <div class="d-flex flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#procItem{{ $item->id }}"
                      aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="procItem{{ $item->id }}">
                     <div class="card-body py-3">
-                        <div class="list-item-heading">{{ $itemName($item) }}@if($itemSize($item))<span class="text-muted fw-normal"> · {{ $itemSize($item) }}</span>@endif</div>
-                        <div class="text-muted text-small">
-                            @if($group === 'selected')
-                                {{ $rows->count() }} anbardan —
-                                {{ $active->map(fn ($a) => $a->warehouse->name_az.' · '.$a->quantity.' × '.number_format((float) $a->unit_cost, 2).' AZN')->implode('; ') }}
-                            @elseif($group === 'choose')
-                                {{ $offered->count() }} anbar təklif verib, ən ucuzu {{ number_format((float) $cheapest, 2) }} AZN
-                                @if($selected) · {{ $selected }} / {{ $need }} seçilib, {{ $missing }} çatışmır @endif
-                            @else
-                                {{ $rows->isEmpty() ? 'Bu məhsul üçün hələ sorğu göndərilməyib' : $rows->count().' anbara sorğu göndərilib, təklif yoxdur' }}
-                            @endif
+                        <div class="list-item-heading d-flex flex-wrap align-items-center gap-2">
+                            <span>{{ $itemName($item) }}@if($itemSize($item))<span class="text-muted fw-normal"> · {{ $itemSize($item) }}</span>@endif</span>
+                            {{-- Xülasə: məhsul hansı vəziyyətdədir (kart yığılı olanda da görünür) --}}
+                            <span class="badge rounded-pill bg-outline-info">
+                                <i data-acorn-icon="info-circle" data-acorn-size="14"></i>
+                                @if($group === 'selected')
+                                    @php
+                                        $parts = $active->map(fn ($a) => $a->warehouse->name_az.' — təklif '.$a->quantity.' × '.number_format((float) $a->unit_cost, 2).' AZN');
+                                        $isCheapest = $active->count() === 1 && $cheapest !== null && (float) $active->first()->unit_cost <= (float) $cheapest;
+                                    @endphp
+                                    @if($active->count() === 1)
+                                        {{ $rows->count() }} anbardan {{ $isCheapest && $rows->count() > 1 ? 'ən ucuz təklif verən ' : '' }}{{ $active->first()->warehouse->name_az }} seçildi — təklif {{ $active->first()->quantity }} × {{ number_format((float) $active->first()->unit_cost, 2) }} AZN
+                                    @else
+                                        {{ $rows->count() }} anbardan {{ $active->count() }}-i seçildi: {{ $parts->implode('; ') }}
+                                    @endif
+                                @elseif($group === 'choose')
+                                    {{ $offered->count() }} anbar təklif verib, ən ucuzu {{ number_format((float) $cheapest, 2) }} AZN
+                                    @if($selected) · {{ $selected }} / {{ $need }} seçilib, {{ $missing }} çatışmır @endif
+                                @else
+                                    {{ $rows->isEmpty() ? 'Hələ sorğu göndərilməyib' : $rows->count().' anbara sorğu göndərilib, təklif yoxdur' }}
+                                @endif
+                            </span>
                         </div>
                         @if($crm)
                             @foreach(($cancellations[$item->id] ?? []) as $c)
@@ -98,7 +112,7 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 pe-3 text-nowrap">
-                    <span class="text-muted text-small">{{ $need }} ədəd{{ $crm ? ' · '.number_format((float) $item->total, 2).' AZN' : '' }}</span>
+                    <span class="text-alternate">{{ $need }} ədəd @if($crm)· <strong>{{ number_format((float) $item->total, 2) }} AZN</strong>@endif</span>
                     @if($crm && ((!($doorBlock ?? 'x') && $need > 0 && $needTotal > 1) || isset($cancelPreviews[$item->id])))
                         <div class="dropdown">
                             <button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Məhsul əməliyyatları">
@@ -127,6 +141,13 @@
                     @foreach($liveParts as $allocation)
                         @include('backend.procurement.partials.allocation')
                     @endforeach
+                    {{-- Anbarların cavabları aşağıda yığılıb — açıldığı bilinsin deyə görünən keçid --}}
+                    @if($rows->isNotEmpty())
+                        <a class="d-inline-block mt-3" data-bs-toggle="collapse" href="#procItem{{ $item->id }}" role="button"
+                           aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="procItem{{ $item->id }}">
+                            <i data-acorn-icon="chevron-bottom" data-acorn-size="16"></i> Sorğu detalları ({{ $rows->count() }} anbar)
+                        </a>
+                    @endif
                 </div>
             @endif
 
@@ -136,7 +157,7 @@
                         <p class="text-muted mb-0">Bu məhsul üçün hələ sorğu yoxdur — "Yeni sorğu" ilə anbarlardan soruşun.</p>
                     @else
                         @if($offered->isNotEmpty())
-                            <div class="table-responsive"><table class="table proc-table">
+                            <div class="table-responsive"><table class="table proc-table" style="table-layout: fixed; min-width: 760px">
                                 <thead><tr><th>Anbar</th><th>Cavab</th><th class="text-end">Vahid alış</th><th>Mənbə</th><th class="text-end">Seçim</th></tr></thead>
                                 <tbody>
                                 @foreach($offered as $row)
@@ -148,12 +169,16 @@
                         @if($silent->isNotEmpty())
                             {{-- Təklifi olmayan anbarlar: təklif verən varsa yığılır (uzun siyahı səhifəni doldurmasın) --}}
                             @if($offered->isNotEmpty())
-                                <a class="d-inline-block text-small mt-2" data-bs-toggle="collapse" href="#procSilent{{ $item->id }}" role="button" aria-expanded="false" aria-controls="procSilent{{ $item->id }}">
-                                    {{ $silent->count() }} anbar cavab verməyib və ya "yoxdur" deyib · göstər
-                                </a>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                                    <span class="text-alternate">{{ collect([$silentWaiting ? $silentWaiting.' — cavab gözlənilir' : null, $silentNone ? $silentNone.' — yoxdur seçilib' : null])->filter()->implode(', ') }}</span>
+                                    <a data-bs-toggle="collapse" href="#procSilent{{ $item->id }}" role="button" aria-expanded="false" aria-controls="procSilent{{ $item->id }}">
+                                        <i data-acorn-icon="chevron-bottom" data-acorn-size="16"></i> Göstər
+                                    </a>
+                                </div>
                             @endif
                             <div id="procSilent{{ $item->id }}" class="collapse {{ $offered->isEmpty() ? 'show' : '' }}">
-                                <div class="table-responsive"><table class="table proc-table">
+                                {{-- Eyni sütun enləri: yuxarıdakı təkliflər cədvəli ilə üst-üstə düşsün --}}
+                                <div class="table-responsive"><table class="table proc-table" style="table-layout: fixed; min-width: 760px">
                                     @if($offered->isEmpty())
                                         <thead><tr><th>Anbar</th><th>Cavab</th><th class="text-end">Vahid alış</th><th>Mənbə</th><th class="text-end">Seçim</th></tr></thead>
                                     @endif
@@ -206,7 +231,7 @@
                             <td class="{{ $log?->isSent() ? 'text-success' : ($log || !$req->warehouse->phone ? 'text-danger' : 'text-muted') }}">
                                 @if(!$req->warehouse->phone) Telefon yazılmayıb
                                 @elseif(!$log) Göndərilməyib
-                                @elseif($log->isSent()) ✓ {{ $log->created_at->format('d.m H:i') }}
+                                @elseif($log->isSent()) ✓ SMS {{ $log->created_at->format('d.m H:i') }}
                                 @else ✕ {{ $log->error }} @endif
                             </td>
                             <td class="text-end">

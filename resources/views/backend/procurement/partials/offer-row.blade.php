@@ -29,14 +29,19 @@
                     @csrf
                     <input type="hidden" name="offer_id" value="{{ $offer->id }}">
                     <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
-                    <input type="number" name="quantity" min="1" max="{{ $canTake }}" value="{{ $canTake }}" class="form-control form-control-sm" aria-label="Seçilən miqdar" required>
+                    {{-- Say yalnız birdən çox götürmək mümkün olanda soruşulur --}}
+                    @if($canTake > 1)
+                        <input type="number" name="quantity" min="1" max="{{ $canTake }}" value="{{ $canTake }}" class="form-control form-control-sm" aria-label="Seçilən miqdar" required>
+                    @else
+                        <input type="hidden" name="quantity" value="1">
+                    @endif
                     <button class="btn btn-sm btn-primary">Seç</button>
                 </form>
             @endif
             @if($editable)
                 <button type="button" class="btn btn-sm {{ $offer ? 'btn-link px-1' : 'btn-outline-primary' }}" data-bs-toggle="modal" data-bs-target="#procOfferModal"
                         data-action="{{ $offerUrl }}" data-title="{{ $offerTitle }}" data-requested="{{ $row['ri']->requested_quantity }}">
-                    {{ $offer ? 'Yenilə' : 'Cavab daxil et' }}
+                    {{ $offer ? 'Cavabı dəyiş' : 'Cavab daxil et' }}
                 </button>
             @endif
         </div>
