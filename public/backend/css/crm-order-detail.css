@@ -6,7 +6,6 @@
 .order-workspace .od-facts__wide { grid-column: 1 / -1; }
 .order-workspace .od-facts dt { color: var(--muted); font-weight: 400; font-size: 13px; margin-bottom: 2px; }
 .order-workspace .od-facts dd { margin: 0; overflow-wrap: anywhere; }
-.order-workspace .od-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--separator); }
 
 /* Status tarixçəsi */
 .order-workspace .od-steps { list-style: none; margin: 0; padding: 0; max-height: 250px; overflow-y: auto; }
