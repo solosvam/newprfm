@@ -11,7 +11,9 @@
 /* Siyahı kartın bütün hündürlüyünü tutur (kart yanındakı kartlarla bərabər uzanır), sığmayanı sürüşür */
 .order-workspace .od-steps-box { position: relative; flex-grow: 1; min-height: 250px; }
 .order-workspace .od-steps { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; overflow-y: auto; }
-.order-workspace .od-steps li { position: relative; padding: 0 0 18px 26px; }
+.order-workspace .od-steps li { position: relative; padding: 0 0 26px 26px; }
+/* İki status arasında keçən vaxt: xəttin ortasında, dik yazılır (xətt 16px-dən başlayır → mərkəz 50% + 8px) */
+.order-workspace .od-steps__gap { position: absolute; left: 6px; top: calc(50% + 8px); transform: translate(-50%, -50%) rotate(-90deg); padding: 0 4px; font-size: 10px; line-height: 14px; white-space: nowrap; color: var(--alternate); background: var(--foreground); }
 .order-workspace .od-steps li::before { content: ""; position: absolute; left: 5px; top: 16px; bottom: 0; width: 2px; background: var(--separator); }
 .order-workspace .od-steps li:last-child { padding-bottom: 0; }
 .order-workspace .od-steps li:last-child::before { display: none; }
