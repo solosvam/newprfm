@@ -106,7 +106,7 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
   `paf.az` yalnız yönləndiricidir — eyni yolu əsas sayta ötürür; səhifələr, sessiya və bankın geri qaytarması əsas saytdadır.
 - SMS ödəniş linkinin müddəti var: admin ayarı (Ayarlar → Sifariş və çatdırılma, standart 72 saat). Müddət link yarananda başlayır,
   SMS göndəriləndə və ya CRM-də "Müddəti yenilə" basılanda yenidən sayılır. Vaxtı bitmiş link sifarişin məlumatını göstərmir.
-- Gözləyən Birbank ödənişi öz vaxt həddimizlə ləğv edilmir: `payments:check-birbank` hər 5 dəqiqədən bir bankdan soruşur,
+- Gözləyən Birbank ödənişi öz vaxt həddimizlə ləğv edilmir: `payments:check-birbank` hər dəqiqə bankdan soruşur,
   ödənilməyən sifarişi bank özü `Expired` edir. Bankda hələ açıq olan ödənişi ləğv saysaq, müştəri iki dəfə ödəyə bilər.
 - ps-side üçün Instagram skripti olmayacaq (8 oktyabr qərarı).
 - ps-side axtarışında mənbə nişanları (qısaltma / adi / hər ikisi) hələlik qalır.

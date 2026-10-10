@@ -15,4 +15,4 @@ Artisan::command('inspire', function () {
 //Schedule::command('bonus:remind-expiring')->dailyAt('11:00')->timezone('Asia/Baku')->withoutOverlapping();
 
 // Müştəri bankdan sayta qayıtmayanda gözləyən Birbank ödənişlərinin nəticəsi (callback-in əvəzi)
-Schedule::command('payments:check-birbank')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('payments:check-birbank')->everyMinute()->withoutOverlapping();
