@@ -70,27 +70,16 @@
                 @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
             </div>
             <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-start justify-content-md-end">
-                {{-- İkinci dərəcəli əməliyyatlar: müştəri kartı, bank yoxlaması, sifarişin tam ləğvi --}}
-                <div class="dropdown">
-                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Digər</button>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        <a class="dropdown-item" href="{{ route('admin.crm.customer', $customer) }}">Müştərinin səhifəsi</a>
-                        @if($order->payments->contains('status', \App\Models\Payment\Payment::PENDING))
-                            <button type="button" class="dropdown-item" data-payment-check
-                                    data-url="{{ route('admin.crm.order.payment-check', [$customer, $order]) }}">Ödənişi bankdan yoxla</button>
-                        @endif
-                        {{-- Sifarişin tam ləğvi (ləğv edilmiş / təhvil verilmiş sifarişdə görünmür) --}}
-                        @if($canCancelOrder)
-                            <div class="dropdown-divider"></div>
-                            @if($orderCancelBlock)
-                                <span class="dropdown-item disabled" aria-disabled="true">Sifarişi ləğv et</span>
-                                <span class="dropdown-item-text text-muted text-small">{{ $orderCancelBlock }}</span>
-                            @else
-                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">Sifarişi ləğv et</button>
-                            @endif
-                        @endif
-                    </div>
-                </div>
+                {{-- Sifarişin tam ləğvi (ləğv edilmiş / təhvil verilmiş sifarişdə yoxdur). Bank yoxlaması — "Ödənişlər" tabında. --}}
+                @if($canCancelOrder)
+                    @if($orderCancelBlock)
+                        <span class="d-inline-block" tabindex="0" title="{{ $orderCancelBlock }}" data-bs-toggle="tooltip">
+                            <button type="button" class="btn btn-outline-danger" disabled>Sifarişi ləğv et</button>
+                        </span>
+                    @else
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">Sifarişi ləğv et</button>
+                    @endif
+                @endif
                 {{-- Növbəti addım: İcraya götür → (anbarlar) → Kuryer təyin et --}}
                 @if($order->status?->code === 'new')
                     @if($startBlock ?? null)

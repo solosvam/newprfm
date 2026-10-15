@@ -57,15 +57,16 @@
     </div>
     @if($editable)
         <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-primary btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#procRequestModal" @disabled($warehouses->isEmpty())>
+            {{-- Üçü də outline, rəngləri fərqli: sorğu — primary (mavi), price list — info (tünd firuzəyi), birbaşa seçim — success (yaşıl) --}}
+            <button type="button" class="btn btn-outline-primary btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#procRequestModal" @disabled($warehouses->isEmpty())>
                 <i data-acorn-icon="plus" data-acorn-size="16"></i><span>Yeni sorğu</span>
             </button>
             {{-- Anbarların price listlərində bu sifarişin məhsulları — aşağıdan açılan panel; say — tapılan sətirlər --}}
-            <button type="button" class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#procPriceLists" aria-controls="procPriceLists">
-                Price listlər @if($priceRows->isNotEmpty())<span class="badge bg-primary ms-1">{{ $priceRows->count() }}</span>@endif
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="offcanvas" data-bs-target="#procPriceLists" aria-controls="procPriceLists">
+                Price listlər @if($priceRows->isNotEmpty())<span class="badge bg-info ms-1">{{ $priceRows->count() }}</span>@endif
             </button>
             {{-- Ətirin anbarda olduğu və qiyməti artıq bilinir: sorğusuz, cavab birbaşa yazılır --}}
-            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#procDirectModal" @disabled($warehouses->isEmpty())>Anbar seç</button>
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#procDirectModal" @disabled($warehouses->isEmpty())>Anbar seç</button>
         </div>
     @endif
 </div>
