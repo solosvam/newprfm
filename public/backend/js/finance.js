@@ -19,6 +19,9 @@
                     o.hidden = o.disabled = allowed.length > 0 && !allowed.includes(o.dataset.type);
                 });
                 if (select.selectedOptions[0]?.disabled) select.value = '';
+                // Mədaxil / Məxaric: siyahıda şəxslər olduğu label-də də görünsün
+                const label = form.querySelector(`label[for="${select.id}"][data-default]`);
+                if (label) label.textContent = option?.dataset[side + 'Label'] || label.dataset.default;
             });
         };
         // Xərc: adı məcburidir ("Ofis icarəsi — oktyabr"); alan hesab yeganə "Xərclər" hesabıdır

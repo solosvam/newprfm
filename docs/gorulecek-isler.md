@@ -151,7 +151,11 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Məhsulu götürmək pul ödəmək deyil. Anbar ödənişi faktiki ödəyən, mənbə, məbləğ və təminat hissəsinə bağlanır.
 - Kuryerin müsbət hesablaşma qalığı şirkətə borcu, mənfi qalıq şirkətin kuryerə borcudur.
 - Mərkəzin anbara birbaşa ödənişi kuryerin balansına yazılmır.
-- Nağd kassa, bank, sahibkarla və kuryerlə hesablaşmalar ayrıdır. Pul transferi təkrar xərc sayılmır.
+- Nağd kassa, bank, şəxslərlə və kuryerlə hesablaşmalar ayrıdır. Pul transferi təkrar xərc sayılmır.
+- Kassada "Sahibkar pul qoydu / Sahibkara qaytarıldı" yoxdur (15 oktyabr). Əvəzində "Şəxslər": Kassada "Yeni şəxs" ilə yaradılır
+  (sahibkar da şəxsdir); "Mədaxil" — şəxsdən kassaya / banka pul, "Məxaric" — kassadan / bankdan şəxsə. Şəxsin mənfi qalığı —
+  bizim ona borcumuz, müsbət qalığı — onun bizə borcu. Köhnə "Sahibkar" hesabı "Sahibkar" adlı şəxsə, köhnə əməliyyatlar
+  Mədaxil / Məxaricə çevrilib (migrasiya). Şəxs anbara ödəniş və xərc üçün ödəyən də ola bilər.
 - Status ID-ləri başqa mənalarla əvəz edilmir.
 - Məhsulun qazancı xalis satışdan hesablanır: vahid qiymət − məhsula düşən promokod payı (endirim məhsullara proporsional
   bölünür — ödəniş sətirləri və məhsul ləğvi ilə eyni paylama, `PaymentItemsBuilder::itemShares`). Məhsul ləğv ediləndə

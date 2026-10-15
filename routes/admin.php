@@ -123,6 +123,7 @@ Route::prefix('admin')
                 ->prefix('finance')->name('finance.')->group(function () {
                     Route::get('/', 'index')->name('index');
                     Route::post('/', 'store')->middleware('throttle:30,1')->name('store');
+                    Route::post('/persons', 'storePerson')->middleware('throttle:30,1')->name('persons.store');
                     Route::post('/{movement}/reverse', 'reverse')->middleware('throttle:30,1')->name('reverse');
                     Route::get('/account/{account}', 'account')->name('account');
                 });

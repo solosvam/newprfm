@@ -66,8 +66,13 @@
             </div></div></div>
         @else
             <div class="col-12 col-md-6 col-xl-4"><div class="card"><div class="card-body">
-                <div class="finance-account__label">{{ $account->type === 'expense' ? 'Xərclənib' : ($account->type === 'owner' && $balance < 0 ? 'Sahibkara borcumuz' : 'Qalıq') }}</div>
-                <div class="finance-account__value">{{ $balance < 0 && !in_array($account->type, ['owner'], true) ? '−' : '' }}{{ $money($balance) }}</div>
+                @if($account->type === 'person')
+                    <div class="finance-account__label">{{ $balance < 0 ? 'Borcumuz' : ($balance > 0 ? 'Bizə borcludur' : 'Hesablaşılıb') }}</div>
+                    <div class="finance-account__value {{ $balance < 0 ? 'text-danger' : '' }}">{{ $money($balance) }}</div>
+                @else
+                    <div class="finance-account__label">{{ $account->type === 'expense' ? 'Xərclənib' : 'Qalıq' }}</div>
+                    <div class="finance-account__value">{{ $balance < 0 ? '−' : '' }}{{ $money($balance) }}</div>
+                @endif
             </div></div></div>
         @endif
     </div>

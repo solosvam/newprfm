@@ -14,15 +14,16 @@ class MoneyMovement extends Model
 {
     /** Növlər və icazəli hesab tipləri [from => [...], to => [...]] */
     public const KINDS = [
-        'warehouse_payment' => ['Anbara ödəniş', ['courier', 'cash', 'bank', 'owner'], ['warehouse']],
+        'warehouse_payment' => ['Anbara ödəniş', ['courier', 'cash', 'bank', 'person'], ['warehouse']],
         // Mal anbara qaytarılıb (qapıda imtina / sifariş ləğvi) — anbar ödənilən pulu geri verdi
-        'warehouse_refund' => ['Anbar pulu qaytardı', ['warehouse'], ['courier', 'cash', 'bank', 'owner']],
+        'warehouse_refund' => ['Anbar pulu qaytardı', ['warehouse'], ['courier', 'cash', 'bank', 'person']],
         'courier_handover' => ['Kuryer pulu təhvil verdi', ['courier'], ['cash']], // kuryer yalnız nağd verir
         'courier_advance' => ['Kuryerə avans / qaytarma', ['cash', 'bank'], ['courier']],
-        'expense' => ['Xərc', ['cash', 'bank', 'owner', 'courier'], ['expense']],
+        'expense' => ['Xərc', ['cash', 'bank', 'person', 'courier'], ['expense']],
         'transfer' => ['Hesablar arası köçürmə', ['cash', 'bank', 'online'], ['cash', 'bank']],
-        'owner_contribution' => ['Sahibkar pul qoydu', ['owner'], ['cash', 'bank']],
-        'owner_repayment' => ['Sahibkara qaytarıldı', ['cash', 'bank'], ['owner']],
+        // Şəxslərlə hesablaşma: şəxs pul verdi (borc, sahibkarın qoyduğu pul) / şəxsə pul verildi (qaytarma, borc)
+        'income' => ['Mədaxil', ['person'], ['cash', 'bank']],
+        'outgo' => ['Məxaric', ['cash', 'bank'], ['person']],
         // Sistem (avtomatik) — əl ilə seçilmir
         'customer_payment' => ['Müştəri ödənişi', ['customer'], ['online', 'courier', 'cash']],
         'customer_refund' => ['Müştəriyə qaytarma', ['online', 'courier', 'cash'], ['customer']],
@@ -30,7 +31,7 @@ class MoneyMovement extends Model
     ];
 
     /** "Yeni əməliyyat" pəncərəsində seçilənlər */
-    public const MANUAL = ['courier_advance', 'expense', 'transfer', 'owner_contribution', 'owner_repayment'];
+    public const MANUAL = ['income', 'outgo', 'expense', 'courier_advance', 'transfer'];
 
     /** Hesab səhifəsindən edilənlər: anbara ödəniş (anbar), pulu təhvil al (kuryer) */
     public const FROM_ACCOUNT_PAGE = ['warehouse_payment', 'courier_handover', 'warehouse_refund'];

@@ -51,6 +51,7 @@ class FinanceTest extends TestCase
             '2026_09_29_150000_create_payment_items_table.php',
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
             '2026_09_29_200000_create_finance_tables.php',
+            '2026_10_15_240000_convert_owner_to_person_accounts.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();
         }
@@ -136,9 +137,11 @@ class FinanceTest extends TestCase
         $this->f()->record($courier, $cash, 60, 'courier_handover', [], 7);
         $this->assertSame(4000, $this->f()->balances()[$courier->id]);
 
-        $owner = $this->f()->system('owner');
-        $this->f()->record($owner, $this->f()->system('expense'), 500, 'expense', [], 7);
-        $this->assertSame(-50000, $this->f()->balances()[$owner->id]); // şirkət sahibkara borcludur
+        $person = FinanceAccount::create(['type' => 'person', 'name' => 'Sahibkar']);
+        $this->f()->record($person, $this->f()->system('expense'), 500, 'expense', [], 7);
+        $this->f()->record($person, $cash, 300, 'income', [], 7);
+        $this->f()->record($cash, $person, 100, 'outgo', [], 7);
+        $this->assertSame(-70000, $this->f()->balances()[$person->id]); // şirkət şəxsə borcludur
     }
 
     public function test_kind_rules_are_enforced(): void

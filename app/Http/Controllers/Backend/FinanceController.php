@@ -53,7 +53,7 @@ class FinanceController extends Controller
             // Ödənilməmiş hissələr (götürülənlər borcdur, qalanları — əvvəlcədən ödəmək olar)
             $parts = $all->map(fn ($a) => ['a' => $a, 'cost' => (int) round($a->quantity * (float) $a->unit_cost * 100), 'paid' => $paid[$a->id] ?? 0])
                 ->filter(fn ($r) => $r['cost'] > $r['paid'])->values();
-            $payers = FinanceAccount::whereIn('type', ['courier', 'cash', 'bank', 'owner'])->where('active', true)->orderBy('name')->get()
+            $payers = FinanceAccount::whereIn('type', ['courier', 'cash', 'bank', 'person'])->where('active', true)->orderBy('name')->get()
                 ->sortBy(fn ($a) => array_search($a->type, ['cash', 'bank', 'courier', 'owner'], true))->values();
         }
         $cash = $finance->system('cash');
@@ -110,6 +110,21 @@ class FinanceController extends Controller
         ]), (int) auth('admin')->id());
 
         return back()->with('success', $movement->kindLabel().': '.number_format((float) $movement->amount, 2).' AZN qeydə alındı.');
+    }
+
+    /** Şəxs (sahibkar, borc verən tanış və s.) — Mədaxil / Məxaric bu hesablarla aparılır */
+    public function storePerson(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120', Rule::unique('finance_accounts', 'name')->where('type', 'person')],
+        ], [
+            'name.required' => 'Şəxsin adını yazın.',
+            'name.max' => 'Ad çox uzundur.',
+            'name.unique' => 'Bu adda şəxs artıq var.',
+        ]);
+        $person = FinanceAccount::create(['type' => 'person', 'name' => trim($data['name'])]);
+
+        return back()->with('success', 'Şəxs yaradıldı: '.$person->name.'.');
     }
 
     public function reverse(Request $request, MoneyMovement $movement, FinanceService $finance): RedirectResponse

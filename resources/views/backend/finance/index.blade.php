@@ -9,7 +9,8 @@
         $b = $balances[$account->id] ?? 0;
         return match ($account->type) {
             'courier' => $b > 0 ? ['Təhvil verməlidir', $money($b), 'text-warning'] : ($b < 0 ? ['Kuryerə borcumuz', $money($b), 'text-danger'] : ['Hesablaşılıb', '0.00 AZN', 'text-muted']),
-            'owner' => $b < 0 ? ['Sahibkara borcumuz', $money($b), 'text-danger'] : ['Qalıq', $money($b), ''],
+            // Mədaxil (şəxs → kassa) qalığı mənfi edir: şəxsə borcluyuq; Məxaric — əksinə
+            'person' => $b < 0 ? ['Borcumuz', $money($b), 'text-danger'] : ($b > 0 ? ['Bizə borcludur', $money($b), 'text-warning'] : ['Hesablaşılıb', '0.00 AZN', 'text-muted']),
             'warehouse' => ($d = $debts[$account->warehouse_id] ?? 0) > 0 ? ['Anbara borc', $money($d), 'text-danger'] : ($d < 0 ? ['Avans', $money($d), 'text-success'] : ['Borc yoxdur', '0.00 AZN', 'text-muted']),
             'expense' => ['Xərclənib', $money($b), ''],
             default => ['Qalıq', ($b < 0 ? '−' : '').$money($b), $b < 0 ? 'text-danger' : ''],
@@ -19,7 +20,8 @@
         'Şirkətin pulu' => ['cash', 'bank', 'online'],
         'Kuryerlər' => ['courier'],
         'Anbarlar' => ['warehouse'],
-        'Sahibkar və xərclər' => ['owner', 'expense'],
+        'Şəxslər' => ['person'],
+        'Xərclər' => ['expense'],
     ];
     $selectable = $accounts->where('type', '!=', 'customer');
 @endphp
@@ -46,7 +48,10 @@
                 <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
                 @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
             </div>
-            <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
+            <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end gap-2 flex-wrap">
+                <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newPerson">
+                    <span>Yeni şəxs</span><i data-acorn-icon="user"></i>
+                </button>
                 <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newMovement">
                     <span>Yeni əməliyyat</span><i data-acorn-icon="plus"></i>
                 </button>
@@ -95,15 +100,16 @@
                 <select id="mvKind" name="kind" class="form-select" required>
                     <option value="">Seçin</option>
                     @foreach(MoneyMovement::MANUAL as $kind)
-                        <option value="{{ $kind }}" data-from="{{ implode(',', MoneyMovement::KINDS[$kind][1]) }}" data-to="{{ implode(',', MoneyMovement::KINDS[$kind][2]) }}" @selected(old('kind') === $kind)>{{ MoneyMovement::KINDS[$kind][0] }}</option>
+                        <option value="{{ $kind }}" data-from="{{ implode(',', MoneyMovement::KINDS[$kind][1]) }}" data-to="{{ implode(',', MoneyMovement::KINDS[$kind][2]) }}"
+                            @if($kind === 'income') data-from-label="Şəxs (kimdən alındı)" @elseif($kind === 'outgo') data-to-label="Şəxs (kimə verildi)" @endif @selected(old('kind') === $kind)>{{ MoneyMovement::KINDS[$kind][0] }}</option>
                     @endforeach
                 </select></div>
-            <div class="mb-3"><label class="form-label" for="mvFrom">Pul haradan çıxdı</label>
+            <div class="mb-3"><label class="form-label" for="mvFrom" data-default="Pul haradan çıxdı">Pul haradan çıxdı</label>
                 <select id="mvFrom" name="from_account_id" class="form-select" required>
                     <option value="">Seçin</option>
                     @foreach($selectable as $a)<option value="{{ $a->id }}" data-type="{{ $a->type }}" @selected((int) old('from_account_id') === $a->id)>{{ $a->name }} · {{ $a->typeLabel() }}</option>@endforeach
                 </select></div>
-            <div class="mb-3"><label class="form-label" for="mvTo">Pul haraya getdi</label>
+            <div class="mb-3"><label class="form-label" for="mvTo" data-default="Pul haraya getdi">Pul haraya getdi</label>
                 <select id="mvTo" name="to_account_id" class="form-select" required>
                     <option value="">Seçin</option>
                     @foreach($selectable as $a)<option value="{{ $a->id }}" data-type="{{ $a->type }}" @selected((int) old('to_account_id') === $a->id)>{{ $a->name }} · {{ $a->typeLabel() }}</option>@endforeach
@@ -115,6 +121,20 @@
             <div class="form-text mt-2">Anbara ödəniş — anbarın kartına klikləyin. Kuryerdən pulu təhvil almaq — kuryerin kartına klikləyin.</div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Qeydə al</button></div>
+    </form></div>
+</div>
+
+{{-- Yeni şəxs: Mədaxil / Məxaric əməliyyatlarında seçilir --}}
+<div class="modal fade" id="newPerson" tabindex="-1" aria-labelledby="newPersonTitle" aria-hidden="true">
+    <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.finance.persons.store') }}">
+        @csrf
+        <div class="modal-header"><h5 class="modal-title" id="newPersonTitle">Yeni şəxs</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+        <div class="modal-body">
+            <label class="form-label" for="personName">Ad, soyad</label>
+            <input id="personName" name="name" maxlength="120" class="form-control" value="{{ old('name') }}" required>
+            <div class="form-text mt-2">Şəxsdən pul alanda — "Mədaxil", şəxsə pul verəndə — "Məxaric". Qalıq şəxsin kartında görünür.</div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Yarat</button></div>
     </form></div>
 </div>
 
