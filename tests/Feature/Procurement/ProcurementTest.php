@@ -251,38 +251,37 @@ class ProcurementTest extends TestCase
         $this->assertSame(0, \App\Models\Finance\FinanceAccount::where('warehouse_id', $empty->id)->count());
     }
 
-    /** "Anbar seç": sorğusuz — seçilən anbarların "var" cavabı qiyməti ilə birbaşa yazılır, SMS getmir */
-    public function test_direct_selection_records_answers_without_sending_a_request(): void
+    /** "Anbar seç": sorğusuz — anbarın "var" cavabı qiyməti ilə yazılır və anbar dərhal seçilir; sorğu SMS-i getmir, seçim SMS-i gedir */
+    public function test_direct_selection_records_the_answer_and_selects_the_warehouse_without_a_request(): void
     {
         $user = new User(['name' => 'Operator']);
         $user->id = 7;
         Gate::before(fn () => true);
         $this->actingAs($user, 'admin');
-        \Illuminate\Support\Facades\Http::fake();
+        config(['services.parfumshop_sms.login' => 'l', 'services.parfumshop_sms.password' => 'p']);
+        \Illuminate\Support\Facades\Http::fake(['apps.lsim.az/*' => \Illuminate\Support\Facades\Http::response(['obj' => 1, 'errorCode' => 0])]);
         $order = $this->order(2);
         $item = $order->items()->first();
-        $a = Warehouse::create(['name_az' => 'Aksin', 'phone' => '0501234567']);
-        $b = Warehouse::create(['name_az' => 'Xətai', 'phone' => '0507654321']);
+        $aksin = Warehouse::create(['name_az' => 'Aksin', 'phone' => '0501234567']);
 
-        $this->post(route('admin.procurement.offers.direct', $order), ['item_id' => $item->id, 'prices' => [$a->id => '95.50', $b->id => '99']])
-            ->assertSessionHasNoErrors()->assertSessionHas('success');
+        $this->post(route('admin.procurement.offers.direct', $order), ['item_id' => $item->id, 'warehouse_id' => $aksin->id, 'unit_cost' => '95.50'])
+            ->assertSessionHasNoErrors()->assertSessionHas('success', fn ($m) => str_starts_with($m, 'Aksin seçildi (sorğusuz).'));
 
-        $requests = WarehouseRequest::with('items.offers')->get();
-        $this->assertCount(2, $requests);
-        $this->assertTrue($requests->every->direct);
-        $offer = $requests->firstWhere('warehouse_id', $a->id)->items->first()->offers->first();
+        $request = WarehouseRequest::with('items.offers')->sole();
+        $this->assertTrue($request->direct);
+        $offer = $request->items->first()->offers->first();
         $this->assertSame([2, '95.50', 'direct'], [(int) $offer->available_quantity, (string) $offer->unit_cost, $offer->source]);
-        \Illuminate\Support\Facades\Http::assertNothingSent(); // SMS getmir
+        $allocation = \App\Models\Procurement\OrderItemAllocation::sole();
+        $this->assertSame([$aksin->id, 2, '95.50'], [(int) $allocation->warehouse_id, (int) $allocation->quantity, (string) $allocation->unit_cost]);
+        // Yalnız seçim SMS-i getdi (sorğu SMS-i yox)
+        \Illuminate\Support\Facades\Http::assertSentCount(1);
+        $this->assertSame(['warehouse_selected'], \App\Models\SmsLog::pluck('context')->all());
 
-        // Sonra adi cavab kimi seçilir
-        app(ProcurementService::class)->allocate($order, $offer->id, 2, 7);
-        $this->assertSame(1, \App\Models\Procurement\OrderItemAllocation::count());
+        // Miqdar artıq seçilib — ikinci "Anbar seç" alınmır
+        $this->post(route('admin.procurement.offers.direct', $order), ['item_id' => $item->id, 'warehouse_id' => $aksin->id, 'unit_cost' => '90'])->assertSessionHasErrors();
+        $this->post(route('admin.procurement.offers.direct', $order), ['item_id' => $item->id, 'unit_cost' => '90'])->assertSessionHasErrors('warehouse_id');
 
-        // Anbar seçilməyibsə — xəta
-        $this->post(route('admin.procurement.offers.direct', $order), ['item_id' => $item->id])->assertSessionHasErrors('prices');
-
-        // Prosesdə: sorğusuz qeyd SMS xətası sayılmır, mənbə "Birbaşa"
-        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Operator - Birbaşa (sorğusuz)')->assertSee('Sorğusuz')->assertDontSee('xəta</span>', false);
+        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Operator - Birbaşa (sorğusuz)')->assertSee('Sorğusuz');
     }
 
     public function test_employee_without_crm_permission_cannot_access_or_write(): void

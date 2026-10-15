@@ -379,13 +379,13 @@
         </div>
     </div>
 
-    {{-- Anbar seç: ətir və qiymət artıq bilinir — sorğu getmir, seçilən anbarların cavabı birbaşa yazılır (sonra "Seç") --}}
+    {{-- Anbar seç: ətirin hansı anbarda neçəyə olduğu artıq bilinir — sorğu getmir, cavab yazılır və anbar dərhal seçilir --}}
     <div class="modal modal-right fade" id="procDirectModal" tabindex="-1" aria-labelledby="procDirectTitle" aria-hidden="true">
-        <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.procurement.offers.direct', $order) }}" data-direct-form>
+        <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.procurement.offers.direct', $order) }}" data-once>
             @csrf
             <div class="modal-header"><h5 class="modal-title" id="procDirectTitle">Anbar seç</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
             <div class="modal-body">
-                <p class="text-muted small">Ətirin seçdiyiniz anbarda olduğunu və qiymətini bilirsinizsə: sorğu göndərilmir, cavab gözlənilmir — anbar "var" cavabı vermiş kimi qeyd olunur. Sonra məhsulun kartında "Seç" ilə anbarı seçin.</p>
+                <p class="text-muted small">Ətirin hansı anbarda olduğunu və qiymətini bilirsinizsə: sorğu göndərilmir, cavab gözlənilmir — anbar dərhal seçilir və ona seçim SMS-i gedir.</p>
                 <div class="mb-4">
                     <div class="form-label fw-bold">Ətir</div>
                     @foreach($order->items->filter(fn ($i) => $i->activeQuantity() > 0) as $item)
@@ -395,24 +395,21 @@
                         </label>
                     @endforeach
                 </div>
-                <div>
-                    <div class="form-label fw-bold">Anbar və 1 ədədin alış qiyməti</div>
+                <div class="mb-4">
+                    <div class="form-label fw-bold">Anbar</div>
                     @foreach($warehouses as $warehouse)
-                        <div class="row g-2 align-items-center mb-2">
-                            <div class="col-7">
-                                <label class="form-check mb-0">
-                                    <input class="form-check-input" type="checkbox" data-direct-warehouse="{{ $warehouse->id }}">
-                                    <span class="form-check-label">{{ $warehouse->name_az }}</span>
-                                </label>
-                            </div>
-                            <div class="col-5">
-                                <div class="input-group input-group-sm">
-                                    <input type="number" step="0.01" min="0.01" class="form-control" name="prices[{{ $warehouse->id }}]" data-direct-price="{{ $warehouse->id }}" disabled aria-label="{{ $warehouse->name_az }} — qiymət">
-                                    <span class="input-group-text">AZN</span>
-                                </div>
-                            </div>
-                        </div>
+                        <label class="form-check">
+                            <input class="form-check-input" type="radio" name="warehouse_id" value="{{ $warehouse->id }}" required>
+                            <span class="form-check-label">{{ $warehouse->name_az }}</span>
+                        </label>
                     @endforeach
+                </div>
+                <div>
+                    <label class="form-label fw-bold" for="procDirectCost">1 ədədin alış qiyməti</label>
+                    <div class="input-group">
+                        <input id="procDirectCost" type="number" step="0.01" min="0.01" name="unit_cost" class="form-control" required>
+                        <span class="input-group-text">AZN</span>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Təsdiqlə</button></div>

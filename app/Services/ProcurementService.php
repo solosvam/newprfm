@@ -65,28 +65,23 @@ class ProcurementService
     }
 
     /**
-     * "Anbar seç": operator ətirin hansı anbarda neçəyə olduğunu artıq bilir. Hər seçilən anbar üçün sorğu və cavab birdən yazılır
-     * (sorğu "direct" — SMS getmir, cavab gözlənilmir): anbar tələb olunan miqdarın hamısını həmin qiymətə verir.
-     * Anbarın özü bundan sonra "Seç" ilə seçilir — adi cavab kimi.
-     *
-     * @param  array<int, string|float>  $prices  warehouse_id => 1 ədədin alış qiyməti
-     * @return \Illuminate\Support\Collection<int, WarehouseOffer>
+     * "Anbar seç": operator ətirin hansı anbarda neçəyə olduğunu artıq bilir. Sorğu və cavab birdən yazılır
+     * (sorğu "direct" — SMS getmir, cavab gözlənilmir), sonra anbar tələb olunan miqdarın hamısına seçilir — adi seçim kimi.
      */
-    public function recordDirect(Order $order, int $itemId, array $prices, int $actor): \Illuminate\Support\Collection
+    public function recordDirect(Order $order, int $itemId, int $warehouseId, string $unitCost, int $actor): OrderItemAllocation
     {
-        return DB::transaction(function () use ($order, $itemId, $prices, $actor) {
-            $this->ensure($prices !== [], 'Ən azı bir anbar seçin.');
-            $requests = $this->createRequests($order, array_keys($prices), [$itemId], $actor, true);
+        return DB::transaction(function () use ($order, $itemId, $warehouseId, $unitCost, $actor) {
+            $request = $this->createRequests($order, [$warehouseId], [$itemId], $actor, true)->first();
+            $requestItem = $request->items()->firstOrFail();
+            $offer = $this->recordOffer($order, $requestItem->id, [
+                'available_quantity' => $requestItem->requested_quantity, 'unit_cost' => $unitCost, 'source' => 'direct',
+            ], $actor);
+            // Artıq başqa anbardan seçilmiş hissə varsa — yalnız çatışmayan miqdar seçilir
+            $item = $order->items()->findOrFail($itemId);
+            $missing = $item->activeQuantity() - (int) $item->allocations()->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)->sum('quantity');
+            $this->ensure($missing > 0, 'Bu məhsul üçün lazım olan miqdar artıq seçilib.');
 
-            return $requests->map(function (WarehouseRequest $request) use ($order, $prices, $actor) {
-                $requestItem = $request->items()->firstOrFail();
-
-                return $this->recordOffer($order, $requestItem->id, [
-                    'available_quantity' => $requestItem->requested_quantity,
-                    'unit_cost' => $prices[$request->warehouse_id],
-                    'source' => 'direct',
-                ], $actor);
-            });
+            return $this->allocate($order, $offer->id, min($missing, $requestItem->requested_quantity), $actor);
         });
     }
 

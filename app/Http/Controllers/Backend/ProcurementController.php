@@ -137,21 +137,23 @@ class ProcurementController extends Controller
         return back()->with('success', trim('Sorğular qeydə alındı. '.WarehouseNotifier::summary($results)));
     }
 
-    /** "Anbar seç": sorğu göndərmədən anbarın cavabını (var, qiymət) birbaşa yazmaq — ProcurementService::recordDirect */
-    public function recordDirect(Request $request, Order $order, ProcurementService $service)
+    /** "Anbar seç": sorğu göndərmədən anbarın cavabı yazılır və anbar dərhal seçilir (ProcurementService::recordDirect); anbara seçim SMS-i gedir */
+    public function recordDirect(Request $request, Order $order, ProcurementService $service, WarehouseNotifier $notifier)
     {
         $data = $request->validate([
             'item_id' => ['required', 'integer'],
-            'prices' => ['required', 'array', 'min:1', 'max:100'],
-            'prices.*' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999.99'],
+            'warehouse_id' => ['required', 'integer'],
+            'unit_cost' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999.99'],
         ], [
-            'prices.required' => 'Ən azı bir anbar seçin və qiymətini yazın.',
-            'prices.*.required' => 'Seçilən anbarın qiymətini yazın.',
-            'prices.*.min' => 'Qiymət 0-dan böyük olmalıdır.',
+            'warehouse_id.required' => 'Anbarı seçin.',
+            'unit_cost.required' => 'Alış qiymətini yazın.',
+            'unit_cost.min' => 'Qiymət 0-dan böyük olmalıdır.',
         ]);
-        $offers = $service->recordDirect($order, (int) $data['item_id'], array_map('strval', $data['prices']), (int) auth('admin')->id());
+        $actor = (int) auth('admin')->id();
+        $allocation = $service->recordDirect($order, (int) $data['item_id'], (int) $data['warehouse_id'], (string) $data['unit_cost'], $actor);
+        $sms = WarehouseNotifier::summary([$allocation->warehouse->name_az => $notifier->notifySelected($order, $allocation, $actor)]);
 
-        return back()->with('success', $offers->count().' anbarın cavabı qeyd olundu (sorğu göndərilmədi). İndi "Seç" ilə anbarı seçə bilərsiniz.');
+        return back()->with('success', trim($allocation->warehouse->name_az.' seçildi (sorğusuz). '.$sms));
     }
 
     public function recordOffer(Request $request, Order $order, int $requestItem, ProcurementService $service)

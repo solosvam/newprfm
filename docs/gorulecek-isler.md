@@ -164,4 +164,4 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
   seçim üçün). Operatorun seçimi anbar üzrə, brend bağlantısı bütün anbarlar üçün yadda qalır. Qiymət alış qiymətidir, 2 onluğa yuvarlaqlaşdırılır.
   Siyahıdakı qiymət stok təsdiqi deyil — sifarişdə siyahının tarixi ilə göstərilir.
 - CRM sifarişinin Proses tabı: məhsul adı "brend ad ölçü növ cins" formatında; "Yeni sorğu", "Price listlər" (aşağıdan açılan panel, yalnız × ilə bağlanır)
-  və "Anbar seç" (sorğusuz: operator anbarı və qiyməti bilir — sorğu və "var" cavabı birdən yazılır, SMS getmir, sonra "Seç").
+  və "Anbar seç" (sorğusuz: operator tək anbarı və qiyməti bilir — sorğu, "var" cavabı və seçim birdən yazılır; sorğu SMS-i getmir, seçim SMS-i gedir).
