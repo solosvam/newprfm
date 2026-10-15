@@ -9,7 +9,7 @@ Son yenilənmə: 10 oktyabr 2026.
 
 ## 1. Sifariş təminatı (CRM / anbar / kuryer)
 
-- [ ] **Anbar Telegram bildirişləri — proddə qoşmaq və yoxlamaq** (15 oktyabr yazıldı): sorğu (şəkil + ad, ölçü, növ, cins; "Var" / "Qismən" / "Yoxdur",
+- [ ] **Anbar Telegram bildirişləri — proddə qoşmaq və yoxlamaq** (15 oktyabr yazıldı): sorğu (şəkilsiz: ad, ölçü, növ, cins; "Var" / "Qismən" / "Yoxdur",
   qiymət və say bot sualına cavabla), seçim ("Rezerv etdim" düyməsi), ləğv — anbarın qrupuna (warehouses.telegram_id = qrupun id-si, mənfi rəqəm).
   Proddə: `php artisan migrate`, `php artisan telegram:webhook --info` (botun hazırkı webhook-u — köhnə sistem istifadə edirsə, qoşulandan sonra
   cavabları o almayacaq), sonra `php artisan telegram:webhook`. Anbarların Telegram ID-sini qrup id-si ilə yazmaq, sorğu tipini Telegram etmək.

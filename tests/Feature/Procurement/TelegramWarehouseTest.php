@@ -85,7 +85,7 @@ class TelegramWarehouseTest extends TestCase
             'reply_to_message' => ['message_id' => $prompt->message_id]]]);
     }
 
-    public function test_request_goes_to_the_group_with_photo_details_and_buttons_and_price_is_answered_by_reply(): void
+    public function test_request_goes_to_the_group_with_details_and_buttons_and_price_is_answered_by_reply(): void
     {
         $order = $this->order(1);
         $request = app(ProcurementService::class)->createRequests($order, [$this->telegramWarehouse()->id], [$order->items()->first()->id], 7)->first();
@@ -93,26 +93,28 @@ class TelegramWarehouseTest extends TestCase
         $log = app(WarehouseNotifier::class)->notifyRequest($request, 7);
 
         $this->assertSame(['telegram', SmsLog::SENT], [$log->channel, $log->status]);
-        $photo = $this->sentTo('sendPhoto')[0];
-        $this->assertSame([self::CHAT, 'https://last.parfumshop.az/frontend/uploads/products/marry-me.webp'], [$photo['chat_id'], $photo['photo']]);
-        $this->assertStringContainsString('Sizdə <b>Lanvin Marry Me</b> ətirinin <b>30 ml</b> ölçüsü <b>Eau De Parfum</b> olan <b>1 ədəd</b> var?', $photo['caption']);
-        $this->assertStringContainsString('Cins: Qadın üçün', $photo['caption']);
-        $this->assertSame(['✅ Var', '❌ Yoxdur'], array_column($photo['reply_markup']['inline_keyboard'][0], 'text'));
+        // Şəkilsiz mətn mesajı (15.10 qərarı)
+        $this->assertSame([], $this->sentTo('sendPhoto'));
+        $sent = $this->sentTo('sendMessage')[0];
+        $this->assertSame(self::CHAT, $sent['chat_id']);
+        $this->assertStringContainsString('Sizdə <b>Lanvin Marry Me</b> ətirinin <b>30 ml</b> ölçüsü <b>Eau De Parfum</b> olan <b>1 ədəd</b> var?', $sent['text']);
+        $this->assertStringContainsString('Cins: Qadın üçün', $sent['text']);
+        $this->assertSame(['✅ Var', '❌ Yoxdur'], array_column($sent['reply_markup']['inline_keyboard'][0], 'text'));
         Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'lsim')); // SMS getmir
 
         // "Var" → bot qiyməti soruşur; "95,5" → anbarın cavabı yazılır
         $message = TelegramMessage::where('kind', TelegramMessage::REQUEST_ITEM)->sole();
         $this->press($message, 'all')->assertOk();
-        $this->assertTrue($this->sentTo('sendMessage')[0]['reply_markup']['force_reply']);
+        $this->assertTrue($this->sentTo('sendMessage')[1]['reply_markup']['force_reply']);
         $this->reply('95,5')->assertOk();
 
         $offer = WarehouseOffer::sole();
         $this->assertSame([1, '95.50', 'telegram', 0, 'Telegram: Kamal'], [(int) $offer->available_quantity, (string) $offer->unit_cost, $offer->source, (int) $offer->recorded_by, $offer->note]);
         // Cavab mətndə təkrarlanmır — yalnız düymədə
-        $this->assertStringNotContainsString('95.50', $this->sentTo('editMessageCaption')[0]['caption']);
+        $this->assertStringNotContainsString('95.50', $this->sentTo('editMessageText')[0]['text']);
         // Düymədə cavabın özü; sual və anbarın cavab mesajı silinir
-        $this->assertSame('✅ Var — 95.50 AZN (Dəyişdir)', $this->sentTo('editMessageCaption')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
-        $this->assertEqualsCanonicalizing([999, $this->sentTo('sendMessage') ? 501 : 0], array_column($this->sentTo('deleteMessage'), 'message_id'));
+        $this->assertSame('✅ Var — 95.50 AZN (Dəyişdir)', $this->sentTo('editMessageText')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
+        $this->assertEqualsCanonicalizing([999, 501], array_column($this->sentTo('deleteMessage'), 'message_id'));
         $this->assertSame(0, TelegramMessage::whereIn('kind', [TelegramMessage::PROMPT, TelegramMessage::REPLY])->count());
         // CRM-də cavabı kimin verdiyi — düyməni basan adam ("Anbar (link)" yox)
         $this->assertSame('Kamal', $offer->authorName(fn () => 'Anbar (link)'));
@@ -124,7 +126,7 @@ class TelegramWarehouseTest extends TestCase
         $request = app(ProcurementService::class)->createRequests($order, [$this->telegramWarehouse()->id], [$order->items()->first()->id], 7)->first();
         app(WarehouseNotifier::class)->notifyRequest($request, 7);
         $message = TelegramMessage::where('kind', TelegramMessage::REQUEST_ITEM)->sole();
-        $this->assertSame(['✅ Hamısı var (3)', 'Qismən'], array_column($this->sentTo('sendPhoto')[0]['reply_markup']['inline_keyboard'][0], 'text'));
+        $this->assertSame(['✅ Hamısı var (3)', 'Qismən'], array_column($this->sentTo('sendMessage')[0]['reply_markup']['inline_keyboard'][0], 'text'));
 
         // Başqa qrupdan basılan düymə qəbul olunmur
         $this->press($message, 'none', '-100999')->assertOk();
@@ -159,7 +161,7 @@ class TelegramWarehouseTest extends TestCase
 
         $this->assertTrue($log->isSent());
         $this->assertSame(OrderItemAllocation::NOTIFIED, $allocation->fresh()->status);
-        $this->assertSame('✅ Rezerv etdim', $this->sentTo('sendPhoto')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
+        $this->assertSame('✅ Rezerv etdim', $this->sentTo('sendMessage')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
 
         $this->press(TelegramMessage::where('kind', TelegramMessage::ALLOCATION)->sole(), 'reserve')->assertOk();
         $this->assertSame(OrderItemAllocation::RESERVED, $allocation->fresh()->status);
@@ -188,28 +190,28 @@ class TelegramWarehouseTest extends TestCase
         $message = TelegramMessage::where('kind', TelegramMessage::REQUEST_ITEM)->sole();
 
         $this->artisan('telegram:remind')->assertSuccessful();
-        $this->assertCount(0, $this->sentTo('sendMessage'), 'hələ 15 dəqiqə keçməyib');
+        $this->assertCount(1, $this->sentTo('sendMessage'), 'hələ 15 dəqiqə keçməyib — yalnız sorğunun özü');
 
         $this->travel(16)->minutes();
         $this->artisan('telegram:remind');
-        $reminder = $this->sentTo('sendMessage')[0];
+        $reminder = $this->sentTo('sendMessage')[1];
         $this->assertSame($message->message_id, $reminder['reply_to_message_id']);
         $this->assertStringContainsString('Xatırlatma:</b> Lanvin Marry Me 30 ml', $reminder['text']);
 
         $this->travel(10)->minutes();
         $this->artisan('telegram:remind');
-        $this->assertCount(1, $this->sentTo('sendMessage'), 'ikincisi 30 dəqiqədən sonra');
+        $this->assertCount(2, $this->sentTo('sendMessage'), 'ikincisi 30 dəqiqədən sonra');
         $this->travel(25)->minutes();
         $this->artisan('telegram:remind');
         $this->travel(40)->minutes();
         $this->artisan('telegram:remind');
-        $this->assertCount(2, $this->sentTo('sendMessage'), 'ən çox 2 dəfə');
+        $this->assertCount(3, $this->sentTo('sendMessage'), 'ən çox 2 dəfə');
 
         // Gecə xatırlatma getmir
         $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-15 22:30', 'Asia/Baku'));
         $message->update(['reminders' => 0, 'reminded_at' => null]);
         $this->artisan('telegram:remind');
-        $this->assertCount(2, $this->sentTo('sendMessage'));
+        $this->assertCount(3, $this->sentTo('sendMessage'));
 
         // Cavab gələndə xatırlatmalar silinir
         $this->press($message, 'none');

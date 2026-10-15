@@ -17,7 +17,7 @@ use Throwable;
 
 /**
  * Sorğu tipi Telegram olan anbarlar: bildiriş anbarın Telegram qrupuna (anbar + bot + Parfumshop) gedir.
- *  - sorğu: hər məhsul üçün ayrıca mesaj (şəkil + ad, ölçü, növ, cins) və düymələr — "Var" / "Yoxdur"
+ *  - sorğu: hər məhsul üçün ayrıca mesaj (ad, ölçü, növ, cins — şəkilsiz, 15.10 qərarı) və düymələr — "Var" / "Yoxdur"
  *    (çox ədəd istənilibsə "Hamısı var", "Qismən", "Yoxdur"). "Var" → bot qiyməti soruşur (cavab mesajı ilə),
  *    "Qismən" → əvvəl sayı. Cavab sorğuya anbarın cavabı kimi yazılır (mənbə "telegram", user_id 0 — anbarın özü);
  *  - seçim: "sizdən seçildi, rezerv edin" + "Rezerv etdim" düyməsi (→ "Anbar ayırdı");
@@ -41,7 +41,7 @@ class TelegramWarehouseBot
             $quantity = (int) $requestItem->requested_quantity;
             $text = 'Sizdə <b>'.e($label['title']).'</b> ətirinin <b>'.e($label['size'] ?? '—').'</b> ölçüsü <b>'.e($label['type'] ?? '—').'</b> olan <b>'.$quantity.' ədəd</b> var?'
                 ."\n\n".$this->details($label)."\nSorğu #".$request->id;
-            $log = $this->post($request->warehouse, $text, $label['photo'], TelegramMessage::REQUEST_ITEM, $requestItem->id,
+            $log = $this->post($request->warehouse, $text, null, TelegramMessage::REQUEST_ITEM, $requestItem->id,
                 fn (TelegramMessage $m) => $this->answerButtons($m, $quantity),
                 'warehouse_request', WarehouseNotifier::SUBJECT_REQUEST, $request->id, $actor);
             $result = $result && !$result->isSent() ? $result : $log;
@@ -57,7 +57,7 @@ class TelegramWarehouseBot
         $text = '✅ <b>'.e($label['full']).'</b> — '.$allocation->quantity.' ədəd sizdən seçildi. Zəhmət olmasa rezerv edin və təsdiqləyin.'
             ."\n\n".$this->details($label)."\nAlış: ".number_format((float) $allocation->unit_cost, 2).' AZN';
 
-        return $this->post($allocation->warehouse, $text, $label['photo'], TelegramMessage::ALLOCATION, $allocation->id,
+        return $this->post($allocation->warehouse, $text, null, TelegramMessage::ALLOCATION, $allocation->id,
             fn (TelegramMessage $m) => [[['text' => '✅ Rezerv etdim', 'callback_data' => $m->id.':reserve']]],
             'warehouse_selected', WarehouseNotifier::SUBJECT_ALLOCATION, $allocation->id, $actor);
     }
