@@ -109,6 +109,10 @@ class TelegramWarehouseTest extends TestCase
         $offer = WarehouseOffer::sole();
         $this->assertSame([1, '95.50', 'telegram', 0, 'Telegram: Kamal'], [(int) $offer->available_quantity, (string) $offer->unit_cost, $offer->source, (int) $offer->recorded_by, $offer->note]);
         $this->assertStringContainsString('✅ <b>Var</b> — 1 ədəd × 95.50 AZN qeyd olundu (Kamal)', $this->sentTo('editMessageCaption')[0]['caption']);
+        // Düymədə cavabın özü; sual və anbarın cavab mesajı silinir
+        $this->assertSame('✅ Var — 95.50 AZN', $this->sentTo('editMessageCaption')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
+        $this->assertEqualsCanonicalizing([999, $this->sentTo('sendMessage') ? 501 : 0], array_column($this->sentTo('deleteMessage'), 'message_id'));
+        $this->assertSame(0, TelegramMessage::whereIn('kind', [TelegramMessage::PROMPT, TelegramMessage::REPLY])->count());
         // CRM-də cavabı kimin verdiyi — düyməni basan adam ("Anbar (link)" yox)
         $this->assertSame('Kamal', $offer->authorName(fn () => 'Anbar (link)'));
     }

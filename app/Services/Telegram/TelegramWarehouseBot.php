@@ -139,6 +139,9 @@ class TelegramWarehouseBot
         if (!$requestItem) {
             return;
         }
+        // Anbarın cavab mesajı da yadda saxlanır — qiymət qeyd olunandan sonra söhbət təmizlənir
+        TelegramMessage::create(['chat_id' => $chat, 'message_id' => (int) ($incoming['message_id'] ?? 0), 'kind' => TelegramMessage::REPLY,
+            'parent_id' => $message->id, 'text' => Str::limit((string) ($incoming['text'] ?? ''), 200)]);
         $requested = (int) $requestItem->requested_quantity;
         $value = str_replace([',', ' '], ['.', ''], trim((string) ($incoming['text'] ?? '')));
 
@@ -175,7 +178,12 @@ class TelegramWarehouseBot
         $result = $quantity
             ? '✅ <b>Var</b> — '.$quantity.' ədəd × '.$price.' AZN qeyd olundu ('.e($who).')'
             : '❌ <b>Yoxdur</b> — qeyd olundu ('.e($who).')';
-        $this->edit($message, $message->text."\n\n".$result, [[['text' => '✏️ Cavabı dəyiş', 'callback_data' => $message->id.':change']]], ['state' => null, 'quantity' => null]);
+        // Düymədə cavabın özü yazılır; basanda cavab dəyişdirilir (düymələr yenidən açılır)
+        $button = $quantity
+            ? '✅ Var — '.($quantity > 1 || (int) $requestItem->requested_quantity > 1 ? $quantity.' ədəd × ' : '').$price.' AZN'
+            : '❌ Yoxdur';
+        $this->edit($message, $message->text."\n\n".$result, [[['text' => $button, 'callback_data' => $message->id.':change']]], ['state' => null, 'quantity' => null]);
+        $this->cleanup($message);
     }
 
     private function reserve(TelegramMessage $message, string $who): void
@@ -200,6 +208,19 @@ class TelegramWarehouseBot
         $message->update(['state' => $state] + ($quantity !== null ? ['quantity' => $quantity] : []));
         TelegramMessage::create(['chat_id' => $message->chat_id, 'message_id' => (int) $sent['message_id'], 'kind' => TelegramMessage::PROMPT,
             'parent_id' => $message->id, 'text' => $question]);
+    }
+
+    /**
+     * Botun sualları (qiymət, say) və anbarın cavab mesajları silinir — qrupda yalnız nəticəli mesaj qalır.
+     * Botun öz mesajını həmişə silə bilir; anbarın mesajını yalnız bot qrupda admindirsə ("Mesajları silmək" icazəsi) — olmasa qalır.
+     */
+    private function cleanup(TelegramMessage $message): void
+    {
+        $extra = TelegramMessage::where('parent_id', $message->id)->whereIn('kind', [TelegramMessage::PROMPT, TelegramMessage::REPLY])->get();
+        foreach ($extra as $row) {
+            rescue(fn () => $this->api->call('deleteMessage', ['chat_id' => $row->chat_id, 'message_id' => $row->message_id]), null, false);
+        }
+        TelegramMessage::whereKey($extra->pluck('id'))->delete();
     }
 
     /** @return list<list<array{text: string, callback_data: string}>> */
