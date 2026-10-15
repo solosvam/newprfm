@@ -49,10 +49,17 @@ class ProcurementController extends Controller
             'contact_name' => ['nullable', 'string', 'max:150'],
             'phone' => ['nullable', 'string', 'max:30'],
             // Telegram çat id-si: rəqəm, qrupda mənfi (-1001234567890)
-            'telegram_id' => ['nullable', 'regex:/^-?\d{1,20}$/'],
+            'telegram_id' => ['nullable', 'required_if:request_channel,telegram', 'regex:/^-?\d{1,20}$/'],
+            // Sorğu tipi Telegram-dırsa, Telegram ID məcburidir
+            'request_channel' => ['nullable', 'in:'.implode(',', array_keys(Warehouse::CHANNELS))],
             'address' => ['nullable', 'string', 'max:500'],
             'active' => ['required', 'boolean'],
-        ], ['telegram_id.regex' => 'Telegram ID yalnız rəqəmlərdən ibarət olmalıdır (qrupda əvvəlində "-" ola bilər).']);
+        ], [
+            'telegram_id.regex' => 'Telegram ID yalnız rəqəmlərdən ibarət olmalıdır (qrupda əvvəlində "-" ola bilər).',
+            'telegram_id.required_if' => 'Sorğu tipi Telegram olanda Telegram ID yazılmalıdır.',
+        ]);
+
+        $data['request_channel'] ??= 'sms';
 
         return $data;
     }

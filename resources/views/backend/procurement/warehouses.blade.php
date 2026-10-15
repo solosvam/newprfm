@@ -86,7 +86,7 @@
                            id="datatableHover">
                         <thead>
                         <tr>
-                            @foreach(['#', 'Anbar', 'Əlaqəli şəxs', 'Telefon', 'Telegram ID', 'Ünvan', 'Aktiv', 'Əməliyyat'] as $heading)
+                            @foreach(['#', 'Anbar', 'Əlaqəli şəxs', 'Telefon', 'Telegram ID', 'Sorğu tipi', 'Ünvan', 'Aktiv', 'Əməliyyat'] as $heading)
                                 <th class="text-muted text-small text-uppercase">{{ $heading }}</th>
                             @endforeach
                         </tr>
@@ -99,6 +99,7 @@
                                 <td class="text-alternate">{{ $warehouse->contact_name ?: '—' }}</td>
                                 <td class="text-alternate">{{ $warehouse->phone ?: '—' }}</td>
                                 <td class="text-alternate">{{ $warehouse->telegram_id ?: '—' }}</td>
+                                <td class="text-alternate">{{ \App\Models\Procurement\Warehouse::CHANNELS[$warehouse->request_channel] ?? 'SMS' }}</td>
                                 <td class="text-alternate">{{ $warehouse->address ?: '—' }}</td>
                                 <td class="text-alternate">{{ $warehouse->active ? 'Aktiv' : 'Deaktiv' }}</td>
                                 <td class="text-alternate">

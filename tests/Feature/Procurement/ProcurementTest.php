@@ -195,13 +195,19 @@ class ProcurementTest extends TestCase
         $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar T', 'telegram_id' => '-1001234567890', 'active' => 1])->assertSessionHasNoErrors();
         $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar Boş', 'active' => 1])->assertSessionHasNoErrors();
         $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar X', 'telegram_id' => '@anbar', 'active' => 1])->assertSessionHasErrors('telegram_id');
+        // Sorğu tipi: standart SMS; Telegram seçiləndə Telegram ID məcburidir
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar Y', 'request_channel' => 'telegram', 'active' => 1])->assertSessionHasErrors('telegram_id');
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar Z', 'request_channel' => 'faks', 'active' => 1])->assertSessionHasErrors('request_channel');
+        $this->assertSame('sms', Warehouse::where('name_az', 'Anbar Boş')->value('request_channel'));
 
         $warehouse = Warehouse::where('name_az', 'Anbar T')->sole();
         $this->assertSame('-1001234567890', $warehouse->telegram_id);
         $this->assertNull(Warehouse::where('name_az', 'Anbar Boş')->value('telegram_id'));
         $this->get(route('admin.procurement.warehouses'))->assertOk()->assertSee('Telegram ID')->assertSee('-1001234567890');
 
-        $this->put(route('admin.procurement.warehouses.update', $warehouse), ['name_az' => 'Anbar T', 'telegram_id' => '987654321', 'active' => 1])->assertSessionHasNoErrors();
+        $this->put(route('admin.procurement.warehouses.update', $warehouse), ['name_az' => 'Anbar T', 'telegram_id' => '987654321', 'request_channel' => 'telegram', 'active' => 1])->assertSessionHasNoErrors();
+        $this->assertSame('telegram', $warehouse->fresh()->request_channel);
+        $this->get(route('admin.procurement.warehouses'))->assertSee('Sorğu tipi')->assertSee('Telegram');
         $this->assertSame('987654321', $warehouse->fresh()->telegram_id);
         $this->get(route('admin.procurement.warehouses.edit', $warehouse))->assertOk()->assertSee('value="987654321"', false);
     }

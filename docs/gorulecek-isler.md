@@ -9,6 +9,9 @@ Son yenilənmə: 10 oktyabr 2026.
 
 ## 1. Sifariş təminatı (CRM / anbar / kuryer)
 
+- [ ] **Anbara sorğunun Telegram ilə göndərilməsi.** Anbarda "Sorğu tipi" (SMS / Telegram) və Telegram ID saxlanır (15 oktyabr), amma
+  göndəriş hələ yalnız SMS ilədir — "Telegram" seçilmiş anbara da SMS gedir. Telegram bot qoşulmalı və sorğu / seçim / ləğv bildirişləri
+  sorğu tipinə görə göndərilməlidir.
 - [ ] **SMS — qalan qərarlar və yoxlamalar** (10 oktyabr: jurnal, çatdırılma statusu, balans, "Yola çıxdım" SMS-i və "SMS" səhifəsi hazırdır):
   - `crm_order_accepted` ("CRM-dən operator sifariş qəbul etdikdə") şablonu bazada var, amma heç bir hadisəyə qoşulmayıb (səhifədə "Qoşulmayıb").
     Qərar: göndərilsinmi, yoxsa silinsin. "Təhvil verildi" SMS-i də qərarsızdır. (`website_order_accepted` 10 oktyabrda silindi.)
