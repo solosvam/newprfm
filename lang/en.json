@@ -852,5 +852,6 @@
     "advisor_greeting": "Hi! I’m your fragrance assistant 👋",
     "advisor_speech": "Answer a few questions and I’ll pick the scents that suit your taste best from the hundreds in our catalog.",
     "orders_address_on_call": "The courier will call you to confirm the delivery location",
-    "orders_meeting_place": "Meeting place:"
+    "orders_meeting_place": "Meeting place:",
+    "checkout_credit_period": "Term"
 }

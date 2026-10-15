@@ -200,9 +200,9 @@
 
         if (selected && state.total > 0) {
             const credit = creditFor(selected);
+            els.creditSummary.querySelector('[data-credit-period]').textContent = (Number(selected.dataset.months) || 1) + ' ' + (els.creditSummary.dataset.monthsLabel || 'ay');
             els.creditSummary.querySelector('[data-credit-monthly]').textContent = money(credit.monthly);
             els.creditSummary.querySelector('[data-credit-total]').textContent = money(credit.sum);
-            els.creditSummary.querySelector('[data-credit-overpay]').textContent = '+' + money(credit.overpay);
         }
     }
 

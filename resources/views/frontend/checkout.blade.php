@@ -144,10 +144,11 @@
                                     @endforeach
                                 </div>
 
-                                <dl class="installment__summary" hidden>
+                                <dl class="installment__summary" data-months-label="{{ __('checkout_months') }}" hidden>
+                                    {{-- Müddət, aylıq ödəniş, ümumi məbləğ ("əlavə ödəniş" göstərilmir — 15.10 qərarı) --}}
+                                    <div><dt>{{ __('checkout_credit_period') }}</dt><dd data-credit-period></dd></div>
                                     <div><dt>{{ __('checkout_credit_monthly') }}</dt><dd data-credit-monthly></dd></div>
                                     <div><dt>{{ __('checkout_credit_total') }}</dt><dd data-credit-total></dd></div>
-                                    <div><dt>{{ __('checkout_credit_overpay') }}</dt><dd data-credit-overpay></dd></div>
                                 </dl>
 
                                 <p id="creditEstimate" hidden></p>
