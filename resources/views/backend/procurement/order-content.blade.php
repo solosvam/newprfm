@@ -381,7 +381,7 @@
 
     {{-- Anbar seç: ətirin hansı anbarda neçəyə olduğu artıq bilinir — sorğu getmir, cavab yazılır və anbar dərhal seçilir --}}
     <div class="modal modal-right fade" id="procDirectModal" tabindex="-1" aria-labelledby="procDirectTitle" aria-hidden="true">
-        <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.procurement.offers.direct', $order) }}" data-once>
+        <div class="modal-dialog modal-dialog-scrollable"><form class="modal-content" method="POST" action="{{ route('admin.procurement.offers.direct', $order) }}" data-once>
             @csrf
             <div class="modal-header"><h5 class="modal-title" id="procDirectTitle">Anbar seç</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
             <div class="modal-body">
@@ -416,9 +416,10 @@
         </form></div>
     </div>
 
-    {{-- Yeni sorğu: seçilən məhsullar hər seçilən anbara ayrıca sorğu kimi gedir --}}
+    {{-- Yeni sorğu: seçilən məhsullar hər seçilən anbara ayrıca sorğu kimi gedir.
+         modal-dialog-scrollable: anbar siyahısı uzun olanda yalnız gövdə sürüşür, "Bağla" / "Sorğunu yarat" həmişə görünür --}}
     <div class="modal modal-right fade" id="procRequestModal" tabindex="-1" aria-labelledby="procRequestTitle" aria-hidden="true">
-        <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.procurement.requests.store', $order) }}">
+        <div class="modal-dialog modal-dialog-scrollable"><form class="modal-content" method="POST" action="{{ route('admin.procurement.requests.store', $order) }}">
             @csrf
             <div class="modal-header"><h5 class="modal-title" id="procRequestTitle">Yeni anbar sorğusu</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
             <div class="modal-body">
