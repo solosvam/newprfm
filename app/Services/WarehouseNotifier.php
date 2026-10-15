@@ -8,12 +8,14 @@ use App\Models\Procurement\Warehouse;
 use App\Models\Procurement\WarehouseRequest;
 use App\Models\SmsLog;
 use App\Models\SmsTemplate;
+use App\Services\Telegram\TelegramWarehouseBot;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Anbar SMS bildirişləri (lsim). Hər SMS-də anbarın portal linki (/w/{token}, 7 gün) olur.
+ * Anbar bildirişləri. Anbarın sorğu tipinə görə: SMS (lsim; hər SMS-də portal linki /w/{token}, 7 gün)
+ * və ya Telegram (anbarın qrupuna düyməli mesaj — TelegramWarehouseBot). Jurnal hər ikisində sms_logs-dadır.
  *  - sorğu yaradılanda   → "N məhsul üçün sorğu var";
  *  - təklif seçiləndə    → "məhsul sizdən seçildi, rezerv edin" + status "Anbara bildirildi";
  *  - seçim ləğv olunanda → "seçim ləğv edildi" (yalnız anbar artıq xəbərdar idisə).
@@ -33,6 +35,9 @@ class WarehouseNotifier
         if (!$this->reachable($warehouse)) {
             return null;
         }
+        if ($this->viaTelegram($warehouse)) {
+            return app(TelegramWarehouseBot::class)->sendRequest($request, $actor);
+        }
         $values = ['count' => $request->items()->count(), 'link' => $this->portal->issue($warehouse, $actor), 'warehouse' => $warehouse->name_az];
         $message = SmsTemplate::message('warehouse_request', $values)
             ?? 'Parfumshop: '.$values['count'].' mehsul ucun sorgu var. Movcudlugu ve qiymeti yazin: '.$values['link'];
@@ -48,6 +53,12 @@ class WarehouseNotifier
         if (!$this->reachable($warehouse)) {
             return null;
         }
+        if ($this->viaTelegram($warehouse)) {
+            $log = app(TelegramWarehouseBot::class)->sendSelected($allocation, $actor);
+            $this->markNotified($order, $allocation, $log, $actor, 'Telegram göndərildi');
+
+            return $log;
+        }
         $values = [
             'product' => $this->productLabel($allocation), 'quantity' => $allocation->quantity,
             'link' => $this->portal->issue($warehouse, $actor).'?tab=selected', 'warehouse' => $warehouse->name_az,
@@ -55,13 +66,18 @@ class WarehouseNotifier
         $message = SmsTemplate::message('warehouse_selected', $values)
             ?? 'Parfumshop: '.$values['product'].' x'.$values['quantity'].' sizden secildi. Rezerv edib tesdiqleyin: '.$values['link'];
         $log = $this->deliver($warehouse, $message, 'warehouse_selected', self::SUBJECT_ALLOCATION, $allocation->id, $actor);
-
-        if ($log->isSent() && $allocation->status === OrderItemAllocation::SELECTED) {
-            rescue(fn () => app(ProcurementService::class)
-                ->transition($order, $allocation->id, OrderItemAllocation::NOTIFIED, ['note' => 'SMS göndərildi'], $actor), report: false);
-        }
+        $this->markNotified($order, $allocation, $log, $actor, 'SMS göndərildi');
 
         return $log;
+    }
+
+    /** Bildiriş getdisə: "Seçilib" → "Anbara bildirildi" */
+    private function markNotified(Order $order, OrderItemAllocation $allocation, SmsLog $log, int $actor, string $note): void
+    {
+        if ($log->isSent() && $allocation->status === OrderItemAllocation::SELECTED) {
+            rescue(fn () => app(ProcurementService::class)
+                ->transition($order, $allocation->id, OrderItemAllocation::NOTIFIED, ['note' => $note], $actor), report: false);
+        }
     }
 
     public function notifyCancelled(OrderItemAllocation $allocation, int $actor): ?SmsLog
@@ -70,6 +86,9 @@ class WarehouseNotifier
         $warehouse = $allocation->warehouse;
         if (!$this->reachable($warehouse)) {
             return null;
+        }
+        if ($this->viaTelegram($warehouse)) {
+            return app(TelegramWarehouseBot::class)->sendCancelled($allocation, $actor);
         }
         $values = ['product' => $this->productLabel($allocation), 'quantity' => $allocation->quantity, 'warehouse' => $warehouse->name_az];
         $message = SmsTemplate::message('warehouse_cancelled', $values)
@@ -97,7 +116,9 @@ class WarehouseNotifier
     {
         $sent = 0;
         $parts = [];
+        $channels = [];
         foreach ($results as $name => $log) {
+            $channels[$log?->channel ?? 'sms'] = true;
             if ($log === null) {
                 $parts[] = $name.' — telefon yoxdur';
             } elseif ($log->isSent()) {
@@ -106,14 +127,23 @@ class WarehouseNotifier
                 $parts[] = $name.' — '.$log->error;
             }
         }
-        $text = $sent ? 'SMS '.$sent.' anbara göndərildi.' : '';
+        // Bütün anbarlar Telegram-dadırsa "Telegram", qarışıqdırsa "Bildiriş", əks halda "SMS"
+        $word = isset($channels['telegram']) ? (count($channels) > 1 ? 'Bildiriş' : 'Telegram') : 'SMS';
+        $text = $sent ? $word.' '.$sent.' anbara göndərildi.' : '';
 
-        return trim($text.($parts ? ' SMS getmədi: '.implode('; ', $parts).'.' : ''));
+        return trim($text.($parts ? ' '.$word.' getmədi: '.implode('; ', $parts).'.' : ''));
     }
 
     private function reachable(?Warehouse $warehouse): bool
     {
-        return $warehouse && $warehouse->active && trim((string) $warehouse->phone) !== '';
+        return $warehouse && $warehouse->active
+            && trim((string) ($this->viaTelegram($warehouse) ? $warehouse->telegram_id : $warehouse->phone)) !== '';
+    }
+
+    /** Sorğu tipi Telegram-dırsa (ID olmadan seçilə bilmir — yoxlama anbar formasındadır) */
+    private function viaTelegram(Warehouse $warehouse): bool
+    {
+        return $warehouse->request_channel === 'telegram';
     }
 
     private function productLabel(OrderItemAllocation $allocation): string

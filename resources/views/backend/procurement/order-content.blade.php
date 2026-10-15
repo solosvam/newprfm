@@ -14,7 +14,7 @@
     $smsLogs = app(\App\Services\WarehouseNotifier::class)->lastLogs($requests->pluck('id'), $order->items->flatMap->allocations->pluck('id'));
     // Mənbə: cavabı kim daxil edib — operator (hansı yolla) və ya anbar özü (link ilə).
     // WhatsApp / Telegram artıq seçilmir (ləğv olunub) — adları yalnız köhnə cavabların tarixçəsi üçün qalır
-    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Operator - Telegram', 'manual' => 'Operator - Digər', 'direct' => 'Operator - Birbaşa (sorğusuz)', 'link' => 'Anbar - link'];
+    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Anbar - Telegram', 'manual' => 'Operator - Digər', 'direct' => 'Operator - Birbaşa (sorğusuz)', 'link' => 'Anbar - link'];
     $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul');
     $itemSize = fn ($item) => $item?->variant?->size?->name_az;
     // Tam ad: brend, ad, ölçü, növ, cins — "Antonio Banderas The Secret Absolu 100 ml Eau De Parfum Kişi üçün"
@@ -35,7 +35,8 @@
     // CRM sifariş səhifəsində məhsulun "⋯" menyusunda ləğv əməliyyatları da olur
     $crm = isset($customer);
     // "Anbar seç" ilə yazılan sorğular (direct) SMS-siz olur — xəta sayılmır
-    $smsProblems = $requests->reject->direct->filter(fn ($r) => !$r->warehouse->phone || !($smsLogs['request'][$r->id] ?? null)?->isSent())->count();
+    $reachable = fn ($w) => (bool) ($w->request_channel === 'telegram' ? $w->telegram_id : $w->phone);
+    $smsProblems = $requests->reject->direct->filter(fn ($r) => !$reachable($r->warehouse) || !($smsLogs['request'][$r->id] ?? null)?->isSent())->count();
     // Anbarların cari price listlərində bu sifarişin məhsulları (ucuzdan bahaya) — "Price listlər" paneli
     $openItems = $order->items->filter(fn ($item) => $item->activeQuantity() > 0 && $item->product_variant_id);
     $priceRows = \App\Models\PriceList\WarehousePriceItem::with(['warehouse', 'priceList:id,created_at'])
@@ -293,21 +294,22 @@
                             <td>{{ $req->items->map(fn ($ri) => $itemName($ri->orderItem).' ×'.$ri->requested_quantity)->implode(', ') }}</td>
                             <td>{{ $req->created_at->format('d.m.Y H:i') }}@if($who($req->created_by))<span class="proc-sub">{{ $who($req->created_by) }}</span>@endif</td>
                             <td><span class="badge {{ $answered === $req->items->count() ? 'bg-outline-success' : 'bg-outline-warning' }}">{{ $answered }}/{{ $req->items->count() }}</span></td>
-                            <td class="{{ $req->direct ? 'text-muted' : ($log?->isSent() ? 'text-success' : ($log || !$req->warehouse->phone ? 'text-danger' : 'text-muted')) }}">
+                            <td class="{{ $req->direct ? 'text-muted' : ($log?->isSent() ? 'text-success' : ($log || !$reachable($req->warehouse) ? 'text-danger' : 'text-muted')) }}">
                                 @if($req->direct) Sorğusuz — "Anbar seç"
-                                @elseif(!$req->warehouse->phone) Telefon yazılmayıb
+                                @elseif($req->warehouse->request_channel === 'telegram' && !$req->warehouse->telegram_id) Telegram ID yazılmayıb
+                                @elseif($req->warehouse->request_channel !== 'telegram' && !$req->warehouse->phone) Telefon yazılmayıb
                                 @elseif(!$log) Göndərilməyib
-                                @elseif($log->isSent()) ✓ SMS {{ $log->created_at->format('d.m H:i') }}
+                                @elseif($log->isSent()) ✓ {{ ($log->channel ?? 'sms') === 'telegram' ? 'Telegram' : 'SMS' }} {{ $log->created_at->format('d.m H:i') }}
                                 @else ✕ {{ $log->error }} @endif
                             </td>
                             <td class="text-end">
                                 <div class="proc-actions">
                                     @if($req->direct)
-                                    @elseif($editable && (!$req->warehouse->phone || $phoneError($log)))
+                                    @elseif($editable && (!$reachable($req->warehouse) || $phoneError($log)))
                                         <a class="btn btn-sm btn-primary text-nowrap" href="{{ route('admin.procurement.warehouses.edit', $req->warehouse) }}">Nömrəni düzəlt</a>
-                                    @elseif($editable && $req->warehouse->phone)
+                                    @elseif($editable && $reachable($req->warehouse))
                                         <form method="POST" action="{{ route('admin.procurement.requests.sms', [$order, $req->id]) }}" data-once>@csrf
-                                            <button class="btn btn-sm btn-outline-primary text-nowrap">{{ $log ? 'SMS-i təkrar göndər' : 'SMS göndər' }}</button>
+                                            <button class="btn btn-sm btn-outline-primary text-nowrap">{{ ($log ? 'Təkrar göndər' : 'Göndər').' ('.($req->warehouse->request_channel === 'telegram' ? 'Telegram' : 'SMS').')' }}</button>
                                         </form>
                                     @endif
                                     <form method="POST" action="{{ route('admin.procurement.warehouses.link', $req->warehouse) }}">@csrf<button class="btn btn-sm btn-outline-primary text-nowrap" @disabled(!$req->warehouse->active)>Link yarat</button></form>

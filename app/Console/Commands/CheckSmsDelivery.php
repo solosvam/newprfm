@@ -23,7 +23,8 @@ class CheckSmsDelivery extends Command
 
     public function handle(SmsService $sms): int
     {
-        $logs = SmsLog::where('status', SmsLog::SENT)->whereNotNull('provider_id')
+        // Telegram mesajlarının çatdırılma hesabatı yoxdur — yalnız SMS
+        $logs = SmsLog::where('status', SmsLog::SENT)->where('channel', 'sms')->whereNotNull('provider_id')
             ->where(fn ($q) => $q->whereNull('delivery_status')->orWhereIn('delivery_status', SmsLog::DELIVERY_PENDING))
             ->where('created_at', '>=', now()->subDays(max(1, (int) $this->option('days'))))
             ->where('created_at', '<=', now()->subMinutes(max(0, (int) $this->option('min-age'))))

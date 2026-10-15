@@ -16,7 +16,6 @@ class SmsLogTest extends TestCase
     {
         parent::setUp();
         $this->procurementSchema();
-        (require database_path('migrations/2026_10_10_180000_add_delivery_status_to_sms_logs.php'))->up();
         config(['services.parfumshop_sms.login' => 'login', 'services.parfumshop_sms.password' => 'secret']);
     }
 

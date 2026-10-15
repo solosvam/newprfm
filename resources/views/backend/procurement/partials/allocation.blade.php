@@ -9,8 +9,9 @@
     $allocTitle = $itemName($item).' — '.$allocation->warehouse->name_az.', '.$allocation->quantity.' ədəd';
     // Növbəti addım: bir düymə (əsas), qalanları menyuda
     $next = ['selected' => ['notified', 'Anbara bildirildi'], 'notified' => ['reserved', 'Anbar ayırdı'], 'reserved' => ['picked', 'Götürüldü']][$status] ?? null;
-    // Telefonu olan anbara "bildirmək" = SMS (status özü "Anbara bildirildi" olur)
-    $hasPhone = (bool) $allocation->warehouse->phone;
+    // Anbara "bildirmək" = sorğu tipinə görə SMS və ya Telegram (status özü "Anbara bildirildi" olur)
+    $via = $allocation->warehouse->request_channel === 'telegram' ? 'Telegram' : 'SMS';
+    $hasPhone = (bool) ($via === 'Telegram' ? $allocation->warehouse->telegram_id : $allocation->warehouse->phone);
     $smsUrl = route('admin.procurement.allocations.sms', [$order, $allocation]);
     $allocSms = $smsLogs['allocation'][$allocation->id] ?? null;
     // Son SMS telefon nömrəsinə görə alınmayıb ("Telefon nömrəsi yanlışdır", "Nömrə formatı yanlışdır")
@@ -40,7 +41,7 @@
                     {{-- SMS nömrəyə görə getməyib: təkrar göndərməyin mənası yoxdur — əvvəl nömrə düzəldilir (təkrar göndər "Digər"dədir) --}}
                     <a class="btn btn-sm btn-primary" href="{{ route('admin.procurement.warehouses.edit', $allocation->warehouse) }}">Nömrəni düzəlt</a>
                 @elseif($status === 'selected' && $hasPhone)
-                    <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="btn btn-sm btn-primary">{{ $allocSms ? 'SMS-i təkrar göndər' : 'Anbara SMS göndər' }}</button></form>
+                    <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="btn btn-sm btn-primary">{{ $allocSms ? 'Təkrar göndər ('.$via.')' : 'Anbara göndər ('.$via.')' }}</button></form>
                 @elseif($next)
                     <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="{{ $next[0] }}"><button class="btn btn-sm btn-primary">{{ $next[1] }}</button></form>
                 @endif
@@ -52,13 +53,13 @@
                     <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">Digər</button>
                     <div class="dropdown-menu dropdown-menu-end">
                         @if($status === 'selected' && $hasPhone && $badPhone)
-                            <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="dropdown-item">SMS-i təkrar göndər</button></form>
+                            <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="dropdown-item">Təkrar göndər ({{ $via }})</button></form>
                         @endif
                         @if($status === 'notified' && $hasPhone)
-                            <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="dropdown-item">SMS-i təkrar göndər</button></form>
+                            <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="dropdown-item">Təkrar göndər ({{ $via }})</button></form>
                         @endif
                         @if($status === 'selected' && $hasPhone)
-                            <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="notified"><button class="dropdown-item">Bildirildi (SMS-siz, telefonla)</button></form>
+                            <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="notified"><button class="dropdown-item">Bildirildi ({{ $via }}-sız, telefonla)</button></form>
                         @endif
                         @foreach(['reserved' => 'Anbar ayırdı (telefonla)', 'picked' => 'Götürüldü'] as $to => $label)
                             @if($status !== 'problem' && array_search($to, $flow, true) > array_search($status, $flow, true) && ($next[0] ?? null) !== $to)

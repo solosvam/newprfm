@@ -253,9 +253,9 @@ class ProcurementController extends Controller
     private function smsResponse(string $warehouse, ?\App\Models\SmsLog $log)
     {
         if ($log?->isSent()) {
-            return back()->with('success', $warehouse.': SMS göndərildi.');
+            return back()->with('success', $warehouse.': '.($log->channel === 'telegram' ? 'Telegram' : 'SMS').' göndərildi.');
         }
 
-        return back()->with('error', $warehouse.': '.($log ? $log->error : 'anbarın telefonu yazılmayıb.'));
+        return back()->with('error', $warehouse.': '.($log ? $log->error : 'anbarın telefonu / Telegram ID-si yazılmayıb.'));
     }
 }

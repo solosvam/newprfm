@@ -62,6 +62,11 @@ return [
         'rest_api_key' => env('ONESIGNAL_REST_API_KEY'),
     ],
 
+    // Anbarlara sorğu / seçim bildirişləri (sorğu tipi Telegram olan anbarlar) — köhnə sistemin botu
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+    ],
+
     'parfumshop_sms' => [
         'url' => env('PARFUMSHOP_SMS_URL', 'https://apps.lsim.az/quicksms/v1/send'),
         'history_url' => env('PARFUMSHOP_SMS_HISTORY_URL', 'https://apps.lsim.az/information/search-by-msisdn'),

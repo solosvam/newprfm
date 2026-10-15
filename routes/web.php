@@ -5,6 +5,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
 
+// Telegram webhook: anbarın Telegram qrupundakı cavabları (CSRF-dən azad — bootstrap/app.php)
+Route::post('/telegram/webhook', \App\Http\Controllers\TelegramWebhookController::class)->middleware('throttle:120,1')->name('telegram.webhook');
+
 // Anbar portalı: qısa link /w/{token} (WarehousePortalService::TOKEN_PATTERN)
 Route::middleware([\App\Http\Middleware\WarehousePortalHeaders::class, 'throttle:60,1'])
     ->where(['token' => \App\Services\WarehousePortalService::TOKEN_PATTERN])

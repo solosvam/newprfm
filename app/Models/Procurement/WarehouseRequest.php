@@ -18,6 +18,11 @@ class WarehouseRequest extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
+    public function order()
+    {
+        return $this->belongsTo(\App\Models\Order\Order::class);
+    }
+
     public function items()
     {
         return $this->hasMany(WarehouseRequestItem::class);
