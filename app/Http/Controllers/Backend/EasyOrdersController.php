@@ -109,7 +109,10 @@ class EasyOrdersController extends Controller
                 // Qeydiyyat bonusu — saytdakı qeydiyyatla eyni qayda (BonusService)
                 $registrationBonus = app(BonusService::class)->grantRegistration($customer);
             }
-            if ($data['address_choice'] === 'new') {
+            if ($data['address_choice'] === 'on_call') {
+                // Müştəri hərəkətdədir — kuryer zəng edib yeri öyrənir (xüsusi "əlaqə ilə" ünvan, bir dəfə yaranır)
+                $address = CustomerAddress::onCallFor($customer);
+            } elseif ($data['address_choice'] === 'new') {
                 $address = $customer->addresses()->create(
                     CustomerAddress::attributesFromForm($data, 'Ünvan #' . ($customer->addresses()->count() + 1)) + [
                         'is_default' => !$customer->addresses()->exists(),

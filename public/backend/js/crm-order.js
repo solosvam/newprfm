@@ -411,11 +411,12 @@
     els.submit.addEventListener('click', () => {
         if (problem()) return;
         const isNew = els.address.value === 'new';
+        const onCall = els.address.value === 'on_call'; // "Müştəri ilə əlaqə saxlayın" — ünvan sonra dəqiqləşir
         const code = selectedCode();
         const payload = {
             cart: cart.map(i => ({ variant_id: i.variantId, quantity: i.qty, price: i.price })),
-            address_mode: isNew ? 'new' : 'existing',
-            address_id: isNew ? null : Number(els.address.value),
+            address_mode: isNew ? 'new' : (onCall ? 'on_call' : 'existing'),
+            address_id: isNew || onCall ? null : Number(els.address.value),
             ...(isNew ? Object.fromEntries([...els.newAddress.querySelectorAll('[name]')].map(i => [i.name, i.value.trim() || null])) : {}),
             payment_method_id: Number(paymentRadios.find(r => r.checked)?.value),
             birbank_installment_months: code === 'birbank_installment'

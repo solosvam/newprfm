@@ -5,10 +5,25 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 
 class CustomerAddress extends Model {
+    /** Müştəri hərəkətdədir — kuryer zəng edib yeri öyrənir (orders.meeting_place) */
+    public const ON_CALL_TEXT = 'Müştəri ilə əlaqə saxlayın və yeri dəqiqləşdirin';
+
     protected $guarded=[];
     protected function casts(): array
     {
-        return ['is_default'=>'boolean'];
+        return ['is_default'=>'boolean', 'on_call'=>'boolean'];
+    }
+
+    /**
+     * Müştərinin "əlaqə ilə" ünvanı: bir dəfə yaranır, sonrakı sifarişlərdə təkrar işlədilir.
+     * Mətn sütununa izah yazılır — ünvanı göstərən hər yer onu oxuyur; şəhər, xəritə nöqtəsi yoxdur.
+     */
+    public static function onCallFor(Customer $customer): self
+    {
+        return static::firstOrCreate(
+            ['customer_id' => $customer->id, 'on_call' => true],
+            ['title' => 'Əlaqə ilə', 'address' => self::ON_CALL_TEXT, 'is_default' => false],
+        );
     }
     public function customer(){
         return $this->belongsTo(Customer::class);
@@ -90,6 +105,16 @@ class CustomerAddress extends Model {
 
     public function getLabelAttribute():string
     {
+        if ($this->on_call) {
+            return '📞 '.self::ON_CALL_TEXT;
+        }
+
         return trim(($this->title ? $this->title.' — ' : '').$this->city.', '.$this->address);
+    }
+
+    /** Qısa ünvan sətri (şəhər, küçə) — "əlaqə ilə" ünvanda izah mətni */
+    public function shortLine(): string
+    {
+        return $this->on_call ? '📞 '.self::ON_CALL_TEXT : collect([$this->city, $this->address])->filter()->implode(', ');
     }
 }

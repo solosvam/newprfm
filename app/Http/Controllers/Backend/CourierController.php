@@ -91,6 +91,16 @@ class CourierController extends Controller
         return back()->with('success', $paid.($pick ? ', götürüldü.' : '.'));
     }
 
+    /** Ünvan "əlaqə ilə" olan sifariş: kuryer müştəri ilə danışandan sonra görüş yerini yazır */
+    public function meetingPlace(Request $request, Order $order): RedirectResponse
+    {
+        $this->authorizeCourier($order);
+        $data = $request->validate(['meeting_place' => ['required', 'string', 'max:500']], ['meeting_place.required' => 'Görüş yerini yazın.']);
+        $order->update(['meeting_place' => trim($data['meeting_place'])]);
+
+        return back()->with('success', 'Görüş yeri yadda saxlandı.');
+    }
+
     public function start(Order $order, OrderStatusService $statuses): RedirectResponse
     {
         $this->authorizeCourier($order);

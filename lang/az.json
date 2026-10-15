@@ -812,5 +812,7 @@
     "map_approx": "Ünvan xəritədə dəqiq tapılmadı — pin-i evinizin üstünə özünüz qoyun.",
     "advisor_fab_bubble": "Sizə uyğun ətri tapmağa kömək edim? ✨",
     "advisor_greeting": "Salam! Mən sizin ətir köməkçinizəm 👋",
-    "advisor_speech": "Mənə bir neçə sualın cavabını deyin — kataloqumuzdakı yüzlərlə ətir arasından sizin zövqünüzə ən uyğun olanları özüm seçəcəyəm."
+    "advisor_speech": "Mənə bir neçə sualın cavabını deyin — kataloqumuzdakı yüzlərlə ətir arasından sizin zövqünüzə ən uyğun olanları özüm seçəcəyəm.",
+    "orders_address_on_call": "Ünvan kuryer sizinlə əlaqə saxlayanda dəqiqləşdiriləcək",
+    "orders_meeting_place": "Görüş yeri:"
 }

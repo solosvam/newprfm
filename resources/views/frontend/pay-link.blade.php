@@ -23,7 +23,7 @@
         ];
         [$tone, $stateTitle, $stateHint] = $states[$state];
         // Link hamı üçün açıqdır: yalnız şəhər və küçə (mənzil, telefon göstərilmir)
-        $addressShort = collect([$order->address?->city, $order->address?->address])->filter()->implode(', ');
+        $addressShort = $order->address?->on_call ? __('orders_address_on_call') : collect([$order->address?->city, $order->address?->address])->filter()->implode(', ');
     @endphp
 
     <main class="paylink">

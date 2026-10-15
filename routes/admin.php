@@ -90,6 +90,7 @@ Route::prefix('admin')
                     Route::post('/order/{order}/parts/{allocation}/pay', 'pay')->name('pay');
                     Route::post('/order/{order}/parts/{allocation}/problem', 'problem')->name('problem');
                     Route::post('/order/{order}/start', 'start')->name('start');
+                    Route::post('/order/{order}/meeting-place', 'meetingPlace')->name('meeting-place');
                     Route::post('/order/{order}/arrive', 'arrive')->name('arrive');
                     Route::post('/order/{order}/deliver', 'deliver')->name('deliver');
                     Route::post('/order/{order}/delivery-problem', 'deliveryProblem')->name('delivery-problem');
@@ -345,6 +346,7 @@ Route::prefix('admin')
                     Route::post('/customer/{customer}/order/{order}/cancel', 'cancelOrder')->name('order.cancel');
                     Route::post('/customer/{customer}/order/{order}/item/{item}/refuse', 'refuseItem')->name('order.item.refuse');
                     Route::post('/customer/{customer}/order/{order}/start', 'startOrder')->name('order.start');
+                    Route::post('/customer/{customer}/order/{order}/meeting-place', 'meetingPlace')->name('order.meeting-place');
                     Route::post('/customer/{customer}/order/{order}/courier', 'assignCourier')->name('order.courier');
                     Route::post('/customer/{customer}/order/{order}/cancellation/{cancellation}/refund', 'refundCancellation')
                         ->middleware(['can:refund', 'throttle:10,1'])->name('order.cancellation.refund');

@@ -850,5 +850,7 @@
     "map_approx": "The exact address was not found — please place the pin on your building.",
     "advisor_fab_bubble": "Shall I help you find your perfect scent? ✨",
     "advisor_greeting": "Hi! I’m your fragrance assistant 👋",
-    "advisor_speech": "Answer a few questions and I’ll pick the scents that suit your taste best from the hundreds in our catalog."
+    "advisor_speech": "Answer a few questions and I’ll pick the scents that suit your taste best from the hundreds in our catalog.",
+    "orders_address_on_call": "The courier will call you to confirm the delivery location",
+    "orders_meeting_place": "Meeting place:"
 }

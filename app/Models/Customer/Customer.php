@@ -61,8 +61,9 @@ class Customer extends Authenticatable
             'registration_otp_expires_at' => 'datetime',
         ];
     }
+    /** Müştərinin ünvanları — "əlaqə ilə" xüsusi ünvanı (CustomerAddress::onCallFor) daxil deyil: saytda, seçimlərdə görünmür */
     public function addresses(){
-        return $this->hasMany(CustomerAddress::class);
+        return $this->hasMany(CustomerAddress::class)->where('on_call', false);
     }
     public function payments()
     {

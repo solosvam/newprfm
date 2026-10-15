@@ -138,7 +138,7 @@ class CustomerCartTest extends TestCase
         Schema::create('settings', function (Blueprint $t) { $t->id(); $t->string('key'); $t->text('value')->nullable(); $t->timestamps(); });
         Schema::create('payment_methods', function (Blueprint $t) { $t->id(); $t->string('code'); $t->boolean('active'); });
         Schema::create('order_statuses', function (Blueprint $t) { $t->id(); $t->string('code'); $t->boolean('active'); });
-        Schema::create('customer_addresses', function (Blueprint $t) { $t->id(); $t->integer('customer_id'); $t->timestamps(); });
+        Schema::create('customer_addresses', function (Blueprint $t) { $t->id(); $t->integer('customer_id'); $t->boolean('on_call')->default(false); $t->timestamps(); });
         Schema::create('orders', function (Blueprint $t) {
             $t->id(); $t->string('order_no'); $t->integer('customer_id'); $t->integer('customer_address_id');
             $t->integer('payment_method_id'); $t->integer('birbank_installment_months')->nullable();

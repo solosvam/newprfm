@@ -59,8 +59,10 @@
         <div class="col-12 col-lg-6">
             <h6 class="crm-order__step"><span>2</span> Çatdırılma ünvanı</h6>
             <select class="form-select" id="crmOrderAddress">
+                {{-- Müştəri hərəkətdədir: kuryer zəng edib yeri öyrənir (müştərinin xüsusi "əlaqə ilə" ünvanı, bir dəfə yaranır) --}}
+                <option value="on_call">📞 {{ \App\Models\Customer\CustomerAddress::ON_CALL_TEXT }}</option>
                 @foreach($orderForm['addresses'] as $a)
-                    <option value="{{ $a->id }}">{{ $a->label }}</option>
+                    <option value="{{ $a->id }}" @selected($loop->first)>{{ $a->label }}</option>
                 @endforeach
                 <option value="new" @selected($orderForm['addresses']->isEmpty())>+ Yeni ünvan əlavə et</option>
             </select>

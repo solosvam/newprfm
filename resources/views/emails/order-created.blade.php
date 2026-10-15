@@ -21,7 +21,7 @@
 <tr><td colspan="2" align="right"><strong>{{ $copy['total'] }}</strong></td><td align="right"><strong>{{ number_format((float)$order->total, 2) }} AZN</strong></td></tr>
 </table>
 @if($order->address)
-<p style="line-height:1.6"><strong>{{ $copy['address'] }}:</strong><br>{{ $order->address->city }}, {{ $order->address->address }}</p>
+<p style="line-height:1.6"><strong>{{ $copy['address'] }}:</strong><br>{{ $order->address->on_call ? __('orders_address_on_call') : $order->address->city.', '.$order->address->address }}</p>
 @endif
 <p style="margin:30px 0"><a href="{{ route('profile.orders') }}" style="background:#28221e;color:white;text-decoration:none;padding:14px 24px;display:inline-block">{{ $copy['button'] }}</a></p>
 @endsection

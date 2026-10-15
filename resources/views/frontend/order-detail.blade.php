@@ -127,7 +127,13 @@
                                 <h2 class="od-card__title">{{ __('orders_delivery_details') }}</h2>
                             </div>
                             <div class="od-card__body">
+                                @if($order->address?->on_call)
+                                    {{-- Ünvan kuryer müştəri ilə əlaqə saxlayanda dəqiqləşir --}}
+                                    <div class="od-address">📞 {{ __('orders_address_on_call') }}</div>
+                                    @if($order->meeting_place)<div class="od-address__extra">{{ __('orders_meeting_place') }} {{ $order->meeting_place }}</div>@endif
+                                @else
                                 <div class="od-address">{{ $order->address?->label ?? '-' }}</div>
+                                @endif
                                 @if($addressExtra)<div class="od-address__extra">{{ $addressExtra }}</div>@endif
                                 @if($order->customer_note)
                                     <div class="od-note"><strong>{{ __('orders_note') }}</strong> {{ $order->customer_note }}</div>

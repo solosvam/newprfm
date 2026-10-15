@@ -24,7 +24,7 @@ class FerrumOrderTest extends TestCase
         Schema::create('customer_credit_profiles', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->string('father_name')->nullable(), $t->string('fin')->nullable(),
             $t->string('relative_1_name')->nullable(), $t->string('relative_1_phone')->nullable(), $t->string('relative_2_name')->nullable(), $t->string('relative_2_phone')->nullable(),
             $t->string('id_card_front')->nullable(), $t->string('id_card_back')->nullable(), $t->string('workplace_name')->nullable(), $t->decimal('salary')->nullable(), $t->string('position')->nullable(), $t->string('id_card_series')->nullable(), $t->string('id_card_number')->nullable(), $t->timestamps()]);
-        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->string('city'), $t->string('district')->nullable(), $t->string('address'),
+        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->boolean('on_call')->default(false), $t->string('city'), $t->string('district')->nullable(), $t->string('address'),
             $t->string('building')->nullable(), $t->string('entrance')->nullable(), $t->string('floor')->nullable(), $t->string('apartment')->nullable()]);
         Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->string('order_no'), $t->integer('customer_id')->nullable(), $t->integer('customer_address_id')->nullable(),
             $t->integer('payment_method_id'), $t->integer('order_status_id'), $t->decimal('subtotal'), $t->decimal('discount')->default(0), $t->decimal('delivery_fee')->default(0), $t->decimal('total'), $t->timestamps()]);

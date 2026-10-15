@@ -34,6 +34,8 @@ Son yenilənmə: 10 oktyabr 2026.
   - müqayisə hesabatı: əvvəlki siyahıya görə yeni gələn, çıxan, qiyməti dəyişən; saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir;
   - digər anbarların faylları ilə sınamaq (indiyə qədər yalnız bir anbarın 1C çıxarışı ilə yoxlanıb: 1677 sətirdən 834-ü avtomatik bağlandı);
   - brend adlarını rəsmi yazılışa gətirmək: "Van Cleef &amp; Arpels" (HTML kodu qalıb), "Victorias Secret", "Tiffany Co", "Viktor Rolf", "BOND No9", "Mont Blanc".
+- [ ] **Sifarişin ünvanı sifarişə köçürülmür.** Sifariş müştərinin ünvan kartına istinad edir (customer_address_id) — müştəri sonradan
+  ünvanını dəyişsə və ya silsə, köhnə sifarişlərin ünvanı da dəyişir / itir. Ünvan sifariş yaranan anda sifarişə köçürülməlidir.
 - [ ] **Qeyri-müəyyən bank əməliyyatlarının uzlaşdırılması:** kimin ödədiyi bilinməyən köçürməni sifarişə bağlamaq.
 
 ## 2. Sayt — səbət və push bildirişləri
@@ -173,3 +175,6 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
   Siyahıdakı qiymət stok təsdiqi deyil — sifarişdə siyahının tarixi ilə göstərilir.
 - CRM sifarişinin Proses tabı: məhsul adı "brend ad ölçü növ cins" formatında; "Yeni sorğu", "Price listlər" (aşağıdan açılan panel, yalnız × ilə bağlanır)
   və "Anbar seç" (sorğusuz: operator tək anbarı və qiyməti bilir — sorğu, "var" cavabı və seçim birdən yazılır; sorğu SMS-i getmir, seçim SMS-i gedir).
+- "Müştəri ilə əlaqə saxlayın və yeri dəqiqləşdirin": hər müştəri üçün bir xüsusi ünvan (customer_addresses.on_call — bir dəfə yaranır,
+  saytda "Ünvanlarım"da və seçimlərdə görünmür, checkout-da müştəriyə verilmir); görüş yeri sifarişdə (orders.meeting_place) —
+  kuryer zəngdən sonra yazır, operator da yazır / dəyişir. Yalnız CRM sifarişi və asan sifariş.

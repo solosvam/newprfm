@@ -109,7 +109,7 @@ class CrmCustomerSearchTest extends TestCase
     public function test_address_is_edited_and_becomes_default(): void
     {
         Schema::create('cities', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->boolean('active')->default(true)]);
-        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->string('title')->nullable(),
+        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->boolean('on_call')->default(false), $t->string('title')->nullable(),
             $t->integer('city_id')->nullable(), $t->string('city')->nullable(), $t->string('address')->nullable(), $t->string('building')->nullable(),
             $t->string('entrance')->nullable(), $t->string('floor')->nullable(), $t->string('apartment')->nullable(), $t->text('note')->nullable(),
             $t->boolean('is_default')->default(false), $t->timestamps()]);

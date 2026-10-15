@@ -259,6 +259,16 @@ class CrmController extends Controller
         return view('backend.crm.sms', compact('messages', 'error'));
     }
 
+    /** Ünvan "əlaqə ilə" olan sifarişin görüş yeri (operator yazır / dəyişir; boş — silinir) */
+    public function meetingPlace(Request $request, Customer $customer, Order $order): RedirectResponse
+    {
+        abort_unless((int) $order->customer_id === (int) $customer->id, 404);
+        $data = $request->validate(['meeting_place' => ['nullable', 'string', 'max:500']]);
+        $order->update(['meeting_place' => trim((string) ($data['meeting_place'] ?? '')) ?: null]);
+
+        return back()->with('success', 'Görüş yeri yadda saxlandı.');
+    }
+
     public function confirmOneClick(Request $request, Customer $customer, Order $order, ShopPricing $pricing): RedirectResponse
     {
         abort_unless($order->one_click && $order->customer_id === $customer->id, 404);
@@ -378,7 +388,8 @@ class CrmController extends Controller
             // Operatorun satdığı vahid qiymət (boşdursa sayt qiyməti)
             'cart.*.price' => ['nullable', 'numeric', 'min:0', 'max:999999'],
 
-            'address_mode' => ['required', Rule::in(['existing', 'new'])],
+            // on_call — "Müştəri ilə əlaqə saxlayın və yeri dəqiqləşdirin" (CustomerAddress::onCallFor)
+            'address_mode' => ['required', Rule::in(['existing', 'new', 'on_call'])],
             'address_id' => ['nullable', 'required_if:address_mode,existing', 'integer'],
             // Ünvan adını operator vermir — "Ünvan #N"
             ...CustomerAddress::formRules('required_if:address_mode,new', withTitle: false),
@@ -429,6 +440,8 @@ class CrmController extends Controller
             // Ünvan
             if ($data['address_mode'] === 'existing') {
                 $address = $customer->addresses()->findOrFail($data['address_id']);
+            } elseif ($data['address_mode'] === 'on_call') {
+                $address = CustomerAddress::onCallFor($customer);
             } else {
                 $address = $customer->addresses()->create(
                     CustomerAddress::attributesFromForm($data, 'Ünvan #' . ($customer->addresses()->count() + 1)) + [

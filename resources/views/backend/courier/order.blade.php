@@ -212,6 +212,26 @@
         <div class="courier-client">
             <div>
                 <div class="courier-wh__name">{{ trim($order->customer?->name.' '.$order->customer?->surname) }}</div>
+                @if($a?->on_call)
+                    {{-- Müştəri hərəkətdədir: zəng edib yeri öyrənin, görüş yerini yazın (operator da görür) --}}
+                    <div class="courier-wh__addr">📞 {{ \App\Models\Customer\CustomerAddress::ON_CALL_TEXT }}</div>
+                    @if($order->meeting_place)
+                        <div class="mt-1"><b>Görüş yeri:</b> {{ $order->meeting_place }}</div>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ rawurlencode($order->meeting_place) }}" target="_blank" rel="noopener" class="btn btn-sm btn-primary mt-2 d-inline-flex align-items-center gap-1">
+                            <i data-acorn-icon="pin" data-acorn-size="14"></i> Google Maps
+                        </a>
+                    @endif
+                    @if(!in_array($code, ['delivered', 'cancelled'], true))
+                        <form method="POST" action="{{ route('admin.courier.meeting-place', $order) }}" class="mt-2" data-once>
+                            @csrf
+                            <label class="form-label small mb-1" for="courierMeetingPlace">{{ $order->meeting_place ? 'Görüş yerini dəyiş' : 'Görüş yeri (müştəri ilə danışandan sonra)' }}</label>
+                            <div class="d-flex gap-2">
+                                <input id="courierMeetingPlace" name="meeting_place" maxlength="500" class="form-control" value="{{ $order->meeting_place }}" placeholder="Məs.: 28 May metrosunun çıxışı, 15:00" required>
+                                <button class="btn btn-outline-primary text-nowrap">Yadda saxla</button>
+                            </div>
+                        </form>
+                    @endif
+                @else
                 @if($addressLine)<a class="courier-wh__addr" href="{{ $a->mapsUrl() }}" target="_blank" rel="noopener">{{ $addressLine }}</a>@endif
                 @if($addressExtra)<div class="small">{{ $addressExtra }}</div>@endif
                 {{-- ünvan qeydi (sütun "note") — orientir və s. --}}
@@ -225,6 +245,7 @@
                         <a href="{{ $a->wazeUrl() }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">Waze</a>
                         @if($a->hasLocation())<span class="badge bg-outline-success align-self-center">📍 dəqiq nöqtə</span>@endif
                     </div>
+                @endif
                 @endif
                 @if($order->customer_note)<div class="small mt-1"><b>Qeyd:</b> {{ $order->customer_note }}</div>@endif
             </div>

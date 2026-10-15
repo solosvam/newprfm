@@ -42,7 +42,7 @@
                 @if($toReturn)<span class="badge bg-warning">Anbara qaytar: {{ $toReturn }} ədəd</span>@endif
             </div>
             <div class="courier-order__who">{{ trim($order->customer?->name.' '.$order->customer?->surname) }}</div>
-            <div class="courier-order__where">{{ $order->address?->city }}{{ $order->address?->address ? ', '.$order->address->address : '' }}</div>
+            <div class="courier-order__where">{{ $order->address?->shortLine() }}@if($order->meeting_place) · <b>{{ $order->meeting_place }}</b>@endif</div>
             <div class="courier-order__meta">
                 <span>Götürülüb: <b>{{ $picked }} / {{ $need }}</b></span>
                 <span>{!! $collect > 0 ? 'Alınacaq: <b>'.number_format($collect, 2).' AZN</b>' : '<span class="text-success">Ödənilib</span>' !!}</span>

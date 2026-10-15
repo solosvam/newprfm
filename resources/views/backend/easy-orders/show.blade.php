@@ -61,6 +61,7 @@
                         <div class="col-12">
                             <label for="easyOrderAddressChoice" class="form-label">Çatdırılma ünvanı</label>
                             <select class="form-select" name="address_choice" id="easyOrderAddressChoice" required>
+                                <option value="on_call" @selected(old('address_choice') === 'on_call')>📞 {{ \App\Models\Customer\CustomerAddress::ON_CALL_TEXT }}</option>
                                 @foreach($addresses as $a)
                                     <option value="{{ $a->id }}" @selected(old('address_choice', $addresses->first()?->id) == $a->id)>{{ $a->label }}</option>
                                 @endforeach
@@ -205,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const current = ++seq;
         const value = mobile.value.replace(/\D/g, '');
         if (!/^994\d{9}$/.test(value)) {
-            select.replaceChildren(new Option('+ Yeni ünvan əlavə et', 'new'));
+            select.replaceChildren(new Option('📞 {{ \App\Models\Customer\CustomerAddress::ON_CALL_TEXT }}', 'on_call'), new Option('+ Yeni ünvan əlavə et', 'new'));
             select.value = 'new'; toggle();
             if (found) found.hidden = true;
             if (notFound) notFound.hidden = true;
@@ -221,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Axtarış alınmadı');
             const result = await response.json();
             if (current !== seq) return;
-            select.replaceChildren();
+            select.replaceChildren(new Option('📞 {{ \App\Models\Customer\CustomerAddress::ON_CALL_TEXT }}', 'on_call'));
             (result.addresses || []).forEach(a => select.add(new Option(a.label, a.id)));
             select.add(new Option('+ Yeni ünvan əlavə et', 'new'));
             select.value = result.addresses?.length ? String(result.addresses[0].id) : 'new';
@@ -242,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle();
         } catch (e) {
             if (current !== seq) return;
-            select.replaceChildren(new Option('+ Yeni ünvan əlavə et', 'new'));
+            select.replaceChildren(new Option('📞 {{ \App\Models\Customer\CustomerAddress::ON_CALL_TEXT }}', 'on_call'), new Option('+ Yeni ünvan əlavə et', 'new'));
             select.value = 'new'; toggle();
         }
     });

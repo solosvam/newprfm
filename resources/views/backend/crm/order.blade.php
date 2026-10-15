@@ -277,7 +277,14 @@
                             @endif
                             <div class="od-facts__wide"><dt>Ünvan</dt><dd>
                                 {{ $order->address?->label ?: 'Ünvan dəqiqləşdirilməyib' }}
-                                @if($order->address)
+                                @if($order->address?->on_call)
+                                    {{-- Görüş yeri: kuryer zəngdən sonra yazır, operator da yaza / dəyişə bilər --}}
+                                    <form method="POST" action="{{ route('admin.crm.order.meeting-place', [$customer, $order]) }}" class="d-flex gap-2 mt-2">
+                                        @csrf
+                                        <input name="meeting_place" maxlength="500" class="form-control form-control-sm" value="{{ $order->meeting_place }}" placeholder="Görüş yeri — məs. 28 May metrosu, 15:00" aria-label="Görüş yeri">
+                                        <button class="btn btn-sm btn-outline-primary text-nowrap">Yadda saxla</button>
+                                    </form>
+                                @elseif($order->address)
                                     <a href="{{ $order->address->mapsUrl() }}" target="_blank" rel="noopener" class="ms-1 {{ $order->address->hasLocation() ? 'text-success' : 'text-muted' }}" title="{{ $order->address->hasLocation() ? 'Müştəri xəritədə nöqtə seçib' : 'Nöqtə seçilməyib — ünvan mətni ilə axtarış' }}">
                                         <i data-acorn-icon="pin" data-acorn-size="14"></i> xəritə
                                     </a>
