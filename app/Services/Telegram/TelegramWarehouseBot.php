@@ -79,6 +79,11 @@ class TelegramWarehouseBot
             $this->onButton($update['callback_query']);
         } elseif (isset($update['message']['reply_to_message'])) {
             $this->onReply($update['message']);
+        } elseif (preg_match('~^/id(@\w+)?$~', trim((string) ($update['message']['text'] ?? '')))) {
+            // Qrupun id-sini öyrənmək üçün: qrupda /id yazılır — bot id-ni qaytarır (anbarın "Telegram ID" xanasına yazılır)
+            $chat = $update['message']['chat'] ?? [];
+            $this->api->call('sendMessage', ['chat_id' => $chat['id'] ?? null, 'parse_mode' => 'HTML',
+                'text' => 'Bu çatın ID-si: <code>'.e((string) ($chat['id'] ?? '')).'</code>'.(isset($chat['title']) ? ' ('.e($chat['title']).')' : '')]);
         }
     }
 

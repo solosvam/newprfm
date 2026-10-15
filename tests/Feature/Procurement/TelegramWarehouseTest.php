@@ -157,6 +157,13 @@ class TelegramWarehouseTest extends TestCase
         $this->assertSame(OrderItemAllocation::RESERVED, $allocation->fresh()->status);
     }
 
+    public function test_id_command_replies_with_the_group_id(): void
+    {
+        $this->webhook(['message' => ['message_id' => 1, 'text' => '/id@ParfumshopBot', 'chat' => ['id' => -100555, 'title' => 'Aksin — Parfumshop']]])->assertOk();
+
+        $this->assertSame('Bu çatın ID-si: <code>-100555</code> (Aksin — Parfumshop)', $this->sentTo('sendMessage')[0]['text']);
+    }
+
     public function test_webhook_rejects_requests_without_the_secret(): void
     {
         $this->postJson(route('telegram.webhook'), ['callback_query' => []])->assertForbidden();
