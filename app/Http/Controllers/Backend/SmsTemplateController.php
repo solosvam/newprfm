@@ -23,6 +23,7 @@ class SmsTemplateController extends Controller
         'easy_order_registration' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (bonus yoxdursa)',
         'order_payment_link' => 'Operator ödəniş linkini SMS ilə göndərəndə',
         'crm_customer_created' => 'CRM-də müştəri yaradılıb şifrə göndəriləndə',
+        'crm_password_reset' => 'CRM-də müştərinin şifrəsi yeniləndikdə (yeni şifrə ilə)',
         'warehouse_request' => 'Anbara yeni sorğu göndəriləndə',
         'warehouse_selected' => 'Anbar seçiləndə (rezerv xahişi)',
         'warehouse_cancelled' => 'Anbar seçimi ləğv ediləndə',

@@ -34,7 +34,6 @@ class SmsLog extends Model
     /** Şablonsuz göndərilən SMS-lərin konteksti */
     public const CONTEXTS = [
         'otp' => 'Təsdiq kodu (OTP)',
-        'crm_password_reset' => 'CRM — yeni şifrə',
     ];
 
     public $timestamps = false;

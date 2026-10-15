@@ -335,6 +335,15 @@ footer .logo--svg { color: var(--on-accent-bg); }
     border-radius: 14px 0 12px 0; background: var(--danger); color: #fff;
     font-size: 12.5px; font-weight: 700; line-height: 1.3; white-space: nowrap;
 }
+.main-image--ribbon { position: relative; overflow: hidden; }
+/* Tester ətir: şəklin sol yuxarı küncündə 45° qara lent. Sağ küncdə seçilmiş / paylaş düymələri var;
+   endirimli tester-də endirim lenti (card-ribbon, z-index 3) üstdə qalır */
+.tester-ribbon {
+    position: absolute; top: 20px; left: -38px; z-index: 2; width: 140px; padding: 5px 0;
+    transform: rotate(-45deg); background: #111; color: #fff; text-align: center;
+    font-size: 12.5px; font-weight: 700; letter-spacing: .03em; line-height: 1.3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .25); pointer-events: none;
+}
 .search-result-discount { display: inline-block; margin-bottom: 2px; padding: 0 6px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 700; line-height: 1.5; }
 
 .cart-row__total.price-sale, .checkout-item__price .price-sale { color: var(--danger); }

@@ -18,6 +18,7 @@
                     <div class="card {{ $product->visibleDiscount() ? 'card--sale' : '' }}" data-href="{{ route('product', $product->slug) }}">
                         @include('frontend.partials.discount-badge', ['product' => $product])
                         <div class="thumb" @if($image && $hoverImage) data-hover-src="{{ route('product.image', ['size' => 400, 'image' => $hoverImage->image]) }}" @endif>
+                            @include('frontend.partials.tester-ribbon', ['product' => $product])
                             {{-- Endirimin bitməsinə 7 gündən az qalıb: şəklin altında canlı geri sayım (main.js → [data-card-countdown]);
                                  hover-də ölçülər siyahısı onun üstünü örtür --}}
                             @if(($cardDiscount = $product->visibleDiscount()) && $cardDiscount->showsCardCountdown())

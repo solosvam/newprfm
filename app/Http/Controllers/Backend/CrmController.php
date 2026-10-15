@@ -229,12 +229,12 @@ class CrmController extends Controller
             'password' => bcrypt($newPassword),
         ]);
 
-        \App\Models\SmsLog::deliver(
-            app(SmsService::class),
-            $customer->mobile,
-            "Hörmətli {$customer->fullname}, yeni şifrəniz: {$newPassword}",
-            'crm_password_reset', $customer, auth('admin')->id(), [$newPassword]
-        );
+        // Şablon "SMS"-dən; söndürülübsə və ya {password} silinibsə — standart mətn (şifrə mütləq getməlidir)
+        $text = \App\Models\SmsTemplate::message('crm_password_reset', ['name' => $customer->name, 'fullname' => $customer->fullname, 'password' => $newPassword]);
+        if ($text === null || !str_contains($text, (string) $newPassword)) {
+            $text = "Hormetli {$customer->name}, Parfumshop hesabiniz ucun yeni sifreniz: {$newPassword}";
+        }
+        \App\Models\SmsLog::deliver(app(SmsService::class), $customer->mobile, $text, 'crm_password_reset', $customer, auth('admin')->id(), [$newPassword]);
 
         return response()->json(['success' => true]);
     }

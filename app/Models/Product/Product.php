@@ -55,6 +55,28 @@ class Product extends Model
             ->orderBy('id');
     }
 
+    /**
+     * Ətir testerdirsə: "Tester" kateqoriyasındadır və ya adında "tester" sözü var (köhnə məhsullarda yalnız adda yazılıb).
+     * Saytda şəklin küncündə "Tester" lenti üçün (frontend.partials.tester-ribbon).
+     */
+    public function isTester(): bool
+    {
+        if (preg_match('/\btester\b/iu', (string) $this->name)) {
+            return true;
+        }
+        if ($this->relationLoaded('categories')) {
+            return $this->categories->contains(fn ($category) => mb_strtolower(trim((string) $category->name_az)) === 'tester');
+        }
+        // "Tester" kateqoriyasındakı məhsullar — bir sorğu ilə, tətbiq konteynerində (hər istək üçün təzə)
+        if (!app()->bound('catalog.tester_ids')) {
+            app()->instance('catalog.tester_ids', rescue(fn () => \Illuminate\Support\Facades\DB::table('product_categories as pc')
+                ->join('categories as c', 'c.id', '=', 'pc.category_id')->whereRaw('lower(c.name_az) = ?', ['tester'])
+                ->pluck('pc.product_id')->flip(), collect(), false));
+        }
+
+        return app('catalog.tester_ids')->has($this->id);
+    }
+
     public function categories()
     {
         return $this->belongsToMany(

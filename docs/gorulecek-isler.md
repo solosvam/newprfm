@@ -9,19 +9,15 @@ Son yenilənmə: 10 oktyabr 2026.
 
 ## 1. Sifariş təminatı (CRM / anbar / kuryer)
 
-- [ ] **Anbar Telegram bildirişləri — qalanlar** (15 oktyabr proddə qoşuldu və sınandı: sorğu, "Var" / "Qismən" / "Yoxdur", qiymət cavabla,
-  "Rezerv etdim", ləğv, status sətri / heşteqlər / reaksiya, xatırlatma `telegram:remind`):
-  - bütün anbarlarda sorğu tipini Telegram etmək (qrup id-ləri artıq yazılıb, "-" göndərəndə əlavə olunur);
-  - botu hər anbar qrupunda admin etmək ("Mesajları silmək") — yoxsa anbarın qiymət cavabları qrupda qalır;
-  - "Qismən", "Cavabı dəyiş", "Rezerv etdim", xatırlatma — real qrupda yoxlamaq;
-  - ideyalar (sonra): price list / keçən qiymətlə bir toxunuşla "Var"; Excel price listi qrupa atmaqla import; seçimdə "Bitib" / "Qiymət dəyişib";
-    kuryer gələndə "Kuryerə verdim"; həftəlik hesablaşma təsdiqi; operator üçün daxili qrupda bildiriş və "Seç"; kuryer botu.
+- [ ] **Anbar Telegram bildirişləri — qalanlar** (15 oktyabr proddə qoşuldu; sorğu tipi anbarın öz ayarındadır — Telegram seçilən anbara Telegram-la gedir):
+  - real qrupda "Qismən", "Dəyişdir", "Rezerv etdim" və xatırlatmanı yoxlamaq (Rufat yoxlayır);
+  - botu anbar qruplarında admin etmək ("Mesajları silmək") — hələlik edilmir, anbarın qiymət cavabları qrupda qalır.
 - [ ] **SMS — qalan qərarlar və yoxlamalar** (10 oktyabr: jurnal, çatdırılma statusu, balans, "Yola çıxdım" SMS-i və "SMS" səhifəsi hazırdır):
   - `crm_order_accepted` ("CRM-dən operator sifariş qəbul etdikdə") şablonu bazada var, amma heç bir hadisəyə qoşulmayıb (səhifədə "Qoşulmayıb").
     Qərar: göndərilsinmi, yoxsa silinsin. "Təhvil verildi" SMS-i də qərarsızdır. (`website_order_accepted` 10 oktyabrda silindi.)
-  - Şablonsuz, kodda yazılmış mətnlər: təsdiq kodu (OTP) və CRM "yeni şifrə" SMS-i. Sonuncuda ə/ş hərfləri var — 1 SMS 70 simvol sayılır;
-    şablona keçirilsinmi.
-  - `bonus:remind-expiring` cədvəli `routes/console.php`-də söndürülüb — `bonus_expiring` SMS-i hazırda getmir.
+  - Təsdiq kodu (OTP) mətni kodda qalır (şablon deyil). CRM "yeni şifrə" SMS-i 15 oktyabrda şablona keçdi (`crm_password_reset`, latın hərfləri).
+  - `bonus:remind-expiring` (və `bonus:expire`) cədvəli `routes/console.php`-də şərhə alınıb — `bonus_expiring` SMS-i getmir və müddəti
+    bitən bonuslar silinmir. Qərar: nə vaxt açılsın.
 - [ ] **CRM sifariş səhifəsi — "Proses" tabının davamı** (10 oktyabr yenidən quruldu: nazik zolaq, "növbəti addım", qruplar, yığılan kartlar):
   proddə real sifarişlərlə (10 məhsul × 10 anbar) baxıb düzəltmək; "Təxmini qazanc" yalnız seçilmiş məhsulların alışını çıxır —
   alışı bilinməyən məhsullar varsa rəqəm şişir, düzəldilməlidir; düymə adlarını birləşdirmək ("Yenilə" nəyi yeniləyir).
@@ -52,10 +48,8 @@ Son yenilənmə: 10 oktyabr 2026.
   - statistika: son 10 gündə, 1 ayda və s. sayta girməyən müştərilərin sayı;
   - ayrıca səhifə: həmin müştərilərin siyahısı, müddətə görə filtr, seçilənlərə push və ya SMS göndərmək.
   Push üçün müştərini abunəsinə bağlamaq lazımdır (`push_subscriptions` hələ yoxdur — yuxarıdakı push bəndi ilə əlaqəli).
-- [ ] **Tester ətirlərin işarələnməsi.** Ətir testerdirsə (hazırda "Tester" kateqoriyası və ya adında "Tester" sözü ilə bilinir):
-  - məhsul şəklinin üstündə, yuxarı sağ və ya sol küncdə yumru nişan ("Tester") — məhsul kartında və məhsul səhifəsində;
-  - adına "Tester" avtomatik əlavə olunur (operator əl ilə yazmır). Qərar verilməlidir: tester ayrıca işarə (sahə) kimi saxlansın,
-    yoxsa kateqoriyadan götürülsün; köhnə adlardakı "Tester" / "TESTER" / "L EDP Tester" yazılışları necə təmizlənsin.
+- [ ] **Tester ətirlərin adı.** Saytda şəklin sol yuxarı küncündə 45° "Tester" lenti 15 oktyabrda edildi (Tester kateqoriyası və ya adda "tester").
+  Qalan: adına "Tester" avtomatik əlavə olunsunmu — onda köhnə adlardakı "Tester" / "TESTER" / "L EDP Tester" yazılışları təmizlənməlidir.
 - [ ] **Saytda filtrdə qiymət əl ilə də yazıla bilsin.** Qiymət aralığı indi yalnız sürgü (slider) ilə seçilir;
   sürgü ilə yanaşı "min" və "max" rəqəm xanaları olsun, ikisi bir-biri ilə sinxron işləsin.
 - [ ] **Email abunəliyi (yeniliklərdən xəbərdar olmaq):**

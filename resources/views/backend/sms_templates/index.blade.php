@@ -9,6 +9,7 @@
         'easy_order_registration' => [],
         'order_payment_link' => ['order_no', 'link'],
         'crm_customer_created' => ['name', 'fullname', 'password'],
+        'crm_password_reset' => ['name', 'fullname', 'password'],
         'warehouse_request' => ['count', 'link', 'warehouse'],
         'warehouse_selected' => ['product', 'quantity', 'link', 'warehouse'],
         'warehouse_cancelled' => ['product', 'quantity', 'warehouse'],

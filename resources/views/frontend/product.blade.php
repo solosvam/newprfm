@@ -82,7 +82,8 @@
             @endforeach
         </div>
 
-        <div class="main-image">
+        <div class="main-image main-image--ribbon">
+            @include('frontend.partials.tester-ribbon', ['product' => $product])
             @if ($firstImage)
                 <img data-main-image src="{{ asset('frontend/uploads/products/' . $firstImage->image) }}" alt="{{ $product->brand?->name }} {{ $product->name }}">
             @endif
