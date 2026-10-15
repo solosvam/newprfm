@@ -99,6 +99,9 @@ class TelegramWarehouseTest extends TestCase
         $this->assertSame(self::CHAT, $sent['chat_id']);
         $this->assertStringContainsString('Sizdə <b>Lanvin Marry Me</b> ətirinin <b>30 ml</b> ölçüsü <b>Eau De Parfum</b> olan <b>1 ədəd</b> var?', $sent['text']);
         $this->assertStringContainsString('Cins: Qadın üçün', $sent['text']);
+        // Status sətri və heşteq
+        $this->assertStringStartsWith('🟡 <b>CAVAB GÖZLƏNİLİR</b>', $sent['text']);
+        $this->assertStringEndsWith('#gozleyir', $sent['text']);
         $this->assertSame(['✅ Var', '❌ Yoxdur'], array_column($sent['reply_markup']['inline_keyboard'][0], 'text'));
         Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'lsim')); // SMS getmir
 
@@ -110,8 +113,12 @@ class TelegramWarehouseTest extends TestCase
 
         $offer = WarehouseOffer::sole();
         $this->assertSame([1, '95.50', 'telegram', 0, 'Telegram: Kamal'], [(int) $offer->available_quantity, (string) $offer->unit_cost, $offer->source, (int) $offer->recorded_by, $offer->note]);
-        // Cavab mətndə təkrarlanmır — yalnız düymədə
-        $this->assertStringNotContainsString('95.50', $this->sentTo('editMessageText')[0]['text']);
+        // Cavablanmış görünüş: status, #cavablandi, reaksiya 👌
+        $edited = $this->sentTo('editMessageText')[0]['text'];
+        $this->assertStringStartsWith('🟢 <b>CAVABLANDI</b> — Var — 95.50 AZN', $edited);
+        $this->assertStringEndsWith('#cavablandi', $edited);
+        $this->assertSame(1, substr_count($edited, 'Sizdə'), 'əsas mətn bir dəfə');
+        $this->assertSame('👌', $this->sentTo('setMessageReaction')[0]['reaction'][0]['emoji']);
         // Düymədə cavabın özü; sual və anbarın cavab mesajı silinir
         $this->assertSame('✅ Var — 95.50 AZN (Dəyişdir)', $this->sentTo('editMessageText')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
         $this->assertEqualsCanonicalizing([999, 501], array_column($this->sentTo('deleteMessage'), 'message_id'));
@@ -163,8 +170,17 @@ class TelegramWarehouseTest extends TestCase
         $this->assertSame(OrderItemAllocation::NOTIFIED, $allocation->fresh()->status);
         $this->assertSame('✅ Rezerv etdim', $this->sentTo('sendMessage')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
 
+        $this->assertStringEndsWith('#rezerv_gozleyir', $this->sentTo('sendMessage')[0]['text']);
         $this->press(TelegramMessage::where('kind', TelegramMessage::ALLOCATION)->sole(), 'reserve')->assertOk();
         $this->assertSame(OrderItemAllocation::RESERVED, $allocation->fresh()->status);
+        $this->assertStringStartsWith('🔵 <b>REZERV OLUNDU</b> (Kamal)', $this->sentTo('editMessageText')[0]['text']);
+        $this->assertStringEndsWith('#rezerv', $this->sentTo('editMessageText')[0]['text']);
+        $this->assertSame('🤝', $this->sentTo('setMessageReaction')[0]['reaction'][0]['emoji']);
+
+        // Seçim ləğv edilsə — qrupdakı seçim mesajı da "ləğv edildi" olur
+        $service->cancelAllocation($order, $allocation->id, 'test', 7);
+        app(WarehouseNotifier::class)->notifyCancelled($allocation->fresh(), 7);
+        $this->assertStringEndsWith('#legv', collect($this->sentTo('editMessageText'))->last()['text']);
     }
 
     public function test_group_id_gets_the_minus_sign_only_when_missing(): void
@@ -217,6 +233,22 @@ class TelegramWarehouseTest extends TestCase
         $this->press($message, 'none');
         $this->assertSame(0, TelegramMessage::where('kind', TelegramMessage::REMINDER)->count());
         $this->assertCount(2, $this->sentTo('deleteMessage'));
+    }
+
+    public function test_answer_given_in_crm_marks_the_telegram_message_answered(): void
+    {
+        \Illuminate\Support\Facades\Gate::before(fn () => true);
+        $user = new \App\Models\User(['name' => 'Operator']);
+        $user->id = 7;
+        $this->actingAs($user, 'admin');
+        $order = $this->order(1);
+        $request = app(ProcurementService::class)->createRequests($order, [$this->telegramWarehouse()->id], [$order->items()->first()->id], 7)->first();
+        app(WarehouseNotifier::class)->notifyRequest($request, 7);
+        $requestItem = $request->items()->first();
+
+        $this->post(route('admin.procurement.offers.store', [$order, $requestItem->id]), ['available_quantity' => 1, 'unit_cost' => '70', 'source' => 'phone'])->assertSessionHasNoErrors();
+
+        $this->assertStringStartsWith('🟢 <b>CAVABLANDI</b> — Var — 70.00 AZN', $this->sentTo('editMessageText')[0]['text']);
     }
 
     public function test_webhook_rejects_requests_without_the_secret(): void

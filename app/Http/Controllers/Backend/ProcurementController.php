@@ -173,6 +173,8 @@ class ProcurementController extends Controller
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
         $service->recordOffer($order, $requestItem, $data, (int) auth('admin')->id());
+        // Anbarın Telegram qrupundakı sorğu mesajı da "cavablandı" olsun (Telegram anbarı deyilsə — heç nə etmir)
+        rescue(fn () => app(\App\Services\Telegram\TelegramWarehouseBot::class)->syncAnswer($requestItem));
 
         return back()->with('success', 'Anbarın cavabı qeydə alındı.');
     }

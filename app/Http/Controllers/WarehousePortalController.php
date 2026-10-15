@@ -58,6 +58,8 @@ class WarehousePortalController extends Controller
             'replaces' => ['nullable', 'integer'], // düzəliş: düzəldilən cavabın id-si
         ]);
         $portal->answer($token, $item, $data);
+        // Anbarın Telegram qrupundakı sorğu mesajı da "cavablandı" olsun
+        rescue(fn () => app(\App\Services\Telegram\TelegramWarehouseBot::class)->syncAnswer($item));
 
         return redirect()->route('warehouse.portal', array_filter(['token' => $token, 'tab' => $request->filled('replaces') ? 'answered' : null]))
             ->with('success', $request->filled('replaces') ? 'Cavabınız yeniləndi.' : 'Cavabınız qeydə alındı.');

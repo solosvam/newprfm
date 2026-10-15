@@ -22,13 +22,25 @@ use Throwable;
  *    "Qismən" → əvvəl sayı. Cavab sorğuya anbarın cavabı kimi yazılır (mənbə "telegram", user_id 0 — anbarın özü);
  *  - seçim: "sizdən seçildi, rezerv edin" + "Rezerv etdim" düyməsi (→ "Anbar ayırdı");
  *  - ləğv: məlumat mesajı.
+ * Hər düyməli mesajın əvvəlində status sətri (🟡 gözləyir / 🟢 cavablandı / 🔵 rezerv), sonunda heşteq (#gozleyir → #cavablandi,
+ * #rezerv_gozleyir → #rezerv) və cavabdan sonra reaksiya (👌 / 🤝). Heşteqə basanda qrupda yalnız həmin vəziyyətdəki mesajlar çıxır —
+ * anbar #gozleyir ilə cavab verməli olduğu bütün sorğuları görür. Heşteqlər Telegram-da etibarlı olsun deyə latın hərfləri ilədir.
  * Göndərilən hər mesaj jurnala yazılır (sms_logs, channel = telegram) — SMS ilə eyni yerdə görünür.
  * Cavablar yalnız anbarın öz qrupundan (Warehouse::telegramChatId) qəbul olunur.
  */
 class TelegramWarehouseBot
 {
+    private const WAITING = ['🟡 <b>CAVAB GÖZLƏNİLİR</b>', '#gozleyir'];
+    private const RESERVE_WAITING = ['🟡 <b>REZERV GÖZLƏNİLİR</b>', '#rezerv_gozleyir'];
+
     public function __construct(private TelegramApi $api)
     {
+    }
+
+    /** Mesajın tam mətni: status sətri + əsas mətn + heşteq (əsas mətn telegram_messages.text-də saxlanır) */
+    private function render(string $body, string $status, string $tag): string
+    {
+        return $status."\n\n".$body."\n\n".$tag;
     }
 
     /** Sorğu: hər məhsula bir mesaj. Hamısı getdisə — uğurlu jurnal yazısı, biri getmədisə — xətalı. */
@@ -41,9 +53,9 @@ class TelegramWarehouseBot
             $quantity = (int) $requestItem->requested_quantity;
             $text = 'Sizdə <b>'.e($label['title']).'</b> ətirinin <b>'.e($label['size'] ?? '—').'</b> ölçüsü <b>'.e($label['type'] ?? '—').'</b> olan <b>'.$quantity.' ədəd</b> var?'
                 ."\n\n".$this->details($label)."\nSorğu #".$request->id;
-            $log = $this->post($request->warehouse, $text, null, TelegramMessage::REQUEST_ITEM, $requestItem->id,
+            $log = $this->post($request->warehouse, $this->render($text, ...self::WAITING), null, TelegramMessage::REQUEST_ITEM, $requestItem->id,
                 fn (TelegramMessage $m) => $this->answerButtons($m, $quantity),
-                'warehouse_request', WarehouseNotifier::SUBJECT_REQUEST, $request->id, $actor);
+                'warehouse_request', WarehouseNotifier::SUBJECT_REQUEST, $request->id, $actor, $text);
             $result = $result && !$result->isSent() ? $result : $log;
         }
 
@@ -57,9 +69,9 @@ class TelegramWarehouseBot
         $text = '✅ <b>'.e($label['full']).'</b> — '.$allocation->quantity.' ədəd sizdən seçildi. Zəhmət olmasa rezerv edin və təsdiqləyin.'
             ."\n\n".$this->details($label)."\nAlış: ".number_format((float) $allocation->unit_cost, 2).' AZN';
 
-        return $this->post($allocation->warehouse, $text, null, TelegramMessage::ALLOCATION, $allocation->id,
+        return $this->post($allocation->warehouse, $this->render($text, ...self::RESERVE_WAITING), null, TelegramMessage::ALLOCATION, $allocation->id,
             fn (TelegramMessage $m) => [[['text' => '✅ Rezerv etdim', 'callback_data' => $m->id.':reserve']]],
-            'warehouse_selected', WarehouseNotifier::SUBJECT_ALLOCATION, $allocation->id, $actor);
+            'warehouse_selected', WarehouseNotifier::SUBJECT_ALLOCATION, $allocation->id, $actor, $text);
     }
 
     public function sendCancelled(OrderItemAllocation $allocation, int $actor): SmsLog
@@ -67,6 +79,10 @@ class TelegramWarehouseBot
         $allocation->loadMissing(['warehouse', 'orderItem.product.brand', 'orderItem.product.type', 'orderItem.product.genders', 'orderItem.variant.size']);
         $label = $this->label($allocation->orderItem);
         $text = '❌ <b>'.e($label['full']).'</b> — '.$allocation->quantity.' ədəd seçimi ləğv edildi, rezerv lazım deyil.';
+        // Seçim mesajı qrupda "rezerv gözləyir" kimi qalmasın
+        foreach (TelegramMessage::where('kind', TelegramMessage::ALLOCATION)->where('subject_id', $allocation->id)->where('message_id', '>', 0)->get() as $selected) {
+            rescue(fn () => $this->edit($selected, $this->render($selected->text, '⚫ <b>SEÇİM LƏĞV EDİLDİ</b>', '#legv'), [], []), null, false);
+        }
 
         return $this->post($allocation->warehouse, $text, null, null, null, null,
             'warehouse_cancelled', WarehouseNotifier::SUBJECT_ALLOCATION, $allocation->id, $actor);
@@ -145,7 +161,7 @@ class TelegramWarehouseBot
                 'none' => $this->saveAnswer($message, $requestItem, 0, null, $who),
                 'all' => $this->ask($message, TelegramMessage::AWAIT_PRICE, $requested, $requested > 1 ? '1 ədədin qiymətini yazın (AZN). Say: '.$requested : '1 ədədin qiymətini yazın (AZN)'),
                 'part' => $this->ask($message, TelegramMessage::AWAIT_QUANTITY, null, 'Neçə ədəd var? 1-dən '.($requested - 1).'-dək rəqəm yazın.'),
-                'change' => $this->edit($message, $message->text, $this->answerButtons($message, $requested), ['state' => null, 'quantity' => null]),
+                'change' => $this->reopen($message, $requested),
                 default => null,
             };
             $this->toast($callback);
@@ -205,11 +221,46 @@ class TelegramWarehouseBot
         ], 0);
         // Cavab yalnız düymədə yazılır (mətndə təkrar olmasın); basanda cavab dəyişdirilir — düymələr yenidən açılır.
         // Kimin cavab verdiyi CRM-də görünür (WarehouseOffer::authorName)
-        $button = ($quantity
-            ? '✅ Var — '.($quantity > 1 || (int) $requestItem->requested_quantity > 1 ? $quantity.' ədəd × ' : '').$price.' AZN'
-            : '❌ Yoxdur').' (Dəyişdir)';
-        $this->edit($message, $message->text, [[['text' => $button, 'callback_data' => $message->id.':change']]], ['state' => null, 'quantity' => null]);
+        $answer = $quantity
+            ? 'Var — '.($quantity > 1 || (int) $requestItem->requested_quantity > 1 ? $quantity.' ədəd × ' : '').$price.' AZN'
+            : 'Yoxdur';
+        $this->markAnswered($message, $answer, $quantity > 0);
         $this->cleanup($message);
+    }
+
+    /** Cavablanmış görünüş: 🟢 / ⚪ status, #cavablandi, düymədə cavab (basanda dəyişdirilir), 👌 reaksiya */
+    private function markAnswered(TelegramMessage $message, string $answer, bool $available): void
+    {
+        $status = ($available ? '🟢' : '⚪').' <b>CAVABLANDI</b> — '.e($answer);
+        $this->edit($message, $this->render($message->text, $status, '#cavablandi'),
+            [[['text' => ($available ? '✅ ' : '❌ ').$answer.' (Dəyişdir)', 'callback_data' => $message->id.':change']]], ['state' => null, 'quantity' => null]);
+        $this->react($message, '👌');
+    }
+
+    /**
+     * Cavab Telegram-dan yox, başqa yolla gəlibsə (operator yazıb, anbar linkdən cavab verib) — qrupdakı sorğu mesajı da
+     * "cavablandı" olsun, #gozleyir siyahısında qalmasın.
+     */
+    public function syncAnswer(int $requestItemId): void
+    {
+        $offer = \App\Models\Procurement\WarehouseOffer::where('warehouse_request_item_id', $requestItemId)->latest('id')->first();
+        if (!$offer) {
+            return;
+        }
+        foreach (TelegramMessage::where('kind', TelegramMessage::REQUEST_ITEM)->where('subject_id', $requestItemId)->where('message_id', '>', 0)->get() as $message) {
+            $quantity = (int) $offer->available_quantity;
+            $requested = (int) WarehouseRequestItem::whereKey($requestItemId)->value('requested_quantity');
+            $this->markAnswered($message, $quantity
+                ? 'Var — '.($quantity > 1 || $requested > 1 ? $quantity.' ədəd × ' : '').number_format((float) $offer->unit_cost, 2, '.', '').' AZN'
+                : 'Yoxdur', $quantity > 0);
+            $this->cleanup($message);
+        }
+    }
+
+    private function react(TelegramMessage $message, ?string $emoji): void
+    {
+        rescue(fn () => $this->api->call('setMessageReaction', ['chat_id' => $message->chat_id, 'message_id' => $message->message_id,
+            'reaction' => $emoji ? [['type' => 'emoji', 'emoji' => $emoji]] : []]), null, false);
     }
 
     private function reserve(TelegramMessage $message, string $who): void
@@ -221,7 +272,15 @@ class TelegramWarehouseBot
             }
             app(ProcurementService::class)->transition($allocation->orderItem->order, $allocation->id, OrderItemAllocation::RESERVED, ['note' => 'Anbar Telegram-da təsdiqlədi ('.$who.')'], 0);
         }
-        $this->edit($message, $message->text."\n\n".'✅ <b>Rezerv olundu</b> ('.e($who).')', [], []);
+        $this->edit($message, $this->render($message->text, '🔵 <b>REZERV OLUNDU</b> ('.e($who).')', '#rezerv'), [], []);
+        $this->react($message, '🤝');
+    }
+
+    /** "Dəyişdir": mesaj yenidən gözləyən görünüşə qayıdır (status, #gozleyir, düymələr), reaksiya götürülür */
+    private function reopen(TelegramMessage $message, int $requested): void
+    {
+        $this->edit($message, $this->render($message->text, ...self::WAITING), $this->answerButtons($message, $requested), ['state' => null, 'quantity' => null]);
+        $this->react($message, null);
     }
 
     /** Botun sualı: qrupda həmin mesaja cavab kimi, Telegram yazı xanasını avtomatik açır */
@@ -275,7 +334,7 @@ class TelegramWarehouseBot
      * @param  (callable(TelegramMessage): array)|null  $buttons
      */
     private function post(Warehouse $warehouse, string $text, ?string $photo, ?string $kind, ?int $subjectId, ?callable $buttons,
-        string $context, string $subjectType, int $logSubjectId, int $actor): SmsLog
+        string $context, string $subjectType, int $logSubjectId, int $actor, ?string $body = null): SmsLog
     {
         $log = ['context' => $context, 'channel' => 'telegram', 'subject_type' => $subjectType, 'subject_id' => $logSubjectId,
             'msisdn' => $warehouse->telegramChatId(), 'message' => Str::limit(strip_tags($text), 1000), 'created_by' => $actor ?: null, 'created_at' => now()];
@@ -283,7 +342,7 @@ class TelegramWarehouseBot
         try {
             if ($kind) {
                 // Düymələrdə öz id-si olduğu üçün qeyd əvvəl yaradılır, mesaj id-si göndərişdən sonra yazılır
-                $message = TelegramMessage::create(['chat_id' => (string) $warehouse->telegramChatId(), 'message_id' => 0, 'kind' => $kind, 'subject_id' => $subjectId, 'text' => $text]);
+                $message = TelegramMessage::create(['chat_id' => (string) $warehouse->telegramChatId(), 'message_id' => 0, 'kind' => $kind, 'subject_id' => $subjectId, 'text' => $body ?? $text]);
             }
             $markup = $buttons && $message ? ['reply_markup' => ['inline_keyboard' => $buttons($message)]] : [];
             $sent = null;
