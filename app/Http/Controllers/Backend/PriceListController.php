@@ -30,9 +30,10 @@ class PriceListController extends Controller
         $current = WarehousePriceList::whereIn('id', WarehousePriceList::currentIds())->get()->keyBy('warehouse_id');
         $matched = WarehousePriceItem::whereIn('price_list_id', $current->pluck('id'))->whereNotNull('product_variant_id')
             ->selectRaw('price_list_id, count(*) as total')->groupBy('price_list_id')->pluck('total', 'price_list_id');
+        $warehouses = Warehouse::where('active',1)->orderBy('name_az')->get();
 
         return view('backend.price_lists.index', [
-            'warehouses' => Warehouse::orderBy('name_az')->get(),
+            'warehouses' => $warehouses,
             'current' => $current,
             'matched' => $matched,
         ]);

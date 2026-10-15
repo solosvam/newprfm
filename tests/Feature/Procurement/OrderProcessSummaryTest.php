@@ -43,7 +43,7 @@ class OrderProcessSummaryTest extends TestCase
 
         // Hələ heç bir cavab yoxdur
         $summary = $this->summary($order);
-        $this->assertEquals(['choose' => 0, 'waiting' => 3, 'selected' => 0], $summary['counts']);
+        $this->assertEquals(['choose' => 0, 'unrequested' => 0, 'waiting' => 3, 'selected' => 0], $summary['counts']);
         $this->assertSame('info', $summary['tone']);
         $this->assertStringContainsString('3 məhsul üçün anbar cavabı gözlənilir', $summary['headline']);
 
@@ -62,6 +62,18 @@ class OrderProcessSummaryTest extends TestCase
         $this->assertStringContainsString('1 məhsul üçün anbar seçilməlidir', $summary['headline']);
         $this->assertStringContainsString('1 məhsul hələ cavab gözləyir', $summary['detail']);
         $this->assertSame('Rufat', $summary['last']['by']);
+    }
+
+    /** Yeni (icraya götürülməmiş) sifarişdə məhsullar "Cavab gözləyir" yox, "Sorğu göndərilməyib" qrupundadır */
+    public function test_items_without_a_request_are_not_shown_as_waiting_for_an_answer(): void
+    {
+        $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
+        $item = $order->items()->create(['quantity' => 1]);
+
+        $summary = $this->summary($order);
+
+        $this->assertSame('unrequested', $summary['items'][$item->id]['group']);
+        $this->assertEquals(['choose' => 0, 'unrequested' => 1, 'waiting' => 0, 'selected' => 0], $summary['counts']);
     }
 
     public function test_headline_when_everything_is_selected_and_when_no_request_was_sent(): void

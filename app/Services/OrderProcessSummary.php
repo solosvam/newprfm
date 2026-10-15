@@ -13,13 +13,15 @@ use Illuminate\Support\Collection;
  *
  * Məhsul qrupları (səhifədə bu sıra ilə göstərilir):
  *  - choose   — anbar cavabı gəlib, seçim gözləyir (işin özü — ən yuxarıda);
- *  - waiting  — hələ istifadə edilə bilən cavab yoxdur (sorğu göndərilməyib və ya cavab gözlənilir);
+ *  - unrequested — anbarlara hələ sorğu göndərilməyib (yeni sifarişdə hamısı buradadır — icraya götürülməyib);
+ *  - waiting  — sorğu gedib, istifadə edilə bilən cavab hələ yoxdur;
  *  - selected — lazım olan miqdar anbarlara seçilib (kart yığılır; problemli olanlar qrupun əvvəlində).
  */
 class OrderProcessSummary
 {
     public const GROUPS = [
         'choose' => 'Cavab gəlib, seçim gözləyir',
+        'unrequested' => 'Sorğu göndərilməyib',
         'waiting' => 'Cavab gözləyir',
         'selected' => 'Anbar seçilib',
     ];
@@ -80,7 +82,7 @@ class OrderProcessSummary
                 && ($log = $sms['allocation'][$a->id] ?? null) && !$log->isSent());
 
             $items[$item->id] = [
-                'group' => $missing === 0 ? 'selected' : ($usable ? 'choose' : 'waiting'),
+                'group' => $missing === 0 ? 'selected' : ($usable ? 'choose' : ($rows->isNotEmpty() ? 'waiting' : 'unrequested')),
                 'problem' => $active->contains('status', OrderItemAllocation::PROBLEM),
                 'sms_failed' => $smsFailed,
                 'has_request' => $rows->isNotEmpty(),
@@ -105,7 +107,7 @@ class OrderProcessSummary
             return $rank($a) <=> $rank($b);
         });
 
-        $counts = array_count_values(array_column($items, 'group')) + ['choose' => 0, 'waiting' => 0, 'selected' => 0];
+        $counts = array_count_values(array_column($items, 'group')) + ['choose' => 0, 'unrequested' => 0, 'waiting' => 0, 'selected' => 0];
 
         return [
             'items' => $items,
@@ -148,12 +150,12 @@ class OrderProcessSummary
                 return ['tone' => 'warning', 'headline' => $counts['choose'].' məhsul üçün anbar seçilməlidir: '.$names('choose'),
                     'detail' => collect(['Cavablar gəlib.', $counts['waiting'] ? $counts['waiting'].' məhsul hələ cavab gözləyir.' : null, $smsFailed ? $smsFailed.' seçimdə anbara SMS getməyib.' : null])->filter()->implode(' ')];
             }
+            if ($counts['unrequested']) {
+                return ['tone' => 'warning', 'headline' => $counts['unrequested'].' məhsul üçün anbarlara sorğu göndərilməyib: '.$names('unrequested'),
+                    'detail' => collect(['"Yeni sorğu" ilə anbarlardan qiymət soruşun.', $counts['waiting'] ? $counts['waiting'].' məhsul cavab gözləyir.' : null])->filter()->implode(' ')];
+            }
             if ($counts['waiting']) {
-                $noRequest = count(array_filter($items, fn ($i) => $i['group'] === 'waiting' && !$i['has_request']));
-
-                return $noRequest
-                    ? ['tone' => 'warning', 'headline' => $noRequest.' məhsul üçün anbarlara sorğu göndərilməyib: '.$names('waiting'), 'detail' => '"Yeni sorğu" ilə anbarlardan qiymət soruşun.']
-                    : ['tone' => 'info', 'headline' => $counts['waiting'].' məhsul üçün anbar cavabı gözlənilir: '.$names('waiting'), 'detail' => 'Cavab telefonla gəlibsə, "Cavab daxil et" ilə özünüz yazın.'.($side ? ' '.$side.'.' : '')];
+                return ['tone' => 'info', 'headline' => $counts['waiting'].' məhsul üçün anbar cavabı gözlənilir: '.$names('waiting'), 'detail' => 'Cavab telefonla gəlibsə, "Cavab daxil et" ilə özünüz yazın.'.($side ? ' '.$side.'.' : '')];
             }
             if ($smsFailed) {
                 return ['tone' => 'danger', 'headline' => $smsFailed.' seçimdə anbara SMS getməyib', 'detail' => 'Anbar seçimdən xəbərsizdir — nömrəni düzəldib SMS-i yenidən göndərin və ya telefonla bildirin.'];
@@ -180,6 +182,7 @@ class OrderProcessSummary
     {
         return collect([
             $counts['choose'] ? $counts['choose'].' məhsul seçim gözləyir.' : null,
+            $counts['unrequested'] ? $counts['unrequested'].' məhsul üçün sorğu göndərilməyib.' : null,
             $counts['waiting'] ? $counts['waiting'].' məhsul cavab gözləyir.' : null,
             $smsFailed ? $smsFailed.' seçimdə anbara SMS getməyib.' : null,
         ])->filter()->implode(' ') ?: null;

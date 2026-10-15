@@ -206,7 +206,7 @@
             <div id="procItem{{ $item->id }}" class="collapse {{ $open ? 'show' : '' }}">
                 <div class="card-body accordion-content pt-0">
                     @if($rows->isEmpty())
-                        <p class="text-muted mb-0">Bu məhsul üçün hələ sorğu yoxdur — "Yeni sorğu" ilə anbarlardan soruşun.</p>
+                        <p class="text-muted mb-0">@if($order->status?->code === 'new') Sifariş icraya götürüləndən sonra anbarlara sorğu göndərmək olar. @else Bu məhsul üçün hələ sorğu yoxdur — "Yeni sorğu" ilə anbarlardan soruşun. @endif</p>
                     @else
                         @if($offered->isNotEmpty())
                             <div class="table-responsive"><table class="table proc-table" style="table-layout: fixed; min-width: 760px">

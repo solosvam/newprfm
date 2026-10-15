@@ -32,9 +32,10 @@
                     <div class="table-responsive"><table class="table align-middle mb-0">
                         <thead><tr>
                             <th class="text-muted text-small text-uppercase">Anbar</th>
-                            <th class="text-muted text-small text-uppercase">Cari siyahı</th>
+                            <th class="text-muted text-small text-uppercase">ƏLAQƏLİ ŞƏXS</th>
+                            <th class="text-muted text-small text-uppercase">CARİ SİYAHI</th>
                             <th class="text-muted text-small text-uppercase">Fayl</th>
-                            <th class="text-muted text-small text-uppercase text-end">Sətir</th>
+                            <th class="text-muted text-small text-uppercase text-end">SƏTİR</th>
                             <th class="text-muted text-small text-uppercase text-end">Uyğunlaşıb</th>
                             <th></th>
                         </tr></thead>
@@ -43,6 +44,7 @@
                             @php $list = $current[$warehouse->id] ?? null; @endphp
                             <tr>
                                 <td>{{ $warehouse->name_az }}</td>
+                                <td>{{ $warehouse->contact_name }}</td>
                                 @if($list)
                                     @php $done = (int) ($matched[$list->id] ?? 0); @endphp
                                     <td class="text-nowrap">{{ $list->created_at->format('d.m.Y H:i') }}
