@@ -49,6 +49,13 @@
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#procResumeModal"
                             data-action="{{ $statusUrl }}" data-title="{{ $allocTitle }}" data-price="{{ $allocation->problem_type === 'price_changed' ? number_format((float) $allocation->unit_cost, 2, '.', '') : '' }}">Həll edildi, davam et</button>
                 @endif
+                @php
+                    // "Digər" menyusunda ən azı bir əməliyyat varmı — yoxdursa menyu göstərilmir (problem mərhələsində kuryer dövründə boş qalırdı)
+                    $hasMenu = ($hasPhone && in_array($status, ['selected', 'notified'], true))
+                        || ($status !== 'problem')
+                        || $editable;
+                @endphp
+                @if($hasMenu)
                 <div class="dropdown">
                     <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">Digər</button>
                     <div class="dropdown-menu dropdown-menu-end">
@@ -75,6 +82,7 @@
                         @endif
                     </div>
                 </div>
+                @endif
             </div>
         @endif
         </div>

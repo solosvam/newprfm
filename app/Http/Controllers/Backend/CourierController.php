@@ -66,18 +66,29 @@ class CourierController extends Controller
         return back()->with('success', 'Problem operatora bildirildi.');
     }
 
-    /** "Ödədim": kuryer anbara öz qalığından ödəyir (Kuryer → Anbar) */
-    public function pay(Request $request, Order $order, int $allocation, FinanceService $finance): RedirectResponse
+    /**
+     * "Ödədim": kuryer anbara öz qalığından ödəyir (Kuryer → Anbar). Məbləğ yazılmır — seçimin ödənilməmiş qalığı
+     * (say × alış qiyməti − artıq ödənilən) ödənilir. $pick — "… ödədim, götürdüm": ödəniş və götürmə birlikdə.
+     */
+    public function pay(Request $request, Order $order, int $allocation, FinanceService $finance, ProcurementService $procurement): RedirectResponse
     {
         $this->authorizeCourier($order);
-        $data = $request->validate(['amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999.99']], [
-            'amount.required' => 'Məbləği yazın.', 'amount.min' => 'Məbləğ düzgün deyil.',
-        ]);
         $part = OrderItemAllocation::with('warehouse')->whereIn('order_item_id', $order->items()->select('id'))->findOrFail($allocation);
-        $finance->record($finance->courierAccount(auth('admin')->user()), $finance->warehouseAccount($part->warehouse),
-            (float) $data['amount'], 'warehouse_payment', ['order_item_allocation_id' => $part->id, 'note' => 'Kuryer ödədi'], $this->me());
+        $left = (int) round($part->quantity * (float) $part->unit_cost * 100) - ($finance->allocationPaid([$part->id])[$part->id] ?? 0);
+        $pick = $request->boolean('pick');
 
-        return back()->with('success', number_format((float) $data['amount'], 2).' AZN anbara ödəniş qeydə alındı.');
+        \Illuminate\Support\Facades\DB::transaction(function () use ($finance, $procurement, $order, $part, $left, $pick) {
+            if ($left > 0) {
+                $finance->record($finance->courierAccount(auth('admin')->user()), $finance->warehouseAccount($part->warehouse),
+                    $left / 100, 'warehouse_payment', ['order_item_allocation_id' => $part->id, 'note' => 'Kuryer ödədi'], $this->me());
+            }
+            if ($pick && $part->status !== OrderItemAllocation::PICKED) {
+                $procurement->transition($order, $part->id, OrderItemAllocation::PICKED, [], $this->me());
+            }
+        });
+        $paid = $left > 0 ? number_format($left / 100, 2).' AZN anbara ödəndi' : 'Anbara artıq ödənilib';
+
+        return back()->with('success', $paid.($pick ? ', götürüldü.' : '.'));
     }
 
     public function start(Order $order, OrderStatusService $statuses): RedirectResponse

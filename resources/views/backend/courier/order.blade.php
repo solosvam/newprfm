@@ -1,5 +1,5 @@
 {{--
-  Kuryer → sifariş (telefon üçün). Anbarlardan götürmə (Götürdüm / Ödədim / Problem) — yalnız yola çıxmazdan əvvəl,
+  Kuryer → sifariş (telefon üçün). Anbarlardan götürmə ("X AZN ödədim, götürdüm" / "Ödənişsiz götürdüm" / Problem) — yalnız yola çıxmazdan əvvəl,
   başqa kuryerə ötürmə, hədiyyəlik qablaşdırma, müştəri, çatdırılma (Çatdırılmaya başladım → Ünvandayam → Təhvil verdim),
   qapıda imtina və imtina edilən məhsulun anbara qaytarılması ("Qaytardım").
 --}}
@@ -108,19 +108,18 @@
 
                     @if(($canAct || $canPay) && $part->status !== Part::PROBLEM)
                         <div class="courier-part__actions">
+                            {{-- Götürmə: ödəniş qalıbsa iki yol — tam ödəyib götürmək (məbləğ yazılmır) və ya ödənişsiz (anbara borc qalır) --}}
                             @if($canAct && $part->status !== Part::PICKED)
-                                <form method="POST" action="{{ route('admin.courier.pick', [$order, $part->id]) }}" data-once>@csrf<button class="btn btn-primary w-100">Götürdüm</button></form>
-                            @endif
-                            @if($canPay && $left > 0)
-                                <details class="courier-more">
-                                    <summary class="btn btn-outline-primary w-100">Ödədim</summary>
-                                    <form method="POST" action="{{ route('admin.courier.pay', [$order, $part->id]) }}" data-once class="courier-more__form">
-                                        @csrf
-                                        <label class="form-label">Anbara ödədiyiniz məbləğ, AZN</label>
-                                        <input type="number" name="amount" min="0.01" max="{{ number_format($left / 100, 2, '.', '') }}" step="0.01" inputmode="decimal" class="form-control" value="{{ number_format($left / 100, 2, '.', '') }}" required>
-                                        <button class="btn btn-primary w-100 mt-2">Təsdiqlə</button>
-                                    </form>
-                                </details>
+                                @if($canPay && $left > 0)
+                                    <form method="POST" action="{{ route('admin.courier.pay', [$order, $part->id]) }}" data-once>@csrf<input type="hidden" name="pick" value="1">
+                                        <button class="btn btn-primary w-100">{{ $money($left) }} ödədim, götürdüm</button></form>
+                                    <form method="POST" action="{{ route('admin.courier.pick', [$order, $part->id]) }}" data-once>@csrf<button class="btn btn-outline-primary w-100">Ödənişsiz götürdüm</button></form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.courier.pick', [$order, $part->id]) }}" data-once>@csrf<button class="btn btn-primary w-100">Götürdüm</button></form>
+                                @endif
+                            @elseif($canPay && $left > 0)
+                                {{-- Ödənişsiz götürülüb — sonradan ödəniş --}}
+                                <form method="POST" action="{{ route('admin.courier.pay', [$order, $part->id]) }}" data-once>@csrf<button class="btn btn-outline-primary w-100">{{ $money($left) }} ödədim</button></form>
                             @endif
                             @if($canAct && $part->status !== Part::PICKED)
                                 <details class="courier-more">

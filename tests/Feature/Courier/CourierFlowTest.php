@@ -213,6 +213,28 @@ class CourierFlowTest extends TestCase
         $this->assertStringContainsString('götürülüb', (string) $s->transferBlock($order->fresh()));
     }
 
+    /** "80.00 AZN ödədim, götürdüm": məbləğ yazılmır — qalıq ödənilir və götürülür; "Ödənişsiz götürdüm" — borc qalır, sonra "ödədim" */
+    public function test_courier_pays_the_remaining_cost_and_picks_in_one_step(): void
+    {
+        (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
+        Schema::table('users', fn (Blueprint $t) => $t->boolean('active')->default(true));
+        \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
+        $courier = User::forceCreate(['name' => 'Fərid']);
+        $courier->assignRole(FinanceService::COURIER_ROLE);
+        [$order, $part, $wh] = $this->assigned($courier);
+        $f = app(FinanceService::class);
+        $this->actingAs($courier, 'admin');
+
+        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', '80.00 AZN anbara ödəndi, götürüldü.');
+        $this->assertSame('picked', $part->fresh()->status);
+        $this->assertSame(8000, $f->allocationPaid([$part->id])[$part->id]);
+        $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
+
+        // Təkrar basılsa ikinci dəfə ödənmir
+        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', 'Anbara artıq ödənilib, götürüldü.');
+        $this->assertSame(8000, $f->allocationPaid([$part->id])[$part->id]);
+    }
+
     public function test_delivery_problem_is_marked_as_notice(): void
     {
         $courier = User::forceCreate(['name' => 'Fərid']);
