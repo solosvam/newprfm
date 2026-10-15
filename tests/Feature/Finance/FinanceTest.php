@@ -231,6 +231,38 @@ class FinanceTest extends TestCase
         $this->assertSame(10000, collect($shown['expense'])->first(fn ($r) => $r['category']?->code === 'transfer')['values'][$cur]);
     }
 
+    public function test_operations_page_filters_and_sums(): void
+    {
+        $cash = $this->f()->system('cash');
+        $bank = $this->f()->system('bank');
+        $external = $this->f()->system('external');
+        $salary = FinanceCategory::create(['name' => 'Əməkhaqqı', 'type' => 'expense']);
+        $bonus = FinanceCategory::create(['name' => 'Bonus', 'type' => 'expense', 'parent_id' => $salary->id]);
+        $this->f()->record($external, $cash, 500, 'income', ['category_id' => FinanceCategory::byCode('adjustment')->id], 7);
+        $this->f()->record($cash, $external, 40, 'outgo', ['category_id' => $salary->id, 'note' => 'Oktyabr maaşı'], 7);
+        $this->f()->record($bank, $external, 10, 'outgo', ['category_id' => $bonus->id], 7);
+        $wrong = $this->f()->record($cash, $external, 99, 'outgo', ['category_id' => $salary->id], 7);
+        $this->f()->reverse($wrong, 7);
+        $this->f()->record($cash, $bank, 100, 'transfer', [], 7);
+
+        $data = fn (array $query) => app(\App\Http\Controllers\Backend\FinanceController::class)
+            ->operations(\Illuminate\Http\Request::create('/', 'GET', $query), $this->f())->getData();
+        $ids = fn (array $query) => collect($data($query)['movements']->items())->pluck('amount')->map(fn ($a) => (float) $a)->sort()->values()->all();
+
+        // Əks olunanlar gizlidir; cəm = 500 − 40 − 10 (köçürmə daxil deyil)
+        $all = $data([]);
+        $this->assertSame(4, $all['movements']->total());
+        $this->assertSame(450.0, $all['total']);
+        $this->assertSame([10.0, 40.0], $ids(['type' => ['out']]));
+        $this->assertSame([40.0, 100.0, 500.0], $ids(['account' => [$cash->id]]));
+        $this->assertSame([10.0, 40.0], $ids(['category' => [$salary->id]]));       // alt kateqoriya da daxildir
+        $this->assertSame([40.0], $ids(['q' => 'maaş']));
+        // Əks olunanlar göstəriləndə: əsli və əksi; Məxaric filtrində əks əməliyyat (mədaxil) yoxdur
+        $this->assertSame([10.0, 40.0, 99.0], $ids(['type' => ['out'], 'reversed' => 1]));
+        $this->assertSame(450.0, $data(['reversed' => 1])['total']);
+        $this->assertSame(0, $data(['from' => now()->addDays(2)->toDateString()])['movements']->total());
+    }
+
     public function test_kind_rules_are_enforced(): void
     {
         $this->expectException(ValidationException::class);

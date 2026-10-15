@@ -95,6 +95,32 @@
         filterParents();
     }
 
+    // Əməliyyatlar filtri: tarix dəyişəndə, açılan siyahı (Növ / Balans / Kateqoriya) dəyişib bağlananda göndərilir
+    document.querySelectorAll('[data-ops-filter]').forEach(form => {
+        form.querySelectorAll('[data-auto-submit]').forEach(i => i.addEventListener('change', () => form.submit()));
+        form.querySelectorAll('[data-apply-on-close]').forEach(dropdown => {
+            let changed = false;
+            dropdown.addEventListener('change', () => { changed = true; });
+            dropdown.addEventListener('hidden.bs.dropdown', () => { if (changed) form.submit(); });
+            dropdown.addEventListener('shown.bs.dropdown', () => dropdown.querySelector('[data-filter-list]')?.focus());
+        });
+        // Siyahıda axtarış
+        form.querySelectorAll('[data-filter-list]').forEach(input => input.addEventListener('input', () => {
+            const term = input.value.trim().toLocaleLowerCase('az');
+            const menu = input.closest('.dropdown-menu');
+            menu.querySelectorAll('[data-filter-item]').forEach(item => {
+                item.hidden = term !== '' && !item.textContent.toLocaleLowerCase('az').includes(term);
+            });
+            menu.querySelectorAll('[data-filter-group]').forEach(title => {
+                let next = title.nextElementSibling, any = false;
+                while (next && next.matches('[data-filter-item]')) { any ||= !next.hidden; next = next.nextElementSibling; }
+                title.hidden = !any;
+            });
+        }));
+        // Axtarışda Enter formu göndərməsin
+        form.querySelectorAll('[data-filter-list]').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); }));
+    });
+
     document.querySelectorAll('form[data-confirm]').forEach(f => f.addEventListener('submit', event => {
         if (!confirm(f.dataset.confirm)) event.preventDefault();
     }));

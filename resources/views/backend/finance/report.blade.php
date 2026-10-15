@@ -31,9 +31,6 @@
                 <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
                 @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
             </div>
-            <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
-                <a href="{{ route('admin.finance.categories') }}" class="btn btn-outline-primary w-100 w-sm-auto">Kateqoriyalar</a>
-            </div>
         </div>
     </div>
 

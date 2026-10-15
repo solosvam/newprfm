@@ -26,7 +26,12 @@
             @endif
             <label class="form-label" for="accDescription">Açıqlama</label>
             <textarea id="accDescription" name="description" rows="2" maxlength="2000" class="form-control">{{ old('description', $editAccount?->description) }}</textarea>
-            @if(!$isNew && !$editAccount->code)
+            @if(!$isNew && !$editAccount->active)
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" name="activate" value="1" id="accActivate">
+                    <label class="form-check-label" for="accActivate">Hesabı yenidən aktiv et</label>
+                </div>
+            @elseif(!$isNew && !$editAccount->code)
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" name="deactivate" value="1" id="accDeactivate" @disabled($editBalance !== 0)>
                     <label class="form-check-label" for="accDeactivate">Hesabı deaktiv et</label>

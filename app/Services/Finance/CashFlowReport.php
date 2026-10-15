@@ -19,9 +19,9 @@ use Illuminate\Support\Collection;
  */
 class CashFlowReport
 {
-    private const INCOME_KINDS = ['income', 'customer_payment', 'warehouse_refund'];
-    private const OUTGO_KINDS = ['outgo', 'customer_refund', 'warehouse_payment'];
-    private const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover'];
+    private const INCOME_KINDS = MoneyMovement::IN_KINDS;
+    private const OUTGO_KINDS = MoneyMovement::OUT_KINDS;
+    private const TRANSFER_KINDS = MoneyMovement::TRANSFER_KINDS;
 
     /**
      * @return array{months: list<Carbon>, expense: list<array>, income: list<array>, totals: array, persons: array}

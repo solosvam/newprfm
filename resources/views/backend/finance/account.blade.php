@@ -141,7 +141,10 @@
         </div></div>
     @endif
 
-    <h2 class="small-title">Pul hərəkətləri</h2>
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="small-title">Pul hərəkətləri</h2>
+        <a href="{{ route('admin.finance.operations', ['account' => [$account->id], 'from' => '', 'to' => '']) }}" class="small mb-2">Əməliyyatlarda filtrlə aç</a>
+    </div>
     <div class="card mb-5"><div class="card-body">
         @include('backend.finance.partials.movements')
     </div></div>

@@ -32,7 +32,6 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **Sifarişin ünvanı sifarişə köçürülmür.** Sifariş müştərinin ünvan kartına istinad edir (customer_address_id) — müştəri sonradan
   ünvanını dəyişsə və ya silsə, köhnə sifarişlərin ünvanı da dəyişir / itir. Ünvan sifariş yaranan anda sifarişə köçürülməlidir.
 - [ ] **Qeyri-müəyyən bank əməliyyatlarının uzlaşdırılması:** kimin ödədiyi bilinməyən köçürməni sifarişə bağlamaq.
-- [ ] **Maliyyə — əməliyyatlar siyahısında filtrlər:** növ, balans, kateqoriya, tarix aralığı; "istinad" sütunu (sifariş / anbar / qarşı köçürmə).
 
 ## 2. Sayt — səbət və push bildirişləri
 
@@ -161,6 +160,9 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Hesablar: Nağd / Kart / Bank / Şəxs ("Yeni hesab", başlanğıc qalıq — "Düzəliş" mədaxili). Şəxsin qalığı şirkətin pulu sayılmır;
   şəxslə hesablaşma köçürmə ilə: Şəxs → Kassa (mənfi qalıq — borcumuz), Kassa → Şəxs. Şəxs öz cibindən ödəyibsə — Məxaric şəxsdən.
   Qalığı sıfır olan hesab deaktiv edilə bilər; sistem hesabları — yox.
+- Maliyyə menyusu: Baxış (hesabların kartları + "Yeni əməliyyat"), Hesablar (cədvəl, "Yarat", deaktivlər), Kateqoriyalar,
+  Əməliyyatlar (tarix, Növ / Balans / Kateqoriya siyahıları, "Filtrlər" paneli: açıqlama, sifariş, icraçı, anbar, kuryer, əks olunanlar;
+  başlıqda cəm = gələn − çıxan, köçürmə daxil deyil; əks olunanlar standart gizli), Pul axını.
 - Pul axını (Maliyyə → "Pul axını"): aylar × kateqoriyalar, ən çox 24 ay. Bütün balanslar = şirkətin hesabları + kuryerlər; gəlir / xərc
   kimin ödəməsindən asılı olmayaraq kateqoriyaya yazılır (şəxsin öz cibindən ödədiyi də xərcdir). Daxili köçürmə həm məxaricdə, həm
   mədaxildə görünür (standart gizli). Şəxslərlə hesablaşma maliyyə nəticəsinə daxil deyil — ayrıca blokdadır. Əks əməliyyat əslindən çıxılır.

@@ -15,3 +15,6 @@
 .finance-report td:first-child { min-width: 220px; }
 .finance-report__total td { background: var(--background); }
 .finance-report__gap { padding: 6px !important; border: 0 !important; }
+/* Əməliyyatlar: açılan filtr siyahıları */
+.finance-filter-menu { min-width: 260px; max-height: 360px; overflow-y: auto; }
+.finance-ops th { white-space: nowrap; }

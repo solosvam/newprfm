@@ -38,6 +38,11 @@ class MoneyMovement extends Model
         'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer',
     ];
 
+    /** İstiqamət qrupları: şirkətə gələn, şirkətdən çıxan, daxili / şəxslə köçürmə */
+    public const IN_KINDS = ['income', 'customer_payment', 'warehouse_refund'];
+    public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment'];
+    public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover'];
+
     /** "Yeni əməliyyat" pəncərəsi: Məxaric / Mədaxil / Köçürmə (kuryerə köçürmə — avans, kuryerdən — təhvil) */
     public const MANUAL = ['outgo', 'income', 'transfer', 'courier_advance', 'courier_handover'];
 
@@ -66,6 +71,16 @@ class MoneyMovement extends Model
     public function user(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
     public function reversalOf(): BelongsTo { return $this->belongsTo(self::class, 'reversal_of_id'); }
     public function reversedBy(): HasOne { return $this->hasOne(self::class, 'reversal_of_id'); }
+
+    /** in | out | transfer. Əks əməliyyat — əslinin əksi (reversalOf yüklənməlidir) */
+    public function direction(): string
+    {
+        $kind = $this->kind === 'reversal' ? $this->reversalOf?->kind : $this->kind;
+        $dir = in_array($kind, self::IN_KINDS, true) ? 'in' : (in_array($kind, self::OUT_KINDS, true) ? 'out' : 'transfer');
+        if ($this->kind === 'reversal' && $dir !== 'transfer') $dir = $dir === 'in' ? 'out' : 'in';
+
+        return $dir;
+    }
 
     public function kindLabel(): string
     {

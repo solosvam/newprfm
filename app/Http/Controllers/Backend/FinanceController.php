@@ -15,21 +15,96 @@ use Illuminate\View\View;
 /** Kassa və hesablar: qalıqlar, pul hərəkətləri, əl ilə əməliyyat, əks əməliyyat */
 class FinanceController extends Controller
 {
-    public function index(Request $request, FinanceService $finance): View
+    /** Baxış: hesabların kartları (qalıq, borc) + "Yeni əməliyyat" */
+    public function index(FinanceService $finance): View
     {
         $finance->syncAccounts();
-        $accounts = FinanceAccount::with('user', 'warehouse')->where('active', true)->orderBy('type')->orderBy('name')->get();
-        $balances = $finance->balances();
-        $debts = $finance->warehouseDebts();
 
-        $accountId = $request->integer('account') ?: null;
-        $movements = MoneyMovement::with(['from', 'to', 'order', 'user', 'reversedBy', 'category'])
-            ->when($accountId, fn ($q) => $q->where(fn ($w) => $w->where('from_account_id', $accountId)->orWhere('to_account_id', $accountId)))
-            ->latest('occurred_at')->latest('id')->limit(1000)->get();
+        return view('backend.finance.index', $this->movementFormData($finance) + ['debts' => $finance->warehouseDebts()]);
+    }
 
-        $categories = FinanceCategory::tree();
+    /** Hesablar: şirkətin hesabları və şəxslər (cədvəl); deaktivlər istəyə görə */
+    public function accounts(Request $request, FinanceService $finance): View
+    {
+        $inactive = $request->boolean('inactive');
+        $accounts = FinanceAccount::whereIn('type', array_merge(FinanceAccount::OWN, ['person']))
+            ->when(!$inactive, fn ($q) => $q->where('active', true))->orderBy('id')->get()
+            ->sortBy(fn ($a) => [$a->type === 'person' ? 1 : 0, $a->id])->values();
 
-        return view('backend.finance.index', compact('accounts', 'balances', 'debts', 'movements', 'accountId', 'categories'));
+        return view('backend.finance.accounts', ['accounts' => $accounts, 'balances' => $finance->balances(), 'inactive' => $inactive]);
+    }
+
+    /**
+     * Əməliyyatlar: bütün pul hərəkətləri, filtrlərlə (növ, balans, kateqoriya, tarix; əlavə — açıqlama, sifariş, icraçı, anbar, kuryer).
+     * Əks olunan qeydlər və əks əməliyyatlar standart olaraq gizlidir. Başlıqdakı cəm: gələn − çıxan (köçürmələr daxil deyil).
+     */
+    public function operations(Request $request, FinanceService $finance): View
+    {
+        $t = 'money_movements';
+        $f = [
+            'types' => array_values(array_intersect((array) $request->query('type', []), ['in', 'out', 'transfer'])),
+            'accounts' => array_map('intval', (array) $request->query('account', [])),
+            'categories' => array_map('intval', (array) $request->query('category', [])),
+            'q' => trim((string) $request->query('q')),
+            'order' => trim((string) $request->query('order')),
+            'user' => (string) $request->query('user'),
+            'counterparty' => array_filter(array_map('intval', [$request->query('warehouse'), $request->query('courier')])),
+            'reversed' => $request->boolean('reversed'),
+        ];
+        // Tarix: ilk açılışda son 30 gün; boş göndərilibsə — məhdudiyyətsiz
+        $date = fn ($v) => rescue(fn () => $v ? \Illuminate\Support\Carbon::parse($v) : null, null, false);
+        $from = $request->has('from') ? $date($request->query('from')) : now()->subDays(29)->startOfDay();
+        $to = $request->has('to') ? $date($request->query('to')) : now();
+
+        $groups = ['in' => MoneyMovement::IN_KINDS, 'out' => MoneyMovement::OUT_KINDS, 'transfer' => MoneyMovement::TRANSFER_KINDS];
+        $opposite = ['in' => 'out', 'out' => 'in', 'transfer' => 'transfer'];
+        $categoryIds = $f['categories']
+            ? FinanceCategory::whereIn('id', $f['categories'])->orWhereIn('parent_id', $f['categories'])->pluck('id')->all() : [];
+
+        $query = MoneyMovement::query()
+            ->when($from, fn ($q) => $q->where("$t.occurred_at", '>=', $from->copy()->startOfDay()))
+            ->when($to, fn ($q) => $q->where("$t.occurred_at", '<=', $to->copy()->endOfDay()))
+            ->when($f['types'], fn ($q) => $q->where(function ($w) use ($f, $groups, $opposite, $t) {
+                foreach ($f['types'] as $type) {
+                    $w->orWhereIn("$t.kind", $groups[$type])
+                        ->orWhere(fn ($r) => $r->where("$t.kind", 'reversal')->whereHas('reversalOf', fn ($o) => $o->whereIn('kind', $groups[$opposite[$type]])));
+                }
+            }))
+            ->when($f['accounts'], fn ($q) => $q->where(fn ($w) => $w->whereIn("$t.from_account_id", $f['accounts'])->orWhereIn("$t.to_account_id", $f['accounts'])))
+            ->when($f['counterparty'], fn ($q) => $q->where(fn ($w) => $w->whereIn("$t.from_account_id", $f['counterparty'])->orWhereIn("$t.to_account_id", $f['counterparty'])))
+            ->when($categoryIds, fn ($q) => $q->whereIn("$t.category_id", $categoryIds))
+            ->when($f['q'] !== '', fn ($q) => $q->where("$t.note", 'like', '%'.$f['q'].'%'))
+            ->when($f['order'] !== '', fn ($q) => $q->whereHas('order', fn ($o) => $o->where('order_no', 'like', '%'.$f['order'].'%')))
+            ->when($f['user'] === 'system', fn ($q) => $q->whereNull("$t.created_by"))
+            ->when(ctype_digit($f['user']), fn ($q) => $q->where("$t.created_by", (int) $f['user']))
+            ->when(!$f['reversed'], fn ($q) => $q->where("$t.kind", '!=', 'reversal')->whereDoesntHave('reversedBy'));
+
+        // Cəm: gələn + / çıxan −; əks əməliyyat əslinin əksi
+        $in = "'".implode("','", MoneyMovement::IN_KINDS)."'";
+        $out = "'".implode("','", MoneyMovement::OUT_KINDS)."'";
+        $total = (float) (clone $query)->leftJoin("$t as orig", 'orig.id', '=', "$t.reversal_of_id")->selectRaw(
+            "SUM(CASE WHEN $t.kind IN ($in) THEN $t.amount WHEN $t.kind IN ($out) THEN -$t.amount
+                 WHEN $t.kind = 'reversal' AND orig.kind IN ($in) THEN -$t.amount WHEN $t.kind = 'reversal' AND orig.kind IN ($out) THEN $t.amount ELSE 0 END) as total"
+        )->value('total');
+
+        $movements = $query->with(['from', 'to', 'order', 'user', 'reversedBy', 'reversalOf', 'category'])
+            ->orderByDesc("$t.occurred_at")->orderByDesc("$t.id")->paginate(50)->withQueryString();
+
+        $all = FinanceAccount::where('active', true)->orderBy('name')->get();
+        $users = \App\Models\User::whereIn('id', MoneyMovement::whereNotNull('created_by')->distinct()->pluck('created_by'))->get()->sortBy('full_name');
+        $active = count($f['types']) + count($f['accounts']) + count($f['categories']) + ($f['q'] !== '') + ($f['order'] !== '') + ($f['user'] !== '') + count($f['counterparty']) + $f['reversed'];
+
+        return view('backend.finance.operations', $this->movementFormData($finance) + compact('movements', 'total', 'f', 'from', 'to', 'all', 'users', 'active'));
+    }
+
+    /** "Yeni əməliyyat" pəncərəsi üçün: aktiv hesablar, qalıqlar, kateqoriyalar */
+    private function movementFormData(FinanceService $finance): array
+    {
+        return [
+            'accounts' => FinanceAccount::with('user', 'warehouse')->where('active', true)->orderBy('type')->orderBy('name')->get(),
+            'balances' => $finance->balances(),
+            'categories' => FinanceCategory::tree(),
+        ];
     }
 
     /**
@@ -157,7 +232,9 @@ class FinanceController extends Controller
         abort_unless(in_array($account->type, array_merge(FinanceAccount::CREATABLE, ['online']), true), 404);
         $data = $this->accountData($request, $account);
         $account->fill(['name' => trim($data['name']), 'description' => $data['description'] ?? null]);
-        if ($request->boolean('deactivate')) {
+        if (!$account->active && $request->boolean('activate')) {
+            $account->active = true;
+        } elseif ($request->boolean('deactivate')) {
             if ($account->code || ($finance->balances()[$account->id] ?? 0) !== 0) {
                 return back()->withErrors(['finance' => $account->code ? 'Sistem hesabı deaktiv edilmir.' : 'Qalığı sıfır olmayan hesab deaktiv edilmir — əvvəlcə pulu köçürün.']);
             }
@@ -166,8 +243,8 @@ class FinanceController extends Controller
         $account->save();
 
         return $account->active
-            ? back()->with('success', 'Hesab yeniləndi.')
-            : redirect()->route('admin.finance.index')->with('success', $account->name.' deaktiv edildi.');
+            ? back()->with('success', $request->boolean('activate') ? $account->name.' yenidən aktivdir.' : 'Hesab yeniləndi.')
+            : redirect()->route('admin.finance.accounts')->with('success', $account->name.' deaktiv edildi.');
     }
 
     private function accountData(Request $request, ?FinanceAccount $account = null): array

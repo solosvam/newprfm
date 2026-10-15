@@ -66,10 +66,16 @@ return [
         ],
     ],
     [
-        'title'      => 'Maliyyə',
-        'icon'       => 'wallet',
-        'route'      => 'admin.finance.index',
-        'permission' => 'finance',
+        'title'    => 'Maliyyə',
+        'icon'     => 'wallet',
+        'id'       => 'financeMenu',
+        'children' => [
+            ['title' => 'Baxış', 'route' => 'admin.finance.index', 'permission' => 'finance'],
+            ['title' => 'Hesablar', 'route' => 'admin.finance.accounts', 'permission' => 'finance'],
+            ['title' => 'Kateqoriyalar', 'route' => 'admin.finance.categories', 'permission' => 'finance'],
+            ['title' => 'Əməliyyatlar', 'route' => 'admin.finance.operations', 'permission' => 'finance'],
+            ['title' => 'Pul axını', 'route' => 'admin.finance.report', 'permission' => 'finance'],
+        ],
     ],
     [
         'title'    => 'Ayarlar',

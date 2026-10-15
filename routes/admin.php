@@ -126,6 +126,8 @@ Route::prefix('admin')
                     Route::post('/accounts', 'storeAccount')->middleware('throttle:30,1')->name('accounts.store');
                     Route::put('/accounts/{account}', 'updateAccount')->middleware('throttle:30,1')->name('accounts.update');
                     Route::get('/report', 'report')->name('report');
+                    Route::get('/accounts', 'accounts')->name('accounts');
+                    Route::get('/operations', 'operations')->name('operations');
                     Route::get('/categories', 'categories')->name('categories');
                     Route::post('/categories', 'storeCategory')->middleware('throttle:30,1')->name('categories.store');
                     Route::put('/categories/{category}', 'updateCategory')->middleware('throttle:30,1')->name('categories.update');
