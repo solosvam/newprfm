@@ -22,14 +22,10 @@ Son yenilənmə: 10 oktyabr 2026.
   saymır — "Təxmini qazanc" düzələndə ikisi eyni düsturdan istifadə etməlidir.
 - [ ] **Anbar price listləri — qalanlar** (11 oktyabr: import, sütun seçimi, avtomatik və əl ilə uyğunlaşdırma, brend bağlama / yaratma,
   Proses tabında qiymət və axtarış hazırdır — Satışlar → Price listlər):
-  - siyahıdakı qiymətlə anbarı birbaşa seçmək (aşağıdakı "Sorğusuz birbaşa təminat" ilə eyni iş);
+  - Price listlər panelindən qiyməti hazır götürüb "Anbar seç" etmək (indi panel yalnız "Sorğu göndər" verir, "Anbar seç"-də qiymət əl ilə yazılır);
   - müqayisə hesabatı: əvvəlki siyahıya görə yeni gələn, çıxan, qiyməti dəyişən; saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir;
   - digər anbarların faylları ilə sınamaq (indiyə qədər yalnız bir anbarın 1C çıxarışı ilə yoxlanıb: 1677 sətirdən 834-ü avtomatik bağlandı);
   - brend adlarını rəsmi yazılışa gətirmək: "Van Cleef &amp; Arpels" (HTML kodu qalıb), "Victorias Secret", "Tiffany Co", "Viktor Rolf", "BOND No9", "Mont Blanc".
-- [ ] **Sorğusuz birbaşa təminat.** Operator ətirin hansı anbarda neçəyə olduğunu artıq bilirsə
-  (məs. telefonla dəqiqləşdirib: X ətirini yalnız Aksin satır, 100 ₼), anbara sorğu göndərmədən
-  anbarı seçir, qiyməti yazır və miqdarı birbaşa həmin anbara bağlayır.
-  Anbara SMS/link getmir. Tarixçədə operator, mənbə (telefon / WhatsApp / digər) və vaxt qalır.
 - [ ] **Qeyri-müəyyən bank əməliyyatlarının uzlaşdırılması:** kimin ödədiyi bilinməyən köçürməni sifarişə bağlamaq.
 
 ## 2. Sayt — səbət və push bildirişləri
@@ -167,3 +163,5 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Price list: sətir bizim varianta (məhsul + ölçü) bağlanır; avtomatik yalnız tək namizəd olanda (brend + ad + növ + tester + həcm, cins yalnız
   seçim üçün). Operatorun seçimi anbar üzrə, brend bağlantısı bütün anbarlar üçün yadda qalır. Qiymət alış qiymətidir, 2 onluğa yuvarlaqlaşdırılır.
   Siyahıdakı qiymət stok təsdiqi deyil — sifarişdə siyahının tarixi ilə göstərilir.
+- CRM sifarişinin Proses tabı: məhsul adı "brend ad ölçü növ cins" formatında; "Yeni sorğu", "Price listlər" (aşağıdan açılan panel, yalnız × ilə bağlanır)
+  və "Anbar seç" (sorğusuz: operator anbarı və qiyməti bilir — sorğu və "var" cavabı birdən yazılır, SMS getmir, sonra "Seç").

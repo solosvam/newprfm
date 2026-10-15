@@ -137,6 +137,23 @@ class ProcurementController extends Controller
         return back()->with('success', trim('Sorğular qeydə alındı. '.WarehouseNotifier::summary($results)));
     }
 
+    /** "Anbar seç": sorğu göndərmədən anbarın cavabını (var, qiymət) birbaşa yazmaq — ProcurementService::recordDirect */
+    public function recordDirect(Request $request, Order $order, ProcurementService $service)
+    {
+        $data = $request->validate([
+            'item_id' => ['required', 'integer'],
+            'prices' => ['required', 'array', 'min:1', 'max:100'],
+            'prices.*' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999.99'],
+        ], [
+            'prices.required' => 'Ən azı bir anbar seçin və qiymətini yazın.',
+            'prices.*.required' => 'Seçilən anbarın qiymətini yazın.',
+            'prices.*.min' => 'Qiymət 0-dan böyük olmalıdır.',
+        ]);
+        $offers = $service->recordDirect($order, (int) $data['item_id'], array_map('strval', $data['prices']), (int) auth('admin')->id());
+
+        return back()->with('success', $offers->count().' anbarın cavabı qeyd olundu (sorğu göndərilmədi). İndi "Seç" ilə anbarı seçə bilərsiniz.');
+    }
+
     public function recordOffer(Request $request, Order $order, int $requestItem, ProcurementService $service)
     {
         $data = $request->validate([

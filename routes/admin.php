@@ -138,6 +138,7 @@ Route::prefix('admin')
                     Route::get('/orders/{order}', 'show')->name('show');
                     Route::post('/orders/{order}/requests', 'createRequests')->name('requests.store');
                     Route::post('/orders/{order}/responses/{requestItem}', 'recordOffer')->name('offers.store');
+                    Route::post('/orders/{order}/direct', 'recordDirect')->name('offers.direct');
                     Route::post('/orders/{order}/allocations', 'allocate')->name('allocations.store');
                     Route::post('/orders/{order}/allocations/{allocation}/cancel', 'cancelAllocation')->name('allocations.cancel');
                     Route::post('/orders/{order}/allocations/{allocation}/status', 'transitionAllocation')->name('allocations.status');

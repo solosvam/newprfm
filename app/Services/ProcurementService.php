@@ -37,9 +37,9 @@ class ProcurementService
     }
 
     /** @return \Illuminate\Support\Collection<int, WarehouseRequest> yaradılan sorğular (SMS üçün) */
-    public function createRequests(Order $order, array $warehouseIds, array $itemIds, int $actor): \Illuminate\Support\Collection
+    public function createRequests(Order $order, array $warehouseIds, array $itemIds, int $actor, bool $direct = false): \Illuminate\Support\Collection
     {
-        return DB::transaction(function () use ($order, $warehouseIds, $itemIds, $actor) {
+        return DB::transaction(function () use ($order, $warehouseIds, $itemIds, $actor, $direct) {
             $this->lockOrder($order);
             $warehouseIds = array_unique($warehouseIds);
             $itemIds = array_unique($itemIds);
@@ -52,7 +52,7 @@ class ProcurementService
             foreach ($warehouses as $warehouse) {
                 $request = WarehouseRequest::create([
                     'order_id' => $order->id, 'warehouse_id' => $warehouse->id, 'created_by' => $actor,
-                ]);
+                ] + ($direct ? ['direct' => true] : [])); // sütunun standart dəyəri false
                 foreach ($items as $item) {
                     $request->items()->create(['order_item_id' => $item->id, 'requested_quantity' => $item->activeQuantity()]);
                 }
@@ -61,6 +61,32 @@ class ProcurementService
             app(OrderStatusService::class)->syncSupply($order, $actor);
 
             return $created;
+        });
+    }
+
+    /**
+     * "Anbar seç": operator ətirin hansı anbarda neçəyə olduğunu artıq bilir. Hər seçilən anbar üçün sorğu və cavab birdən yazılır
+     * (sorğu "direct" — SMS getmir, cavab gözlənilmir): anbar tələb olunan miqdarın hamısını həmin qiymətə verir.
+     * Anbarın özü bundan sonra "Seç" ilə seçilir — adi cavab kimi.
+     *
+     * @param  array<int, string|float>  $prices  warehouse_id => 1 ədədin alış qiyməti
+     * @return \Illuminate\Support\Collection<int, WarehouseOffer>
+     */
+    public function recordDirect(Order $order, int $itemId, array $prices, int $actor): \Illuminate\Support\Collection
+    {
+        return DB::transaction(function () use ($order, $itemId, $prices, $actor) {
+            $this->ensure($prices !== [], 'Ən azı bir anbar seçin.');
+            $requests = $this->createRequests($order, array_keys($prices), [$itemId], $actor, true);
+
+            return $requests->map(function (WarehouseRequest $request) use ($order, $prices, $actor) {
+                $requestItem = $request->items()->firstOrFail();
+
+                return $this->recordOffer($order, $requestItem->id, [
+                    'available_quantity' => $requestItem->requested_quantity,
+                    'unit_cost' => $prices[$request->warehouse_id],
+                    'source' => 'direct',
+                ], $actor);
+            });
         });
     }
 

@@ -14,9 +14,15 @@
     $smsLogs = app(\App\Services\WarehouseNotifier::class)->lastLogs($requests->pluck('id'), $order->items->flatMap->allocations->pluck('id'));
     // Mənbə: cavabı kim daxil edib — operator (hansı yolla) və ya anbar özü (link ilə).
     // WhatsApp / Telegram artıq seçilmir (ləğv olunub) — adları yalnız köhnə cavabların tarixçəsi üçün qalır
-    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Operator - Telegram', 'manual' => 'Operator - Digər', 'link' => 'Anbar - link'];
+    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Operator - Telegram', 'manual' => 'Operator - Digər', 'direct' => 'Operator - Birbaşa (sorğusuz)', 'link' => 'Anbar - link'];
     $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul');
     $itemSize = fn ($item) => $item?->variant?->size?->name_az;
+    // Tam ad: brend, ad, ölçü, növ, cins — "Antonio Banderas The Secret Absolu 100 ml Eau De Parfum Kişi üçün"
+    $order->loadMissing(['items.product.brand', 'items.product.type', 'items.product.genders', 'items.variant.size']);
+    $productLabel = fn ($product, $size) => $product
+        ? collect([html_entity_decode((string) $product->brand?->name), $product->name, $size, $product->type?->name_az, $product->genders->pluck('name_az')->implode(', ')])->filter()->implode(' ')
+        : 'Silinmiş məhsul';
+    $itemLabel = fn ($item) => $productLabel($item?->product, $itemSize($item));
     // order_item_id => [sorğu sətri + onun sorğusu]
     $requestRows = $requests->flatMap(fn ($req) => $req->items->map(fn ($ri) => ['req' => $req, 'ri' => $ri]))->groupBy(fn ($row) => $row['ri']->order_item_id);
 @endphp
@@ -28,12 +34,18 @@
     $itemsById = $order->items->keyBy('id');
     // CRM sifariş səhifəsində məhsulun "⋯" menyusunda ləğv əməliyyatları da olur
     $crm = isset($customer);
-    $smsProblems = $requests->filter(fn ($r) => !$r->warehouse->phone || !($smsLogs['request'][$r->id] ?? null)?->isSent())->count();
-    // Anbarların cari price listlərində bu sifarişin variantları: variant id => sətirlər (ucuzdan bahaya)
-    $listPrices = \App\Models\PriceList\WarehousePriceItem::with(['warehouse:id,name_az', 'priceList:id,created_at'])
+    // "Anbar seç" ilə yazılan sorğular (direct) SMS-siz olur — xəta sayılmır
+    $smsProblems = $requests->reject->direct->filter(fn ($r) => !$r->warehouse->phone || !($smsLogs['request'][$r->id] ?? null)?->isSent())->count();
+    // Anbarların cari price listlərində bu sifarişin məhsulları (ucuzdan bahaya) — "Price listlər" paneli
+    $openItems = $order->items->filter(fn ($item) => $item->activeQuantity() > 0 && $item->product_variant_id);
+    $priceRows = \App\Models\PriceList\WarehousePriceItem::with(['warehouse', 'priceList:id,created_at'])
         ->whereIn('price_list_id', \App\Models\PriceList\WarehousePriceList::currentIds())
-        ->whereIn('product_variant_id', $order->items->pluck('product_variant_id')->filter()->unique()->all() ?: [0])
-        ->orderBy('price')->get()->groupBy('product_variant_id');
+        ->whereIn('product_variant_id', $openItems->pluck('product_variant_id')->unique()->all() ?: [0])
+        ->get()
+        // Məhsul-məhsul (sifarişdəki sıra ilə), hər məhsulun içində ucuzdan bahaya
+        ->sortBy(fn ($row) => [$openItems->values()->search(fn ($item) => $item->product_variant_id == $row->product_variant_id), (float) $row->price])->values();
+    // Artıq sorğu göndərilmiş "anbar + məhsul" cütləri — təkrar sorğu düyməsi göstərilmir
+    $requested = $requests->flatMap(fn ($req) => $req->items->map(fn ($ri) => $req->warehouse_id.':'.$ri->order_item_id))->flip();
     $phoneError = fn ($log) => $log && !$log->isSent() && \Illuminate\Support\Str::contains(mb_strtolower((string) $log->error), 'nömrə');
 @endphp
 
@@ -44,9 +56,17 @@
         @else Anbar seçimi rezervasiya təsdiqi deyil. Müştərinin satış qiyməti dəyişmir. @endif
     </div>
     @if($editable)
-        <button type="button" class="btn btn-primary btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#procRequestModal" @disabled($warehouses->isEmpty())>
-            <i data-acorn-icon="plus" data-acorn-size="16"></i><span>Yeni sorğu</span>
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-primary btn-icon btn-icon-start" data-bs-toggle="modal" data-bs-target="#procRequestModal" @disabled($warehouses->isEmpty())>
+                <i data-acorn-icon="plus" data-acorn-size="16"></i><span>Yeni sorğu</span>
+            </button>
+            {{-- Anbarların price listlərində bu sifarişin məhsulları — aşağıdan açılan panel; say — tapılan sətirlər --}}
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="offcanvas" data-bs-target="#procPriceLists" aria-controls="procPriceLists">
+                Price listlər @if($priceRows->isNotEmpty())<span class="badge bg-primary ms-1">{{ $priceRows->count() }}</span>@endif
+            </button>
+            {{-- Ətirin anbarda olduğu və qiyməti artıq bilinir: sorğusuz, cavab birbaşa yazılır --}}
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#procDirectModal" @disabled($warehouses->isEmpty())>Anbar seç</button>
+        </div>
     @endif
 </div>
 
@@ -98,7 +118,7 @@
                      aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="procItem{{ $item->id }}">
                     <div class="card-body py-3">
                         <div class="list-item-heading justify-content-between d-flex flex-wrap align-items-center gap-2">
-                            <span>{{ $itemName($item) }}@if($itemSize($item))<span class="text-muted fw-normal"> · {{ $itemSize($item) }}</span>@endif</span>
+                            <span>{{ $itemLabel($item) }}</span>
                             {{-- Xülasə: məhsul hansı vəziyyətdədir (kart yığılı olanda da görünür) --}}
                             <span class="text-alternate fw-normal">
                                 @if($group === 'selected')
@@ -146,14 +166,6 @@
                                 @else ən ucuz alış {{ number_format((float) $cheapest, 2) }} AZN @endif
                                 — {{ $margin < 0 ? 'zərərlədir' : 'qazanc yoxdur' }}.
                                 @if($editable) Anbarla qiyməti danışın və ya başqa anbardan soruşun. @endif
-                            </div>
-                        @endif
-                        {{-- Price listlərdəki qiymət: stok təsdiqi deyil (siyahı həftəlikdir) — ona görə siyahının tarixi də yazılır --}}
-                        @if(($listed = $listPrices[$item->product_variant_id] ?? collect())->isNotEmpty())
-                            <div class="text-muted text-small">Price listdə:
-                                @foreach($listed as $row)
-                                    <span class="text-nowrap">{{ $row->warehouse?->name_az }} <strong class="text-body">{{ number_format((float) $row->price, 2) }} AZN</strong> <span title="Siyahının yükləndiyi tarix">({{ $row->priceList?->created_at?->format('d.m') }})</span></span>@if(!$loop->last) · @endif
-                                @endforeach
                             </div>
                         @endif
                         @if($crm)
@@ -253,22 +265,6 @@
     </div>
 @endforeach
 
-{{-- Price listlərdə axtarış: bütün anbarların cari siyahısında mətnlə (Excel-də Ctrl+F-in əvəzi). procurement-order.js --}}
-<div class="card d-flex mb-2">
-    <div class="d-flex flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#procLists" aria-expanded="false" aria-controls="procLists">
-        <div class="card-body py-3">
-            <div class="list-item-heading">Price listlərdə axtar</div>
-            <div class="text-muted text-small">Anbarların yüklənmiş qiymət siyahılarında ad ilə axtarış</div>
-        </div>
-    </div>
-    <div id="procLists" class="collapse" data-remember-collapse="proc-lists">
-        <div class="card-body accordion-content pt-0">
-            <input type="search" class="form-control" placeholder="Məs.: eros edp 100" data-list-search="{{ route('admin.price-lists.search') }}" aria-label="Price listlərdə axtar">
-            <div class="mt-3" data-list-results><p class="text-muted mb-0">Ən azı 2 hərf yazın. Sözlərin sırası vacib deyil.</p></div>
-        </div>
-    </div>
-</div>
-
 {{-- Sorğular və anbar SMS-ləri: ikinci dərəcəli — yığılmış açılır, operatorun seçimi yadda qalır (procurement-order.js) --}}
 @if($requests->isNotEmpty())
     <div class="card d-flex mb-2">
@@ -296,15 +292,17 @@
                             <td>{{ $req->items->map(fn ($ri) => $itemName($ri->orderItem).' ×'.$ri->requested_quantity)->implode(', ') }}</td>
                             <td>{{ $req->created_at->format('d.m.Y H:i') }}@if($who($req->created_by))<span class="proc-sub">{{ $who($req->created_by) }}</span>@endif</td>
                             <td><span class="badge {{ $answered === $req->items->count() ? 'bg-outline-success' : 'bg-outline-warning' }}">{{ $answered }}/{{ $req->items->count() }}</span></td>
-                            <td class="{{ $log?->isSent() ? 'text-success' : ($log || !$req->warehouse->phone ? 'text-danger' : 'text-muted') }}">
-                                @if(!$req->warehouse->phone) Telefon yazılmayıb
+                            <td class="{{ $req->direct ? 'text-muted' : ($log?->isSent() ? 'text-success' : ($log || !$req->warehouse->phone ? 'text-danger' : 'text-muted')) }}">
+                                @if($req->direct) Sorğusuz — "Anbar seç"
+                                @elseif(!$req->warehouse->phone) Telefon yazılmayıb
                                 @elseif(!$log) Göndərilməyib
                                 @elseif($log->isSent()) ✓ SMS {{ $log->created_at->format('d.m H:i') }}
                                 @else ✕ {{ $log->error }} @endif
                             </td>
                             <td class="text-end">
                                 <div class="proc-actions">
-                                    @if($editable && (!$req->warehouse->phone || $phoneError($log)))
+                                    @if($req->direct)
+                                    @elseif($editable && (!$req->warehouse->phone || $phoneError($log)))
                                         <a class="btn btn-sm btn-primary text-nowrap" href="{{ route('admin.procurement.warehouses.edit', $req->warehouse) }}">Nömrəni düzəlt</a>
                                     @elseif($editable && $req->warehouse->phone)
                                         <form method="POST" action="{{ route('admin.procurement.requests.sms', [$order, $req->id]) }}" data-once>@csrf
@@ -324,6 +322,102 @@
 @endif
 
 @if($editable)
+    {{-- Price listlər: bu sifarişin məhsulları anbarların cari siyahılarında (Acorn "Offcanvas bottom").
+         Arxa fon yoxdur, Esc və kənara klik bağlamır — yalnız ×; açıq olanda səhifəni sürüşdürmək olur. --}}
+    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="procPriceLists" aria-labelledby="procPriceListsTitle"
+         data-bs-backdrop="false" data-bs-keyboard="false" data-bs-scroll="true" style="height: 55vh">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="procPriceListsTitle">Price listlər — bu sifarişin məhsulları</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Bağla"></button>
+        </div>
+        <div class="offcanvas-body pt-0">
+            @if($priceRows->isEmpty())
+                <p class="text-muted mb-0">Anbarların price listlərində bu sifarişin məhsulları tapılmadı. Price list yüklənməyib və ya məhsul uyğunlaşdırılmayıb (Satışlar → Price listlər).</p>
+            @else
+                <div class="table-responsive"><table class="table align-middle mb-0">
+                    <thead><tr>
+                        <th class="text-muted text-small text-uppercase">№</th>
+                        <th class="text-muted text-small text-uppercase">Anbar</th>
+                        <th class="text-muted text-small text-uppercase">Məhsul</th>
+                        <th class="text-muted text-small text-uppercase text-end">Qiymət</th>
+                        <th class="text-muted text-small text-uppercase">Price list tarixi</th>
+                        <th class="text-muted text-small text-uppercase text-end">Əməliyyat</th>
+                    </tr></thead>
+                    <tbody>
+                    @foreach($priceRows as $row)
+                        @php
+                            $rowItems = $openItems->where('product_variant_id', $row->product_variant_id);
+                            $pending = $rowItems->reject(fn ($oi) => $requested->has($row->warehouse_id.':'.$oi->id));
+                        @endphp
+                        <tr>
+                            <td class="text-muted">{{ $loop->iteration }}</td>
+                            <td>{{ $row->warehouse?->name_az }}@unless($row->warehouse?->active)<div class="text-danger text-small">anbar deaktivdir</div>@endunless</td>
+                            <td>{{ $itemLabel($rowItems->first()) }}<div class="text-muted text-small">Price listdə: {{ $row->raw_name }}</div></td>
+                            <td class="text-end text-nowrap">{{ number_format((float) $row->price, 2) }} AZN</td>
+                            <td class="text-nowrap">{{ $row->priceList?->created_at?->format('d.m.Y') }}
+                                @if($row->priceList?->created_at?->lt(now()->subDays(14)))<span class="badge bg-outline-warning ms-1">köhnəlib</span>@endif
+                            </td>
+                            <td class="text-end">
+                                @if($pending->isEmpty())
+                                    <span class="text-muted text-small text-nowrap">Sorğu göndərilib</span>
+                                @elseif($row->warehouse?->active)
+                                    <form method="POST" action="{{ route('admin.procurement.requests.store', $order) }}" data-once>
+                                        @csrf
+                                        <input type="hidden" name="warehouse_ids[]" value="{{ $row->warehouse_id }}">
+                                        @foreach($pending as $oi)<input type="hidden" name="item_ids[]" value="{{ $oi->id }}">@endforeach
+                                        <button class="btn btn-sm btn-primary text-nowrap">Sorğu göndər</button>
+                                    </form>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table></div>
+                <div class="form-text mt-2">Price listdəki qiymət həftəlik siyahıdandır, stok təsdiqi deyil. Ətirin olduğunu bilirsinizsə, "Anbar seç" ilə sorğusuz qeyd edin.</div>
+            @endif
+        </div>
+    </div>
+
+    {{-- Anbar seç: ətir və qiymət artıq bilinir — sorğu getmir, seçilən anbarların cavabı birbaşa yazılır (sonra "Seç") --}}
+    <div class="modal modal-right fade" id="procDirectModal" tabindex="-1" aria-labelledby="procDirectTitle" aria-hidden="true">
+        <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.procurement.offers.direct', $order) }}" data-direct-form>
+            @csrf
+            <div class="modal-header"><h5 class="modal-title" id="procDirectTitle">Anbar seç</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+            <div class="modal-body">
+                <p class="text-muted small">Ətirin seçdiyiniz anbarda olduğunu və qiymətini bilirsinizsə: sorğu göndərilmir, cavab gözlənilmir — anbar "var" cavabı vermiş kimi qeyd olunur. Sonra məhsulun kartında "Seç" ilə anbarı seçin.</p>
+                <div class="mb-4">
+                    <div class="form-label fw-bold">Ətir</div>
+                    @foreach($order->items->filter(fn ($i) => $i->activeQuantity() > 0) as $item)
+                        <label class="form-check">
+                            <input class="form-check-input" type="radio" name="item_id" value="{{ $item->id }}" @checked($loop->first) required>
+                            <span class="form-check-label">{{ $itemLabel($item) }} × {{ $item->activeQuantity() }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <div>
+                    <div class="form-label fw-bold">Anbar və 1 ədədin alış qiyməti</div>
+                    @foreach($warehouses as $warehouse)
+                        <div class="row g-2 align-items-center mb-2">
+                            <div class="col-7">
+                                <label class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" data-direct-warehouse="{{ $warehouse->id }}">
+                                    <span class="form-check-label">{{ $warehouse->name_az }}</span>
+                                </label>
+                            </div>
+                            <div class="col-5">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="0.01" min="0.01" class="form-control" name="prices[{{ $warehouse->id }}]" data-direct-price="{{ $warehouse->id }}" disabled aria-label="{{ $warehouse->name_az }} — qiymət">
+                                    <span class="input-group-text">AZN</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Təsdiqlə</button></div>
+        </form></div>
+    </div>
+
     {{-- Yeni sorğu: seçilən məhsullar hər seçilən anbara ayrıca sorğu kimi gedir --}}
     <div class="modal modal-right fade" id="procRequestModal" tabindex="-1" aria-labelledby="procRequestTitle" aria-hidden="true">
         <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.procurement.requests.store', $order) }}">

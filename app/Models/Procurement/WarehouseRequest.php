@@ -8,6 +8,11 @@ class WarehouseRequest extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return ['direct' => 'boolean'];
+    }
+
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class);
