@@ -13,6 +13,7 @@ use App\Models\Order\OrderStatus;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
+use App\Services\BonusService;
 use App\Services\CartService;
 use App\Services\Payment\Birbank;
 use App\Services\PromoCodeService;
@@ -225,7 +226,7 @@ class CheckoutController extends Controller
 
             // Sifarişin yaradılması
             $order = Order ::create([
-                'bonus_percent' => app(\App\Services\BonusService::class)->currentPercent(), // sifariş anındakı faiz sabitlənir
+                'bonus_percent' => app(BonusService::class)->currentPercent(), // sifariş anındakı faiz sabitlənir
                 'order_no' => $orderNo,
                 'customer_id' => $customer -> id,
                 'customer_address_id' => $address -> id,
@@ -304,8 +305,6 @@ class CheckoutController extends Controller
             return response()->json([
                 'ok' => true, 'order_no' => $order->order_no,
                 'redirect' => $redirect,
-                // The order and its items are already saved, including for card payments.
-                // A failed card payment can be retried from the existing order.
                 'clear_cart' => true,
                 'cart' => [],
             ]);

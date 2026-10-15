@@ -184,6 +184,27 @@ class ProcurementTest extends TestCase
         $this->get(route('admin.procurement.warehouses.edit', Warehouse::first()))->assertOk()->assertSee('Anbar A');
     }
 
+    public function test_warehouse_telegram_id_is_optional_numeric_and_shown_in_the_list(): void
+    {
+        $user = new User(['name' => 'Operator']);
+        $user->id = 7;
+        Gate::before(fn () => true);
+        $this->actingAs($user, 'admin');
+
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar T', 'telegram_id' => '-1001234567890', 'active' => 1])->assertSessionHasNoErrors();
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar Boş', 'active' => 1])->assertSessionHasNoErrors();
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar X', 'telegram_id' => '@anbar', 'active' => 1])->assertSessionHasErrors('telegram_id');
+
+        $warehouse = Warehouse::where('name_az', 'Anbar T')->sole();
+        $this->assertSame('-1001234567890', $warehouse->telegram_id);
+        $this->assertNull(Warehouse::where('name_az', 'Anbar Boş')->value('telegram_id'));
+        $this->get(route('admin.procurement.warehouses'))->assertOk()->assertSee('Telegram ID')->assertSee('-1001234567890');
+
+        $this->put(route('admin.procurement.warehouses.update', $warehouse), ['name_az' => 'Anbar T', 'telegram_id' => '987654321', 'active' => 1])->assertSessionHasNoErrors();
+        $this->assertSame('987654321', $warehouse->fresh()->telegram_id);
+        $this->get(route('admin.procurement.warehouses.edit', $warehouse))->assertOk()->assertSee('value="987654321"', false);
+    }
+
     public function test_employee_without_crm_permission_cannot_access_or_write(): void
     {
         $user = new User(['name' => 'Kuryer']);

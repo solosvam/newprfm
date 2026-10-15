@@ -81,5 +81,6 @@ trait ProcurementSchema
         (require database_path('migrations/2026_09_30_100000_create_sms_logs_and_warehouse_sms.php'))->up();
         // Sifariş səhifəsi anbarların price listlərindəki qiymətləri də göstərir
         (require database_path('migrations/2026_10_11_100000_create_warehouse_price_lists.php'))->up();
+        (require database_path('migrations/2026_10_15_100000_add_telegram_id_to_warehouses.php'))->up();
     }
 }

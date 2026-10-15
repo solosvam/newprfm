@@ -3,6 +3,7 @@
     'name_az' => ['Anbarın adı', 150],
     'contact_name' => ['Əlaqəli şəxs', 150],
     'phone' => ['Telefon', 30],
+    'telegram_id' => ['Telegram ID', 21],
     'address' => ['Ünvan', 500],
 ] as $field => [$label, $maxlength])
     <div class="mb-3 {{ $horizontal ? 'row' : '' }}">
@@ -11,7 +12,7 @@
             <input type="text" id="warehouse_{{ $field }}" name="{{ $field }}"
                    class="form-control @error($field) is-invalid @enderror"
                    value="{{ old($field, $warehouse?->{$field}) }}" maxlength="{{ $maxlength }}"
-                   @required($field === 'name_az')>
+                   @required($field === 'name_az') @if($field === 'telegram_id') inputmode="numeric" placeholder="İstəyə bağlı, məs. 123456789" @endif>
             @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
     </div>

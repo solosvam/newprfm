@@ -48,9 +48,11 @@ class ProcurementController extends Controller
             'name_az' => ['required', 'string', 'max:150'],
             'contact_name' => ['nullable', 'string', 'max:150'],
             'phone' => ['nullable', 'string', 'max:30'],
+            // Telegram çat id-si: rəqəm, qrupda mənfi (-1001234567890)
+            'telegram_id' => ['nullable', 'regex:/^-?\d{1,20}$/'],
             'address' => ['nullable', 'string', 'max:500'],
             'active' => ['required', 'boolean'],
-        ]);
+        ], ['telegram_id.regex' => 'Telegram ID yalnız rəqəmlərdən ibarət olmalıdır (qrupda əvvəlində "-" ola bilər).']);
 
         return $data;
     }
