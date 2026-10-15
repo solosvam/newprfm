@@ -229,7 +229,7 @@ class TelegramWarehouseBot
     {
         $sent = $this->api->call('sendMessage', [
             'chat_id' => $message->chat_id, 'text' => $question, 'reply_to_message_id' => $message->message_id,
-            'reply_markup' => ['force_reply' => true, 'input_field_placeholder' => $state === TelegramMessage::AWAIT_PRICE ? '95.50' : '1'],
+            'reply_markup' => ['force_reply' => true, 'input_field_placeholder' => $state === TelegramMessage::AWAIT_PRICE ? 'Sadəcə rəqəm yazın' : '1'],
         ]);
         $message->update(['state' => $state] + ($quantity !== null ? ['quantity' => $quantity] : []));
         TelegramMessage::create(['chat_id' => $message->chat_id, 'message_id' => (int) $sent['message_id'], 'kind' => TelegramMessage::PROMPT,
