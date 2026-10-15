@@ -555,8 +555,9 @@
         const maxInput = slider.querySelector('[data-price-max-range]');
         const rangeEl = slider.querySelector('[data-price-range]');
         const wrapper = slider.parentElement;
-        const minLabel = wrapper.querySelector('[data-price-min-label]');
-        const maxLabel = wrapper.querySelector('[data-price-max-label]');
+        // Əl ilə yazılan qiymət xanaları (sürgü ilə sinxron)
+        const minNumber = wrapper.querySelector('[data-price-min-number]');
+        const maxNumber = wrapper.querySelector('[data-price-max-number]');
         const minHidden = wrapper.querySelector('[data-price-min-hidden]');
         const maxHidden = wrapper.querySelector('[data-price-max-hidden]');
 
@@ -584,14 +585,42 @@
             rangeEl.style.left = minPercent + '%';
             rangeEl.style.right = (100 - maxPercent) + '%';
 
-            minLabel.textContent = minVal.toFixed(2) + ' ₼';
-            maxLabel.textContent = maxVal.toFixed(2) + ' ₼';
+            // Yazılan xana hələ redaktə olunursa, üstünə yazılmasın
+            if (document.activeElement !== minNumber) minNumber.value = priceText(minVal);
+            if (document.activeElement !== maxNumber) maxNumber.value = priceText(maxVal);
             minHidden.value = minVal;
             maxHidden.value = maxVal;
         }
 
+        // Dar sütuna sığsın: tam qiymət onluqsuz ("1698"), qəpikli — iki onluqla ("100.50")
+        function priceText(value) {
+            return Number.isInteger(Math.round(value * 100) / 100) ? String(Math.round(value)) : value.toFixed(2);
+        }
+
+        // Yazılan rəqəm: vergül də olar; aralıqdan kənardırsa həddə çəkilir, min > max olsa yerləri dəyişmir — o biri ona uyğunlaşır
+        function fromNumber(input) {
+            const isMin = input === minNumber;
+            let value = parseFloat(String(input.value).replace(',', '.').replace(/[^\d.]/g, ''));
+            if (Number.isNaN(value)) value = isMin ? min : max;
+            value = Math.min(max, Math.max(min, value));
+            if (isMin) {
+                minInput.value = value;
+                if (value > parseFloat(maxInput.value)) maxInput.value = value;
+            } else {
+                maxInput.value = value;
+                if (value < parseFloat(minInput.value)) minInput.value = value;
+            }
+            input.value = priceText(value);
+            update();
+        }
+
         minInput.addEventListener('input', update);
         maxInput.addEventListener('input', update);
+        [minNumber, maxNumber].forEach(function (input) {
+            input.addEventListener('change', function () { fromNumber(input); });
+            // Enter — əvvəl dəyər tətbiq olunur, sonra forma (filtr) göndərilir
+            input.addEventListener('keydown', function (e) { if (e.key === 'Enter') fromNumber(input); });
+        });
         update();
     });
 

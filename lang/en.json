@@ -853,5 +853,7 @@
     "advisor_speech": "Answer a few questions and I’ll pick the scents that suit your taste best from the hundreds in our catalog.",
     "orders_address_on_call": "The courier will call you to confirm the delivery location",
     "orders_meeting_place": "Meeting place:",
-    "checkout_credit_period": "Term"
+    "checkout_credit_period": "Term",
+    "catalog_price_from": "Minimum price",
+    "catalog_price_to": "Maximum price"
 }

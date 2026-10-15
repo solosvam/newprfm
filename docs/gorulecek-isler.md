@@ -50,8 +50,6 @@ Son yenilənmə: 10 oktyabr 2026.
   Push üçün müştərini abunəsinə bağlamaq lazımdır (`push_subscriptions` hələ yoxdur — yuxarıdakı push bəndi ilə əlaqəli).
 - [ ] **Tester ətirlərin adı.** Saytda şəklin sol yuxarı küncündə 45° "Tester" lenti 15 oktyabrda edildi (Tester kateqoriyası və ya adda "tester").
   Qalan: adına "Tester" avtomatik əlavə olunsunmu — onda köhnə adlardakı "Tester" / "TESTER" / "L EDP Tester" yazılışları təmizlənməlidir.
-- [ ] **Saytda filtrdə qiymət əl ilə də yazıla bilsin.** Qiymət aralığı indi yalnız sürgü (slider) ilə seçilir;
-  sürgü ilə yanaşı "min" və "max" rəqəm xanaları olsun, ikisi bir-biri ilə sinxron işləsin.
 - [ ] **Email abunəliyi (yeniliklərdən xəbərdar olmaq):**
   - qonaqlar saytda email yazıb abunə olur;
   - yazılan email köhnə (mövcud) müştəriyə aiddirsə, həmin müştəri avtomatik abunə sayılır;

@@ -26,9 +26,19 @@
                        value="{{ $selectedMax }}" data-price-max-range>
             </div>
 
+            {{-- Qiyməti əl ilə də yazmaq olur: xanalar sürgü ilə sinxrondur (main.js → [data-price-slider]) --}}
             <div class="price-slider__values">
-                <span data-price-min-label>{{ number_format($selectedMin, 2) }} ₼</span>
-                <span data-price-max-label>{{ number_format($selectedMax, 2) }} ₼</span>
+                <label class="price-slider__field">
+                    <input type="text" inputmode="decimal" class="price-slider__number" value="{{ fmod($selectedMin, 1) == 0 ? (int) $selectedMin : number_format($selectedMin, 2, '.', '') }}"
+                           data-price-min-number aria-label="{{ __('catalog_price_from') }}">
+                    <span>₼</span>
+                </label>
+                <span class="price-slider__dash" aria-hidden="true">—</span>
+                <label class="price-slider__field">
+                    <input type="text" inputmode="decimal" class="price-slider__number" value="{{ fmod($selectedMax, 1) == 0 ? (int) $selectedMax : number_format($selectedMax, 2, '.', '') }}"
+                           data-price-max-number aria-label="{{ __('catalog_price_to') }}">
+                    <span>₼</span>
+                </label>
             </div>
 
             <input type="hidden" name="min_price" value="{{ $selectedMin }}" data-price-min-hidden>

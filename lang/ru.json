@@ -853,5 +853,7 @@
     "advisor_speech": "Ответьте на несколько вопросов — и я сам подберу из сотен ароматов нашего каталога те, что лучше всего подойдут именно вам.",
     "orders_address_on_call": "Курьер свяжется с вами, чтобы уточнить место доставки",
     "orders_meeting_place": "Место встречи:",
-    "checkout_credit_period": "Срок"
+    "checkout_credit_period": "Срок",
+    "catalog_price_from": "Минимальная цена",
+    "catalog_price_to": "Максимальная цена"
 }

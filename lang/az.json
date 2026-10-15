@@ -815,5 +815,7 @@
     "advisor_speech": "Mənə bir neçə sualın cavabını deyin — kataloqumuzdakı yüzlərlə ətir arasından sizin zövqünüzə ən uyğun olanları özüm seçəcəyəm.",
     "orders_address_on_call": "Ünvan kuryer sizinlə əlaqə saxlayanda dəqiqləşdiriləcək",
     "orders_meeting_place": "Görüş yeri:",
-    "checkout_credit_period": "Müddət"
+    "checkout_credit_period": "Müddət",
+    "catalog_price_from": "Minimum qiymət",
+    "catalog_price_to": "Maksimum qiymət"
 }

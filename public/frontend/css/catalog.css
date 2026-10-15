@@ -165,7 +165,14 @@
 }
 .price-slider__input::-webkit-slider-runnable-track { background: none; }
 .price-slider__input::-moz-range-track { background: none; }
-.price-slider__values { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.price-slider__values { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); margin: 8px 0 6px; }
+.price-slider__field {
+    flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 6px 8px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: text;
+}
+.price-slider__field:focus-within { border-color: var(--accent); }
+.price-slider__number { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; padding: 0; }
+.price-slider__dash { color: var(--muted, #888); font-weight: 400; }
 
 /* Collapsible side panels (mobile) */
 .side-panel__toggle {
