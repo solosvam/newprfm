@@ -87,7 +87,7 @@
                            id="datatableHover" data-page-length="20">
                         <thead>
                         <tr>
-                            @foreach(['#', 'Anbar', 'Əlaqəli şəxs', 'Telefon', 'Telegram ID', 'Sorğu tipi', 'Ünvan', 'Aktiv', 'Əməliyyat'] as $heading)
+                            @foreach(['#', 'Anbar', 'Əlaqəli şəxs', 'Telefon', 'Telegram ID', 'Sorğu tipi', 'Borcumuz', 'Ünvan', 'Aktiv', 'Əməliyyat'] as $heading)
                                 <th class="text-muted text-small text-uppercase">{{ $heading }}</th>
                             @endforeach
                         </tr>
@@ -101,6 +101,15 @@
                                 <td class="text-alternate">{{ $warehouse->phone ?: '—' }}</td>
                                 <td class="text-alternate">{{ $warehouse->telegram_id ?: '—' }}</td>
                                 <td class="text-alternate">{{ \App\Models\Procurement\Warehouse::CHANNELS[$warehouse->request_channel] ?? 'SMS' }}</td>
+                                @php $debt = $debts[$warehouse->id] ?? 0; @endphp
+                                {{-- Borc varsa göstərilir (Kassada anbarın səhifəsinə keçid), avans — yaşıl, yoxdursa boş --}}
+                                <td class="text-nowrap" data-order="{{ $debt }}">
+                                    @if($debt !== 0)
+                                        <a href="{{ route('admin.finance.account', app(\App\Services\FinanceService::class)->warehouseAccount($warehouse)) }}" class="{{ $debt > 0 ? 'text-danger fw-bold' : 'text-success' }}">
+                                            {{ $debt < 0 ? 'avans ' : '' }}{{ number_format(abs($debt) / 100, 2) }} AZN
+                                        </a>
+                                    @endif
+                                </td>
                                 <td class="text-alternate">{{ $warehouse->address ?: '—' }}</td>
                                 <td class="text-alternate">{{ $warehouse->active ? 'Aktiv' : 'Deaktiv' }}</td>
                                 <td class="text-alternate">

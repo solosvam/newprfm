@@ -43,8 +43,10 @@ class FinanceController extends Controller
         $parts = collect();
         $payers = collect();
         $debt = null;
+        $byDay = null;
         if ($account->type === 'warehouse') {
             $debt = $finance->warehouseDebts()[$account->warehouse_id] ?? 0;
+            $byDay = $finance->warehouseDebtByDay($account->warehouse);
             $all = \App\Models\Procurement\OrderItemAllocation::with(['orderItem.order', 'orderItem.product', 'orderItem.variant.size'])
                 ->where('warehouse_id', $account->warehouse_id)->where('status', '!=', 'cancelled')->orderBy('id')->get();
             $paid = $finance->allocationPaid($all->pluck('id')->all());
@@ -56,7 +58,7 @@ class FinanceController extends Controller
         }
         $cash = $finance->system('cash');
 
-        return view('backend.finance.account', compact('account', 'balance', 'movements', 'parts', 'payers', 'debt', 'cash'));
+        return view('backend.finance.account', compact('account', 'balance', 'movements', 'parts', 'payers', 'debt', 'cash', 'byDay'));
     }
 
     public function store(Request $request, FinanceService $finance): RedirectResponse

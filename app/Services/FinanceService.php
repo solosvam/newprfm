@@ -72,6 +72,38 @@ class FinanceService
         ]);
     }
 
+    /**
+     * Anbara borcun günlərə bölgüsü: hər gün götürülən malın dəyəri, onun ödənilən hissəsi və ödənilməmiş qalığı
+     * ("2350-nin 350-si bu günə aiddir"). Gün — hissənin "Götürüldü" olduğu tarix. Sifarişə bağlanmayan ümumi ödənişlər
+     * (və anbarın qaytardığı pul) ayrıca qaytarılır: qalıqların cəmi − ümumi ödəniş = cari borc.
+     *
+     * @return array{days: list<array{date: \Illuminate\Support\Carbon, cost: int, paid: int, left: int, parts: int}>, unlinked: int}
+     */
+    public function warehouseDebtByDay(Warehouse $warehouse): array
+    {
+        $parts = OrderItemAllocation::where('warehouse_id', $warehouse->id)->whereIn('status', OrderItemAllocation::DEBT_STATUSES)->get();
+        $pickedAt = \App\Models\Procurement\AllocationStatusLog::whereIn('order_item_allocation_id', $parts->pluck('id'))
+            ->where('to_status', OrderItemAllocation::PICKED)->selectRaw('order_item_allocation_id, MAX(created_at) as at')
+            ->groupBy('order_item_allocation_id')->pluck('at', 'order_item_allocation_id');
+        $paid = $this->allocationPaid($parts->pluck('id')->all());
+
+        $days = $parts->groupBy(fn ($a) => \Illuminate\Support\Carbon::parse($pickedAt[$a->id] ?? $a->updated_at)->toDateString())
+            ->map(function ($group, $date) use ($paid) {
+                $cost = $group->sum(fn ($a) => (int) round($a->quantity * (float) $a->unit_cost * 100));
+                $done = $group->sum(fn ($a) => $paid[$a->id] ?? 0);
+
+                return ['date' => \Illuminate\Support\Carbon::parse($date), 'cost' => $cost, 'paid' => $done, 'left' => $cost - $done, 'parts' => $group->count()];
+            })->sortByDesc('date')->values()->all();
+
+        // Hissəyə bağlanmayan: anbara ümumi ödəniş (+) və anbarın qaytardığı (−)
+        $account = $this->warehouseAccount($warehouse);
+        $unlinked = MoneyMovement::whereNull('order_item_allocation_id')
+            ->where(fn ($q) => $q->where('to_account_id', $account->id)->orWhere('from_account_id', $account->id))->get()
+            ->sum(fn ($m) => ((int) $m->to_account_id === $account->id ? 1 : -1) * (int) round((float) $m->amount * 100));
+
+        return ['days' => $days, 'unlinked' => $unlinked];
+    }
+
     /** Hər təminat hissəsinə ödənilən (əks əməliyyatlar çıxılmış): allocation_id => cents */
     public function allocationPaid(array $allocationIds): Collection
     {

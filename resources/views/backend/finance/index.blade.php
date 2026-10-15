@@ -57,7 +57,10 @@
 
     {{-- Hesablar: kliklə → yalnız o hesabın hərəkətləri --}}
     @foreach($groups as $groupTitle => $types)
-        @php $groupAccounts = $accounts->whereIn('type', $types); @endphp
+        @php
+            // Anbarlar: yalnız haqq-hesabı açıq olanlar (borc və ya avans) — sıfır qalıqlı anbar kartı göstərilmir
+            $groupAccounts = $accounts->whereIn('type', $types)->reject(fn ($a) => $a->type === 'warehouse' && ($debts[$a->warehouse_id] ?? 0) === 0);
+        @endphp
         @continue($groupAccounts->isEmpty())
         <h2 class="small-title">{{ $groupTitle }}</h2>
         <div class="finance-accounts mb-4">

@@ -72,6 +72,33 @@
         @endif
     </div>
 
+    @if($account->type === 'warehouse' && $byDay && $byDay['days'])
+        {{-- Borc günlər üzrə: hansı gün nə qədər mal götürülüb, nə qədəri ödənilib, nə qədəri qalıb --}}
+        <h2 class="small-title">Borc günlər üzrə</h2>
+        <div class="card mb-4"><div class="card-body">
+            <div class="table-responsive"><table class="table align-middle mb-0">
+                <thead><tr>@foreach(['Gün', 'Götürülən mal', 'Ödənilib', 'Qalıq borc'] as $th)<th class="text-muted text-small text-uppercase">{{ $th }}</th>@endforeach</tr></thead>
+                <tbody>
+                @foreach($byDay['days'] as $day)
+                    <tr>
+                        <td class="text-nowrap">{{ $day['date']->isToday() ? 'Bu gün' : ($day['date']->isYesterday() ? 'Dünən' : $day['date']->format('d.m.Y')) }}
+                            <span class="d-block small text-muted">{{ $day['parts'] }} hissə</span></td>
+                        <td class="text-nowrap">{{ $money($day['cost']) }}</td>
+                        <td class="text-nowrap text-success">{{ $day['paid'] ? $money($day['paid']) : '—' }}</td>
+                        <td class="text-nowrap fw-bold {{ $day['left'] > 0 ? 'text-danger' : 'text-muted' }}">{{ $day['left'] > 0 ? $money($day['left']) : 'ödənilib' }}</td>
+                    </tr>
+                @endforeach
+                @if($byDay['unlinked'] !== 0)
+                    <tr>
+                        <td colspan="3" class="text-muted">{{ $byDay['unlinked'] > 0 ? 'Ümumi ödəniş (sifarişə bağlı olmadan) — borcdan çıxılır' : 'Anbarın qaytardığı pul (sifarişə bağlı olmadan)' }}</td>
+                        <td class="text-nowrap fw-bold {{ $byDay['unlinked'] > 0 ? 'text-success' : 'text-danger' }}">{{ $byDay['unlinked'] > 0 ? '−' : '+' }}{{ $money($byDay['unlinked']) }}</td>
+                    </tr>
+                @endif
+                </tbody>
+            </table></div>
+        </div></div>
+    @endif
+
     @if($account->type === 'warehouse')
         <h2 class="small-title">Ödənilməmiş hissələr</h2>
         <div class="card mb-5"><div class="card-body">

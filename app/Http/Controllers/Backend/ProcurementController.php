@@ -15,7 +15,10 @@ class ProcurementController extends Controller
 {
     public function warehouses()
     {
-        return view('backend.procurement.warehouses', ['warehouses' => Warehouse::orderBy('name_az')->get()]);
+        // Anbara borc (götürülən mal − ödənilən; mənfi — avans): warehouse_id => qəpik
+        $debts = rescue(fn () => app(\App\Services\FinanceService::class)->warehouseDebts(), collect(), false);
+
+        return view('backend.procurement.warehouses', ['warehouses' => Warehouse::orderBy('name_az')->get(), 'debts' => $debts]);
     }
 
     public function createLink(Warehouse $warehouse, \App\Services\WarehousePortalService $portal)

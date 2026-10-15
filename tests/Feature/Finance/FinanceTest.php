@@ -99,6 +99,35 @@ class FinanceTest extends TestCase
         $this->f()->record($courier, $whAccount, 25, 'warehouse_payment', ['order_item_allocation_id' => $allocation->id], 7);
     }
 
+    /** Borc günlər üzrə: dünən götürülən hissə qismən ödənilib, bu gün götürülən ödənilməyib; ümumi ödəniş ayrıca */
+    public function test_warehouse_debt_is_split_by_pickup_day(): void
+    {
+        [$order, $yesterdayPart, $warehouse] = $this->allocation(); // 50 AZN
+        $p = app(ProcurementService::class);
+        $this->travelTo(now()->subDay());
+        $p->transition($order, $yesterdayPart->id, 'picked', [], 7);
+        $this->travelBack();
+
+        $item = $order->items()->create(['quantity' => 1]);
+        $p->createRequests($order, [$warehouse->id], [$item->id], 7);
+        $offer = $p->recordOffer($order, WarehouseRequestItem::latest('id')->first()->id, ['available_quantity' => 1, 'unit_cost' => '35', 'source' => 'phone'], 7);
+        $todayPart = $p->allocate($order, $offer->id, 1, 7);
+        $p->transition($order, $todayPart->id, 'picked', [], 7);
+
+        $account = $this->f()->warehouseAccount($warehouse);
+        $this->f()->record($this->f()->system('cash'), $account, 20, 'warehouse_payment', ['order_item_allocation_id' => $yesterdayPart->id], 7);
+        $this->f()->record($this->f()->system('cash'), $account, 5, 'warehouse_payment', [], 7); // ümumi ödəniş
+
+        $byDay = $this->f()->warehouseDebtByDay($warehouse);
+
+        $this->assertSame([[3500, 0, 3500], [5000, 2000, 3000]], array_map(fn ($d) => [$d['cost'], $d['paid'], $d['left']], $byDay['days']));
+        $this->assertTrue($byDay['days'][0]['date']->isToday());
+        $this->assertTrue($byDay['days'][1]['date']->isYesterday());
+        $this->assertSame(500, $byDay['unlinked']);
+        // Qalıqların cəmi − ümumi ödəniş = cari borc
+        $this->assertSame(3500 + 3000 - 500, $this->f()->warehouseDebts()[$warehouse->id]);
+    }
+
     public function test_courier_hands_cash_to_center_and_owner_debt(): void
     {
         $courier = $this->courier();
