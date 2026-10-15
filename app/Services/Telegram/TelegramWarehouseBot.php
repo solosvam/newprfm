@@ -175,14 +175,12 @@ class TelegramWarehouseBot
         app(ProcurementService::class)->recordOffer($order, $requestItem->id, [
             'available_quantity' => $quantity, 'unit_cost' => $price, 'source' => 'telegram', 'note' => 'Telegram: '.$who,
         ], 0);
-        $result = $quantity
-            ? '✅ <b>Var</b> — '.$quantity.' ədəd × '.$price.' AZN qeyd olundu ('.e($who).')'
-            : '❌ <b>Yoxdur</b> — qeyd olundu ('.e($who).')';
-        // Düymədə cavabın özü yazılır; basanda cavab dəyişdirilir (düymələr yenidən açılır)
+        // Cavab yalnız düymədə yazılır (mətndə təkrar olmasın); basanda cavab dəyişdirilir — düymələr yenidən açılır.
+        // Kimin cavab verdiyi CRM-də görünür (WarehouseOffer::authorName)
         $button = $quantity
             ? '✅ Var — '.($quantity > 1 || (int) $requestItem->requested_quantity > 1 ? $quantity.' ədəd × ' : '').$price.' AZN'
             : '❌ Yoxdur';
-        $this->edit($message, $message->text."\n\n".$result, [[['text' => $button, 'callback_data' => $message->id.':change']]], ['state' => null, 'quantity' => null]);
+        $this->edit($message, $message->text, [[['text' => $button, 'callback_data' => $message->id.':change']]], ['state' => null, 'quantity' => null]);
         $this->cleanup($message);
     }
 
