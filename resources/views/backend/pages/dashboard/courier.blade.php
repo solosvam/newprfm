@@ -65,7 +65,7 @@
             'warehouse_payment' => 'Anbara ödədiniz — '.$row['other']?->name,
             'courier_handover' => 'Kassaya təhvil verdiniz',
             'courier_advance' => $row['delta'] > 0 ? 'Avans / qaytarma aldınız' : 'Avans qaytarıldı',
-            'expense' => 'Xərc: '.$m->note,
+            'outgo' => 'Xərc: '.($m->category?->name ?? '').($m->note ? ' — '.$m->note : ''),
             'reversal' => 'Düzəliş (əks əməliyyat #'.$m->reversal_of_id.')',
             default => $m->kindLabel(),
         };
@@ -83,7 +83,7 @@
                     <div class="courier-history__meta">
                         {{ $m->occurred_at->format('d.m.Y H:i') }}
                         @if($m->order) · {{ $m->order->order_no }}@endif
-                        @if($m->kind !== 'expense' && $m->note && $m->kind !== 'reversal') · {{ $m->note }}@endif
+                        @if($m->kind !== 'outgo' && $m->note && $m->kind !== 'reversal') · {{ $m->note }}@endif
                     </div>
                 </div>
                 <div class="courier-history__sum">

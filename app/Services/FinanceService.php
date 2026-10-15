@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Finance\FinanceAccount;
+use App\Models\Finance\FinanceCategory;
 use App\Models\Finance\MoneyMovement;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentOperation;
@@ -16,7 +17,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * Kassa və hesablaşma. Hər hərəkət from → to; qalıq = daxil olan − çıxan.
  *  - Kuryer: + → kuryer şirkətə təhvil verməlidir, − → şirkət kuryerə borcludur.
- *  - Sahibkar: − → şirkət sahibkara borcludur.
+ *  - Şəxs: − → şirkət şəxsə borcludur, + → şəxs şirkətə borcludur. Şəxsin pulu "Hesablar"ın cəminə daxil deyil.
+ *  - Mədaxil / Məxaric: qarşı tərəf "Kənar" hesabıdır, mənası kateqoriyadadır (hesabat kateqoriya üzrə qurulur).
  *  - Anbar: borc = götürülmüş (picked) hissələrin alış dəyəri − anbara ödənilən (+ anbarın geri qaytardığı).
  *    Mal anbara qaytarılıb pul alınmayıbsa borc mənfi olur — anbar şirkətə borcludur.
  * Qeydlər silinmir: səhv əks əməliyyatla düzəldilir (reverse).
@@ -127,6 +129,18 @@ class FinanceService
         $this->ensure(in_array($from->type, $rule[1], true), '"'.$rule[0].'" üçün göndərən hesab uyğun deyil ('.$from->name.').');
         $this->ensure(in_array($to->type, $rule[2], true), '"'.$rule[0].'" üçün alan hesab uyğun deyil ('.$to->name.').');
         $this->ensure($from->active && $to->active, 'Hesab deaktivdir.');
+        if ($kind === 'transfer') {
+            $this->ensure(in_array($from->type, FinanceAccount::OWN, true) || in_array($to->type, FinanceAccount::OWN, true),
+                'Köçürmədə ən azı bir tərəf şirkətin hesabı olmalıdır.');
+        }
+        // Kateqoriya: Mədaxil / Məxaricdə seçilir, qalan növlərdə növün özündəndir
+        if (in_array($kind, ['income', 'outgo'], true)) {
+            $category = isset($attrs['category_id']) ? FinanceCategory::find($attrs['category_id']) : null;
+            $this->ensure($category !== null, 'Kateqoriyanı seçin.');
+            $this->ensure($category->fits($kind), '"'.$category->name.'" kateqoriyası '.($kind === 'income' ? 'mədaxil' : 'məxaric').' üçün deyil.');
+        } elseif (isset(MoneyMovement::KIND_CATEGORY[$kind])) {
+            $attrs['category_id'] = FinanceCategory::byCode(MoneyMovement::KIND_CATEGORY[$kind])?->id;
+        }
 
         return DB::transaction(function () use ($from, $to, $cents, $kind, $attrs, $actor) {
             // Anbara ödəniş təminat hissəsinə bağlıdırsa: həmin anbar və dəyərdən çox ödənilə bilməz
@@ -172,6 +186,7 @@ class FinanceService
                 'to_account_id' => $locked->from_account_id,
                 'amount' => $locked->amount,
                 'kind' => 'reversal',
+                'category_id' => $locked->category_id,
                 'order_id' => $locked->order_id,
                 'order_item_allocation_id' => $locked->order_item_allocation_id,
                 'payment_id' => $locked->payment_id,

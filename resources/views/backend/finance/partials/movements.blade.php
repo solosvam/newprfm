@@ -44,7 +44,7 @@
                 {{ $m->created_at?->format('d.m.Y H:i') }}
                 @if($m->isBackdated())<span class="d-block small text-warning">sonradan yazılıb</span>@endif
             </td>
-            <td>{{ $m->kindLabel() }}@if($m->reversedBy)<span class="d-block small text-danger">əks olunub (#{{ $m->reversedBy->id }})</span>@endif</td>
+            <td>{{ $m->label() }}@if($m->reversedBy)<span class="d-block small text-danger">əks olunub (#{{ $m->reversedBy->id }})</span>@endif</td>
             <td class="text-alternate">{{ $m->from?->name }}</td>
             <td class="text-alternate">{{ $m->to?->name }}</td>
             <td data-order="{{ $m->amount }}" class="text-nowrap fw-bold">{{ number_format((float) $m->amount, 2) }} AZN</td>
@@ -54,7 +54,7 @@
             <td class="text-end">
                 @if($m->kind !== 'reversal' && !$m->reversedBy)
                     <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reverseMovement"
-                            data-action="{{ route('admin.finance.reverse', $m) }}" data-title="#{{ $m->id }} · {{ $m->kindLabel() }} · {{ number_format((float) $m->amount, 2) }} AZN">Əks et</button>
+                            data-action="{{ route('admin.finance.reverse', $m) }}" data-title="#{{ $m->id }} · {{ $m->label() }} · {{ number_format((float) $m->amount, 2) }} AZN">Əks et</button>
                 @endif
             </td>
         </tr>

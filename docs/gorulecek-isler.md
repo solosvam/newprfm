@@ -32,6 +32,9 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **Sifarişin ünvanı sifarişə köçürülmür.** Sifariş müştərinin ünvan kartına istinad edir (customer_address_id) — müştəri sonradan
   ünvanını dəyişsə və ya silsə, köhnə sifarişlərin ünvanı da dəyişir / itir. Ünvan sifariş yaranan anda sifarişə köçürülməlidir.
 - [ ] **Qeyri-müəyyən bank əməliyyatlarının uzlaşdırılması:** kimin ödədiyi bilinməyən köçürməni sifarişə bağlamaq.
+- [ ] **Maliyyə — pul axını hesabatı** (Clopos kimi): aylar sütunda, kateqoriyalar sətirdə (alt kateqoriyalar üstün altında),
+  ümumi məxaric / mədaxil / maliyyə nəticəsi; "Transferləri gizlət", "Boş sətirləri gizlət". Köçürmə və şəxslə hesablaşma nəticəyə qarışmır.
+- [ ] **Maliyyə — əməliyyatlar siyahısında filtrlər:** növ, balans, kateqoriya, tarix aralığı; "istinad" sütunu (sifariş / anbar / qarşı köçürmə).
 
 ## 2. Sayt — səbət və push bildirişləri
 
@@ -152,10 +155,15 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Kuryerin müsbət hesablaşma qalığı şirkətə borcu, mənfi qalıq şirkətin kuryerə borcudur.
 - Mərkəzin anbara birbaşa ödənişi kuryerin balansına yazılmır.
 - Nağd kassa, bank, şəxslərlə və kuryerlə hesablaşmalar ayrıdır. Pul transferi təkrar xərc sayılmır.
-- Kassada "Sahibkar pul qoydu / Sahibkara qaytarıldı" yoxdur (15 oktyabr). Əvəzində "Şəxslər": Kassada "Yeni şəxs" ilə yaradılır
-  (sahibkar da şəxsdir); "Mədaxil" — şəxsdən kassaya / banka pul, "Məxaric" — kassadan / bankdan şəxsə. Şəxsin mənfi qalığı —
-  bizim ona borcumuz, müsbət qalığı — onun bizə borcu. Köhnə "Sahibkar" hesabı "Sahibkar" adlı şəxsə, köhnə əməliyyatlar
-  Mədaxil / Məxaricə çevrilib (migrasiya). Şəxs anbara ödəniş və xərc üçün ödəyən də ola bilər.
+- Maliyyə Clopos üslubundadır (16 oktyabr). "Yeni əməliyyat": **Məxaric / Mədaxil** (balans + kateqoriya; qarşı tərəf sistemdəki
+  "Kənar" hesabıdır) və **Köçürmə** (haradan → haraya; kuryerə — avans, kuryerdən kassaya — təhvil). Anbara ödəniş hesabın səhifəsindən.
+- Kateqoriyalar: Mədaxil / Məxaric / Hər ikisi, iki səviyyəli ağac. Sistem kateqoriyaları (Satış, Müştəriyə qaytarma, Anbara ödəniş,
+  Anbar pulu qaytardı, Köçürmə, Düzəliş, Digər xərclər) kilidlidir; avtomatik olanlar əl ilə seçilmir. Sahibkar — kateqoriyadır
+  (qoyduğu pul Mədaxil, götürdüyü Məxaric; borc qalığı izlənmir). İstifadə olunan kateqoriya silinmir.
+- Hesablar: Nağd / Kart / Bank / Şəxs ("Yeni hesab", başlanğıc qalıq — "Düzəliş" mədaxili). Şəxsin qalığı şirkətin pulu sayılmır;
+  şəxslə hesablaşma köçürmə ilə: Şəxs → Kassa (mənfi qalıq — borcumuz), Kassa → Şəxs. Şəxs öz cibindən ödəyibsə — Məxaric şəxsdən.
+  Qalığı sıfır olan hesab deaktiv edilə bilər; sistem hesabları — yox.
+- Köhnə "Xərc" əməliyyatları "Digər xərclər" Məxaricinə, sahibkar əməliyyatları "Sahibkar" kateqoriyasına çevrilib (migrasiya).
 - Status ID-ləri başqa mənalarla əvəz edilmir.
 - Məhsulun qazancı xalis satışdan hesablanır: vahid qiymət − məhsula düşən promokod payı (endirim məhsullara proporsional
   bölünür — ödəniş sətirləri və məhsul ləğvi ilə eyni paylama, `PaymentItemsBuilder::itemShares`). Məhsul ləğv ediləndə

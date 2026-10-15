@@ -3,6 +3,7 @@
 namespace Tests\Feature\Finance;
 
 use App\Models\Finance\FinanceAccount;
+use App\Models\Finance\FinanceCategory;
 use App\Models\Finance\MoneyMovement;
 use App\Models\Order\Order;
 use App\Models\Payment\Payment;
@@ -52,6 +53,7 @@ class FinanceTest extends TestCase
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
             '2026_09_29_200000_create_finance_tables.php',
             '2026_10_15_240000_convert_owner_to_person_accounts.php',
+            '2026_10_16_100000_create_finance_categories.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();
         }
@@ -129,26 +131,77 @@ class FinanceTest extends TestCase
         $this->assertSame(3500 + 3000 - 500, $this->f()->warehouseDebts()[$warehouse->id]);
     }
 
-    public function test_courier_hands_cash_to_center_and_owner_debt(): void
+    public function test_courier_hands_cash_to_center(): void
     {
         $courier = $this->courier();
         $cash = $this->f()->system('cash');
         $this->f()->record($cash, $courier, 100, 'courier_advance', [], 7);
         $this->f()->record($courier, $cash, 60, 'courier_handover', [], 7);
         $this->assertSame(4000, $this->f()->balances()[$courier->id]);
+    }
 
-        $person = FinanceAccount::create(['type' => 'person', 'name' => 'Sahibkar']);
-        $this->f()->record($person, $this->f()->system('expense'), 500, 'expense', [], 7);
-        $this->f()->record($person, $cash, 300, 'income', [], 7);
-        $this->f()->record($cash, $person, 100, 'outgo', [], 7);
-        $this->assertSame(-70000, $this->f()->balances()[$person->id]); // şirkət şəxsə borcludur
+    public function test_income_outgo_need_fitting_category_and_persons_settle_by_transfer(): void
+    {
+        $cash = $this->f()->system('cash');
+        $external = $this->f()->system('external');
+        $owner = FinanceCategory::byCode('owner');
+        $salary = FinanceCategory::create(['name' => 'Əməkhaqqı', 'type' => 'expense']);
+
+        $in = $this->f()->record($external, $cash, 1000, 'income', ['category_id' => $owner->id], 7);   // sahibkar pul qoydu
+        $this->f()->record($cash, $external, 300, 'outgo', ['category_id' => $salary->id], 7);
+        $this->assertSame(70000, $this->f()->balances()[$cash->id]);
+        $this->assertSame('Mədaxil · Sahibkar', $in->load('category')->label());
+
+        // Şəxs: borc aldıq (Şəxs → Kassa) — qalıq mənfi; bir hissəsini qaytardıq
+        $person = FinanceAccount::create(['type' => 'person', 'name' => 'Elçin']);
+        $loan = $this->f()->record($person, $cash, 500, 'transfer', [], 7);
+        $this->f()->record($cash, $person, 200, 'transfer', [], 7);
+        $this->assertSame(-30000, $this->f()->balances()[$person->id]);
+        $this->assertSame(FinanceCategory::byCode('transfer')->id, $loan->category_id);
+        // Şəxs öz cibindən xərc ödədi — şirkətin ona borcu artır
+        $this->f()->record($person, $external, 100, 'outgo', ['category_id' => $salary->id], 7);
+        $this->assertSame(-40000, $this->f()->balances()[$person->id]);
+
+        foreach ([
+            fn () => $this->f()->record($external, $cash, 10, 'income', [], 7),                                   // kateqoriyasız
+            fn () => $this->f()->record($external, $cash, 10, 'income', ['category_id' => $salary->id], 7),        // məxaric kateqoriyası
+            fn () => $this->f()->record($cash, $external, 10, 'outgo', ['category_id' => FinanceCategory::byCode('sale')->id], 7), // avtomatik
+            fn () => $this->f()->record($person, FinanceAccount::create(['type' => 'person', 'name' => 'B']), 10, 'transfer', [], 7), // şəxsdən şəxsə
+        ] as $bad) {
+            try {
+                $bad();
+                $this->fail('Qəbul olunmamalı idi');
+            } catch (ValidationException) {
+            }
+        }
+    }
+
+    public function test_migration_turns_owner_into_category_and_expenses_into_outgo(): void
+    {
+        // Köhnə vəziyyət: sahibkar hesabı, "Xərclər" hesabı, xərc və sahibkar əməliyyatları
+        (require database_path('migrations/2026_10_16_100000_create_finance_categories.php'))->down();
+        DB::table('finance_accounts')->where('code', 'external')->update(['type' => 'expense', 'code' => 'expense', 'name' => 'Xərclər']);
+        $owner = FinanceAccount::create(['type' => 'owner', 'code' => 'owner', 'name' => 'Sahibkar']);
+        $cash = $this->f()->system('cash');
+        $expense = FinanceAccount::where('code', 'expense')->first();
+        $mv = fn ($from, $to, $kind) => MoneyMovement::create(['from_account_id' => $from->id, 'to_account_id' => $to->id, 'amount' => 10, 'kind' => $kind, 'occurred_at' => now()])->id;
+        $contribution = $mv($owner, $cash, 'owner_contribution');
+        $repayment = $mv($cash, $owner, 'owner_repayment');
+        $spent = $mv($cash, $expense, 'expense');
+        (require database_path('migrations/2026_10_16_100000_create_finance_categories.php'))->up();
+
+        $this->assertNull(FinanceAccount::find($owner->id)); // başqa hərəkəti yoxdur — silinir
+        $external = $this->f()->system('external');
+        $this->assertSame(['income', $external->id, 'owner'], [MoneyMovement::find($contribution)->kind, MoneyMovement::find($contribution)->from_account_id, MoneyMovement::find($contribution)->category->code]);
+        $this->assertSame(['outgo', $external->id, 'owner'], [MoneyMovement::find($repayment)->kind, MoneyMovement::find($repayment)->to_account_id, MoneyMovement::find($repayment)->category->code]);
+        $this->assertSame(['outgo', 'other_expense'], [MoneyMovement::find($spent)->kind, MoneyMovement::find($spent)->category->code]);
     }
 
     public function test_kind_rules_are_enforced(): void
     {
         $this->expectException(ValidationException::class);
-        // Xərc hesabından kassaya "köçürmə" olmaz
-        $this->f()->record($this->f()->system('expense'), $this->f()->system('cash'), 10, 'transfer', [], 7);
+        // Kənar hesabdan kassaya "köçürmə" olmaz (bu, mədaxildir)
+        $this->f()->record($this->f()->system('external'), $this->f()->system('cash'), 10, 'transfer', [], 7);
     }
 
     public function test_reversal_restores_balances_once(): void

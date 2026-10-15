@@ -9,21 +9,19 @@
         $b = $balances[$account->id] ?? 0;
         return match ($account->type) {
             'courier' => $b > 0 ? ['Təhvil verməlidir', $money($b), 'text-warning'] : ($b < 0 ? ['Kuryerə borcumuz', $money($b), 'text-danger'] : ['Hesablaşılıb', '0.00 AZN', 'text-muted']),
-            // Mədaxil (şəxs → kassa) qalığı mənfi edir: şəxsə borcluyuq; Məxaric — əksinə
+            // Şəxs → Kassa köçürməsi qalığı mənfi edir: şəxsə borcluyuq; Kassa → Şəxs — əksinə
             'person' => $b < 0 ? ['Borcumuz', $money($b), 'text-danger'] : ($b > 0 ? ['Bizə borcludur', $money($b), 'text-warning'] : ['Hesablaşılıb', '0.00 AZN', 'text-muted']),
             'warehouse' => ($d = $debts[$account->warehouse_id] ?? 0) > 0 ? ['Anbara borc', $money($d), 'text-danger'] : ($d < 0 ? ['Avans', $money($d), 'text-success'] : ['Borc yoxdur', '0.00 AZN', 'text-muted']),
-            'expense' => ['Xərclənib', $money($b), ''],
-            default => ['Qalıq', ($b < 0 ? '−' : '').$money($b), $b < 0 ? 'text-danger' : ''],
+            default => [$account->typeLabel().' · qalıq', ($b < 0 ? '−' : '').$money($b), $b < 0 ? 'text-danger' : ''],
         };
     };
     $groups = [
-        'Şirkətin pulu' => ['cash', 'bank', 'online'],
+        'Hesablar' => \App\Models\Finance\FinanceAccount::OWN,
+        'Şəxslər' => ['person'],
         'Kuryerlər' => ['courier'],
         'Anbarlar' => ['warehouse'],
-        'Şəxslər' => ['person'],
-        'Xərclər' => ['expense'],
     ];
-    $selectable = $accounts->where('type', '!=', 'customer');
+    $ownTotal = $accounts->whereIn('type', \App\Models\Finance\FinanceAccount::OWN)->sum(fn ($a) => $balances[$a->id] ?? 0);
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
@@ -49,10 +47,11 @@
                 @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
             </div>
             <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end gap-2 flex-wrap">
-                <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newPerson">
-                    <span>Yeni şəxs</span><i data-acorn-icon="user"></i>
+                <a href="{{ route('admin.finance.categories') }}" class="btn btn-outline-primary w-100 w-sm-auto">Kateqoriyalar</a>
+                <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#accountModal">
+                    <span>Yeni hesab</span><i data-acorn-icon="plus"></i>
                 </button>
-                <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newMovement">
+                <button type="button" class="btn btn-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#newMovement">
                     <span>Yeni əməliyyat</span><i data-acorn-icon="plus"></i>
                 </button>
             </div>
@@ -64,10 +63,11 @@
     @foreach($groups as $groupTitle => $types)
         @php
             // Anbarlar: yalnız haqq-hesabı açıq olanlar (borc və ya avans) — sıfır qalıqlı anbar kartı göstərilmir
-            $groupAccounts = $accounts->whereIn('type', $types)->reject(fn ($a) => $a->type === 'warehouse' && ($debts[$a->warehouse_id] ?? 0) === 0);
+            $groupAccounts = $accounts->whereIn('type', $types)->reject(fn ($a) => $a->type === 'warehouse' && ($debts[$a->warehouse_id] ?? 0) === 0)
+                ->sortBy(fn ($a) => array_search($a->type, $types, true));
         @endphp
         @continue($groupAccounts->isEmpty())
-        <h2 class="small-title">{{ $groupTitle }}</h2>
+        <h2 class="small-title">{{ $groupTitle }}@if($groupTitle === 'Hesablar') <span class="text-muted">· cəmi {{ $ownTotal < 0 ? '−' : '' }}{{ $money($ownTotal) }}</span>@endif</h2>
         <div class="finance-accounts mb-4">
             @foreach($groupAccounts as $account)
                 @php [$label, $value, $tone] = $describe($account); @endphp
@@ -90,53 +90,7 @@
     </section>
 </div>
 
-{{-- Yeni əməliyyat: növ seçiləndə hesab siyahıları uyğun tiplərlə süzülür (finance.js) --}}
-<div class="modal modal-right fade" id="newMovement" tabindex="-1" aria-labelledby="newMovementTitle" aria-hidden="true">
-    <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.finance.store') }}" data-movement-form>
-        @csrf
-        <div class="modal-header"><h5 class="modal-title" id="newMovementTitle">Yeni əməliyyat</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
-        <div class="modal-body">
-            <div class="mb-3"><label class="form-label" for="mvKind">Əməliyyat</label>
-                <select id="mvKind" name="kind" class="form-select" required>
-                    <option value="">Seçin</option>
-                    @foreach(MoneyMovement::MANUAL as $kind)
-                        <option value="{{ $kind }}" data-from="{{ implode(',', MoneyMovement::KINDS[$kind][1]) }}" data-to="{{ implode(',', MoneyMovement::KINDS[$kind][2]) }}"
-                            @if($kind === 'income') data-from-label="Şəxs (kimdən alındı)" @elseif($kind === 'outgo') data-to-label="Şəxs (kimə verildi)" @endif @selected(old('kind') === $kind)>{{ MoneyMovement::KINDS[$kind][0] }}</option>
-                    @endforeach
-                </select></div>
-            <div class="mb-3"><label class="form-label" for="mvFrom" data-default="Pul haradan çıxdı">Pul haradan çıxdı</label>
-                <select id="mvFrom" name="from_account_id" class="form-select" required>
-                    <option value="">Seçin</option>
-                    @foreach($selectable as $a)<option value="{{ $a->id }}" data-type="{{ $a->type }}" @selected((int) old('from_account_id') === $a->id)>{{ $a->name }} · {{ $a->typeLabel() }}</option>@endforeach
-                </select></div>
-            <div class="mb-3"><label class="form-label" for="mvTo" data-default="Pul haraya getdi">Pul haraya getdi</label>
-                <select id="mvTo" name="to_account_id" class="form-select" required>
-                    <option value="">Seçin</option>
-                    @foreach($selectable as $a)<option value="{{ $a->id }}" data-type="{{ $a->type }}" @selected((int) old('to_account_id') === $a->id)>{{ $a->name }} · {{ $a->typeLabel() }}</option>@endforeach
-                </select></div>
-            <div class="mb-3"><label class="form-label" for="mvAmount">Məbləğ, AZN</label><input id="mvAmount" type="number" name="amount" min="0.01" step="0.01" class="form-control" value="{{ old('amount') }}" required></div>
-                <div class="mb-3"><label class="form-label" for="mvAt">Real tarix <small class="text-muted">(boş — indi)</small></label><input id="mvAt" type="datetime-local" name="occurred_at" class="form-control" value="{{ old('occurred_at') }}"></div>
-            <label class="form-label" for="mvNote" data-note-label>Qeyd</label>
-            <textarea id="mvNote" name="note" rows="2" maxlength="2000" class="form-control">{{ old('note') }}</textarea>
-            <div class="form-text mt-2">Anbara ödəniş — anbarın kartına klikləyin. Kuryerdən pulu təhvil almaq — kuryerin kartına klikləyin.</div>
-        </div>
-        <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Qeydə al</button></div>
-    </form></div>
-</div>
-
-{{-- Yeni şəxs: Mədaxil / Məxaric əməliyyatlarında seçilir --}}
-<div class="modal fade" id="newPerson" tabindex="-1" aria-labelledby="newPersonTitle" aria-hidden="true">
-    <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.finance.persons.store') }}">
-        @csrf
-        <div class="modal-header"><h5 class="modal-title" id="newPersonTitle">Yeni şəxs</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
-        <div class="modal-body">
-            <label class="form-label" for="personName">Ad, soyad</label>
-            <input id="personName" name="name" maxlength="120" class="form-control" value="{{ old('name') }}" required>
-            <div class="form-text mt-2">Şəxsdən pul alanda — "Mədaxil", şəxsə pul verəndə — "Məxaric". Qalıq şəxsin kartında görünür.</div>
-        </div>
-        <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Yarat</button></div>
-    </form></div>
-</div>
-
+@include('backend.finance.partials.movement-modal')
+@include('backend.finance.partials.account-modal', ['editAccount' => null, 'editBalance' => null])
 @include('backend.finance.partials.reverse-modal')
 @endsection

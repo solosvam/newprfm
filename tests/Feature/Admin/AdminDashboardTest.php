@@ -55,6 +55,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::table('permissions', fn (Blueprint $t) => $t->string('description')->nullable());
         (require database_path('migrations/2026_09_29_200000_create_finance_tables.php'))->up();
+        (require database_path('migrations/2026_10_16_100000_create_finance_categories.php'))->up();
         $this->orderStatusFixtures();
         DB::table('order_statuses')->where('code', 'new')->update(['name_az' => 'Sifariş verildi']);
         DB::table('order_statuses')->where('code', 'sent')->update(['name_az' => 'Yola çıxdı']);

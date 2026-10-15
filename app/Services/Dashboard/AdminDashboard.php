@@ -425,7 +425,7 @@ class AdminDashboard
 
             return [
                 'cash' => round($sum('cash'), 2),
-                'bank' => round($sum('bank'), 2),
+                'bank' => round($sum('bank') + $sum('card'), 2),
                 // + kuryer şirkətə təhvil verməlidir, − şirkət kuryerə borcludur
                 'couriers_owe' => round($couriers->where('balance', '>', 0)->sum('balance'), 2),
                 'owe_couriers' => round(-$couriers->where('balance', '<', 0)->sum('balance'), 2),

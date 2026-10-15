@@ -123,7 +123,12 @@ Route::prefix('admin')
                 ->prefix('finance')->name('finance.')->group(function () {
                     Route::get('/', 'index')->name('index');
                     Route::post('/', 'store')->middleware('throttle:30,1')->name('store');
-                    Route::post('/persons', 'storePerson')->middleware('throttle:30,1')->name('persons.store');
+                    Route::post('/accounts', 'storeAccount')->middleware('throttle:30,1')->name('accounts.store');
+                    Route::put('/accounts/{account}', 'updateAccount')->middleware('throttle:30,1')->name('accounts.update');
+                    Route::get('/categories', 'categories')->name('categories');
+                    Route::post('/categories', 'storeCategory')->middleware('throttle:30,1')->name('categories.store');
+                    Route::put('/categories/{category}', 'updateCategory')->middleware('throttle:30,1')->name('categories.update');
+                    Route::delete('/categories/{category}', 'destroyCategory')->middleware('throttle:30,1')->name('categories.destroy');
                     Route::post('/{movement}/reverse', 'reverse')->middleware('throttle:30,1')->name('reverse');
                     Route::get('/account/{account}', 'account')->name('account');
                 });

@@ -11,20 +11,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FinanceAccount extends Model
 {
     public const TYPES = [
-        'cash' => 'Nağd kassa',
-        'bank' => 'Bank hesabı',
+        'cash' => 'Nağd',
+        'card' => 'Kart',
+        'bank' => 'Bank',
         'online' => 'Onlayn ödənişlər',
-        'courier' => 'Kuryer',
         'person' => 'Şəxs',
+        'courier' => 'Kuryer',
         'warehouse' => 'Anbar',
-        'expense' => 'Xərc',
+        'external' => 'Kənar',
         'customer' => 'Müştərilər',
     ];
 
-    /** Şirkətin öz pulu olan hesablar (köçürmə bunların arasında xərc deyil) */
-    public const OWN = ['cash', 'bank', 'online'];
+    /** Şirkətin öz pulu olan hesablar — "Hesablar"ın cəmi bunlardır */
+    public const OWN = ['cash', 'card', 'bank', 'online'];
 
-    protected $fillable = ['type', 'code', 'name', 'user_id', 'warehouse_id', 'active'];
+    /** "Yeni hesab" ilə yaradılan tiplər. Şəxsin pulu şirkətin pulu deyil: mənfi qalıq — ona borcumuz */
+    public const CREATABLE = ['cash', 'card', 'bank', 'person'];
+
+    protected $fillable = ['type', 'code', 'name', 'description', 'user_id', 'warehouse_id', 'active'];
 
     /** Yeni hesab aktivdir (firstOrCreate-dən sonra da yaddaşda düzgün olsun) */
     protected $attributes = ['active' => true];

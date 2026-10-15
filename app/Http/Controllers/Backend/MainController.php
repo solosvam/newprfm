@@ -61,7 +61,7 @@ class MainController extends Controller
     private function courierHistory(\App\Models\Finance\FinanceAccount $account)
     {
         $running = 0;
-        return \App\Models\Finance\MoneyMovement::with(['from', 'to', 'order'])
+        return \App\Models\Finance\MoneyMovement::with(['from', 'to', 'order', 'category'])
             ->where(fn ($q) => $q->where('from_account_id', $account->id)->orWhere('to_account_id', $account->id))
             ->orderBy('occurred_at')->orderBy('id')->get()
             ->map(function ($m) use ($account, &$running) {

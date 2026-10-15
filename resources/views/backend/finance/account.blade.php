@@ -7,6 +7,7 @@
     $title = $account->name;
     $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Kassa', '' => $account->name];
     $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN';
+    $editable = in_array($account->type, array_merge(\App\Models\Finance\FinanceAccount::CREATABLE, ['online']), true);
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
@@ -38,10 +39,14 @@
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#warehousePayModal"
                             data-allocation="" data-left="" data-title="{{ $account->name }} — ümumi ödəniş (sifarişə bağlı olmadan)">Ümumi ödəniş</button>
                 @endif
+                @if($editable)
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#accountModal">Redaktə et</button>
+                @endif
             </div>
         </div>
     </div>
     @include('backend.procurement.feedback')
+    @if($account->description)<p class="text-muted mb-4">{{ $account->description }}</p>@endif
 
     {{-- Xülasə --}}
     <div class="row g-3 mb-4">
@@ -51,7 +56,7 @@
                     <div class="finance-account__label">Şirkətə təhvil verməlidir</div><div class="finance-account__value text-warning">{{ $money($balance) }}</div>
                 @elseif($balance < 0)
                     <div class="finance-account__label">Şirkətin kuryerə borcu</div><div class="finance-account__value text-danger">{{ $money($balance) }}</div>
-                    <div class="small text-muted mt-1">Kuryer öz pulundan ödəyib. Qaytarmaq üçün "Yeni əməliyyat → Kuryerə avans / qaytarma".</div>
+                    <div class="small text-muted mt-1">Kuryer öz pulundan ödəyib. Qaytarmaq üçün "Yeni əməliyyat → Köçürmə": Kassa → kuryer.</div>
                 @else
                     <div class="finance-account__label">Hesablaşılıb</div><div class="finance-account__value">0.00 AZN</div>
                 @endif
@@ -142,6 +147,10 @@
     </div></div>
 </div>
 
+@if($editable)
+    @include('backend.finance.partials.account-modal', ['editAccount' => $account, 'editBalance' => $balance])
+@endif
+
 @if($account->type === 'courier')
     {{-- Pulu təhvil al: kuryer → mərkəzi nağd kassa (bank olmaz — kuryer nağd verir) --}}
     <div class="modal modal-right fade" id="handoverModal" tabindex="-1" aria-labelledby="handoverTitle" aria-hidden="true">
@@ -182,7 +191,7 @@
                         <option value="">Seçin</option>
                         @foreach($payers as $acc)<option value="{{ $acc->id }}">{{ $acc->name }} · {{ $acc->typeLabel() }}</option>@endforeach
                     </select>
-                    <div class="form-text">Kuryer ödəyibsə — kuryerin qalığı azalır. Sahibkar şəxsi kartından — şirkət sahibkara borclu qalır.</div>
+                    <div class="form-text">Kuryer ödəyibsə — kuryerin qalığı azalır. Şəxs öz pulundan ödəyibsə — şirkət ona borclu qalır.</div>
                 </div>
                 <div class="mb-3"><label class="form-label" for="payAmount">Məbləğ, AZN</label><input id="payAmount" type="number" name="amount" min="0.01" step="0.01" class="form-control" required></div>
                 <div class="mb-3"><label class="form-label" for="payAt">Real tarix <small class="text-muted">(boş — indi)</small></label><input id="payAt" type="datetime-local" name="occurred_at" class="form-control"></div>

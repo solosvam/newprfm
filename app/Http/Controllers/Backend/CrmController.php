@@ -335,8 +335,8 @@ class CrmController extends Controller
             $finance = app(\App\Services\FinanceService::class);
             $finance->syncAccounts();
             $settlement = [
-                'accounts' => \App\Models\Finance\FinanceAccount::whereIn('type', ['courier', 'cash', 'bank', 'person'])->where('active', true)->orderBy('name')->get()
-                    ->sortBy(fn ($a) => array_search($a->type, ['courier', 'cash', 'bank', 'person'], true))->values(),
+                'accounts' => \App\Models\Finance\FinanceAccount::whereIn('type', ['courier', 'cash', 'card', 'bank', 'person'])->where('active', true)->orderBy('name')->get()
+                    ->sortBy(fn ($a) => array_search($a->type, ['courier', 'cash', 'card', 'bank', 'person'], true))->values(),
                 'paid' => $finance->allocationPaid($order->items->flatMap->allocations->pluck('id')->all()),
                 'movements' => \App\Models\Finance\MoneyMovement::with(['from', 'to', 'user', 'reversedBy'])
                     ->where('order_id', $order->id)->latest('occurred_at')->latest('id')->get(),
