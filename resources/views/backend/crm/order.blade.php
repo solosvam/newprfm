@@ -142,7 +142,7 @@
                 $tabs['item-history'] = ['Tarixçə', null, false, 'clock'];
                 $tabs['info'] = ['Məlumat', null, false, 'info-circle'];
             @endphp
-    <div class="card mb-2 od-sticky" data-od-sticky>
+    <div class="card mb-2 od-sticky border border-primary" data-od-sticky>
         <div class="card-body py-2">
             <div class="row g-3 align-items-center">
                 <div class="col-12 col-xl-6 order-2 order-xl-1">
