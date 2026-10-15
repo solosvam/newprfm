@@ -47,6 +47,7 @@
                 @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
             </div>
             <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end gap-2 flex-wrap">
+                <a href="{{ route('admin.finance.report') }}" class="btn btn-outline-primary w-100 w-sm-auto">Pul axını</a>
                 <a href="{{ route('admin.finance.categories') }}" class="btn btn-outline-primary w-100 w-sm-auto">Kateqoriyalar</a>
                 <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#accountModal">
                     <span>Yeni hesab</span><i data-acorn-icon="plus"></i>

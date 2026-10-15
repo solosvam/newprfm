@@ -11,3 +11,7 @@
 .settle-stat { padding: 14px 16px; border-radius: var(--border-radius-md); background: var(--background); }
 .settle-stat span { display: block; font-size: 12px; color: var(--muted); }
 .settle-stat b { font-size: 17px; font-variant-numeric: tabular-nums; }
+/* Pul axını hesabatı */
+.finance-report td:first-child { min-width: 220px; }
+.finance-report__total td { background: var(--background); }
+.finance-report__gap { padding: 6px !important; border: 0 !important; }

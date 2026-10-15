@@ -64,6 +64,7 @@ class MoneyMovement extends Model
     public function order(): BelongsTo { return $this->belongsTo(Order::class); }
     public function allocation(): BelongsTo { return $this->belongsTo(OrderItemAllocation::class, 'order_item_allocation_id'); }
     public function user(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
+    public function reversalOf(): BelongsTo { return $this->belongsTo(self::class, 'reversal_of_id'); }
     public function reversedBy(): HasOne { return $this->hasOne(self::class, 'reversal_of_id'); }
 
     public function kindLabel(): string

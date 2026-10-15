@@ -188,6 +188,28 @@ class FinanceController extends Controller
         ]);
     }
 
+    /** Pul axını: aylar × kateqoriyalar (ən çox 24 ay) */
+    public function report(Request $request, \App\Services\Finance\CashFlowReport $report): View
+    {
+        $month = fn ($value, $default) => rescue(fn () => $value ? \Illuminate\Support\Carbon::createFromFormat('!Y-m', $value) : $default, $default, false);
+        $to = $month($request->query('to'), now()->startOfMonth());
+        $from = $month($request->query('from'), $to->copy()->subMonths(5));
+        if ($from > $to) [$from, $to] = [$to, $from];
+        if ($from->diffInMonths($to) > 23) $from = $to->copy()->subMonths(23);
+
+        $accounts = FinanceAccount::whereIn('type', array_merge(FinanceAccount::OWN, ['courier']))->where('active', true)->orderBy('name')->get()
+            ->sortBy(fn ($a) => array_search($a->type, array_merge(FinanceAccount::OWN, ['courier']), true))->values();
+        $account = $accounts->firstWhere('id', $request->integer('account'));
+        // Formadan gələndə qutu işarələnməyibsə — göstərilir; ilk açılışda köçürmələr gizlidir
+        $submitted = $request->has('to');
+        $hideTransfers = $submitted ? $request->boolean('hide_transfers') : true;
+        $hideEmpty = $request->boolean('hide_empty');
+
+        $data = $report->build($from, $to->copy()->endOfMonth(), $account, $hideTransfers, $hideEmpty);
+
+        return view('backend.finance.report', $data + compact('accounts', 'account', 'from', 'to', 'hideTransfers', 'hideEmpty'));
+    }
+
     public function categories(): View
     {
         $categories = FinanceCategory::withCount(['movements', 'children'])->get();

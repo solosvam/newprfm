@@ -197,6 +197,40 @@ class FinanceTest extends TestCase
         $this->assertSame(['outgo', 'other_expense'], [MoneyMovement::find($spent)->kind, MoneyMovement::find($spent)->category->code]);
     }
 
+    public function test_cash_flow_report_groups_by_category_and_month(): void
+    {
+        $cash = $this->f()->system('cash');
+        $bank = $this->f()->system('bank');
+        $external = $this->f()->system('external');
+        $salary = FinanceCategory::create(['name' => 'Əməkhaqqı', 'type' => 'expense']);
+        $bonus = FinanceCategory::create(['name' => 'Bonus', 'type' => 'expense', 'parent_id' => $salary->id]);
+        $person = FinanceAccount::create(['type' => 'person', 'name' => 'Elçin']);
+        $lastMonth = now()->subMonthNoOverflow()->startOfMonth()->addDays(2);
+
+        $this->f()->record($external, $cash, 1000, 'income', ['category_id' => FinanceCategory::byCode('owner')->id, 'occurred_at' => $lastMonth], 7);
+        $this->f()->record($cash, $external, 300, 'outgo', ['category_id' => $salary->id], 7);
+        $this->f()->record($cash, $external, 50, 'outgo', ['category_id' => $bonus->id], 7);
+        $wrong = $this->f()->record($cash, $external, 20, 'outgo', ['category_id' => $salary->id], 7);
+        $this->f()->reverse($wrong, 7);
+        $this->f()->record($cash, $bank, 100, 'transfer', [], 7);                // daxili — nəticəyə təsir etmir
+        $this->f()->record($person, $cash, 400, 'transfer', [], 7);              // borc — ayrıca blok
+        $this->f()->record($person, $external, 30, 'outgo', ['category_id' => $salary->id], 7); // şəxs öz cibindən
+
+        $report = app(\App\Services\Finance\CashFlowReport::class)->build(now()->subMonthNoOverflow()->startOfMonth(), now()->endOfMonth());
+        [$prev, $cur] = [now()->subMonthNoOverflow()->format('Y-m'), now()->format('Y-m')];
+        $row = fn ($section, $name) => collect($report[$section])->first(fn ($r) => $r['category']?->name === $name);
+
+        $this->assertSame(38000, $row('expense', 'Əməkhaqqı')['values'][$cur]); // 300 + 50 bonus + 30 şəxsdən, 20 əks olunub
+        $this->assertSame(5000, $row('expense', 'Bonus')['values'][$cur]);
+        $this->assertSame(100000, $row('income', 'Sahibkar')['values'][$prev]);
+        $this->assertNull($row('expense', 'Köçürmə'));                        // köçürmələr gizlədilib
+        $this->assertSame(-38000, $report['totals']['result'][$cur]);
+        $this->assertSame(40000, $report['persons']['in'][$cur]);
+
+        $shown = app(\App\Services\Finance\CashFlowReport::class)->build(now()->startOfMonth(), now()->endOfMonth(), $cash, false);
+        $this->assertSame(10000, collect($shown['expense'])->first(fn ($r) => $r['category']?->code === 'transfer')['values'][$cur]);
+    }
+
     public function test_kind_rules_are_enforced(): void
     {
         $this->expectException(ValidationException::class);
