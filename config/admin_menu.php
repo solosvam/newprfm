@@ -66,7 +66,7 @@ return [
         ],
     ],
     [
-        'title'      => 'Kassa',
+        'title'      => 'Maliyyə',
         'icon'       => 'wallet',
         'route'      => 'admin.finance.index',
         'permission' => 'finance',

@@ -5,7 +5,7 @@
 @php
     $html_tag_data = [];
     $title = 'Pul axını';
-    $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Kassa', '' => 'Pul axını'];
+    $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Maliyyə', '' => 'Pul axını'];
     $monthNames = ['', 'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'İyun', 'İyul', 'Avqust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
     $keys = array_map(fn ($m) => $m->format('Y-m'), $months);
     $multi = count($keys) > 1;

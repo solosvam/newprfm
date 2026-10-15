@@ -5,7 +5,7 @@
 @php
     $html_tag_data = [];
     $title = 'Kateqoriyalar';
-    $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Kassa', '' => 'Kateqoriyalar'];
+    $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Maliyyə', '' => 'Kateqoriyalar'];
     $tone = ['income' => 'bg-outline-success', 'expense' => 'bg-outline-danger', 'both' => 'bg-outline-primary'];
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])

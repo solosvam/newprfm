@@ -1,8 +1,8 @@
 @use('App\Models\Finance\MoneyMovement')
 @php
     $html_tag_data = [];
-    $title = 'Kassa və hesablar';
-    $breadcrumbs = ['/' => 'ParfumShop', '' => 'Kassa'];
+    $title = 'Maliyyə';
+    $breadcrumbs = ['/' => 'ParfumShop', '' => 'Maliyyə'];
     $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN';
     // Qalığın mənası hesab tipinə görə
     $describe = function ($account) use ($balances, $debts, $money) {

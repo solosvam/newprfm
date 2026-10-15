@@ -5,7 +5,7 @@
 @php
     $html_tag_data = [];
     $title = $account->name;
-    $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Kassa', '' => $account->name];
+    $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Maliyyə', '' => $account->name];
     $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN';
     $editable = in_array($account->type, array_merge(\App\Models\Finance\FinanceAccount::CREATABLE, ['online']), true);
 @endphp

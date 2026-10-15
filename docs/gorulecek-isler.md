@@ -161,7 +161,7 @@ Nə ediləcəyi hələ qərarlaşdırılmayıb. Rəqəmlər lokal bazadandır (9
 - Hesablar: Nağd / Kart / Bank / Şəxs ("Yeni hesab", başlanğıc qalıq — "Düzəliş" mədaxili). Şəxsin qalığı şirkətin pulu sayılmır;
   şəxslə hesablaşma köçürmə ilə: Şəxs → Kassa (mənfi qalıq — borcumuz), Kassa → Şəxs. Şəxs öz cibindən ödəyibsə — Məxaric şəxsdən.
   Qalığı sıfır olan hesab deaktiv edilə bilər; sistem hesabları — yox.
-- Pul axını (Kassa → "Pul axını"): aylar × kateqoriyalar, ən çox 24 ay. Bütün balanslar = şirkətin hesabları + kuryerlər; gəlir / xərc
+- Pul axını (Maliyyə → "Pul axını"): aylar × kateqoriyalar, ən çox 24 ay. Bütün balanslar = şirkətin hesabları + kuryerlər; gəlir / xərc
   kimin ödəməsindən asılı olmayaraq kateqoriyaya yazılır (şəxsin öz cibindən ödədiyi də xərcdir). Daxili köçürmə həm məxaricdə, həm
   mədaxildə görünür (standart gizli). Şəxslərlə hesablaşma maliyyə nəticəsinə daxil deyil — ayrıca blokdadır. Əks əməliyyat əslindən çıxılır.
 - Köhnə "Xərc" əməliyyatları "Digər xərclər" Məxaricinə, sahibkar əməliyyatları "Sahibkar" kateqoriyasına çevrilib (migrasiya).

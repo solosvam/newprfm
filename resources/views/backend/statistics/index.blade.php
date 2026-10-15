@@ -388,7 +388,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="small-title">Maliyyə — hazırkı vəziyyət</h2>
                 <a href="{{ route('admin.finance.index') }}" class="btn btn-icon btn-icon-end btn-xs btn-background-alternate p-0 mb-2 dash-link">
-                    <span class="align-bottom">Kassa</span>
+                    <span class="align-bottom">Maliyyə</span>
                     <i data-acorn-icon="chevron-right" class="align-middle" data-acorn-size="12"></i>
                 </a>
             </div>
