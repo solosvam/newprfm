@@ -104,9 +104,9 @@
                                 <td class="text-alternate">
                                     <a href="{{ route('admin.procurement.warehouses.edit', $warehouse) }}"
                                        class="btn btn-primary btn-sm">Redaktə et</a>
-                                    {{-- Alış-veriş olubsa server silmir, deaktiv edir (ProcurementController::destroyWarehouse) --}}
+                                    {{-- Pul haqq-hesabı olubsa server silmir, deaktiv edir (ProcurementController::destroyWarehouse) --}}
                                     <form method="POST" action="{{ route('admin.procurement.warehouses.destroy', $warehouse) }}" class="d-inline"
-                                          onsubmit="return confirm('{{ e(addslashes($warehouse->name_az)) }} silinsin? Bu anbarla alış-veriş olubsa, silinməyəcək — deaktiv ediləcək.')">
+                                          onsubmit="return confirm('{{ e(addslashes($warehouse->name_az)) }} silinsin? Bu anbarla pul haqq-hesabı olubsa, silinməyəcək — deaktiv ediləcək.')">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-outline-danger btn-sm">Sil</button>
                                     </form>

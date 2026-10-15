@@ -71,6 +71,7 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] `.env`-də `ONESIGNAL_REST_API_KEY` (olmasa push getmir).
 - [ ] `.env`-də `SHORT_URL=https://paf.az` (sonra `php artisan config:cache`). Olmasa ödəniş, referal və anbar linkləri əsas domenlə gedir.
 - [ ] Migrasiyaları işə salmaq.
+- [ ] **Test məlumatını silmək, sonra sıfırlama səhifəsini koddan çıxarmaq.** `admin/reset` (menyuda yoxdur, yalnız Super admin): kassa / pul hərəkətləri, sifarişlər və asan sifarişlər, price listlər. Əvvəl bazanın ehtiyat nüsxəsi. İş bitəndən sonra `ResetController`, `ProductionReset`, `backend/reset.blade.php`, testi və `routes/admin.php`-dəki iki sətir silinməlidir.
 - [ ] `composer install` (price list importu üçün `phpoffice/phpspreadsheet` əlavə olunub).
 - [ ] Cron `sms:check-delivery`-ni də işlədir (5 dəqiqədən bir): göndərilən SMS-lərin çatdırılma statusu.
 - [ ] **Test rejimində yoxlamaq:** Birbank taksit seçəndə bankın səhifəsində ayların (2 / 3 / 6) göründüyünü — 11 oktyabrdan ay `description: "TAKSIT=N"` ilə göndərilir, əvvəl göndərilmirdi.

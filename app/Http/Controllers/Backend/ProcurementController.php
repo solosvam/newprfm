@@ -65,23 +65,30 @@ class ProcurementController extends Controller
     }
 
     /**
-     * Anbarı silmək. Alış-veriş olubsa (sifarişdə bu anbar seçilib və ya anbarla pul hərəkəti var) silinmir — deaktiv edilir,
-     * çünki sifarişlərin və hesablaşmaların tarixçəsi ona bağlıdır. Sorğu, cavab, link, price list alış-veriş sayılmır və anbarla birlikdə silinir.
+     * Anbarı silmək. Anbarla pul haqq-hesabı olubsa (Kassada ödəniş / geri qaytarma) silinmir — deaktiv edilir, hesablaşmaların tarixçəsi ona bağlıdır.
+     * Sorğu, cavab, link, price list və ləğv edilmiş seçimlər alış-veriş sayılmır — anbarla birlikdə silinir.
+     * Hələ qüvvədə olan seçim varsa (sifarişin təminatı bu anbardandır) silinmir — əvvəl seçim ləğv edilməlidir.
      */
     public function destroyWarehouse(Warehouse $warehouse)
     {
         $account = \App\Models\Finance\FinanceAccount::where('type', 'warehouse')->where('warehouse_id', $warehouse->id)->first();
-        $traded = OrderItemAllocation::where('warehouse_id', $warehouse->id)->exists()
-            || ($account && \Illuminate\Support\Facades\DB::table('money_movements')
-                ->where(fn ($q) => $q->where('from_account_id', $account->id)->orWhere('to_account_id', $account->id))->exists());
+        $paid = $account && \Illuminate\Support\Facades\DB::table('money_movements')
+            ->where(fn ($q) => $q->where('from_account_id', $account->id)->orWhere('to_account_id', $account->id))->exists();
 
-        if ($traded) {
+        if ($paid) {
             $warehouse->update(['active' => false]);
 
-            return back()->with('warning', $warehouse->name_az.' ilə alış-veriş olduğu üçün silinə bilməz — deaktiv edildi.');
+            return back()->with('warning', $warehouse->name_az.' ilə pul haqq-hesabı olduğu üçün silinə bilməz — deaktiv edildi.');
+        }
+        $live = OrderItemAllocation::where('warehouse_id', $warehouse->id)->where('status', '!=', OrderItemAllocation::CANCELLED)->count();
+        if ($live) {
+            return back()->withErrors(['warehouse' => $warehouse->name_az.' '.$live.' qüvvədə olan seçimdə var (sifarişin məhsulu bu anbardan gəlir). Əvvəl həmin seçimləri ləğv edin, sonra silin.']);
         }
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($warehouse, $account) {
+            $allocationIds = OrderItemAllocation::where('warehouse_id', $warehouse->id)->pluck('id'); // yalnız ləğv edilmişlər qalıb
+            \Illuminate\Support\Facades\DB::table('allocation_status_logs')->whereIn('order_item_allocation_id', $allocationIds)->delete();
+            OrderItemAllocation::whereIn('id', $allocationIds)->delete();
             $requestIds = WarehouseRequest::where('warehouse_id', $warehouse->id)->pluck('id');
             $itemIds = \App\Models\Procurement\WarehouseRequestItem::whereIn('warehouse_request_id', $requestIds)->pluck('id');
             \App\Models\Procurement\WarehouseOffer::whereIn('warehouse_request_item_id', $itemIds)->delete();

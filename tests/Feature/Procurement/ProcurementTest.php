@@ -226,20 +226,23 @@ class ProcurementTest extends TestCase
         $this->assertNull(Warehouse::find($asked->id));
         $this->assertSame(0, WarehouseRequest::count());
 
-        // Sifarişdə seçilib — silinmir, deaktiv edilir
-        $bought = Warehouse::create(['name_az' => 'Seçilən']);
-        $offer = $this->offer($order, $bought, 2, '50');
-        app(ProcurementService::class)->allocate($order, $offer->id, 1, 7);
-        $this->delete(route('admin.procurement.warehouses.destroy', $bought))
-            ->assertSessionHas('warning', 'Seçilən ilə alış-veriş olduğu üçün silinə bilməz — deaktiv edildi.');
-        $this->assertFalse(Warehouse::find($bought->id)->active);
+        // Qüvvədə olan seçim — silinmir (sifarişin təminatı pozulmasın); seçim ləğv ediləndən sonra silinir
+        $chosen = Warehouse::create(['name_az' => 'Seçilən']);
+        $offer = $this->offer($order, $chosen, 2, '50');
+        $allocation = app(ProcurementService::class)->allocate($order, $offer->id, 1, 7);
+        $this->delete(route('admin.procurement.warehouses.destroy', $chosen))->assertSessionHasErrors('warehouse');
+        $this->assertNotNull(Warehouse::find($chosen->id));
+        app(ProcurementService::class)->cancelAllocation($order, $allocation->id, 'test', 7);
+        $this->delete(route('admin.procurement.warehouses.destroy', $chosen))->assertSessionHas('success', 'Seçilən silindi.');
+        $this->assertSame(0, \App\Models\Procurement\OrderItemAllocation::count());
 
-        // Anbarla pul hərəkəti var — o da alış-verişdir
+        // Anbarla pul haqq-hesabı var — silinmir, deaktiv edilir
         $paid = Warehouse::create(['name_az' => 'Ödənilən']);
         $finance = app(\App\Services\FinanceService::class);
         \Illuminate\Support\Facades\DB::table('money_movements')->insert(['from_account_id' => 999, 'to_account_id' => $finance->warehouseAccount($paid)->id, 'amount' => 30]);
-        $this->delete(route('admin.procurement.warehouses.destroy', $paid))->assertSessionHas('warning');
-        $this->assertNotNull(Warehouse::find($paid->id));
+        $this->delete(route('admin.procurement.warehouses.destroy', $paid))
+            ->assertSessionHas('warning', 'Ödənilən ilə pul haqq-hesabı olduğu üçün silinə bilməz — deaktiv edildi.');
+        $this->assertFalse(Warehouse::find($paid->id)->active);
 
         // Hesabı olan, amma pul hərəkəti olmayan anbar silinir (hesabı da)
         $empty = Warehouse::create(['name_az' => 'Boş']);

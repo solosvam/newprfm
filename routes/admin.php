@@ -145,6 +145,10 @@ Route::prefix('admin')
                     Route::post('/orders/{order}/requests/{warehouseRequest}/sms', 'requestSms')->name('requests.sms');
                 });
 
+            // MÜVƏQQƏTİ: canlıya çıxmazdan əvvəl test məlumatının silinməsi — yalnız Super admin, menyuda yoxdur (sonra silinəcək)
+            Route::get('/reset', [\App\Http\Controllers\Backend\ResetController::class, 'index'])->name('reset');
+            Route::post('/reset', [\App\Http\Controllers\Backend\ResetController::class, 'run'])->middleware('throttle:5,1')->name('reset.run');
+
             // Anbarların price listləri (Excel importu, uyğunlaşdırma, sifarişdə axtarış)
             Route::middleware('can:crm')->controller(\App\Http\Controllers\Backend\PriceListController::class)
                 ->prefix('price-lists')->name('price-lists.')->group(function () {
