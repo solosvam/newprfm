@@ -39,8 +39,6 @@
 
 /* Tablar */
 /* Tablar: Acorn "Line Title" üslubu olduğu kimi; yalnız yuxarıdan boşluq və sayğacın düzlənməsi */
-.order-workspace .order-detail-tabs { margin-top: 16px; }
-.order-workspace .order-detail-tabs + .tab-content { padding-top: 14px; }
 .order-workspace .order-detail-tabs .nav-link { white-space: nowrap; }
 .order-workspace .od-tab-count {
     display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px;
@@ -110,3 +108,5 @@
 .order-workspace .od-sticky.is-stuck .od-sticky__label,
 .order-workspace .od-sticky.is-stuck .od-sticky__extra { display: none !important; }
 .order-workspace .od-sticky.is-stuck .cta-3 { font-size: 1rem; }
+/* Aktiv tabda (pill — mavi fon) say nişanı ağ olsun, fonla qarışmasın */
+.order-workspace .order-detail-tabs .nav-link.active .od-tab-count { background: #fff; color: var(--primary); }

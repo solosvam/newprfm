@@ -146,7 +146,7 @@
         <div class="card-body py-2">
             <div class="row g-3 align-items-center">
                 <div class="col-12 col-xl-6 order-2 order-xl-1">
-                    <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title responsive-tabs order-detail-tabs mb-0" role="tablist" aria-label="Sifariş bölmələri">
+                    <ul class="nav nav-pills responsive-tabs order-detail-tabs mb-0" role="tablist" aria-label="Sifariş bölmələri">
                         @foreach($tabs as $key => [$label, $count, $warn, $icon])
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $key }}-tab" data-bs-toggle="tab" href="#{{ $key }}" data-bs-target="#{{ $key }}" role="tab" aria-controls="{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}"><i data-acorn-icon="{{ $icon }}" data-acorn-size="16" class="me-1"></i>{{ $label }}@if($count)<span class="od-tab-count {{ $warn ? 'is-warn' : '' }}">{{ $count }}</span>@endif</a>
