@@ -102,3 +102,11 @@
 .order-workspace .od-notice.is-success { border-left-color: var(--success); }
 .order-workspace .od-notice.is-info { border-left-color: var(--info); }
 .order-workspace .od-notice__meta { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* Yapışan kart (tablar + status / müştəri / yekun / ödəniş): sürüşəndə üst menyunun altında qalır.
+   --od-sticky-top üst menyunun hündürlüyüdür (crm-order-detail.js ölçür). Yapışanda kiçilir: başlıqlar, telefon və nişan gizlənir. */
+.order-workspace .od-sticky { position: sticky; top: var(--od-sticky-top, 0px); z-index: 20; transition: box-shadow .15s; }
+.order-workspace .od-sticky.is-stuck { box-shadow: 0 6px 16px rgba(0, 0, 0, .08); }
+.order-workspace .od-sticky.is-stuck .od-sticky__label,
+.order-workspace .od-sticky.is-stuck .od-sticky__extra { display: none !important; }
+.order-workspace .od-sticky.is-stuck .cta-3 { font-size: 1rem; }

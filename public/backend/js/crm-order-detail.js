@@ -177,3 +177,26 @@ $(document).ready(function () {
     });
 
 });
+
+// Yapışan kart: üst menyunun altında yapışır; yapışanda .is-stuck (kiçik görünüş).
+// Menyunun alt kənarı hər sürüşmədə yenidən ölçülür — Acorn menyusu ekran ölçüsünə görə sabit / adi ola bilir.
+(() => {
+    const card = document.querySelector('[data-od-sticky]');
+    if (!card) return;
+    const nav = document.querySelector('#nav.nav-container, .nav-container');
+    let frame = null;
+    const update = () => {
+        frame = null;
+        const box = nav?.getBoundingClientRect();
+        const top = box && box.bottom > 0 && ['fixed', 'sticky'].includes(getComputedStyle(nav).position) ? Math.round(box.bottom) : 0;
+        card.style.setProperty('--od-sticky-top', top + 'px');
+        // Kartın əsl yeri (marker) menyunun altından yuxarı keçibsə — kart yapışıb
+        card.classList.toggle('is-stuck', marker.getBoundingClientRect().top < top);
+    };
+    const marker = document.createElement('div');
+    card.before(marker);
+    const schedule = () => { frame ??= requestAnimationFrame(update); };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
+})();

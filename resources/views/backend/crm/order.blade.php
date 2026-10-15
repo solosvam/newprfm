@@ -131,30 +131,57 @@
         </div></div>
     @endif
 
-    {{-- Nazik zolaq: operatorun iş zamanı daim baxdığı məlumat (qalanı "Məlumat" tabındadır) --}}
-    <div class="card mb-2">
-        <div class="card-body py-3">
+    {{-- Yapışan kart: solda tablar, sağda daim lazım olan məlumat (status, müştəri, yekun, ödəniş). Səhifə sürüşəndə
+         ekranın yuxarısında qalır və kiçilir (crm-order-detail.js → .is-stuck) — başqa taba keçmək üçün yuxarı qalxmaq lazım deyil.
+         Qalan məlumat "Məlumat" tabındadır. --}}
+            @php
+                // [ad, say (nişan), say diqqət tələb edirmi, Acorn ikonu]
+                $tabs = ['process' => ['Proses', $process['counts']['choose'] ?: null, $process['counts']['choose'] > 0, 'settings-1'],
+                    'payments' => ['Ödənişlər', $order->payments->count() ?: null, false, 'credit-card']];
+                if (!empty($settlement)) $tabs['settlements'] = ['Hesablaşmalar', null, false, 'sync-horizontal'];
+                $tabs['item-history'] = ['Tarixçə', null, false, 'clock'];
+                $tabs['info'] = ['Məlumat', null, false, 'info-circle'];
+            @endphp
+    <div class="card mb-2 od-sticky" data-od-sticky>
+        <div class="card-body py-2">
             <div class="row g-3 align-items-center">
-                <div class="col-6 col-md-3">
-                    <div class="text-small text-muted mb-1">STATUS</div>
-                    <span class="badge bg-outline-primary">{{ $order->status?->name_az ?? '—' }}</span>
+                <div class="col-12 col-xl-6 order-2 order-xl-1">
+                    <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title responsive-tabs order-detail-tabs mb-0" role="tablist" aria-label="Sifariş bölmələri">
+                        @foreach($tabs as $key => [$label, $count, $warn, $icon])
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $key }}-tab" data-bs-toggle="tab" href="#{{ $key }}" data-bs-target="#{{ $key }}" role="tab" aria-controls="{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}"><i data-acorn-icon="{{ $icon }}" data-acorn-size="16" class="me-1"></i>{{ $label }}@if($count)<span class="od-tab-count {{ $warn ? 'is-warn' : '' }}">{{ $count }}</span>@endif</a>
+                            </li>
+                        @endforeach
+                        <li class="nav-item dropdown ms-auto pe-0 d-none responsive-tab-dropdown">
+                            <a class="btn btn-icon btn-icon-only btn-background pt-0 bg-transparent pe-0" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i data-acorn-icon="more-horizontal"></i></a>
+                            <ul class="dropdown-menu mt-2 dropdown-menu-end"></ul>
+                        </li>
+                    </ul>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="text-small text-muted mb-1">MÜŞTƏRİ</div>
-                    <a href="{{ route('admin.crm.customer', $customer) }}">{{ $customer->name }} {{ $customer->surname }}</a>
-                    @if($customer->mobile)<a class="d-block text-small" href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile) }}">{{ $customer->mobile }}</a>@endif
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="text-small text-muted mb-1">YEKUN</div>
-                    <div class="cta-3 text-primary">{{ number_format((float) $order->total, 2) }} AZN</div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="text-small text-muted mb-1">ÖDƏNİŞ</div>
-                    <div>{{ $order->paymentMethod?->name_az ?? '—' }}</div>
-                    {{-- Qapıda ödənişdə vəziyyət üsulun adını təkrarlayır ("Qapıda ödəniş") — nişan yalnız fərqli olanda --}}
-                    @if(($paymentLabels[$order->payment_status] ?? null) && $paymentLabels[$order->payment_status] !== $order->paymentMethod?->name_az)
-                        <span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] }}</span>
-                    @endif
+                <div class="col-12 col-xl-6 order-1 order-xl-2">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-6 col-md-3">
+                            <div class="text-small text-muted mb-1 od-sticky__label">STATUS</div>
+                            <span class="badge bg-outline-primary">{{ $order->status?->name_az ?? '—' }}</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-small text-muted mb-1 od-sticky__label">MÜŞTƏRİ</div>
+                            <a href="{{ route('admin.crm.customer', $customer) }}">{{ $customer->name }} {{ $customer->surname }}</a>
+                            @if($customer->mobile)<a class="d-block text-small od-sticky__extra" href="tel:+{{ preg_replace('/\D+/', '', $customer->mobile) }}">{{ $customer->mobile }}</a>@endif
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-small text-muted mb-1 od-sticky__label">YEKUN</div>
+                            <div class="cta-3 text-primary">{{ number_format((float) $order->total, 2) }} AZN</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-small text-muted mb-1 od-sticky__label">ÖDƏNİŞ</div>
+                            <div>{{ $order->paymentMethod?->name_az ?? '—' }}</div>
+                            {{-- Qapıda ödənişdə vəziyyət üsulun adını təkrarlayır ("Qapıda ödəniş") — nişan yalnız fərqli olanda --}}
+                            @if(($paymentLabels[$order->payment_status] ?? null) && $paymentLabels[$order->payment_status] !== $order->paymentMethod?->name_az)
+                                <span class="badge od-sticky__extra {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] }}</span>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -170,26 +197,6 @@
         @endif
     </div>
 
-    {{-- Tablar: kartdan kənarda (fonun üstündə); hər tabın məzmunu öz kartlarındadır — kart içində kart yoxdur --}}
-            @php
-                $tabs = ['process' => ['Proses', $process['counts']['choose'] ?: null, $process['counts']['choose'] > 0],
-                    'payments' => ['Ödənişlər', $order->payments->count() ?: null, false]];
-                if (!empty($settlement)) $tabs['settlements'] = ['Hesablaşmalar', null, false];
-                $tabs['item-history'] = ['Tarixçə', null, false];
-                $tabs['info'] = ['Məlumat', null, false];
-            @endphp
-            {{-- Acorn "Responsive Tabs with Line Title": link kimi tablar; sığmayanlar "…" menyusuna düşür (responsivetab.js) --}}
-            <ul class="nav nav-tabs nav-tabs-title nav-tabs-line-title responsive-tabs order-detail-tabs" role="tablist" aria-label="Sifariş bölmələri">
-                @foreach($tabs as $key => [$label, $count, $warn])
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link {{ $loop->first ? 'active' : '' }}" id="{{ $key }}-tab" data-bs-toggle="tab" href="#{{ $key }}" data-bs-target="#{{ $key }}" role="tab" aria-controls="{{ $key }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $label }}@if($count)<span class="od-tab-count {{ $warn ? 'is-warn' : '' }}">{{ $count }}</span>@endif</a>
-                    </li>
-                @endforeach
-                <li class="nav-item dropdown ms-auto pe-0 d-none responsive-tab-dropdown">
-                    <a class="btn btn-icon btn-icon-only btn-background pt-0 bg-transparent pe-0" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i data-acorn-icon="more-horizontal"></i></a>
-                    <ul class="dropdown-menu mt-2 dropdown-menu-end"></ul>
-                </li>
-            </ul>
         <div class="tab-content mb-5">
             <div class="tab-pane fade show active" id="process" role="tabpanel" aria-labelledby="process-tab" tabindex="0">
                 @if($cancelBlock && $order->items->contains(fn ($i) => $i->activeQuantity() > 0))
