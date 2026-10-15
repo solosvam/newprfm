@@ -23,7 +23,7 @@ use Throwable;
  *  - seçim: "sizdən seçildi, rezerv edin" + "Rezerv etdim" düyməsi (→ "Anbar ayırdı");
  *  - ləğv: məlumat mesajı.
  * Göndərilən hər mesaj jurnala yazılır (sms_logs, channel = telegram) — SMS ilə eyni yerdə görünür.
- * Cavablar yalnız anbarın öz qrupundan (warehouses.telegram_id) qəbul olunur.
+ * Cavablar yalnız anbarın öz qrupundan (Warehouse::telegramChatId) qəbul olunur.
  */
 class TelegramWarehouseBot
 {
@@ -231,21 +231,21 @@ class TelegramWarehouseBot
         string $context, string $subjectType, int $logSubjectId, int $actor): SmsLog
     {
         $log = ['context' => $context, 'channel' => 'telegram', 'subject_type' => $subjectType, 'subject_id' => $logSubjectId,
-            'msisdn' => $warehouse->telegram_id, 'message' => Str::limit(strip_tags($text), 1000), 'created_by' => $actor ?: null, 'created_at' => now()];
+            'msisdn' => $warehouse->telegramChatId(), 'message' => Str::limit(strip_tags($text), 1000), 'created_by' => $actor ?: null, 'created_at' => now()];
         $message = null;
         try {
             if ($kind) {
                 // Düymələrdə öz id-si olduğu üçün qeyd əvvəl yaradılır, mesaj id-si göndərişdən sonra yazılır
-                $message = TelegramMessage::create(['chat_id' => (string) $warehouse->telegram_id, 'message_id' => 0, 'kind' => $kind, 'subject_id' => $subjectId, 'text' => $text]);
+                $message = TelegramMessage::create(['chat_id' => (string) $warehouse->telegramChatId(), 'message_id' => 0, 'kind' => $kind, 'subject_id' => $subjectId, 'text' => $text]);
             }
             $markup = $buttons && $message ? ['reply_markup' => ['inline_keyboard' => $buttons($message)]] : [];
             $sent = null;
             if ($photo) {
                 // Şəkil yüklənməsə (fayl yoxdur, Telegram ünvana çata bilmir) — mesaj şəkilsiz gedir
-                $sent = rescue(fn () => $this->api->call('sendPhoto', ['chat_id' => $warehouse->telegram_id, 'photo' => $photo, 'caption' => $text, 'parse_mode' => 'HTML'] + $markup), null, false);
+                $sent = rescue(fn () => $this->api->call('sendPhoto', ['chat_id' => $warehouse->telegramChatId(), 'photo' => $photo, 'caption' => $text, 'parse_mode' => 'HTML'] + $markup), null, false);
             }
             $withPhoto = $sent !== null; // şəkilli mesajın mətni "caption"dır — redaktə ayrı üsulla gedir
-            $sent ??= $this->api->call('sendMessage', ['chat_id' => $warehouse->telegram_id, 'text' => $text, 'parse_mode' => 'HTML'] + $markup);
+            $sent ??= $this->api->call('sendMessage', ['chat_id' => $warehouse->telegramChatId(), 'text' => $text, 'parse_mode' => 'HTML'] + $markup);
             $message?->update(['message_id' => (int) $sent['message_id'], 'has_photo' => $withPhoto]);
             $log += ['status' => SmsLog::SENT, 'provider_id' => (string) $sent['message_id']];
         } catch (Throwable $e) {

@@ -49,7 +49,8 @@ class TelegramWarehouseTest extends TestCase
 
     private function telegramWarehouse(): Warehouse
     {
-        return Warehouse::create(['name_az' => 'Aksin', 'active' => true, 'telegram_id' => self::CHAT, 'request_channel' => 'telegram']);
+        // Köhnə sistemdəki kimi qrup id-si "-" işarəsiz saxlanır — göndərəndə əlavə olunur
+        return Warehouse::create(['name_az' => 'Aksin', 'active' => true, 'telegram_id' => ltrim(self::CHAT, '-'), 'request_channel' => 'telegram']);
     }
 
     private function order(int $quantity): Order
@@ -155,6 +156,13 @@ class TelegramWarehouseTest extends TestCase
 
         $this->press(TelegramMessage::where('kind', TelegramMessage::ALLOCATION)->sole(), 'reserve')->assertOk();
         $this->assertSame(OrderItemAllocation::RESERVED, $allocation->fresh()->status);
+    }
+
+    public function test_group_id_gets_the_minus_sign_only_when_missing(): void
+    {
+        $this->assertSame('-482788956', (new Warehouse(['telegram_id' => '482788956']))->telegramChatId());
+        $this->assertSame('-1001234567890', (new Warehouse(['telegram_id' => '-1001234567890']))->telegramChatId());
+        $this->assertNull((new Warehouse(['telegram_id' => null]))->telegramChatId());
     }
 
     public function test_id_command_replies_with_the_group_id(): void

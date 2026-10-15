@@ -12,7 +12,7 @@
             <input type="text" id="warehouse_{{ $field }}" name="{{ $field }}"
                    class="form-control @error($field) is-invalid @enderror"
                    value="{{ old($field, $warehouse?->{$field}) }}" maxlength="{{ $maxlength }}"
-                   @required($field === 'name_az') @if($field === 'telegram_id') inputmode="numeric" placeholder="İstəyə bağlı, məs. 123456789" @endif>
+                   @required($field === 'name_az') @if($field === 'telegram_id') inputmode="numeric" placeholder="Qrupun ID-si, məs. 482788956" @endif>
             @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
     </div>
@@ -25,7 +25,7 @@
                 <option value="{{ $value }}" @selected(old('request_channel', $warehouse?->request_channel ?? 'sms') === $value)>{{ $label }}</option>
             @endforeach
         </select>
-        <div class="form-text">Anbara sorğu bu yolla göndərilir. Telegram üçün Telegram ID yazılmalıdır.</div>
+        <div class="form-text">Anbara sorğu bu yolla göndərilir. Telegram üçün anbarın qrupunun ID-si yazılır ("-" işarəsi göndərəndə özü əlavə olunur). Qrupun ID-sini öyrənmək üçün qrupda /id yazın.</div>
         @error('request_channel')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </div>
