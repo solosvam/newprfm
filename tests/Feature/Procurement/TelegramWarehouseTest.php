@@ -109,6 +109,8 @@ class TelegramWarehouseTest extends TestCase
         $offer = WarehouseOffer::sole();
         $this->assertSame([1, '95.50', 'telegram', 0, 'Telegram: Kamal'], [(int) $offer->available_quantity, (string) $offer->unit_cost, $offer->source, (int) $offer->recorded_by, $offer->note]);
         $this->assertStringContainsString('✅ <b>Var</b> — 1 ədəd × 95.50 AZN qeyd olundu (Kamal)', $this->sentTo('editMessageCaption')[0]['caption']);
+        // CRM-də cavabı kimin verdiyi — düyməni basan adam ("Anbar (link)" yox)
+        $this->assertSame('Kamal', $offer->authorName(fn () => 'Anbar (link)'));
     }
 
     public function test_partial_quantity_wrong_input_none_and_foreign_chat(): void

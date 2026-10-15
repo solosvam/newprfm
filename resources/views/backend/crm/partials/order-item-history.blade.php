@@ -15,7 +15,7 @@
                     'text' => $req->warehouse->name_az.' cavab verdi: '.($offer->available_quantity
                         ? $offer->available_quantity.' ədəd'.($offer->unit_cost !== null ? ' × '.number_format((float) $offer->unit_cost, 2).' AZN' : '')
                         : 'yoxdur').' · '.($sources[$offer->source] ?? $offer->source),
-                    'by' => $who($offer->recorded_by), 'note' => $offer->note]);
+                    'by' => $offer->authorName($who), 'note' => $offer->source === 'telegram' ? null : $offer->note]);
             }
         }
     }

@@ -201,7 +201,7 @@ class OrderProcessSummary
             $events->push(['at' => $request->created_at, 'by' => $who($request->created_by), 'text' => $request->warehouse?->name_az.' — sorğu göndərildi']);
             foreach ($request->items as $requestItem) {
                 foreach ($requestItem->offers as $offer) {
-                    $events->push(['at' => $offer->created_at, 'by' => $who($offer->recorded_by), 'text' => $request->warehouse?->name_az.' cavab verdi']);
+                    $events->push(['at' => $offer->created_at, 'by' => $offer->authorName($who), 'text' => $request->warehouse?->name_az.' cavab verdi']);
                 }
             }
         }

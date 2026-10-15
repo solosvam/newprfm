@@ -36,7 +36,7 @@
             @endif
         @else <span class="text-muted">—</span> @endif
     </td>
-    <td>@if($offer){{ $sources[$offer->source] ?? $offer->source }}<span class="proc-sub">{{ $offer->created_at->format('d.m H:i') }}@if($who($offer->recorded_by)) · {{ $who($offer->recorded_by) }}@endif</span>@else<span class="text-muted">—</span>@endif</td>
+    <td>@if($offer){{ $sources[$offer->source] ?? $offer->source }}<span class="proc-sub">{{ $offer->created_at->format('d.m H:i') }}@if($offer->authorName($who)) · {{ $offer->authorName($who) }}@endif</span>@else<span class="text-muted">—</span>@endif</td>
     <td class="text-end">
         <div class="proc-actions">
             @if($editable && $canTake > 0)
@@ -73,8 +73,8 @@
                     <span class="text-nowrap">{{ $old->created_at->format('d.m H:i') }}</span>
                     <span class="badge {{ $answerBadge($old)[0] }}">{{ $answerBadge($old)[1] }}</span>
                     @if($old->available_quantity && $old->unit_cost !== null)<span class="text-nowrap">{{ number_format((float) $old->unit_cost, 2) }} AZN</span>@endif
-                    <span>{{ $sources[$old->source] ?? $old->source }}@if($who($old->recorded_by)) · {{ $who($old->recorded_by) }}@endif</span>
-                    @if($old->note)<span>— {{ $old->note }}</span>@endif
+                    <span>{{ $sources[$old->source] ?? $old->source }}@if($old->authorName($who)) · {{ $old->authorName($who) }}@endif</span>
+                    @if($old->note && $old->source !== 'telegram')<span>— {{ $old->note }}</span>@endif
                     @if($loop->first)<span class="text-success">qüvvədə olan</span>@endif
                 </div>
             @endforeach
