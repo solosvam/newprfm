@@ -259,6 +259,11 @@ class FinanceController extends Controller
             'parent_id.exists' => 'Üst kateqoriya yanlışdır.',
         ]);
         $parentId = $data['parent_id'] ?? null;
+        $parent = $parentId ? FinanceCategory::find($parentId) : null;
+        // Üst kateqoriya avtomatik ola bilməz; növü eyni və ya "Hər ikisi" olmalıdır
+        if ($parent && (in_array($parent->code, FinanceCategory::AUTO, true) || !in_array($parent->type, ['both', $data['type']], true))) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['parent_id' => '"'.$parent->name.'" altına bu növdə kateqoriya yaradılmır.']);
+        }
         if ($category && $parentId && ((int) $parentId === $category->id || $category->children()->exists())) {
             throw \Illuminate\Validation\ValidationException::withMessages(['parent_id' => 'Alt kateqoriyası olan kateqoriya başqasının altına keçirilmir.']);
         }

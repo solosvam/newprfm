@@ -70,16 +70,29 @@
             const btn = event.relatedTarget;
             if (!btn) return;
             const d = btn.dataset;
+            categoryModal.dataset.id = d.id || '';
+            categoryModal.dataset.hasChildren = d.hasChildren || '0';
             form.action = d.action;
             form.querySelector('[name="_method"]').value = d.method || 'POST';
             categoryModal.querySelector('.modal-title').textContent = d.title;
             form.querySelector('[name="name"]').value = d.name || '';
             form.querySelector('[name="type"]').value = d.type || 'expense';
-            const parent = form.querySelector('[name="parent_id"]');
-            parent.value = d.parent || '';
-            // Özünün altına və ya alt kateqoriyası varsa başqasının altına keçirilmir
-            [...parent.options].forEach(o => { o.hidden = o.disabled = !!o.value && (o.value === d.id || d.hasChildren === '1'); });
+            form.querySelector('[name="parent_id"]').value = d.parent || '';
+            filterParents();
         });
+        // Üst kateqoriya: eyni növ və ya "Hər ikisi"; özünün altına və ya alt kateqoriyası varsa başqasının altına keçirilmir
+        const filterParents = () => {
+            const d = categoryModal.dataset;
+            const type = form.querySelector('[name="type"]').value;
+            const parent = form.querySelector('[name="parent_id"]');
+            [...parent.options].forEach(o => {
+                const ok = !o.value || (o.value !== d.id && d.hasChildren !== '1' && (o.dataset.type === 'both' || o.dataset.type === type));
+                o.hidden = o.disabled = !ok;
+            });
+            if (parent.selectedOptions[0]?.disabled) parent.value = '';
+        };
+        form.querySelector('[name="type"]').addEventListener('change', filterParents);
+        filterParents();
     }
 
     document.querySelectorAll('form[data-confirm]').forEach(f => f.addEventListener('submit', event => {

@@ -85,7 +85,11 @@
             <label class="form-label" for="catParent">Üst kateqoriya <small class="text-muted">(boş — əsas)</small></label>
             <select id="catParent" name="parent_id" class="form-select">
                 <option value="">—</option>
-                @foreach($parents as $p)<option value="{{ $p->id }}" @selected((int) old('parent_id') === $p->id)>{{ $p->name }}</option>@endforeach
+                {{-- Avtomatik kateqoriyaların (Satış, Köçürmə...) altına kateqoriya yaradılmır; növ uyğun olmalıdır (finance.js) --}}
+                @foreach($parents as $p)
+                    @continue(in_array($p->code, \App\Models\Finance\FinanceCategory::AUTO, true))
+                    <option value="{{ $p->id }}" data-type="{{ $p->type }}" @selected((int) old('parent_id') === $p->id)>{{ $p->name }}</option>
+                @endforeach
             </select>
             <div class="form-text">Məs.: "Əməkhaqqı" → "Bonus". Hesabatda alt kateqoriyalar üst kateqoriyanın altında görünür.</div>
         </div>
