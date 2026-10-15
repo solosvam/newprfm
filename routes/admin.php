@@ -134,6 +134,7 @@ Route::prefix('admin')
                     Route::post('/warehouses', 'storeWarehouse')->name('warehouses.store');
                     Route::get('/warehouses/{warehouse}/edit', 'editWarehouse')->name('warehouses.edit');
                     Route::put('/warehouses/{warehouse}', 'updateWarehouse')->name('warehouses.update');
+                    Route::delete('/warehouses/{warehouse}', 'destroyWarehouse')->name('warehouses.destroy');
                     Route::get('/orders/{order}', 'show')->name('show');
                     Route::post('/orders/{order}/requests', 'createRequests')->name('requests.store');
                     Route::post('/orders/{order}/responses/{requestItem}', 'recordOffer')->name('offers.store');

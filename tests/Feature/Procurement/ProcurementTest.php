@@ -6,6 +6,7 @@ use App\Models\Order\Order;
 use App\Models\Order\OrderItem;
 use App\Models\Procurement\OrderItemAllocation;
 use App\Models\Procurement\Warehouse;
+use App\Models\Procurement\WarehouseRequest;
 use App\Models\Procurement\WarehouseRequestItem;
 use App\Models\User;
 use App\Services\ProcurementService;
@@ -203,6 +204,48 @@ class ProcurementTest extends TestCase
         $this->put(route('admin.procurement.warehouses.update', $warehouse), ['name_az' => 'Anbar T', 'telegram_id' => '987654321', 'active' => 1])->assertSessionHasNoErrors();
         $this->assertSame('987654321', $warehouse->fresh()->telegram_id);
         $this->get(route('admin.procurement.warehouses.edit', $warehouse))->assertOk()->assertSee('value="987654321"', false);
+    }
+
+    public function test_warehouse_is_deleted_unless_something_was_bought_from_it(): void
+    {
+        $user = new User(['name' => 'Operator']);
+        $user->id = 7;
+        Gate::before(fn () => true);
+        $this->actingAs($user, 'admin');
+        // Maliyyə: yalnız anbar hesabı və pul hərəkəti lazımdır
+        \Illuminate\Support\Facades\Schema::create('finance_accounts', fn ($t) => [$t->id(), $t->string('type'), $t->string('code')->nullable(), $t->string('name'),
+            $t->unsignedBigInteger('user_id')->nullable(), $t->unsignedBigInteger('warehouse_id')->nullable(), $t->boolean('active')->default(true), $t->timestamps()]);
+        \Illuminate\Support\Facades\Schema::create('money_movements', fn ($t) => [$t->id(), $t->unsignedBigInteger('from_account_id'), $t->unsignedBigInteger('to_account_id'), $t->decimal('amount', 12, 2), $t->timestamps()]);
+        $order = $this->order();
+
+        // Yalnız sorğu, cavab və link — alış-veriş sayılmır: anbar hər şeyi ilə birlikdə silinir
+        $asked = Warehouse::create(['name_az' => 'Soruşulan']);
+        $this->offer($order, $asked, 2, '50');
+        \App\Models\Procurement\WarehouseAccessLink::create(['warehouse_id' => $asked->id, 'token_hash' => str_repeat('a', 64), 'created_by' => 7, 'expires_at' => now()->addDay()]);
+        $this->delete(route('admin.procurement.warehouses.destroy', $asked))->assertSessionHas('success', 'Soruşulan silindi.');
+        $this->assertNull(Warehouse::find($asked->id));
+        $this->assertSame(0, WarehouseRequest::count());
+
+        // Sifarişdə seçilib — silinmir, deaktiv edilir
+        $bought = Warehouse::create(['name_az' => 'Seçilən']);
+        $offer = $this->offer($order, $bought, 2, '50');
+        app(ProcurementService::class)->allocate($order, $offer->id, 1, 7);
+        $this->delete(route('admin.procurement.warehouses.destroy', $bought))
+            ->assertSessionHas('warning', 'Seçilən ilə alış-veriş olduğu üçün silinə bilməz — deaktiv edildi.');
+        $this->assertFalse(Warehouse::find($bought->id)->active);
+
+        // Anbarla pul hərəkəti var — o da alış-verişdir
+        $paid = Warehouse::create(['name_az' => 'Ödənilən']);
+        $finance = app(\App\Services\FinanceService::class);
+        \Illuminate\Support\Facades\DB::table('money_movements')->insert(['from_account_id' => 999, 'to_account_id' => $finance->warehouseAccount($paid)->id, 'amount' => 30]);
+        $this->delete(route('admin.procurement.warehouses.destroy', $paid))->assertSessionHas('warning');
+        $this->assertNotNull(Warehouse::find($paid->id));
+
+        // Hesabı olan, amma pul hərəkəti olmayan anbar silinir (hesabı da)
+        $empty = Warehouse::create(['name_az' => 'Boş']);
+        $finance->warehouseAccount($empty);
+        $this->delete(route('admin.procurement.warehouses.destroy', $empty))->assertSessionHas('success');
+        $this->assertSame(0, \App\Models\Finance\FinanceAccount::where('warehouse_id', $empty->id)->count());
     }
 
     public function test_employee_without_crm_permission_cannot_access_or_write(): void

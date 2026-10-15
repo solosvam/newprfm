@@ -64,6 +64,37 @@ class ProcurementController extends Controller
         return back()->with('success', 'Anbar əlavə edildi.');
     }
 
+    /**
+     * Anbarı silmək. Alış-veriş olubsa (sifarişdə bu anbar seçilib və ya anbarla pul hərəkəti var) silinmir — deaktiv edilir,
+     * çünki sifarişlərin və hesablaşmaların tarixçəsi ona bağlıdır. Sorğu, cavab, link, price list alış-veriş sayılmır və anbarla birlikdə silinir.
+     */
+    public function destroyWarehouse(Warehouse $warehouse)
+    {
+        $account = \App\Models\Finance\FinanceAccount::where('type', 'warehouse')->where('warehouse_id', $warehouse->id)->first();
+        $traded = OrderItemAllocation::where('warehouse_id', $warehouse->id)->exists()
+            || ($account && \Illuminate\Support\Facades\DB::table('money_movements')
+                ->where(fn ($q) => $q->where('from_account_id', $account->id)->orWhere('to_account_id', $account->id))->exists());
+
+        if ($traded) {
+            $warehouse->update(['active' => false]);
+
+            return back()->with('warning', $warehouse->name_az.' ilə alış-veriş olduğu üçün silinə bilməz — deaktiv edildi.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($warehouse, $account) {
+            $requestIds = WarehouseRequest::where('warehouse_id', $warehouse->id)->pluck('id');
+            $itemIds = \App\Models\Procurement\WarehouseRequestItem::whereIn('warehouse_request_id', $requestIds)->pluck('id');
+            \App\Models\Procurement\WarehouseOffer::whereIn('warehouse_request_item_id', $itemIds)->delete();
+            \App\Models\Procurement\WarehouseRequestItem::whereIn('id', $itemIds)->delete();
+            WarehouseRequest::whereIn('id', $requestIds)->delete();
+            \Illuminate\Support\Facades\DB::table('warehouse_access_links')->where('warehouse_id', $warehouse->id)->delete();
+            $account?->delete();
+            $warehouse->delete(); // price listlər bazada cascade ilə silinir
+        });
+
+        return back()->with('success', $warehouse->name_az.' silindi.');
+    }
+
     public function updateWarehouse(Request $request, Warehouse $warehouse)
     {
         $warehouse->update($this->warehouseData($request));
