@@ -111,7 +111,7 @@ class TelegramWarehouseTest extends TestCase
         // Cavab mətndə təkrarlanmır — yalnız düymədə
         $this->assertStringNotContainsString('95.50', $this->sentTo('editMessageCaption')[0]['caption']);
         // Düymədə cavabın özü; sual və anbarın cavab mesajı silinir
-        $this->assertSame('✅ Var — 95.50 AZN', $this->sentTo('editMessageCaption')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
+        $this->assertSame('✅ Var — 95.50 AZN (Dəyişdir)', $this->sentTo('editMessageCaption')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
         $this->assertEqualsCanonicalizing([999, $this->sentTo('sendMessage') ? 501 : 0], array_column($this->sentTo('deleteMessage'), 'message_id'));
         $this->assertSame(0, TelegramMessage::whereIn('kind', [TelegramMessage::PROMPT, TelegramMessage::REPLY])->count());
         // CRM-də cavabı kimin verdiyi — düyməni basan adam ("Anbar (link)" yox)
@@ -177,6 +177,44 @@ class TelegramWarehouseTest extends TestCase
         $this->webhook(['message' => ['message_id' => 1, 'text' => '/id@ParfumshopBot', 'chat' => ['id' => -100555, 'title' => 'Aksin — Parfumshop']]])->assertOk();
 
         $this->assertSame('Bu çatın ID-si: <code>-100555</code> (Aksin — Parfumshop)', $this->sentTo('sendMessage')[0]['text']);
+    }
+
+    public function test_unanswered_request_gets_reminders_in_working_hours_and_they_are_removed_after_the_answer(): void
+    {
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-15 12:00', 'Asia/Baku'));
+        $order = $this->order(1);
+        $request = app(ProcurementService::class)->createRequests($order, [$this->telegramWarehouse()->id], [$order->items()->first()->id], 7)->first();
+        app(WarehouseNotifier::class)->notifyRequest($request, 7);
+        $message = TelegramMessage::where('kind', TelegramMessage::REQUEST_ITEM)->sole();
+
+        $this->artisan('telegram:remind')->assertSuccessful();
+        $this->assertCount(0, $this->sentTo('sendMessage'), 'hələ 15 dəqiqə keçməyib');
+
+        $this->travel(16)->minutes();
+        $this->artisan('telegram:remind');
+        $reminder = $this->sentTo('sendMessage')[0];
+        $this->assertSame($message->message_id, $reminder['reply_to_message_id']);
+        $this->assertStringContainsString('Xatırlatma:</b> Lanvin Marry Me 30 ml', $reminder['text']);
+
+        $this->travel(10)->minutes();
+        $this->artisan('telegram:remind');
+        $this->assertCount(1, $this->sentTo('sendMessage'), 'ikincisi 30 dəqiqədən sonra');
+        $this->travel(25)->minutes();
+        $this->artisan('telegram:remind');
+        $this->travel(40)->minutes();
+        $this->artisan('telegram:remind');
+        $this->assertCount(2, $this->sentTo('sendMessage'), 'ən çox 2 dəfə');
+
+        // Gecə xatırlatma getmir
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-15 22:30', 'Asia/Baku'));
+        $message->update(['reminders' => 0, 'reminded_at' => null]);
+        $this->artisan('telegram:remind');
+        $this->assertCount(2, $this->sentTo('sendMessage'));
+
+        // Cavab gələndə xatırlatmalar silinir
+        $this->press($message, 'none');
+        $this->assertSame(0, TelegramMessage::where('kind', TelegramMessage::REMINDER)->count());
+        $this->assertCount(2, $this->sentTo('deleteMessage'));
     }
 
     public function test_webhook_rejects_requests_without_the_secret(): void

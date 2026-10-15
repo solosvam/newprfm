@@ -86,5 +86,6 @@ trait ProcurementSchema
         (require database_path('migrations/2026_10_15_140000_add_request_channel_to_warehouses.php'))->up();
         (require database_path('migrations/2026_10_10_180000_add_delivery_status_to_sms_logs.php'))->up();
         (require database_path('migrations/2026_10_15_160000_create_telegram_messages.php'))->up();
+        (require database_path('migrations/2026_10_15_180000_add_reminders_to_telegram_messages.php'))->up();
     }
 }

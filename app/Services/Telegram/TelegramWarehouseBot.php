@@ -72,6 +72,34 @@ class TelegramWarehouseBot
             'warehouse_cancelled', WarehouseNotifier::SUBJECT_ALLOCATION, $allocation->id, $actor);
     }
 
+    /**
+     * Cavabsız sorğuya xatırlatma: həmin mesaja cavab kimi (qrupda mesaja keçid olur). Cavab gələndə silinir.
+     * Göndərildisə true.
+     */
+    public function remind(TelegramMessage $message, string $label): bool
+    {
+        $sent = rescue(fn () => $this->api->call('sendMessage', [
+            'chat_id' => $message->chat_id, 'reply_to_message_id' => $message->message_id, 'parse_mode' => 'HTML',
+            'text' => '⏰ <b>Xatırlatma:</b> '.e($label).' — bu sorğuya cavab gözlənilir. Yuxarıdakı mesajda "Var" və ya "Yoxdur" basın.',
+        ]), null);
+        if (!$sent) {
+            return false;
+        }
+        TelegramMessage::create(['chat_id' => $message->chat_id, 'message_id' => (int) $sent['message_id'], 'kind' => TelegramMessage::REMINDER,
+            'parent_id' => $message->id, 'text' => $label]);
+        $message->update(['reminders' => $message->reminders + 1, 'reminded_at' => now()]);
+
+        return true;
+    }
+
+    /** Məhsulun qısa adı (xatırlatma və s. üçün): "Lanvin Marry Me 30 ml" */
+    public function shortLabel(?OrderItem $item): string
+    {
+        $label = $this->label($item);
+
+        return trim($label['title'].' '.($label['size'] ?? ''));
+    }
+
     /** Webhook: düymə basılması (callback_query) və botun sualına cavab (message.reply_to_message) */
     public function handle(array $update): void
     {
@@ -177,9 +205,9 @@ class TelegramWarehouseBot
         ], 0);
         // Cavab yalnız düymədə yazılır (mətndə təkrar olmasın); basanda cavab dəyişdirilir — düymələr yenidən açılır.
         // Kimin cavab verdiyi CRM-də görünür (WarehouseOffer::authorName)
-        $button = $quantity
+        $button = ($quantity
             ? '✅ Var — '.($quantity > 1 || (int) $requestItem->requested_quantity > 1 ? $quantity.' ədəd × ' : '').$price.' AZN'
-            : '❌ Yoxdur';
+            : '❌ Yoxdur').' (Dəyişdir)';
         $this->edit($message, $message->text, [[['text' => $button, 'callback_data' => $message->id.':change']]], ['state' => null, 'quantity' => null]);
         $this->cleanup($message);
     }
@@ -209,12 +237,12 @@ class TelegramWarehouseBot
     }
 
     /**
-     * Botun sualları (qiymət, say) və anbarın cavab mesajları silinir — qrupda yalnız nəticəli mesaj qalır.
+     * Botun sualları (qiymət, say), xatırlatmalar və anbarın cavab mesajları silinir — qrupda yalnız nəticəli mesaj qalır.
      * Botun öz mesajını həmişə silə bilir; anbarın mesajını yalnız bot qrupda admindirsə ("Mesajları silmək" icazəsi) — olmasa qalır.
      */
     private function cleanup(TelegramMessage $message): void
     {
-        $extra = TelegramMessage::where('parent_id', $message->id)->whereIn('kind', [TelegramMessage::PROMPT, TelegramMessage::REPLY])->get();
+        $extra = TelegramMessage::where('parent_id', $message->id)->whereIn('kind', [TelegramMessage::PROMPT, TelegramMessage::REPLY, TelegramMessage::REMINDER])->get();
         foreach ($extra as $row) {
             rescue(fn () => $this->api->call('deleteMessage', ['chat_id' => $row->chat_id, 'message_id' => $row->message_id]), null, false);
         }

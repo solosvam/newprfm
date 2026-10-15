@@ -13,6 +13,10 @@ Son yenilənmə: 10 oktyabr 2026.
   qiymət və say bot sualına cavabla), seçim ("Rezerv etdim" düyməsi), ləğv — anbarın qrupuna (warehouses.telegram_id = qrupun id-si, mənfi rəqəm).
   Proddə: `php artisan migrate`, `php artisan telegram:webhook --info` (botun hazırkı webhook-u — köhnə sistem istifadə edirsə, qoşulandan sonra
   cavabları o almayacaq), sonra `php artisan telegram:webhook`. Anbarların Telegram ID-sini qrup id-si ilə yazmaq, sorğu tipini Telegram etmək.
+  Xatırlatma: `telegram:remind` (cron, 5 dəqiqədən bir) — cavabsız sorğuya 15 dəq sonra, sonra 30 dəq sonra, 09:00–21:00.
+  Bot hər anbar qrupunda admin olmalıdır ("Mesajları silmək") — yoxsa anbarın qiymət cavabları qrupda qalır.
+  Telegram ideyaları (sonra): price list / keçən qiymətlə bir toxunuşla "Var"; Excel price listi qrupa atmaqla import; seçimdə "Bitib" / "Qiymət dəyişib";
+  kuryer gələndə "Kuryerə verdim"; həftəlik hesablaşma təsdiqi; operator üçün daxili qrupda bildiriş və "Seç"; kuryer botu.
 - [ ] **SMS — qalan qərarlar və yoxlamalar** (10 oktyabr: jurnal, çatdırılma statusu, balans, "Yola çıxdım" SMS-i və "SMS" səhifəsi hazırdır):
   - `crm_order_accepted` ("CRM-dən operator sifariş qəbul etdikdə") şablonu bazada var, amma heç bir hadisəyə qoşulmayıb (səhifədə "Qoşulmayıb").
     Qərar: göndərilsinmi, yoxsa silinsin. "Təhvil verildi" SMS-i də qərarsızdır. (`website_order_accepted` 10 oktyabrda silindi.)
