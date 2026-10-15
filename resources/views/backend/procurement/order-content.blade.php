@@ -178,7 +178,12 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 pe-3 text-nowrap">
-                    <span class="text-alternate">{{ $need }} ədəd @if($crm)· <strong>{{ number_format((float) $item->total, 2) }} AZN</strong>@endif</span>
+                    {{-- Bir ədəddə "1 ədəd · 209.00 AZN", çoxda hesabı ilə: "2 × 232.00 = 464.00 AZN" (ləğv olunan miqdar sayılmır) --}}
+                    <span class="text-alternate">
+                        @if(!$crm){{ $need }} ədəd
+                        @elseif($need > 1){{ $need }} × {{ number_format((float) $item->unit_price, 2) }} = <strong>{{ number_format($need * (float) $item->unit_price, 2) }} AZN</strong>
+                        @else{{ $need }} ədəd · <strong>{{ number_format((float) $item->unit_price, 2) }} AZN</strong>@endif
+                    </span>
                     @if($crm && ((!($doorBlock ?? 'x') && $need > 0 && $needTotal > 1) || isset($cancelPreviews[$item->id])))
                         <div class="dropdown">
                             <button type="button" class="btn btn-sm btn-icon btn-icon-only btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Məhsul əməliyyatları">
