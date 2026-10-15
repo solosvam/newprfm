@@ -68,11 +68,11 @@
                                      data-datatable="#datatableHover">
                                     <button class="btn btn-outline-muted btn-sm dropdown-toggle" type="button"
                                             data-bs-toggle="dropdown" aria-expanded="false" data-bs-offset="0,3">
-                                        10 Nəticə
+                                        20 Nəticə
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
                                         @foreach([5, 10, 20, 50, 100] as $limit)
-                                            <a class="dropdown-item {{ $limit === 10 ? 'active' : '' }}" href="#">
+                                            <a class="dropdown-item {{ $limit === 20 ? 'active' : '' }}" href="#">
                                                 {{ $limit }} Nəticə
                                             </a>
                                         @endforeach
@@ -82,8 +82,9 @@
                         </div>
                     </div>
 
+                    {{-- data-page-length: DataTables bu atributu özü oxuyur — açılanda 20 sətir --}}
                     <table class="data-table data-table-pagination data-table-standard responsive nowrap hover"
-                           id="datatableHover">
+                           id="datatableHover" data-page-length="20">
                         <thead>
                         <tr>
                             @foreach(['#', 'Anbar', 'Əlaqəli şəxs', 'Telefon', 'Telegram ID', 'Sorğu tipi', 'Ünvan', 'Aktiv', 'Əməliyyat'] as $heading)
