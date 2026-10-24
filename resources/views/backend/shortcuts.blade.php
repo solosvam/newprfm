@@ -35,7 +35,7 @@
                             <p>Bu qısayollar sistemin istənilən səhifəsində işləyir.</p>
                             <br>
                             <p>
-                                <kbd>s</kbd> düyməsi axtarış qutusunu açır. 'Search'
+                                <kbd>f</kbd> düyməsi axtarış qutusunu açır. 'Search'
                             </p>
                             <p>
                                 <kbd>p</kbd> düyməsi sağdakı ayarlar panelini açır, təkrar basıldıqda isə bağlanır. 'Panel'
@@ -45,6 +45,9 @@
                             </p>
                             <p>
                                 <kbd>c</kbd> düyməsi "CRM" səhifəsini açır. 'CRM'
+                            </p>
+                            <p>
+                                <kbd>s</kbd> düyməsi "Sifarişlər" səhifəsini açır.
                             </p>
                         </div>
                     </div>

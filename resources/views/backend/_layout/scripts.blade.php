@@ -25,7 +25,7 @@
 
 <script src="{{asset('backend/js/common.js')}}"></script>
 <script src="{{asset('backend/js/scripts.js')}}"></script>
-<script src="{{asset('backend/js/plugins/shortcuts.js')}}"></script>
+<script src="{{asset('backend/js/plugins/shortcuts.js?v=1.1')}}"></script>
 <script src="{{asset('backend/js/cs/scrollspy.js')}}"></script>
 <script src="{{asset('backend/js/pages/dashboard.default.js')}}"></script>
 <script src="{{asset('backend/js/vendor/select2.full.min.js')}}"></script>
