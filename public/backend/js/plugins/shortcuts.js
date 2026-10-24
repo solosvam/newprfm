@@ -23,7 +23,7 @@ class Shortcuts {
 
     // Single key bindings
     _initSingleKeys() {
-        Mousetrap.bind('s', function () {
+        Mousetrap.bind('f', function () {
             const searchModal = new bootstrap.Modal(document.getElementById('searchPagesModal'));
             searchModal.show();
         });
@@ -49,6 +49,10 @@ class Shortcuts {
 
         Mousetrap.bind('c', function () {
             window.location.href = '/admin/crm';
+        });
+
+        Mousetrap.bind('s', function () {
+            window.location.href = '/admin/orders';
         });
 
     }
