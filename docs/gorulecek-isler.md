@@ -90,10 +90,11 @@ Son yenilənmə: 28 oktyabr 2026.
   (`/js/DownloadFileClientSide.js`) Blob edib yükləyir — ayrıca URL yoxdur. Plan:
   - extension Ferrum-da `world: "MAIN"` content script ilə bu funksiyanı əvəz edir: "tutma" rejimində base64-ü götürür, yükləmir;
     rejim sönülüdürsə orijinal funksiyanı çağırır (adi çap dəyişmir). Funksiya tapılmasa ehtiyat yol: `URL.createObjectURL` + `<a>.click`-i tutmaq;
-  - hər sətirdə çap düyməsinin yanında "→ Sifarişə bağla": sifariş nömrəsi soruşulur, extension sətrin çap düyməsini özü basır,
-    gələn PDF-i tutur; sətirdən müraciət nömrəsi (`PFL-APP-…`) və kod da götürülür;
+  - `https://pm.ferrumcapital.az/pasm` cədvəlində hər sətrin qarşısında "Parfumshop-a bağla" düyməsi: basanda parfumshop sifariş
+    nömrəsi soruşulur, extension sətrin çap düyməsini özü basır, gələn PDF-i tutur, adlandırır (məs. `PS12345_PFL-APP-002227.pdf`);
+    sətirdən müraciət nömrəsi (`PFL-APP-…`) və kod da götürülür;
   - MAIN → `postMessage` → isolated content script → background → parfumshop `POST …/ferrum/attach-pdf` (`order_no`, `ferrum_app_no`, PDF);
-  - Laravel: fayl `storage/app/ferrum/…`-də (public deyil), yol sifarişə və ya ayrıca `order_documents` cədvəlinə yazılır;
+  - Laravel: fayl serverə yüklənir (`storage/app/ferrum/…`, public deyil), fayl yolu sifarişin sənəd sahəsinə yazılır;
     admin paneldə və müştəri hesabında "Kredit sənədi" linki.
   Qeydlər: extension indi token yox, admin sessiyasının cookie-si + `ferrum` icazəsi ilə işləyir (`admin/ferrum/...`) —
   endpoint də eyni qoruma ilə admin route olmalı, yükləmə `sensitive_access_logs`-a yazılmalıdır. Ferrum müraciət nömrəsi hazırda
