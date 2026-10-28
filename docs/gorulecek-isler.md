@@ -3,7 +3,7 @@
 Layihə üzrə **yeganə** görüləcək işlər sənədi. Yeni iş əlavə olunanda, iş bitəndə və ya qərar veriləndə yalnız bu fayl yenilənir.
 Əvvəlki `docs/order-fulfillment-plan.md` və `docs/backlog.md` bu fayla birləşdirilib silinib.
 
-Son yenilənmə: 10 oktyabr 2026.
+Son yenilənmə: 28 oktyabr 2026.
 
 ---
 
@@ -26,7 +26,8 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **Anbar price listləri — qalanlar** (11 oktyabr: import, sütun seçimi, avtomatik və əl ilə uyğunlaşdırma, brend bağlama / yaratma,
   Proses tabında qiymət və axtarış hazırdır — Satışlar → Price listlər):
   - Price listlər panelindən qiyməti hazır götürüb "Anbar seç" etmək (indi panel yalnız "Sorğu göndər" verir, "Anbar seç"-də qiymət əl ilə yazılır);
-  - müqayisə hesabatı: əvvəlki siyahıya görə yeni gələn, çıxan, qiyməti dəyişən; saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir;
+  - müqayisə hesabatı: yeni price list yüklənəndə köhnə ilə fərqi göstərmək — "X məhsul yeni siyahıda yoxdur", "Y məhsul yeni əlavə olunub"
+    (və qiyməti dəyişənlər); saytda yeni məhsul yaratmaq və deaktiv etmək avtomatik deyil — operator seçir;
   - digər anbarların faylları ilə sınamaq (indiyə qədər yalnız bir anbarın 1C çıxarışı ilə yoxlanıb: 1677 sətirdən 834-ü avtomatik bağlandı);
   - brend adlarını rəsmi yazılışa gətirmək: "Van Cleef &amp; Arpels" (HTML kodu qalıb), "Victorias Secret", "Tiffany Co", "Viktor Rolf", "BOND No9", "Mont Blanc".
 - [ ] **Sifarişin ünvanı sifarişə köçürülmür.** Sifariş müştərinin ünvan kartına istinad edir (customer_address_id) — müştəri sonradan
@@ -40,6 +41,19 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **Sifarişi kuryerə yönləndirəndə anbarlar üzrə "pul ver / pul vermə" seçimi.** Məs. 3 anbar var: 2-nə pul ver, 1-nə vermə.
   "Pul ver" seçilən anbarlarda köhnə qayda qalır. "Pul vermə" seçilənlərdə kuryerə pulla bağlı heç nə görünmür, yalnız "Götürdüm" seçilir;
   "Götürdüm" seçilən kimi anbara borc yaranır (kuryer "götürdüm, pul vermədim" seçmiş kimi).
+
+- [ ] **Telegram botda "Anbara rezerv et" mesajında qiymət olmasın.**
+- [ ] **Sifarişlər səhifəsi:**
+  - sifarişə kuryer təyin olunubsa, kuryerin adı görünsün;
+  - cədvəldə sətrin istənilən yerinə toxunanda sifarişin detalları açılsın.
+- [ ] **Hissə-hissə ödənişin statusu sifarişlə birlikdə.** Sifariş detallarında hissə-hissə ödəniş olanda altında "Gözləyir" yazılır.
+  Sifariş icraya götürüləndə hissə-hissə ödənişin statusu avtomatik "Təsdiq olundu" olsun; sifariş ləğv ediləndə hissə-hissə ödəniş də "İmtina" olsun.
+- [ ] **Borclar üçün ayrıca bölmə** — "borclu olduqlarım" və "mənə borcu olanlar". Müştərilər və anbarlar bölməsindən ayrıdır
+  (nə müştəriyə, nə anbara aiddir). Açıq sual: bölmənin adı (məs. "Borclar", "Debitor / kreditor", "Qarşı tərəflər").
+- [ ] **Stok alışı və öz istehsalımız:**
+  - hədiyyə kartları — HK 100, HK 200, HK 500, HK 1000; öz barkodları var, stok kimi alış edilməlidir;
+  - öz brendimizin ətirləri də stok kimi alış edilməlidir;
+  - öz mallarımızın istehsalı və istehsala gedən xərclər (xammal, qablaşdırma və s.) uçotu.
 
 ## 2. Sayt — səbət və push bildirişləri
 
@@ -68,6 +82,8 @@ Son yenilənmə: 10 oktyabr 2026.
 ## 3. Brauzer extension-ları
 
 - [ ] **ferrum-filler** (`extensions/ferrum-filler/README.md`): real Ferrum formasında yoxlayıb tamamlamaq.
+- [ ] **ferrum-filler: Ferrum-a doldurulan qiymət.** Müştərinin aylıq seçimindən sonrakı rəqəm, yəni üzərinə faiz gəlinmiş məbləğ doldurulmalıdır.
+  Yuvarlaqlaşdırma: kəsr hissəsi 0.10 və çoxdursa yuxarı, azdırsa aşağı — məs. 124.10 → 125, 124.09 → 124.
 
 ## 4. Prod-a çıxmazdan əvvəl
 
