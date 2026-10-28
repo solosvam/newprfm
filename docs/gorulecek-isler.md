@@ -85,6 +85,21 @@ Son yenilənmə: 28 oktyabr 2026.
 - [ ] **ferrum-filler: Ferrum-a doldurulan qiymət.** Müştərinin aylıq seçimindən sonrakı rəqəm, yəni üzərinə faiz gəlinmiş məbləğ doldurulmalıdır.
   Yuvarlaqlaşdırma: kəsr hissəsi 0.10 və çoxdursa yuxarı, azdırsa aşağı — məs. 124.10 → 125, 124.09 → 124.
 
+- [ ] **ferrum-filler: Ferrum kredit sənədini (PDF) sifarişə bağlamaq.** pm.ferrumcapital.az Blazor Server-dir: "Çap et" basılanda
+  PDF serverdə yaranır, SignalR ilə base64 kimi gəlir və `window.downloadFileClientSide(file, fileName, format)`
+  (`/js/DownloadFileClientSide.js`) Blob edib yükləyir — ayrıca URL yoxdur. Plan:
+  - extension Ferrum-da `world: "MAIN"` content script ilə bu funksiyanı əvəz edir: "tutma" rejimində base64-ü götürür, yükləmir;
+    rejim sönülüdürsə orijinal funksiyanı çağırır (adi çap dəyişmir). Funksiya tapılmasa ehtiyat yol: `URL.createObjectURL` + `<a>.click`-i tutmaq;
+  - hər sətirdə çap düyməsinin yanında "→ Sifarişə bağla": sifariş nömrəsi soruşulur, extension sətrin çap düyməsini özü basır,
+    gələn PDF-i tutur; sətirdən müraciət nömrəsi (`PFL-APP-…`) və kod da götürülür;
+  - MAIN → `postMessage` → isolated content script → background → parfumshop `POST …/ferrum/attach-pdf` (`order_no`, `ferrum_app_no`, PDF);
+  - Laravel: fayl `storage/app/ferrum/…`-də (public deyil), yol sifarişə və ya ayrıca `order_documents` cədvəlinə yazılır;
+    admin paneldə və müştəri hesabında "Kredit sənədi" linki.
+  Qeydlər: extension indi token yox, admin sessiyasının cookie-si + `ferrum` icazəsi ilə işləyir (`admin/ferrum/...`) —
+  endpoint də eyni qoruma ilə admin route olmalı, yükləmə `sensitive_access_logs`-a yazılmalıdır. Ferrum müraciət nömrəsi hazırda
+  sifarişdə saxlanmır; doldurma zamanı yazılsa, sifariş nömrəsini əl ilə yazmaq lazım olmaz. `host_permissions`-da
+  `last.parfumshop.az` yoxdur.
+
 ## 4. Prod-a çıxmazdan əvvəl
 
 - [ ] Serverdə `schedule:run` cron və queue worker (`QUEUE_CONNECTION=database`; `NotifyPriceDrop` və növbəli email-lər üçün).
