@@ -104,6 +104,10 @@ Route::prefix('admin')
                 ->prefix('ferrum')->name('ferrum.')->group(function () {
                     Route::get('/orders/{ref}', 'order')->where('ref', '[A-Za-z0-9-]{1,30}')->name('order');
                     Route::get('/orders/{order}/id-card/{side}', 'idCard')->whereNumber('order')->whereIn('side', ['front', 'back'])->name('id-card');
+                    // Kredit müqaviləsi (PDF): extension Ferrum-un /pasm səhifəsindən sifarişə bağlayır
+                    Route::get('/contract/{ref}', 'contractOrder')->where('ref', '[A-Za-z0-9-]{1,30}')->name('contract.order');
+                    Route::post('/orders/{order}/contract', 'storeContract')->whereNumber('order')->name('contract.store');
+                    Route::get('/orders/{order}/contract', 'contract')->whereNumber('order')->name('contract');
                 });
 
             // Operator yan paneli (extensions/ps-side)

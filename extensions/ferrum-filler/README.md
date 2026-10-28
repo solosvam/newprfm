@@ -42,3 +42,16 @@ gedişat Ferrum səhifəsinin sol yuxarı küncündə görünür:
 DevExpress combo-ları: dropdown düyməsi (✕ yox) ilə açılır, siyahı virtual olduğu üçün lazım olsa mətn hərf-hərf yazılıb süzülür.
 Radio (Adi / Limitdən istifadə / Check-up) və Qeyd operatorundur. **Müraciət saxlanmır və göndərilmir.**
 Sabit mətnlər `config.js` → `FERRUM`-dadır.
+
+## Kredit müqaviləsini sifarişə bağlamaq (`/pasm`)
+Ferrum-da `pm.ferrumcapital.az/pasm` cədvəlində hər sətrin çap düyməsinin yanında **Parfumshop-a bağla** düyməsi çıxır
+(`pasm.js`, cədvəl yenidən çəkiləndə düymə yenidən qoyulur).
+1. Düyməni basın → parfumshop sifariş nömrəsini (PS… və ya ID) yazın → **Yoxla**: sifariş, müştəri və məbləğ göstərilir;
+   sifarişdə artıq müqavilə varsa xəbərdarlıq — yenisi köhnəni əvəz edir.
+2. **Yüklə** — extension sətrin çap düyməsini özü basır. Ferrum PDF-i SignalR ilə göndərir və
+   `window.downloadFileClientSide(file, fileName, format)` çağırır; `pasm-hook.js` (MAIN world) həmin an bu funksiyanı bir dəfəlik
+   əvəz edir: PDF yüklənmir, tutulur. Ehtiyat yol: blob/data linkinə `<a download>.click()`. Adi çap dəyişmir.
+3. `background.js` PDF-i parfumshop-a göndərir: `POST /admin/ferrum/orders/{id}/contract` (admin sessiyası + CSRF,
+   token `GET /admin/ferrum/contract/{ref}` cavabından). Fayl `storage/app/private/contracts/{sifariş}_{PFL-APP-…}.pdf`,
+   yol `orders.contract_file`-a yazılır. Admin sifariş səhifəsində "Kredit müqaviləsi" linki (yalnız `ferrum` icazəsi ilə).
+Yükləmə və baxış `sensitive_access_logs`-a yazılır. Yalnız taksit sifarişləri, yalnız PDF (fayl `%PDF-` ilə başlamalıdır).

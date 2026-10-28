@@ -85,21 +85,12 @@ Son yenilənmə: 28 oktyabr 2026.
 - [ ] **ferrum-filler: Ferrum-a doldurulan qiymət.** Müştərinin aylıq seçimindən sonrakı rəqəm, yəni üzərinə faiz gəlinmiş məbləğ doldurulmalıdır.
   Yuvarlaqlaşdırma: kəsr hissəsi 0.10 və çoxdursa yuxarı, azdırsa aşağı — məs. 124.10 → 125, 124.09 → 124.
 
-- [ ] **ferrum-filler: Ferrum kredit sənədini (PDF) sifarişə bağlamaq.** pm.ferrumcapital.az Blazor Server-dir: "Çap et" basılanda
-  PDF serverdə yaranır, SignalR ilə base64 kimi gəlir və `window.downloadFileClientSide(file, fileName, format)`
-  (`/js/DownloadFileClientSide.js`) Blob edib yükləyir — ayrıca URL yoxdur. Plan:
-  - extension Ferrum-da `world: "MAIN"` content script ilə bu funksiyanı əvəz edir: "tutma" rejimində base64-ü götürür, yükləmir;
-    rejim sönülüdürsə orijinal funksiyanı çağırır (adi çap dəyişmir). Funksiya tapılmasa ehtiyat yol: `URL.createObjectURL` + `<a>.click`-i tutmaq;
-  - `https://pm.ferrumcapital.az/pasm` cədvəlində hər sətrin qarşısında "Parfumshop-a bağla" düyməsi: basanda parfumshop sifariş
-    nömrəsi soruşulur, extension sətrin çap düyməsini özü basır, gələn PDF-i tutur, adlandırır (məs. `PS12345_PFL-APP-002227.pdf`);
-    sətirdən müraciət nömrəsi (`PFL-APP-…`) və kod da götürülür;
-  - MAIN → `postMessage` → isolated content script → background → parfumshop `POST …/ferrum/attach-pdf` (`order_no`, `ferrum_app_no`, PDF);
-  - Laravel: fayl serverə yüklənir (`storage/app/ferrum/…`, public deyil), fayl yolu sifarişin sənəd sahəsinə yazılır;
-    admin paneldə və müştəri hesabında "Kredit sənədi" linki.
-  Qeydlər: extension indi token yox, admin sessiyasının cookie-si + `ferrum` icazəsi ilə işləyir (`admin/ferrum/...`) —
-  endpoint də eyni qoruma ilə admin route olmalı, yükləmə `sensitive_access_logs`-a yazılmalıdır. Ferrum müraciət nömrəsi hazırda
-  sifarişdə saxlanmır; doldurma zamanı yazılsa, sifariş nömrəsini əl ilə yazmaq lazım olmaz. `host_permissions`-da
-  `last.parfumshop.az` yoxdur.
+- [ ] **ferrum-filler: kredit müqaviləsini (PDF) sifarişə bağlamaq — real Ferrum-da yoxlamaq** (28 oktyabr yazıldı, v0.6.0).
+  Ferrum `/pasm` cədvəlində hər sətrin çap düyməsinin yanında "Parfumshop-a bağla": sifariş nömrəsi yoxlanır, extension çap düyməsini
+  özü basır, `downloadFileClientSide`-ı bir dəfəlik əvəz edib PDF-i tutur, `{sifariş}_{PFL-APP-…}.pdf` adı ilə yükləyir →
+  `orders.contract_file`; admin sifariş səhifəsində "Kredit müqaviləsi" linki (`ferrum` icazəsi ilə). Saxta Ferrum səhifəsində yoxlanıb.
+  Real Ferrum-da yoxlanmalı: çap düyməsi tapılırmı (mətn / title / class-da "çap" və ya "print" axtarılır), müraciət nömrəsi
+  sətirdən düz götürülürmü, PDF hansı formatda gəlir. Düymə görünməsə — sətrin HTML-i lazımdır.
 
 ## 4. Prod-a çıxmazdan əvvəl
 

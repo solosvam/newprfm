@@ -1,0 +1,9 @@
+/* Ferrum /pasm cədvəlində "Parfumshop-a bağla" düyməsi (pasm.js) */
+.ps-contract-btn {
+    margin-left: 6px; padding: 3px 9px; border: 1px solid #1e88e5; border-radius: 6px;
+    background: #fff; color: #1e88e5; font: 600 12px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    white-space: nowrap; cursor: pointer; vertical-align: middle;
+}
+.ps-contract-btn:hover { background: #1e88e5; color: #fff; }
+.ps-contract-btn.is-done { border-color: #2e7d32; color: #2e7d32; }
+.ps-contract-btn.is-done::before { content: "✓ "; }

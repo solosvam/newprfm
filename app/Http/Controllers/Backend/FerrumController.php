@@ -8,11 +8,14 @@ use App\Services\IdCard\IdCardStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Ferrum Capital-ın API-si yoxdur — operator məlumatları pm.ferrumcapital.az formasına doldurur.
- * Bu controller Chrome extension-u (extensions/ferrum-filler) üçün sifariş məlumatlarını JSON verir.
+ * Bu controller Chrome extension-u (extensions/ferrum-filler) üçün sifariş məlumatlarını JSON verir
+ * və Ferrum-da çap olunan kredit müqaviləsini (PDF) sifarişə bağlayır.
  * Admin sessiyası + "ferrum" icazəsi; hər açılış sensitive_access_logs-a yazılır.
  */
 class FerrumController extends Controller
@@ -20,20 +23,12 @@ class FerrumController extends Controller
     /** {ref} — sifariş nömrəsi (PS260930000123) və ya id */
     public function order(Request $request, string $ref): JsonResponse
     {
-        $ref = trim($ref);
-        $order = Order::with([
+        $order = $this->findInstallmentOrder($ref, [
             'customer.creditProfile', 'address', 'paymentMethod', 'status',
             'items.product.brand', 'items.variant.size', 'creditApplication.period',
-        ])->where('order_no', strtoupper($ref))
-            ->when(ctype_digit($ref), fn ($q) => $q->orWhere('id', (int) $ref))
-            ->first();
-        if (!$order) {
-            return response()->json(['message' => 'Sifariş tapılmadı: '.$ref], 404);
-        }
-        // Yalnız taksit sifarişləri — başqa sifarişin həssas məlumatı (FİN, vəsiqə) ümumiyyətlə verilmir
-        if ($order->paymentMethod?->code !== 'installment') {
-            return response()->json(['message' => $order->order_no.' taksit sifarişi deyil ('
-                .($order->paymentMethod?->name_az ?? $order->paymentMethod?->name ?? 'ödəniş üsulu yoxdur').'). Ferrum yalnız taksit sifarişləri üçündür.'], 422);
+        ]);
+        if ($order instanceof JsonResponse) {
+            return $order;
         }
         $this->logAccess($request, 'ferrum_order', $order->id);
 
@@ -126,6 +121,81 @@ class FerrumController extends Controller
         $this->logAccess($request, 'ferrum_id_card_'.$side, $order->id);
 
         return response()->file($path, ['Cache-Control' => 'no-store']);
+    }
+
+    /** Müqavilə bağlamazdan əvvəl: operator düzgün sifarişi seçdiyini görsün (həssas məlumat yoxdur) + POST üçün CSRF token */
+    public function contractOrder(string $ref): JsonResponse
+    {
+        $order = $this->findInstallmentOrder($ref, ['customer']);
+        if ($order instanceof JsonResponse) {
+            return $order;
+        }
+
+        return response()->json([
+            'id' => $order->id,
+            'order_no' => $order->order_no,
+            'customer' => trim($order->customer?->name.' '.$order->customer?->surname),
+            'total' => (float) $order->total,
+            'has_contract' => (bool) $order->contract_file,
+            'cancelled' => $order->isCancelled(),
+            'csrf' => csrf_token(),
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    /** Ferrum-un çap etdiyi müqavilə: {sifariş}_{müraciət}.pdf adı ilə saxlanır, köhnəsi silinir */
+    public function storeContract(Request $request, Order $order): JsonResponse
+    {
+        abort_unless($order->paymentMethod?->code === 'installment', 422, 'Ferrum yalnız taksit sifarişləri üçündür.');
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'ferrum_app_no' => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9-]+$/'],
+        ]);
+        if (file_get_contents($request->file('file')->getRealPath(), false, null, 0, 5) !== '%PDF-') {
+            throw ValidationException::withMessages(['file' => 'Fayl PDF deyil.']);
+        }
+        $name = $order->order_no.(!empty($data['ferrum_app_no']) ? '_'.strtoupper($data['ferrum_app_no']) : '').'.pdf';
+        $disk = Storage::disk('local');
+        $path = $disk->putFileAs('contracts', $request->file('file'), $name);
+        abort_unless($path, 500, 'Fayl saxlanmadı.');
+        if ($order->contract_file && $order->contract_file !== $path) {
+            $disk->delete($order->contract_file);
+        }
+        $order->update(['contract_file' => $path]);
+        $this->logAccess($request, 'ferrum_contract_upload', $order->id);
+
+        return response()->json(['message' => $order->order_no.' sifarişinə bağlandı.', 'file' => $name]);
+    }
+
+    /** Admin sifariş səhifəsindəki "Kredit müqaviləsi" linki */
+    public function contract(Request $request, Order $order): BinaryFileResponse
+    {
+        $disk = Storage::disk('local');
+        abort_unless($order->contract_file && $disk->exists($order->contract_file), 404);
+        $this->logAccess($request, 'ferrum_contract_view', $order->id);
+
+        return response()->file($disk->path($order->contract_file), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.basename($order->contract_file).'"',
+            'Cache-Control' => 'no-store',
+        ]);
+    }
+
+    /** {ref} — sifariş nömrəsi və ya id. Yalnız taksit sifarişləri — başqa sifarişin həssas məlumatı ümumiyyətlə verilmir */
+    private function findInstallmentOrder(string $ref, array $with): Order|JsonResponse
+    {
+        $ref = trim($ref);
+        $order = Order::with(array_merge(['paymentMethod'], $with))->where('order_no', strtoupper($ref))
+            ->when(ctype_digit($ref), fn ($q) => $q->orWhere('id', (int) $ref))
+            ->first();
+        if (!$order) {
+            return response()->json(['message' => 'Sifariş tapılmadı: '.$ref], 404);
+        }
+        if ($order->paymentMethod?->code !== 'installment') {
+            return response()->json(['message' => $order->order_no.' taksit sifarişi deyil ('
+                .($order->paymentMethod?->name_az ?? $order->paymentMethod?->name ?? 'ödəniş üsulu yoxdur').'). Ferrum yalnız taksit sifarişləri üçündür.'], 422);
+        }
+
+        return $order;
     }
 
     /** Ferrum üçün mütləq lazım olan, amma boş sahələr */

@@ -248,6 +248,11 @@
                             <div><dt>Mənbə</dt><dd>{{ $sourceLabels[$order->source] ?? ($order->source ?: '—') }}@if($order->created_by && $staff->has($order->created_by)) · {{ $staff[$order->created_by] }}@endif</dd></div>
                             <div><dt>Ödəniş üsulu</dt><dd>{{ $order->paymentMethod?->name_az ?? '—' }}@if($order->birbank_installment_months) · {{ $order->birbank_installment_months }} ay @endif</dd></div>
                             <div><dt>Ödəniş vəziyyəti</dt><dd><span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span></dd></div>
+                            @if($order->contract_file)
+                                @can('ferrum')
+                                    <div><dt>Kredit müqaviləsi</dt><dd><a href="{{ route('admin.ferrum.contract', $order) }}" target="_blank" rel="noopener">{{ basename($order->contract_file) }}</a></dd></div>
+                                @endcan
+                            @endif
                         </dl>
                         {{-- Yekun hesab: ayrıca kart deyil, sifariş məlumatlarının davamı --}}
                     <div class="od-summary border-top pt-3 mt-auto">

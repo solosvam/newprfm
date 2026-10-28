@@ -6,6 +6,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class FerrumOrderTest extends TestCase
@@ -38,6 +40,7 @@ class FerrumOrderTest extends TestCase
         Schema::create('credit_applications', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->integer('order_id'), $t->integer('credit_period_id'),
             $t->decimal('interest_rate'), $t->decimal('total'), $t->decimal('monthly'), $t->integer('credit_status_id')->nullable(), $t->timestamps()]);
         (require database_path('migrations/2026_09_30_120000_add_ferrum_permission_and_access_log.php'))->up();
+        (require database_path('migrations/2026_10_28_100000_add_contract_file_to_orders.php'))->up();
         $this->assertTrue(DB::table('permissions')->where('name', 'ferrum')->where('guard_name', 'admin')->exists());
         DB::table('permissions')->delete(); // Spatie roles cədvəli yoxdur — icazəni Gate::before yoxlayır
 
@@ -63,6 +66,7 @@ class FerrumOrderTest extends TestCase
     protected function tearDown(): void
     {
         @unlink(\App\Services\IdCard\IdCardStorage::directory().'/'.$this->card);
+        Storage::disk('local')->delete(['contracts/PS260930000077_PFL-APP-002227.pdf', 'contracts/PS260930000077_PFL-APP-002300.pdf']);
         parent::tearDown();
     }
 
@@ -100,6 +104,55 @@ class FerrumOrderTest extends TestCase
         $this->get($json['id_card']['front'])->assertOk();
         $this->get('/admin/ferrum/orders/77/id-card/back')->assertNotFound();
         $this->assertSame(1, DB::table('sensitive_access_logs')->where('action', 'ferrum_id_card_front')->count());
+    }
+
+    public function test_contract_pdf_is_attached_to_order(): void
+    {
+        $this->admin();
+        $check = $this->getJson('/admin/ferrum/contract/PS260930000077')->assertOk()->json();
+        $this->assertSame(77, $check['id']);
+        $this->assertSame('Aysel Məmmədova', $check['customer']);
+        $this->assertFalse($check['has_contract']);
+        $this->assertNotEmpty($check['csrf']);
+        $this->assertArrayNotHasKey('fin', $check);
+
+        $pdf = fn () => UploadedFile::fake()->createWithContent('contract.pdf', "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF");
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => 'pfl-app-002227'])
+            ->assertOk()->assertJsonPath('file', 'PS260930000077_PFL-APP-002227.pdf');
+        $this->assertSame('contracts/PS260930000077_PFL-APP-002227.pdf', DB::table('orders')->where('id', 77)->value('contract_file'));
+        $this->assertTrue(Storage::disk('local')->exists('contracts/PS260930000077_PFL-APP-002227.pdf'));
+        $this->assertTrue($this->getJson('/admin/ferrum/contract/77')->json('has_contract'));
+
+        // yenisi köhnəni əvəz edir
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => 'PFL-APP-002300'])->assertOk();
+        $this->assertFalse(Storage::disk('local')->exists('contracts/PS260930000077_PFL-APP-002227.pdf'));
+
+        $this->get('/admin/ferrum/orders/77/contract')->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertSame(2, DB::table('sensitive_access_logs')->where('action', 'ferrum_contract_upload')->count());
+        $this->assertSame(1, DB::table('sensitive_access_logs')->where('action', 'ferrum_contract_view')->count());
+
+        // PDF olmayan fayl və şübhəli müraciət nömrəsi qəbul olunmur
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => UploadedFile::fake()->createWithContent('x.pdf', '<html>')])->assertUnprocessable();
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => '../x'])->assertUnprocessable();
+    }
+
+    public function test_contract_only_for_installment_and_permission(): void
+    {
+        $this->getJson('/admin/ferrum/contract/77')->assertUnauthorized();
+        $this->admin();
+        $this->get('/admin/ferrum/orders/77/contract')->assertNotFound();
+        DB::table('payment_methods')->insert(['id' => 2, 'code' => 'card_online', 'name_az' => 'Saytda onlayn ödəniş']);
+        DB::table('orders')->where('id', 77)->update(['payment_method_id' => 2]);
+        $this->getJson('/admin/ferrum/contract/77')->assertStatus(422);
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => UploadedFile::fake()->createWithContent('c.pdf', "%PDF-1.4\n%%EOF")])->assertStatus(422);
+    }
+
+    public function test_contract_forbidden_without_permission(): void
+    {
+        $this->admin(false);
+        $this->getJson('/admin/ferrum/contract/77')->assertForbidden();
+        $this->get('/admin/ferrum/orders/77/contract')->assertForbidden();
+        $this->postJson('/admin/ferrum/orders/77/contract')->assertForbidden();
     }
 
     public function test_not_found_forbidden_and_guest(): void

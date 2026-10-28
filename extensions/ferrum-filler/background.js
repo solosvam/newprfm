@@ -1,0 +1,62 @@
+// Ferrum müqaviləsini parfumshop-a göndərir (pasm.js-dən mesajla).
+// Sorğular buradan gedir: Ferrum səhifəsindən birbaşa fetch CORS-a ilişir, burada isə host_permissions kifayətdir.
+// Admin sessiyasının cookie-si ilə işləyir (popup kimi); POST üçün CSRF token yoxlama cavabından gəlir.
+import { SITES, FERRUM_HOST } from './config.js';
+
+async function currentSite() {
+    const { siteId } = await chrome.storage.local.get('siteId');
+    return SITES.find((s) => s.id === siteId) || SITES[0];
+}
+
+async function request(path, options = {}) {
+    const site = await currentSite();
+    let response;
+    try {
+        response = await fetch(site.url + path, {
+            credentials: 'include', cache: 'no-store', ...options,
+            headers: { Accept: 'application/json', ...(options.headers || {}) },
+        });
+    } catch {
+        return { ok: false, error: `${site.label} ilə əlaqə qurulmadı. İnterneti və extension ayarlarındakı saytı yoxlayın.` };
+    }
+    const isJson = (response.headers.get('content-type') || '').includes('application/json');
+    if (response.status === 401 || (!isJson && response.redirected)) {
+        return { ok: false, error: `${site.label} admin panelinə daxil olmamısınız. Eyni Chrome-da adminə daxil olun.` };
+    }
+    if (response.status === 403) return { ok: false, error: 'Hesabınızın "ferrum" icazəsi yoxdur.' };
+    if (response.status === 419) return { ok: false, error: 'Sessiya yeniləndi — sifariş nömrəsini yenidən yoxlayın.' };
+    if (response.status === 429) return { ok: false, error: 'Çox sorğu göndərildi. Bir dəqiqə sonra yenidən cəhd edin.' };
+    const body = isJson ? await response.json().catch(() => null) : null;
+    if (!response.ok || !body) {
+        const first = body?.errors ? Object.values(body.errors)[0]?.[0] : null;
+        return { ok: false, error: first || body?.message || `Xəta baş verdi (HTTP ${response.status}).` };
+    }
+    return { ok: true, data: body, site: site.label };
+}
+
+function checkOrder(ref) {
+    return request(`/admin/ferrum/contract/${encodeURIComponent(ref)}`);
+}
+
+function uploadContract({ orderId, csrf, base64, appNo }) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const form = new FormData();
+    form.append('file', new Blob([bytes], { type: 'application/pdf' }), 'contract.pdf');
+    if (appNo) form.append('ferrum_app_no', appNo);
+    return request(`/admin/ferrum/orders/${Number(orderId)}/contract`, { method: 'POST', body: form, headers: { 'X-CSRF-TOKEN': csrf } });
+}
+
+chrome.runtime.onMessage.addListener((message, sender, reply) => {
+    // Yalnız öz content script-imiz və yalnız Ferrum səhifəsindən
+    if (sender.id !== chrome.runtime.id || !sender.url || new URL(sender.url).host !== FERRUM_HOST) return;
+    if (message?.type === 'contract-check') {
+        checkOrder(String(message.ref || '')).then(reply);
+        return true;
+    }
+    if (message?.type === 'contract-upload') {
+        uploadContract(message).then(reply);
+        return true;
+    }
+});
