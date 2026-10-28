@@ -82,6 +82,11 @@
         }
     }
 
+    // Məhsulun kiçik şəkli; şəkil yoxdursa boş yer (sətirlər bərabər dursun)
+    const thumb = src => src
+        ? `<img class="crm-thumb" src="${esc(src)}" alt="" loading="lazy">`
+        : '<span class="crm-thumb" aria-hidden="true"></span>';
+
     function renderResults(list) {
         if (!list) {
             els.results.innerHTML = '<div class="crm-order__empty">Axtarış nəticələri burada görünəcək.</div>';
@@ -93,7 +98,7 @@
         }
         els.results.innerHTML = list.map((p, i) => `
             <div class="crm-result" data-index="${i}">
-                <div class="crm-result__name">${esc(p.name)}<span class="crm-result__brand">${esc([p.brand, p.type, p.gender].filter(Boolean).join(' · '))}</span></div>
+                <div class="crm-result__name">${thumb(p.image)}<div>${esc(p.name)}<span class="crm-result__brand">${esc([p.brand, p.type, p.gender].filter(Boolean).join(' · '))}</span></div></div>
                 ${p.variants.length === 1
                     // Tək variant: seçim yoxdur, ox olmadan sadə sahə
                     ? `<div class="form-control crm-result__single" data-variant data-variant-id="${p.variants[0].id}">${esc(p.variants[0].label)} · ${money(p.variants[0].price)}</div>`
@@ -122,7 +127,7 @@
             const salePrice = Number(variant.price);
             const listPrice = Number(variant.list_price ?? variant.price);
             const base = selectedCode() === 'installment' ? listPrice : salePrice;
-            cart.push({ variantId, name: product.name, brand: product.brand || '', variant: variant.label, salePrice, listPrice, basePrice: base, price: base, qty });
+            cart.push({ variantId, name: product.name, brand: product.brand || '', image: product.image || null, variant: variant.label, salePrice, listPrice, basePrice: base, price: base, qty });
         }
 
         row.querySelector('[data-qty]').value = 1;
@@ -139,8 +144,11 @@
             els.cart.innerHTML = cart.map((i, idx) => `
                 <div class="crm-cart-item" data-index="${idx}">
                     <div class="crm-cart-item__info">
-                        <div class="crm-cart-item__name">${esc(i.name)}</div>
-                        <div class="crm-cart-item__meta">${esc([i.brand, i.variant].filter(Boolean).join(' · '))}</div>
+                        ${thumb(i.image)}
+                        <div>
+                            <div class="crm-cart-item__name">${esc(i.name)}</div>
+                            <div class="crm-cart-item__meta">${esc([i.brand, i.variant].filter(Boolean).join(' · '))}</div>
+                        </div>
                     </div>
                     <div class="crm-cart-item__ctrl">
                         <div class="crm-cart-item__qty">

@@ -16,7 +16,9 @@
     padding: 10px 0; border-bottom: 1px solid var(--separator);
 }
 .crm-result:last-child { border-bottom: 0; }
-.crm-result__name { font-weight: 600; line-height: 1.3; }
+.crm-result__name { display: flex; align-items: center; gap: 10px; font-weight: 600; line-height: 1.3; }
+/* Məhsulun kiçik şəkli: axtarış nəticəsi və səbət */
+.crm-thumb { flex: 0 0 44px; width: 44px; height: 44px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--separator); }
 .crm-result__brand { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
 .crm-result .form-control, .crm-result .form-select { padding-top: 6px; padding-bottom: 6px; }
 .crm-result .btn { padding: 6px 0; }
@@ -32,7 +34,8 @@
     padding: 12px 0; border-bottom: 1px dashed var(--separator);
 }
 .crm-cart-item:last-child { border-bottom: 0; }
-.crm-cart-item__info { min-width: 0; padding-top: 2px; }
+.crm-cart-item__info { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding-top: 2px; }
+.crm-cart-item__info > div { min-width: 0; }
 .crm-cart-item__side { text-align: right; }
 .crm-cart-item__ctrl .crm-cart-item__qty { margin-top: 0; }
 /* Səbət dar olanda: say × qiymət adın altına düşür */

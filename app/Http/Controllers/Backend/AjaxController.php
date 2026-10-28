@@ -132,7 +132,8 @@ class AjaxController extends Controller
             'brand' => $p->brand?->name,
             'type' => $p->type?->name_az,
             'gender' => $p->genders->first()?->name_az,
-            'image' => ($img = $p->images->first()) ? asset('frontend/uploads/products/' . $img->image) : null,
+            // kiçik şəkil (200px webp) — axtarış nəticəsində və səbətdə
+            'image' => ($img = $p->images->first()) ? route('product.image', [200, $img->image]) : null,
             'variants' => $p->variants->map(fn ($v) => [
                 'id' => $v->id,
                 'label' => $v->size?->name_az ?? '—',

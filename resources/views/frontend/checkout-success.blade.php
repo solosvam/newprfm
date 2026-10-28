@@ -34,6 +34,10 @@
             <p class="order-success__subtitle">
                 {{ __('reviews_order_number') }} <strong>{{ $order->order_no }}</strong>
             </p>
+            {{-- Kredit müraciətinin və qonaq "bir kliklə al"-ın öz əlaqə mətni var --}}
+            @if(!$order->creditApplication()->exists() && !($guestOneClick ?? false))
+                <p class="order-success__subtitle">{{ __('order_success_operator_contact') }}</p>
+            @endif
 
             @if(!($guestOneClick ?? false))
                 <a href="{{ route('orders') }}" class="btn btn-dark order-success__link">{{ __('reviews_view_my_orders') }}</a>
