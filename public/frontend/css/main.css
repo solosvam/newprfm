@@ -216,11 +216,15 @@ footer { background: var(--accent-bg); color: var(--on-accent-bg); margin-top: 4
 
 .credit-modal-summary { background: var(--surface-2); border-radius: 12px; padding: 16px; margin: 22px 0; }
 .credit-modal-summary .credit-modal-product {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+    justify-content: flex-start; align-items: center; gap: 14px;
     padding: 2px 0 14px; margin-bottom: 5px; border-bottom: 0;
 }
+.credit-modal-product__image { flex: 0 0 auto; width: 84px; height: 84px; object-fit: contain; border-radius: 10px; background: #fff; }
+.credit-modal-summary .credit-modal-product .credit-modal-product__body { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 4px; padding: 0; min-width: 0; }
 .credit-modal-summary .credit-modal-product strong { font-size: 13px; color: var(--text-secondary); }
 .credit-modal-summary .credit-modal-product span { font-size: 18px; font-weight: 700; line-height: 1.35; color: var(--text); }
+.credit-modal-product__specs { display: flex; flex-wrap: wrap; list-style: none; margin: 4px 0 0; padding: 0; font-size: 13px; color: var(--text-secondary); }
+.credit-modal-product__specs li + li::before { content: "·"; margin: 0 8px; }
 .credit-modal-summary div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; color: var(--text); }
 .credit-modal-summary > div:not(.credit-modal-product) + div:not(.credit-modal-product) { border-top: 1px solid var(--border); }
 

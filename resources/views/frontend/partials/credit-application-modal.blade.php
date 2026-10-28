@@ -18,6 +18,13 @@
         'free' => __('product_interest_free'),
         'scrollHint' => __('credit_modal_scroll_hint'),
     ];
+    // Məhsul kartı: cins → həcm → konsentrasiya. Cins qısa ("Qadın üçün" → "Qadın"), konsentrasiya tam ("Eau de Parfum")
+    $creditImage = $product->images->first();
+    $creditGender = $product->genders->first();
+    $creditGender = $creditGender ? preg_replace(['/\s+üçün$/u', '/^for\s+/iu'], '', $creditGender->{'name_'.$creditLocale} ?: $creditGender->name_az) : null;
+    $creditGender = $creditGender ? mb_convert_case(mb_substr($creditGender, 0, 1), MB_CASE_UPPER).mb_substr($creditGender, 1) : null;
+    $creditType = $product->type ? preg_replace_callback('/\s(De|Du|La)\s/u', fn ($m) => ' '.mb_strtolower($m[1]).' ', $product->type->{'name_'.$creditLocale} ?: $product->type->name_az) : null;
+    $creditSize = fn ($variant) => $variant->size?->{'name_'.$creditLocale} ?: ($variant->size?->name_az ?: $variant->id);
 @endphp
 <dialog id="creditApplicationDialog" class="credit-application-dialog" aria-labelledby="creditDialogTitle" data-error-message="{{ $creditCopy['error'] }}" data-success-message="{{ $creditCopy['success'] }}">
     <div class="credit-modal-head">
@@ -41,19 +48,33 @@
                     @endforeach
                 </div>
             </div>
-            <div class="credit-modal-field">
+            {{-- Tək həcm varsa seçim göstərilmir (həcm kartda yazılır), çox həcm — yan-yana --}}
+            <div class="credit-modal-field" @if($variants->count() < 2) hidden @endif>
                 <label>{{ $creditCopy['size'] }}</label>
                 <div class="credit-modal-options" id="creditVariantOptions">
                     @foreach($variants as $variant)
                         <label class="credit-modal-pill">
                             <input type="radio" name="product_variant_id" value="{{ $variant->id }}" data-price="{{ $variant->price }}" @checked($loop->first) required>
-                            <span>{{ $variant->size?->{'name_'.$creditLocale} ?: ($variant->size?->name_az ?: $variant->id) }}</span>
+                            <span>{{ $creditSize($variant) }}</span>
                         </label>
                     @endforeach
                 </div>
             </div>
             <div class="credit-modal-summary">
-                <div class="credit-modal-product"><strong>{{ $product->brand?->name }}</strong><span>{{ $product->name }}</span></div>
+                <div class="credit-modal-product">
+                    @if($creditImage)
+                        <img class="credit-modal-product__image" src="{{ asset('frontend/uploads/products/'.$creditImage->image) }}" alt="{{ $product->brand?->name }} {{ $product->name }}">
+                    @endif
+                    <div class="credit-modal-product__body">
+                        <strong>{{ $product->brand?->name }}</strong>
+                        <span>{{ $product->name }}</span>
+                        <ul class="credit-modal-product__specs">
+                            @if($creditGender)<li>{{ $creditGender }}</li>@endif
+                            <li id="creditSize">{{ $variants->first() ? $creditSize($variants->first()) : '—' }}</li>
+                            @if($creditType)<li>{{ $creditType }}</li>@endif
+                        </ul>
+                    </div>
+                </div>
                 <div><span>{{ $creditCopy['price'] }}</span><strong id="creditPrice">—</strong></div>
                 <div><span>{{ $creditCopy['monthly'] }}</span><strong id="creditMonthly">—</strong></div>
                 <div><span>{{ $creditCopy['total'] }}</span><strong id="creditTotal">—</strong></div>

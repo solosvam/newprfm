@@ -66,7 +66,9 @@ function initCreditApplicationModal() {
     }
 
     function calculate() {
-        const price = Number(variantOptions.querySelector('input:checked')?.dataset.price || 0);
+        const variant = variantOptions.querySelector('input:checked');
+        const price = Number(variant?.dataset.price || 0);
+        if (variant) document.getElementById('creditSize').textContent = variant.nextElementSibling.textContent;
         filterPeriods(price);
         const rate = Number(periodOptions.querySelector('input:checked')?.dataset.rate || 0);
         const months = Number(periodOptions.querySelector('input:checked')?.dataset.months || 1);
