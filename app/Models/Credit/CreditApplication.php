@@ -14,6 +14,8 @@ class CreditApplication extends Model
         'credit_period_id',
         'interest_rate',
         'total',
+        'standard_total',
+        'total_edited_by',
         'monthly',
         'credit_status_id',
     ];
@@ -23,8 +25,23 @@ class CreditApplication extends Model
         return [
             'interest_rate' => 'decimal:2',
             'total'         => 'decimal:2',
+            'standard_total' => 'decimal:2',
             'monthly'       => 'decimal:2',
         ];
+    }
+
+    /**
+     * Razılaşdırılan ümumi məbləğ: operator göndərməyibsə standart; göndəribsə faizsiz məbləğ ($min) ilə standart arasında olmalıdır.
+     * Aralıqdan kənardırsa null.
+     */
+    public static function agreedTotal(float $standard, float $min, ?float $requested): ?float
+    {
+        if ($requested === null) {
+            return round($standard, 2);
+        }
+        $requested = round($requested, 2);
+
+        return $requested >= round($min, 2) && $requested <= round($standard, 2) ? $requested : null;
     }
 
     public function customer()

@@ -88,11 +88,14 @@ class CrmController extends Controller
                     ->paginate(10),
             ]),
             'installment' => view('backend.crm.tabs.installment', [
-                'orders' => $customer->orders()
+                'orders' => $installmentOrders = $customer->orders()
                     ->where('payment_method_id', 4)
                     ->with(['status', 'creditApplication.status', 'creditApplication.period'])
                     ->latest()
                     ->paginate(10),
+                // ümumi məbləği dəyişən əməkdaşların adı
+                'creditEditors' => \App\Models\User::whereIn('id', $installmentOrders->pluck('creditApplication.total_edited_by')->filter()->unique())
+                    ->get()->mapWithKeys(fn ($u) => [$u->id => $u->full_name]),
             ]),
             'payments' => view('backend.crm.tabs.payments', [
                 'payments' => $customer->payments()
@@ -397,6 +400,8 @@ class CrmController extends Controller
             'payment_method_id' => ['required', 'integer'],
             'birbank_installment_months' => ['nullable', 'integer', Rule::in([2, 3, 6])],
             'credit_period_id' => ['nullable', 'integer'],
+            // Kreditin razılaşdırılan ümumi məbləği (kampaniya) — yalnız credit_total_edit icazəsi ilə
+            'credit_total' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'gift_wrap' => ['nullable', 'boolean'],
             // Operator qiyməti əl ilə dəyişibsə — bonus faizi 0..admin ayarı (standart 0)
             'bonus_percent' => ['nullable', 'integer', 'min:0', 'max:'.(int) floor((float) \App\Models\Setting::valueOf('order_bonus_percent', 5))],
@@ -499,7 +504,15 @@ class CrmController extends Controller
             $delivery = $pricing->deliveryFee($goods); // checkout-dakı kimi: endirimdən sonrakı məbləğə görə
             $giftWrapFee = $pricing->giftWrapFee($giftWrap);
             $payable = round($goods + $delivery + $giftWrapFee, 2);
-            $total = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
+            $standardTotal = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
+            $total = $standardTotal;
+            $creditEdited = false;
+            if ($period && isset($data['credit_total']) && abs((float) $data['credit_total'] - $standardTotal) >= 0.005) {
+                abort_unless(auth()->user()?->can('credit_total_edit'), 403, 'Kreditin ümumi məbləğini dəyişməyə icazəniz yoxdur.');
+                $total = CreditApplication::agreedTotal($standardTotal, $payable, (float) $data['credit_total']);
+                abort_if($total === null, 422, 'Ümumi məbləğ '.number_format($payable, 2).' – '.number_format($standardTotal, 2).' ₼ aralığında olmalıdır.');
+                $creditEdited = true;
+            }
 
             $order = Order::create([
                 'order_no' => 'TMP' . Str::random(20),
@@ -537,6 +550,7 @@ class CrmController extends Controller
                     'customer_id' => $customer->id, 'order_id' => $order->id,
                     'credit_period_id' => $period->id, 'interest_rate' => $period->interest_rate,
                     'total' => $total, 'monthly' => round($total / $period->month, 2),
+                    'standard_total' => $standardTotal, 'total_edited_by' => $creditEdited ? auth()->id() : null,
                     'credit_status_id' => CreditStatus::where('code', 'pending')->firstOrFail()->id,
                 ]);
             }

@@ -146,10 +146,23 @@
                         </label>
                     @endforeach
                 </div>
+                {{-- Ümumi məbləğ: standart (müddətin faizi ilə); icazəsi olan operator kampaniya üçün azalda bilər, aylıq avtomatik --}}
                 <dl class="crm-order__credit" id="crmOrderCredit" hidden>
+                    <div>
+                        <dt>Ümumi məbləğ</dt>
+                        <dd>
+                            @can('credit_total_edit')
+                                <div class="input-group input-group-sm crm-order__credit-total">
+                                    <input type="number" class="form-control text-end" id="crmOrderCreditTotal" step="0.01" inputmode="decimal" aria-label="Kreditin ümumi məbləği">
+                                    <span class="input-group-text">₼</span>
+                                </div>
+                                <div class="form-text" data-credit-standard hidden></div>
+                            @else
+                                <span data-credit-total>—</span>
+                            @endcan
+                        </dd>
+                    </div>
                     <div><dt>Aylıq ödəniş</dt><dd data-credit-monthly>—</dd></div>
-                    <div><dt>Ümumi məbləğ</dt><dd data-credit-total>—</dd></div>
-                    <div><dt>Faiz məbləği</dt><dd data-credit-overpay>—</dd></div>
                 </dl>
             </div>
         </div>

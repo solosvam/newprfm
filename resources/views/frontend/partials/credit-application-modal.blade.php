@@ -18,7 +18,7 @@
         'free' => __('product_interest_free'),
         'scrollHint' => __('credit_modal_scroll_hint'),
     ];
-    // Məhsul kartı: cins → həcm → konsentrasiya. Cins qısa ("Qadın üçün" → "Qadın"), konsentrasiya tam ("Eau de Parfum")
+    // Məhsul kartı: cins → həcm → konsentrasiya — adlar bazada necə yazılıbsa elə
     $creditImage = $product->images->first();
     $creditGender = $product->genders->first();
     // ikon üçün: qadın / kişi / unisex (bazada "Qadın üçün" və "Qadın", "Kişi üçün" və "Kişi" ayrı-ayrıdır)
@@ -28,9 +28,8 @@
         (bool) preg_match('/kişi|\bmen\b/iu', $creditGender->name_az.' '.$creditGender->name_en) => 'male',
         default => 'unisex',
     };
-    $creditGender = $creditGender ? preg_replace(['/\s+üçün$/u', '/^for\s+/iu'], '', $creditGender->{'name_'.$creditLocale} ?: $creditGender->name_az) : null;
-    $creditGender = $creditGender ? mb_convert_case(mb_substr($creditGender, 0, 1), MB_CASE_UPPER).mb_substr($creditGender, 1) : null;
-    $creditType = $product->type ? preg_replace_callback('/\s(De|Du|La)\s/u', fn ($m) => ' '.mb_strtolower($m[1]).' ', $product->type->{'name_'.$creditLocale} ?: $product->type->name_az) : null;
+    $creditGender = $creditGender ? ($creditGender->{'name_'.$creditLocale} ?: $creditGender->name_az) : null; // bazada necədirsə
+    $creditType = $product->type ? ($product->type->{'name_'.$creditLocale} ?: $product->type->name_az) : null;
     $creditSize = fn ($variant) => $variant->size?->{'name_'.$creditLocale} ?: ($variant->size?->name_az ?: $variant->id);
 @endphp
 <dialog id="creditApplicationDialog" class="credit-application-dialog" aria-labelledby="creditDialogTitle" data-error-message="{{ $creditCopy['error'] }}" data-success-message="{{ $creditCopy['success'] }}">

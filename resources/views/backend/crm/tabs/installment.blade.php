@@ -39,7 +39,13 @@
                         <td>{{ $credit?->period?->name_az ?? $credit?->period?->name ?? '—' }}</td>
                         <td>{{ $credit ? number_format((float)$credit->interest_rate, 2) . '%' : '—' }}</td>
                         <td class="text-nowrap">{{ $credit ? number_format((float)$credit->monthly, 2) . ' ₼' : '—' }}</td>
-                        <td class="fw-semibold text-nowrap">{{ number_format((float)($credit?->total ?? $order->total), 2) }} ₼</td>
+                        <td class="fw-semibold text-nowrap">
+                            {{ number_format((float)($credit?->total ?? $order->total), 2) }} ₼
+                            @if($credit?->total_edited_by)
+                                {{-- operator kampaniya üçün dəyişib --}}
+                                <small class="d-block fw-normal text-muted">standart {{ number_format((float) $credit->standard_total, 2) }} ₼ · {{ $creditEditors[$credit->total_edited_by] ?? 'Əməkdaş #'.$credit->total_edited_by }}</small>
+                            @endif
+                        </td>
                         <td><span class="badge bg-warning text-dark">{{ $credit?->status?->name_az ?? '—' }}</span></td>
                         <td><span class="badge {{ $orderStatusBadge }}">{{ $order->status?->name_az ?? '—' }}</span></td>
                         <td class="text-end">

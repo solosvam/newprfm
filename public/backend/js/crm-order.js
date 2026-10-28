@@ -243,13 +243,27 @@
     const payable = () => subtotal() + deliveryFee(subtotal()) + giftTotal();
     const selectedPeriod = () => selectedCode() === 'installment'
         ? root.querySelector('input[name="crm_credit_period"]:checked') : null;
-    // Yekun: hissə-hissədə faiz də daxil
-    const total = () => {
+    // Standart kredit məbləği: müddətin faizi ilə
+    const standardTotal = () => {
         const period = selectedPeriod();
-        return payable() * (1 + (period ? Number(period.dataset.rate) || 0 : 0) / 100);
+        return Math.round(payable() * (1 + (period ? Number(period.dataset.rate) || 0 : 0) / 100) * 100) / 100;
     };
+    // Operatorun razılaşdırdığı ümumi məbləğ (kampaniya); müddət, səbət və s. dəyişəndə standarta qayıdır
+    const creditInput = $('crmOrderCreditTotal');
+    let creditOverride = null;
+    let lastStandard = null;
+    function syncCreditStandard() {
+        const std = selectedPeriod() ? standardTotal() : null;
+        if (std !== lastStandard) creditOverride = null;
+        lastStandard = std;
+    }
+    const creditMin = () => Math.round(payable() * 100) / 100;
+    const creditInvalid = () => creditOverride !== null && (creditOverride < creditMin() || creditOverride > standardTotal());
+    // Yekun: hissə-hissədə faiz də daxil (və ya razılaşdırılan məbləğ)
+    const total = () => (selectedPeriod() ? (creditOverride ?? standardTotal()) : payable());
 
     function updateTotals() {
+        syncCreditStandard();
         const goods = subtotal();
         const fee = deliveryFee(goods);
         const off = discount();
@@ -356,7 +370,7 @@
         }
     }
 
-    // Hissə-hissə: aylıq ödəniş, ümumi məbləğ, faiz məbləği
+    // Hissə-hissə: ümumi məbləğ (icazə ilə redaktə), aylıq ödəniş avtomatik
     function updateCredit() {
         const period = selectedPeriod();
         if (!period || !cart.length) {
@@ -366,10 +380,30 @@
         const months = Number(period.dataset.months) || 1;
         const full = total();
         els.credit.hidden = false;
-        els.credit.querySelector('[data-credit-monthly]').textContent = money(full / months);
-        els.credit.querySelector('[data-credit-total]').textContent = money(full);
-        els.credit.querySelector('[data-credit-overpay]').textContent = money(full - payable());
+        els.credit.querySelector('[data-credit-monthly]').textContent = creditInvalid() ? '—' : money(full / months);
+        if (!creditInput) {
+            els.credit.querySelector('[data-credit-total]').textContent = money(full);
+            return;
+        }
+        creditInput.min = creditMin().toFixed(2);
+        creditInput.max = standardTotal().toFixed(2);
+        if (document.activeElement !== creditInput) creditInput.value = full.toFixed(2);
+        creditInput.classList.toggle('is-invalid', creditInvalid());
+        const standard = els.credit.querySelector('[data-credit-standard]');
+        standard.hidden = creditOverride === null;
+        standard.innerHTML = `Standart: ${money(standardTotal())} · <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-credit-reset>Qaytar</button>`;
     }
+    creditInput?.addEventListener('input', () => {
+        const value = parseFloat(creditInput.value.replace(',', '.'));
+        creditOverride = Number.isFinite(value) && Math.abs(value - standardTotal()) >= 0.005 ? Math.round(value * 100) / 100 : null;
+        updateTotals();
+    });
+    creditInput?.addEventListener('change', updateTotals); // fokus gedəndə dəyəri formatla
+    els.credit.addEventListener('click', event => {
+        if (!event.target.closest('[data-credit-reset]')) return;
+        creditOverride = null;
+        updateTotals();
+    });
 
     // ---------- Yoxlama və göndərmə ----------
     function problem() {
@@ -383,6 +417,7 @@
         if (!code) return 'Ödəniş üsulunu seçin';
         if (code === 'birbank_installment' && !root.querySelector('input[name="crm_birbank_months"]:checked')) return 'Taksit müddətini seçin';
         if (code === 'installment' && !root.querySelector('input[name="crm_credit_period"]:checked')) return 'Kredit müddətini seçin';
+        if (code === 'installment' && creditInvalid()) return `Ümumi məbləğ ${money(creditMin())} – ${money(standardTotal())} aralığında olmalıdır`;
         return '';
     }
 
@@ -431,6 +466,7 @@
                 ? Number(root.querySelector('input[name="crm_birbank_months"]:checked')?.value) || null : null,
             credit_period_id: code === 'installment'
                 ? Number(root.querySelector('input[name="crm_credit_period"]:checked')?.value) || null : null,
+            credit_total: code === 'installment' && creditOverride !== null ? creditOverride : null,
             gift_wrap: els.giftWrap.checked,
             // qiymət əl ilə dəyişibsə — seçilən bonus faizi (server də yoxlayır)
             bonus_percent: priceChanged() ? manualBonusPercent : null,
