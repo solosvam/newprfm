@@ -32,6 +32,14 @@ Son yenilənmə: 10 oktyabr 2026.
 - [ ] **Sifarişin ünvanı sifarişə köçürülmür.** Sifariş müştərinin ünvan kartına istinad edir (customer_address_id) — müştəri sonradan
   ünvanını dəyişsə və ya silsə, köhnə sifarişlərin ünvanı da dəyişir / itir. Ünvan sifariş yaranan anda sifarişə köçürülməlidir.
 - [ ] **Qeyri-müəyyən bank əməliyyatlarının uzlaşdırılması:** kimin ödədiyi bilinməyən köçürməni sifarişə bağlamaq.
+- [ ] **Admin kuryer (baş kuryer).** Kuryerlərdən biri admin seçilir:
+  - digər kuryerlərin balansındakı pul hərəkətlərini görür — pul haradan gəldi, kimə ödədi;
+  - onların balansındakı pulu öz hesabına köçürür. Adi kuryer pulunu köçürə bilmir, pulu yalnız admin kuryer özünə çəkə bilər;
+  - sifarişlərin kuryerlə bağlı bütün proseslərini görür: hansı kuryerdə nə var, hansı statusdadır, anbardan götürüb-götürməyib və s.
+- [ ] **Ayarlarda "Telegram" bölməsi** (SMS bölməsi kimi): Telegram mesaj şablonları oradan idarə olunsun.
+- [ ] **Sifarişi kuryerə yönləndirəndə anbarlar üzrə "pul ver / pul vermə" seçimi.** Məs. 3 anbar var: 2-nə pul ver, 1-nə vermə.
+  "Pul ver" seçilən anbarlarda köhnə qayda qalır. "Pul vermə" seçilənlərdə kuryerə pulla bağlı heç nə görünmür, yalnız "Götürdüm" seçilir;
+  "Götürdüm" seçilən kimi anbara borc yaranır (kuryer "götürdüm, pul vermədim" seçmiş kimi).
 
 ## 2. Sayt — səbət və push bildirişləri
 
