@@ -20,6 +20,7 @@
 /* Məhsulun kiçik şəkli: axtarış nəticəsi və səbət */
 .crm-thumb { flex: 0 0 44px; width: 44px; height: 44px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--separator); }
 .crm-result__brand { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.crm-result__purchase { display: block; font-size: 12px; font-weight: 400; color: var(--warning); }
 .crm-result .form-control, .crm-result .form-select { padding-top: 6px; padding-bottom: 6px; }
 .crm-result .btn { padding: 6px 0; }
 .crm-result__single { background: var(--background); color: var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }

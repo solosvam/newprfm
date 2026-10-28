@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCreditProfile;
 use App\Models\Product\Product;
+use App\Services\Procurement\LastPurchase;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -126,6 +127,10 @@ class AjaxController extends Controller
             ->limit(10)
             ->get();
 
+        // Son alış (qiymət, anbar, tarix) — yalnız icazəsi olan əməkdaşa
+        $purchases = auth()->user()?->can('crm.purchase_info')
+            ? LastPurchase::forVariants($products->flatMap->variants->pluck('id')->all()) : null;
+
         return response()->json($products->map(fn (Product $p) => [
             'id' => $p->id,
             'name' => $p->name,
@@ -140,6 +145,7 @@ class AjaxController extends Controller
                 // məhsul endirimi avtomatik; list_price — adi qiymət
                 'price' => $v->salePrice(),
                 'list_price' => (float) $v->price,
+                ...($purchases !== null ? ['last_purchase' => $purchases[$v->id] ?? null] : []),
             ])->values(),
         ])->values());
     }

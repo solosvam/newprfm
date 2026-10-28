@@ -19,14 +19,14 @@ return new class extends Migration
         });
 
         DB::table('permissions')->updateOrInsert(
-            ['name' => 'credit_total_edit', 'guard_name' => 'admin'],
+            ['name' => 'crm.credit_total', 'guard_name' => 'admin'],
             ['description' => 'CRM: kreditin ümumi məbləğini əl ilə dəyişmək (kampaniya)', 'created_at' => now(), 'updated_at' => now()]
         );
     }
 
     public function down(): void
     {
-        DB::table('permissions')->where('name', 'credit_total_edit')->where('guard_name', 'admin')->delete();
+        DB::table('permissions')->where('name', 'crm.credit_total')->where('guard_name', 'admin')->delete();
         Schema::table('credit_applications', fn (Blueprint $table) => $table->dropColumn(['standard_total', 'total_edited_by']));
     }
 };

@@ -87,6 +87,13 @@
         ? `<img class="crm-thumb" src="${esc(src)}" alt="" loading="lazy">`
         : '<span class="crm-thumb" aria-hidden="true"></span>';
 
+    // Son alış (yalnız crm.purchase_info icazəsi ilə serverdən gəlir); undefined — icazə yoxdur, null — alış olmayıb
+    const purchaseText = v => v.last_purchase === undefined ? ''
+        : v.last_purchase ? `Son alış: ${money(v.last_purchase.cost)} · ${v.last_purchase.warehouse || '—'} · ${v.last_purchase.date}`
+        : 'Son alış: yoxdur';
+    const purchaseLine = v => (v.last_purchase === undefined ? ''
+        : `<span class="crm-result__purchase" data-purchase>${esc(purchaseText(v))}</span>`);
+
     function renderResults(list) {
         if (!list) {
             els.results.innerHTML = '<div class="crm-order__empty">Axtarış nəticələri burada görünəcək.</div>';
@@ -98,7 +105,7 @@
         }
         els.results.innerHTML = list.map((p, i) => `
             <div class="crm-result" data-index="${i}">
-                <div class="crm-result__name">${thumb(p.image)}<div>${esc(p.name)}<span class="crm-result__brand">${esc([p.brand, p.type, p.gender].filter(Boolean).join(' · '))}</span></div></div>
+                <div class="crm-result__name">${thumb(p.image)}<div>${esc(p.name)}<span class="crm-result__brand">${esc([p.brand, p.type, p.gender].filter(Boolean).join(' · '))}</span>${purchaseLine(p.variants[0])}</div></div>
                 ${p.variants.length === 1
                     // Tək variant: seçim yoxdur, ox olmadan sadə sahə
                     ? `<div class="form-control crm-result__single" data-variant data-variant-id="${p.variants[0].id}">${esc(p.variants[0].label)} · ${money(p.variants[0].price)}</div>`
@@ -109,6 +116,15 @@
                 <button type="button" class="btn btn-primary" data-add title="Səbətə əlavə et" aria-label="Səbətə əlavə et">+</button>
             </div>`).join('');
     }
+
+    // Ölçü dəyişəndə həmin ölçünün son alışı
+    els.results.addEventListener('change', event => {
+        const select = event.target.closest('select[data-variant]');
+        const line = select?.closest('.crm-result')?.querySelector('[data-purchase]');
+        if (!line) return;
+        const product = results[Number(select.closest('.crm-result').dataset.index)];
+        line.textContent = purchaseText(product.variants.find(v => v.id === Number(select.value)));
+    });
 
     els.results.addEventListener('click', event => {
         const btn = event.target.closest('[data-add]');
@@ -127,7 +143,7 @@
             const salePrice = Number(variant.price);
             const listPrice = Number(variant.list_price ?? variant.price);
             const base = selectedCode() === 'installment' ? listPrice : salePrice;
-            cart.push({ variantId, name: product.name, brand: product.brand || '', image: product.image || null, variant: variant.label, salePrice, listPrice, basePrice: base, price: base, qty });
+            cart.push({ variantId, name: product.name, brand: product.brand || '', image: product.image || null, variant: variant.label, purchase: purchaseText(variant), salePrice, listPrice, basePrice: base, price: base, qty });
         }
 
         row.querySelector('[data-qty]').value = 1;
@@ -148,6 +164,7 @@
                         <div>
                             <div class="crm-cart-item__name">${esc(i.name)}</div>
                             <div class="crm-cart-item__meta">${esc([i.brand, i.variant].filter(Boolean).join(' · '))}</div>
+                            ${i.purchase ? `<div class="crm-result__purchase">${esc(i.purchase)}</div>` : ''}
                         </div>
                     </div>
                     <div class="crm-cart-item__ctrl">

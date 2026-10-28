@@ -400,7 +400,7 @@ class CrmController extends Controller
             'payment_method_id' => ['required', 'integer'],
             'birbank_installment_months' => ['nullable', 'integer', Rule::in([2, 3, 6])],
             'credit_period_id' => ['nullable', 'integer'],
-            // Kreditin razılaşdırılan ümumi məbləği (kampaniya) — yalnız credit_total_edit icazəsi ilə
+            // Kreditin razılaşdırılan ümumi məbləği (kampaniya) — yalnız crm.credit_total icazəsi ilə
             'credit_total' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'gift_wrap' => ['nullable', 'boolean'],
             // Operator qiyməti əl ilə dəyişibsə — bonus faizi 0..admin ayarı (standart 0)
@@ -508,7 +508,7 @@ class CrmController extends Controller
             $total = $standardTotal;
             $creditEdited = false;
             if ($period && isset($data['credit_total']) && abs((float) $data['credit_total'] - $standardTotal) >= 0.005) {
-                abort_unless(auth()->user()?->can('credit_total_edit'), 403, 'Kreditin ümumi məbləğini dəyişməyə icazəniz yoxdur.');
+                abort_unless(auth()->user()?->can('crm.credit_total'), 403, 'Kreditin ümumi məbləğini dəyişməyə icazəniz yoxdur.');
                 $total = CreditApplication::agreedTotal($standardTotal, $payable, (float) $data['credit_total']);
                 abort_if($total === null, 422, 'Ümumi məbləğ '.number_format($payable, 2).' – '.number_format($standardTotal, 2).' ₼ aralığında olmalıdır.');
                 $creditEdited = true;

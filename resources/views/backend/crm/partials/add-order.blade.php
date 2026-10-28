@@ -151,7 +151,7 @@
                     <div>
                         <dt>Ümumi məbləğ</dt>
                         <dd>
-                            @can('credit_total_edit')
+                            @can('crm.credit_total')
                                 <div class="input-group input-group-sm crm-order__credit-total">
                                     <input type="number" class="form-control text-end" id="crmOrderCreditTotal" step="0.01" inputmode="decimal" aria-label="Kreditin ümumi məbləği">
                                     <span class="input-group-text">₼</span>
