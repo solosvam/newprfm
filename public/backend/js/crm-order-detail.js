@@ -54,6 +54,9 @@ $(document).ready(function () {
             if (r.refund) { set('refund-label', refundLabels[r.refund] || 'Qaytarılacaq'); set('refund', money(r.amount)); }
             cancelModal.querySelector('[data-r-row="bonus"]').hidden = !(r.bonus > 0);
             set('bonus', '−' + money(r.bonus));
+            // Kredit sifarişi: yeni yekun faizlə, aylıq ödəniş də yenilənir
+            cancelModal.querySelector('[data-r-row="credit"]').hidden = !r.credit;
+            if (r.credit) set('monthly', money(r.credit.monthly));
         };
 
         cancelModal.addEventListener('show.bs.modal', event => {

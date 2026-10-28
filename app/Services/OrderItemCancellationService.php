@@ -22,6 +22,9 @@ use Illuminate\Validation\ValidationException;
  *    Bonusla ödənilibsə: məbləğ dərhal bonus balansına qayıdır. Nağd: kuryerin alacağı məbləğ azalır.
  *  - Qazanılmış bonus artıq yazılıbsa, fərqi geri alınır ("Sifariş ləğvi" qeydi ilə).
  *  - Artıq qalan anbar seçimləri (ən yenisindən) bağlanır.
+ *  - Hissə-hissə (kredit): yekun qalan məhsullara görə kreditin faizi ilə yenidən hesablanır, kredit müraciətinin
+ *    ümumi və aylıq məbləği yenilənir (əl ilə razılaşdırılmış məbləğ standarta qayıdır). Ferrum-da müraciət
+ *    təsdiqlənibsə ləğv edilməməlidir — operator bunu təsdiq pəncərəsində təsdiqləyir (CrmController::cancelItem).
  *
  * Qapıda imtina (refuseAtDoor): kuryer ünvandadır, müştəri məhsullardan birini götürmür.
  *  Eyni hesablama; götürülmüş anbar hissəsi ləğv edilmir — "Anbara qaytarılır" olur (kuryer sonra "Qaytardım").
@@ -60,7 +63,6 @@ class OrderItemCancellationService
 
         return match (true) {
             !in_array($order->status?->code, self::EDITABLE_STATUSES, true) => 'Bu mərhələdə məhsul ləğv edilə bilməz.',
-            $order->paymentMethod?->code === 'installment' => 'Hissə-hissə (kredit) sifarişində məhsul ləğvi hələ dəstəklənmir.',
             $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
             default => null,
         };
@@ -100,6 +102,16 @@ class OrderItemCancellationService
         $discount = max(0, $cents($order->discount) - ($base - $unit) * $quantity - $promoPart);
         $total = max(0, $cents($order->total) - $amount);
 
+        // Kredit: yeni yekun = qalan məhsullar + çatdırılma + qablaşdırma, üstünə kreditin faizi
+        $credit = null;
+        if ($order->paymentMethod?->code === 'installment' && ($application = $order->creditApplication()->with('period')->first())) {
+            $payable = $subtotal - $discount + $cents($order->delivery_fee) + $cents($order->gift_wrap_fee);
+            $total = max(0, (int) round($payable * (1 + (float) $application->interest_rate / 100)));
+            $amount = max(0, $cents($order->total) - $total);
+            $months = max(1, (int) ($application->period?->month ?? 1));
+            $credit = ['total' => $total / 100, 'monthly' => round($total / 100 / $months, 2)];
+        }
+
         // Bonus artıq yazılıbsa, yeni məbləğə görə fərq geri alınır
         $bonus = 0.0;
         if ((float) $order->bonus_earned > 0) {
@@ -114,6 +126,7 @@ class OrderItemCancellationService
             'total' => $total / 100,
             'bonus' => $bonus,
             'refund' => $this->refundStatus($order),
+            'credit' => $credit,
         ];
     }
 
@@ -313,6 +326,12 @@ class OrderItemCancellationService
                 : 0,
             'total' => $result['total'],
         ]);
+        if ($result['credit']) {
+            $order->creditApplication()->update([
+                'total' => $result['credit']['total'], 'monthly' => $result['credit']['monthly'],
+                'standard_total' => $result['credit']['total'], 'total_edited_by' => null,
+            ]);
+        }
 
         $productName = ($item->product?->name ?? 'Məhsul').' ×'.$quantity;
 

@@ -225,16 +225,43 @@ class OrderItemCancellationTest extends TestCase
         $this->cancel($order->fresh('items'), 0, 2); // sifarişdə heç nə qalmazdı
     }
 
-    public function test_blocked_after_courier_for_credit_and_with_pending_bank_payment(): void
+    public function test_blocked_after_courier_and_with_pending_bank_payment(): void
     {
         $service = app(OrderItemCancellationService::class);
         $this->assertNotNull($service->blockReason($this->order(['order_status_id' => 2])));
-        $this->assertNotNull($service->blockReason($this->order(['payment_method_id' => 4])));
 
         $order = $this->order(['payment_status' => 'pending']);
         DB::table('payments')->insert(['customer_id' => 1, 'order_id' => $order->id, 'provider' => 'birbank', 'amount' => 395, 'status' => 'pending']);
         $this->assertNotNull($service->blockReason($order->fresh()));
         $this->assertNull($service->blockReason($this->order()));
+    }
+
+    public function test_credit_order_cancel_recalculates_credit_with_interest(): void
+    {
+        Schema::create('credit_periods', function (Blueprint $t) { $t->id(); $t->integer('month'); $t->decimal('interest_rate', 5, 2); });
+        Schema::create('credit_applications', function (Blueprint $t) {
+            $t->id(); $t->integer('customer_id'); $t->integer('order_id'); $t->integer('credit_period_id'); $t->decimal('interest_rate', 5, 2);
+            $t->decimal('total', 10, 2); $t->decimal('standard_total', 10, 2)->nullable(); $t->unsignedBigInteger('total_edited_by')->nullable();
+            $t->decimal('monthly', 10, 2); $t->timestamps();
+        });
+        DB::table('credit_periods')->insert(['id' => 1, 'month' => 6, 'interest_rate' => 10]);
+        // 400 − 10 + 5 = 395 → +10% = 434.50; operator kampaniya ilə 420 razılaşdırıb
+        $order = $this->order(['payment_method_id' => 4, 'payment_status' => 'pending', 'total' => 420, 'bonus_earned' => 0]);
+        DB::table('credit_applications')->insert(['customer_id' => 1, 'order_id' => $order->id, 'credit_period_id' => 1, 'interest_rate' => 10,
+            'total' => 420, 'standard_total' => 434.50, 'total_edited_by' => 7, 'monthly' => 70]);
+
+        $this->assertNull(app(OrderItemCancellationService::class)->blockReason($order));
+        $cancellation = $this->cancel($order, 1, 1); // 100-lük məhsul, promo payı 2.50 → qalan 300 − 7.50 + 5 = 297.50 → +10% = 327.25
+
+        $order->refresh();
+        $this->assertSame('327.25', $order->total);
+        $this->assertSame('92.75', $cancellation->amount); // 420 − 327.25
+        $credit = DB::table('credit_applications')->where('order_id', $order->id)->first();
+        $this->assertEquals(327.25, $credit->total);
+        $this->assertEquals(327.25, $credit->standard_total);
+        $this->assertEquals(54.54, $credit->monthly);
+        $this->assertNull($credit->total_edited_by); // əl ilə məbləğ standarta qayıdır
+        $this->assertNull($cancellation->refund_status);
     }
 
     public function test_whole_order_cancel_refunds_items_and_delivery_and_reverses_bonus(): void

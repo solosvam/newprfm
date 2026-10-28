@@ -446,9 +446,21 @@
                         <input class="form-check-input" type="checkbox" name="customer_agreed" value="1" required>
                         <span class="form-check-label">Müştəri ilə danışılıb, razıdır</span>
                     </label>
+                    @if($order->paymentMethod?->code === 'installment')
+                        {{-- Kredit: Ferrum-da təsdiqlənmiş müraciətin məbləği burada dəyişsə, müqavilə ilə uyğun gəlməz --}}
+                        <div class="alert alert-warning mb-3">
+                            <strong>Diqqət:</strong> Ferrum-da müraciət təsdiqlənibsə, məhsulu ləğv edə bilməzsiniz.
+                            Əvvəl Ferrum-da müraciətin statusunu yoxlayın.
+                        </div>
+                        <label class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="ferrum_not_approved" value="1" required>
+                            <span class="form-check-label">Yoxladım — Ferrum-da müraciət təsdiqlənməyib</span>
+                        </label>
+                    @endif
                     <div class="od-cancel-result">
                         <div><span>Yekundan çıxılır</span><b data-r="amount"></b></div>
                         <div><span>Yeni yekun</span><b data-r="total"></b></div>
+                        <div data-r-row="credit"><span>Yeni aylıq ödəniş</span><b data-r="monthly"></b></div>
                         <div data-r-row="refund"><span data-r="refund-label"></span><b data-r="refund"></b></div>
                         <div data-r-row="bonus"><span>Qazanılmış bonusdan geri alınır</span><b data-r="bonus"></b></div>
                     </div>
