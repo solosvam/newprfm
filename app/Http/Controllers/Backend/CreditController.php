@@ -68,8 +68,13 @@ class CreditController extends Controller
 
     public function applications()
     {
+        $applications = CreditApplication::with(['order', 'customer', 'period', 'status'])->latest()->paginate(30);
+
         return view('backend.credit.applications', [
-            'applications' => CreditApplication::with(['order.items.product', 'order.items.variant.size', 'customer', 'period', 'status'])->latest()->paginate(30),
+            'applications' => $applications,
+            // ümumi məbləği (faizi) əl ilə dəyişən əməkdaşların adı
+            'editors' => \App\Models\User::whereIn('id', $applications->pluck('total_edited_by')->filter()->unique())
+                ->get()->mapWithKeys(fn ($u) => [$u->id => $u->full_name]),
         ]);
     }
 
