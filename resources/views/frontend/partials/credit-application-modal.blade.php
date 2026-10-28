@@ -21,6 +21,13 @@
     // Məhsul kartı: cins → həcm → konsentrasiya. Cins qısa ("Qadın üçün" → "Qadın"), konsentrasiya tam ("Eau de Parfum")
     $creditImage = $product->images->first();
     $creditGender = $product->genders->first();
+    // ikon üçün: qadın / kişi / unisex (bazada "Qadın üçün" və "Qadın", "Kişi üçün" və "Kişi" ayrı-ayrıdır)
+    $creditGenderKind = match (true) {
+        !$creditGender => null,
+        (bool) preg_match('/qadın|women/iu', $creditGender->name_az.' '.$creditGender->name_en) => 'female',
+        (bool) preg_match('/kişi|\bmen\b/iu', $creditGender->name_az.' '.$creditGender->name_en) => 'male',
+        default => 'unisex',
+    };
     $creditGender = $creditGender ? preg_replace(['/\s+üçün$/u', '/^for\s+/iu'], '', $creditGender->{'name_'.$creditLocale} ?: $creditGender->name_az) : null;
     $creditGender = $creditGender ? mb_convert_case(mb_substr($creditGender, 0, 1), MB_CASE_UPPER).mb_substr($creditGender, 1) : null;
     $creditType = $product->type ? preg_replace_callback('/\s(De|Du|La)\s/u', fn ($m) => ' '.mb_strtolower($m[1]).' ', $product->type->{'name_'.$creditLocale} ?: $product->type->name_az) : null;
@@ -69,9 +76,30 @@
                         <strong>{{ $product->brand?->name }}</strong>
                         <span>{{ $product->name }}</span>
                         <ul class="credit-modal-product__specs">
-                            @if($creditGender)<li>{{ $creditGender }}</li>@endif
-                            <li id="creditSize">{{ $variants->first() ? $creditSize($variants->first()) : '—' }}</li>
-                            @if($creditType)<li>{{ $creditType }}</li>@endif
+                            @if($creditGender)
+                                <li>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        @if($creditGenderKind === 'female')
+                                            <circle cx="12" cy="9" r="5.5"/><path d="M12 14.5V22M8.5 18.5h7"/>
+                                        @elseif($creditGenderKind === 'male')
+                                            <circle cx="10" cy="14" r="5.5"/><path d="M14 10l6-6M15 4h5v5"/>
+                                        @else
+                                            <circle cx="12" cy="12" r="5"/><path d="M12 17v5M9.5 19.5h5M15.5 8.5L20 4M16.5 4H20v3.5"/>
+                                        @endif
+                                    </svg>
+                                    <span>{{ $creditGender }}</span>
+                                </li>
+                            @endif
+                            <li>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4v3h-4zM9 5h6v2.5H9z"/><rect x="6" y="7.5" width="12" height="14" rx="2.5"/><path d="M9.5 12.5h5v5h-5z"/></svg>
+                                <span id="creditSize">{{ $variants->first() ? $creditSize($variants->first()) : '—' }}</span>
+                            </li>
+                            @if($creditType)
+                                <li>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5s6.5 7.2 6.5 12A6.5 6.5 0 0 1 5.5 14.5c0-4.8 6.5-12 6.5-12z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg>
+                                    <span>{{ $creditType }}</span>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
