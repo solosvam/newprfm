@@ -58,6 +58,8 @@
             </a>
         </div>
     </div>
-
-    @yield('subnav')
 </header>
+@hasSection('subnav')
+    {{-- Kateqoriyalar sabit panelin altındadır və səhifə ilə sürüşür (yuxarıda yalnız loqo, dil, axtarış, sevimlilər, səbət, hesab qalır) --}}
+    <div class="site-subnav">@yield('subnav')</div>
+@endif
