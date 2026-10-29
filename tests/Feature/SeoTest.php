@@ -49,6 +49,10 @@ class SeoTest extends TestCase
             $this->get('/index.php?'.$query)->assertStatus(301)->assertRedirect(url($target));
         }
         $this->get('/index.php?route=product/product&product_id=55555')->assertNotFound();
+        // Proddakı veb server /index.php-ni Laravel-ə "/" kimi ötürür — "?route=" ana səhifədə də köhnə ünvandır
+        foreach ($cases as $query => $target) {
+            $this->get('/?'.$query)->assertStatus(301)->assertRedirect(url($target));
+        }
         $this->get('/index.php?route=foo/bar')->assertNotFound();
     }
 

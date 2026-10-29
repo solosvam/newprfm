@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Telegram webhook-u xaricdən gəlir — CSRF tokeni yoxdur (yoxlama gizli başlıqladır)
         $middleware->validateCsrfTokens(except: ['telegram/webhook']);
         // Locale needs the session started by the web middleware group.
-        $middleware->web(append: [setLangMiddleware::class]);
+        $middleware->web(append: [setLangMiddleware::class, \App\Http\Middleware\LegacyOpencartUrls::class]);
         // Redirect authenticated users away from the login page for their own guard.
         $middleware->redirectUsersTo(function (Request $request) {
             if ($request->is('admin') || $request->is('admin/*')) {
