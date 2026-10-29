@@ -63,6 +63,9 @@ class OrderItemCancellationService
 
         return match (true) {
             !in_array($order->status?->code, self::EDITABLE_STATUSES, true) => 'Bu mərhələdə məhsul ləğv edilə bilməz.',
+            // Ferrum təsdiq veribsə müqavilə köhnə məbləğlədir — əvvəl Ferrum-da dəyişmək lazımdır
+            $order->paymentMethod?->code === 'installment' && $order->creditApplication()->whereHas('status', fn ($q) => $q->where('code', 'approved'))->exists()
+                => 'Ferrum-da müraciət təsdiqlənib — məhsul ləğv edilə bilməz. Əvvəl Ferrum-da müqaviləni dəyişin.',
             $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
             default => null,
         };

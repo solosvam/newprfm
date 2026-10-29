@@ -54,7 +54,17 @@
                                     <small class="d-block text-muted">standart {{ number_format((float) $application->standard_total, 2) }} ₼ · {{ $editors[$application->total_edited_by] ?? 'Əməkdaş #'.$application->total_edited_by }}</small>
                                 @endif
                             </td>
-                            <td>{{ $application->status?->name_az }}</td>
+                            <td>
+                                {{-- İstənilən statusa əl ilə; avtomatik: Ferrum-a dolduruldu → Yoxlanılır, müqavilə yükləndi → Təsdiqlənib --}}
+                                <form method="POST" action="{{ route('admin.credit.applications.status', $application) }}">
+                                    @csrf
+                                    <select name="status" class="form-select form-select-sm" data-credit-status aria-label="Kredit statusu">
+                                        @foreach($statuses as $status)
+                                            <option value="{{ $status->code }}" @selected($application->credit_status_id === $status->id)>{{ $status->name_az }}</option>
+                                        @endforeach
+                                    </select>
+                                </form>
+                            </td>
                         </tr>
                     @empty
                         <tr><td colspan="10" class="text-center">Hələ müraciət yoxdur.</td></tr>
@@ -65,4 +75,10 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('js_page')
+    <script>
+        document.querySelectorAll('[data-credit-status]').forEach(select => select.addEventListener('change', () => select.form.submit()));
+    </script>
 @endsection

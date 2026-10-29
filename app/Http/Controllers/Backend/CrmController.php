@@ -304,7 +304,7 @@ class CrmController extends Controller
 
         $order->load([
             'items.product.brand', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs',
-            'paymentMethod', 'status', 'address', 'statusLogs.status', 'statusLogs.user', 'courier',
+            'paymentMethod', 'status', 'address', 'statusLogs.status', 'statusLogs.user', 'courier', 'creditApplication.status',
             'payments' => fn ($query) => $query->latest('id'),
             'payments.operations', 'payments.items.refundItems.operation', 'itemCancellations.user', 'itemCancellations.orderItem.product',
         ]);
@@ -349,6 +349,8 @@ class CrmController extends Controller
         return view('backend.crm.order', [
             'settlement' => $settlement,
             'cancelBlock' => $cancelBlock,
+            'creditStatuses' => $order->paymentMethod?->code === 'installment' && $order->creditApplication
+                ? \App\Models\Credit\CreditStatus::orderBy('sort_order')->get() : collect(),
             'doorBlock' => $cancellation->doorBlockReason($order),
             'orderCancelBlock' => $cancellation->orderBlockReason($order),
             'orderCancelPreview' => $cancellation->orderPreview($order),

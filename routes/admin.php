@@ -108,6 +108,7 @@ Route::prefix('admin')
                     Route::get('/contract/{ref}', 'contractOrder')->where('ref', '[A-Za-z0-9-]{1,30}')->name('contract.order');
                     Route::post('/orders/{order}/contract', 'storeContract')->whereNumber('order')->name('contract.store');
                     Route::get('/orders/{order}/contract', 'contract')->whereNumber('order')->name('contract');
+                    Route::post('/orders/{order}/filled', 'filled')->whereNumber('order')->name('filled');
                 });
 
             // Operator yan paneli (extensions/ps-side)
@@ -280,6 +281,7 @@ Route::prefix('admin')
                 ->name('credit.')
                 ->group(function () {
                     Route::get('/applications', 'applications')->name('applications');
+                    Route::post('/applications/{application}/status', 'updateStatus')->whereNumber('application')->name('applications.status');
                     Route::get('/periods', 'periods')->name('periods');
                     Route::post('/periods', 'updatePeriods')->name('periods.update');
                     Route::get('/terms', 'terms')->name('terms');

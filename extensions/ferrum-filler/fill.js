@@ -446,6 +446,8 @@ export async function fillPage(plan) {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Parfumshop-da müraciət "Yoxlanılır" olsun (background.js göndərir — popup bağlansa da)
+    if (plan.orderId) send({ kind: 'filled', orderId: plan.orderId });
     panel.done(problems.length ? `Bitdi — ${problems.length} xəbərdarlıq. Yoxlayın, sonra özünüz saxlayın.` : 'Bitdi. Yoxlayın, sonra özünüz saxlayın.');
     return { ok: true, known, log, problems };
 }

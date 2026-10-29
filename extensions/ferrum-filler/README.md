@@ -55,3 +55,10 @@ Ferrum-da `pm.ferrumcapital.az/pasm` cədvəlində hər sətrin çap düyməsini
    token `GET /admin/ferrum/contract/{ref}` cavabından). Fayl `storage/app/private/contracts/{sifariş}_{PFL-APP-…}.pdf`,
    yol `orders.contract_file`-a yazılır. Admin sifariş səhifəsində "Kredit müqaviləsi" linki (yalnız `ferrum` icazəsi ilə).
 Yükləmə və baxış `sensitive_access_logs`-a yazılır. Yalnız taksit sifarişləri, yalnız PDF (fayl `%PDF-` ilə başlamalıdır).
+
+## Kredit müraciətinin statusu
+- Ferrum formasını doldurma bitəndə (`fill.js` → `background.js`) parfumshop-da müraciət **Yoxlanılır** olur —
+  yalnız "Gözləmədə"dirsə (`POST /admin/ferrum/orders/{id}/filled`). Popup bağlansa da göndərilir.
+- Müqavilə (PDF) sifarişə bağlananda müraciət **Təsdiqlənib** olur.
+- Digər statuslar (İmtina edilib, Ləğv edilib) və istənilən düzəliş — əl ilə: Hissəli ödəniş müraciətləri və CRM sifariş səhifəsi.
+Hər dəyişiklik `credit_status_logs`-a yazılır (kim, haradan: manual / ferrum_fill / contract).

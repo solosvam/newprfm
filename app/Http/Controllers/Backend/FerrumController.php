@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order\Order;
+use App\Services\Credit\CreditStatusService;
 use App\Services\IdCard\IdCardStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -162,8 +163,22 @@ class FerrumController extends Controller
         }
         $order->update(['contract_file' => $path]);
         $this->logAccess($request, 'ferrum_contract_upload', $order->id);
+        // Müqavilə Ferrum təsdiq verəndən sonra çıxır → müraciət "Təsdiqlənib"
+        if ($order->creditApplication) {
+            app(CreditStatusService::class)->set($order->creditApplication, CreditStatusService::APPROVED, (int) auth('admin')->id(), 'contract');
+        }
 
         return response()->json(['message' => $order->order_no.' sifarişinə bağlandı.', 'file' => $name]);
+    }
+
+    /** Extension Ferrum formasını doldurub bitirdi → müraciət "Yoxlanılır" (yalnız "Gözləmədə"dirsə; irəli getmiş statusa toxunmur) */
+    public function filled(Order $order): JsonResponse
+    {
+        abort_unless($order->paymentMethod?->code === 'installment' && $order->creditApplication, 422, 'Sifarişə kredit müraciəti bağlı deyil.');
+        $changed = app(CreditStatusService::class)->set($order->creditApplication, CreditStatusService::REVIEWING,
+            (int) auth('admin')->id(), 'ferrum_fill', [CreditStatusService::PENDING]);
+
+        return response()->json(['changed' => $changed, 'status' => $order->creditApplication->fresh('status')->status?->name_az]);
     }
 
     /** Admin sifariş səhifəsindəki "Kredit müqaviləsi" linki */

@@ -48,9 +48,20 @@ function uploadContract({ orderId, csrf, base64, appNo }) {
     return request(`/admin/ferrum/orders/${Number(orderId)}/contract`, { method: 'POST', body: form, headers: { 'X-CSRF-TOKEN': csrf } });
 }
 
+// Ferrum forması dolduruldu (fill.js) → parfumshop-da kredit müraciəti "Yoxlanılır" (yalnız "Gözləmədə"dirsə)
+async function markFilled(orderId) {
+    const check = await checkOrder(String(Number(orderId)));
+    if (!check.ok) return check;
+    return request(`/admin/ferrum/orders/${Number(orderId)}/filled`, { method: 'POST', headers: { 'X-CSRF-TOKEN': check.data.csrf } });
+}
+
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
     // Yalnız öz content script-imiz və yalnız Ferrum səhifəsindən
     if (sender.id !== chrome.runtime.id || !sender.url || new URL(sender.url).host !== FERRUM_HOST) return;
+    if (message?.type === 'ferrum-progress' && message.kind === 'filled' && message.orderId) {
+        markFilled(message.orderId).catch(() => {});
+        return;
+    }
     if (message?.type === 'contract-check') {
         checkOrder(String(message.ref || '')).then(reply);
         return true;

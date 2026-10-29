@@ -257,6 +257,7 @@ async function buildPlan() {
             id_card_series: c.id_card_series, id_card_number: c.id_card_number,
             gender: c.gender === null || c.gender === undefined ? null : FERRUM.gender[Number(c.gender)],
         },
+        orderId: d.order.id, // doldurma bitəndə müraciət "Yoxlanılır" olur (background.js)
         source: FERRUM.source,
         months: months ? Number(months) : null,
         price: Number(d.order.total) || 0,                 // parfumshop sifarişinin yekunu

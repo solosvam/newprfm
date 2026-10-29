@@ -242,14 +242,19 @@ class OrderItemCancellationTest extends TestCase
         Schema::create('credit_applications', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->integer('order_id'); $t->integer('credit_period_id'); $t->decimal('interest_rate', 5, 2);
             $t->decimal('total', 10, 2); $t->decimal('standard_total', 10, 2)->nullable(); $t->unsignedBigInteger('total_edited_by')->nullable();
-            $t->decimal('monthly', 10, 2); $t->timestamps();
+            $t->decimal('monthly', 10, 2); $t->integer('credit_status_id')->nullable(); $t->timestamps();
         });
+        Schema::create('credit_statuses', function (Blueprint $t) { $t->id(); $t->string('code'); });
+        DB::table('credit_statuses')->insert([['id' => 1, 'code' => 'pending'], ['id' => 3, 'code' => 'approved']]);
         DB::table('credit_periods')->insert(['id' => 1, 'month' => 6, 'interest_rate' => 10]);
         // 400 − 10 + 5 = 395 → +10% = 434.50; operator kampaniya ilə 420 razılaşdırıb
         $order = $this->order(['payment_method_id' => 4, 'payment_status' => 'pending', 'total' => 420, 'bonus_earned' => 0]);
         DB::table('credit_applications')->insert(['customer_id' => 1, 'order_id' => $order->id, 'credit_period_id' => 1, 'interest_rate' => 10,
-            'total' => 420, 'standard_total' => 434.50, 'total_edited_by' => 7, 'monthly' => 70]);
+            'total' => 420, 'standard_total' => 434.50, 'total_edited_by' => 7, 'monthly' => 70, 'credit_status_id' => 3]);
 
+        // Ferrum təsdiqləyibsə — ləğv bağlıdır
+        $this->assertStringContainsString('təsdiqlənib', app(OrderItemCancellationService::class)->blockReason($order));
+        DB::table('credit_applications')->where('order_id', $order->id)->update(['credit_status_id' => 1]);
         $this->assertNull(app(OrderItemCancellationService::class)->blockReason($order));
         $cancellation = $this->cancel($order, 1, 1); // 100-lük məhsul, promo payı 2.50 → qalan 300 − 7.50 + 5 = 297.50 → +10% = 327.25
 

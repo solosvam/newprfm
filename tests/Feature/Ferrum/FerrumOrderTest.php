@@ -41,6 +41,10 @@ class FerrumOrderTest extends TestCase
             $t->decimal('interest_rate'), $t->decimal('total'), $t->decimal('monthly'), $t->integer('credit_status_id')->nullable(), $t->timestamps()]);
         (require database_path('migrations/2026_09_30_120000_add_ferrum_permission_and_access_log.php'))->up();
         (require database_path('migrations/2026_10_28_100000_add_contract_file_to_orders.php'))->up();
+        (require database_path('migrations/2026_10_29_120000_create_credit_status_logs.php'))->up();
+        Schema::create('credit_statuses', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az'), $t->integer('sort_order')->default(0)]);
+        DB::table('credit_statuses')->insert([['id' => 1, 'code' => 'pending', 'name_az' => 'Gözləmədə'], ['id' => 2, 'code' => 'reviewing', 'name_az' => 'Yoxlanılır'],
+            ['id' => 3, 'code' => 'approved', 'name_az' => 'Təsdiqlənib'], ['id' => 4, 'code' => 'rejected', 'name_az' => 'İmtina edilib'], ['id' => 5, 'code' => 'cancelled', 'name_az' => 'Ləğv edilib']]);
         $this->assertTrue(DB::table('permissions')->where('name', 'ferrum')->where('guard_name', 'admin')->exists());
         DB::table('permissions')->delete(); // Spatie roles cədvəli yoxdur — icazəni Gate::before yoxlayır
 
@@ -60,7 +64,7 @@ class FerrumOrderTest extends TestCase
         DB::table('product_variants')->insert(['id' => 1, 'product_id' => 1, 'size_id' => 1]);
         DB::table('order_items')->insert(['order_id' => 77, 'product_id' => 1, 'product_variant_id' => 1, 'unit_price' => 150, 'quantity' => 2, 'cancelled_quantity' => 0, 'total' => 300]);
         DB::table('credit_periods')->insert(['id' => 1, 'month' => 6, 'interest_rate' => 10]);
-        DB::table('credit_applications')->insert(['customer_id' => 5, 'order_id' => 77, 'credit_period_id' => 1, 'interest_rate' => 10, 'total' => 330, 'monthly' => 55]);
+        DB::table('credit_applications')->insert(['id' => 1, 'customer_id' => 5, 'order_id' => 77, 'credit_period_id' => 1, 'interest_rate' => 10, 'total' => 330, 'monthly' => 55, 'credit_status_id' => 1]);
     }
 
     protected function tearDown(): void
@@ -134,6 +138,32 @@ class FerrumOrderTest extends TestCase
         // PDF olmayan fayl və şübhəli müraciət nömrəsi qəbul olunmur
         $this->postJson('/admin/ferrum/orders/77/contract', ['file' => UploadedFile::fake()->createWithContent('x.pdf', '<html>')])->assertUnprocessable();
         $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => '../x'])->assertUnprocessable();
+    }
+
+    public function test_credit_status_follows_ferrum_fill_contract_and_manual_changes(): void
+    {
+        $this->admin();
+        $status = fn () => DB::table('credit_applications')->where('id', 1)->value('credit_status_id');
+
+        $this->postJson('/admin/ferrum/orders/77/filled')->assertOk()->assertJsonPath('changed', true)->assertJsonPath('status', 'Yoxlanılır');
+        $this->assertSame(2, $status());
+
+        $pdf = UploadedFile::fake()->createWithContent('c.pdf', "%PDF-1.4\n%%EOF");
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf, 'ferrum_app_no' => 'PFL-APP-002227'])->assertOk();
+        $this->assertSame(3, $status());
+
+        // təkrar doldurma təsdiqlənmiş müraciəti geri qaytarmır
+        $this->postJson('/admin/ferrum/orders/77/filled')->assertOk()->assertJsonPath('changed', false);
+        $this->assertSame(3, $status());
+
+        // əl ilə — istənilən status
+        $this->post('/admin/credit/applications/1/status', ['status' => 'rejected'])->assertRedirect();
+        $this->assertSame(4, $status());
+        $this->post('/admin/credit/applications/1/status', ['status' => 'nope'])->assertSessionHasErrors('status');
+
+        $this->assertSame(['ferrum_fill', 'contract', 'manual'], DB::table('credit_status_logs')->orderBy('id')->pluck('source')->all());
+        $this->assertSame([7, 7, 7], DB::table('credit_status_logs')->pluck('user_id')->map(fn ($id) => (int) $id)->all());
+        Storage::disk('local')->delete('contracts/PS260930000077_PFL-APP-002227.pdf');
     }
 
     public function test_contract_only_for_installment_and_permission(): void

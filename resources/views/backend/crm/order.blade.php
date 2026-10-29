@@ -248,6 +248,22 @@
                             <div><dt>Mənbə</dt><dd>{{ $sourceLabels[$order->source] ?? ($order->source ?: '—') }}@if($order->created_by && $staff->has($order->created_by)) · {{ $staff[$order->created_by] }}@endif</dd></div>
                             <div><dt>Ödəniş üsulu</dt><dd>{{ $order->paymentMethod?->name_az ?? '—' }}@if($order->birbank_installment_months) · {{ $order->birbank_installment_months }} ay @endif</dd></div>
                             <div><dt>Ödəniş vəziyyəti</dt><dd><span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span></dd></div>
+                            @if($order->paymentMethod?->code === 'installment' && $order->creditApplication)
+                                <div><dt>Kredit statusu</dt><dd>
+                                    @can('credit.menu')
+                                        <form method="POST" action="{{ route('admin.credit.applications.status', $order->creditApplication) }}">
+                                            @csrf
+                                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Kredit statusu">
+                                                @foreach($creditStatuses as $creditStatus)
+                                                    <option value="{{ $creditStatus->code }}" @selected($order->creditApplication->credit_status_id === $creditStatus->id)>{{ $creditStatus->name_az }}</option>
+                                                @endforeach
+                                            </select>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-outline-primary">{{ $order->creditApplication->status?->name_az ?? '—' }}</span>
+                                    @endcan
+                                </dd></div>
+                            @endif
                             @if($order->contract_file)
                                 @can('ferrum')
                                     <div><dt>Kredit müqaviləsi</dt><dd><a href="{{ route('admin.ferrum.contract', $order) }}" target="_blank" rel="noopener">{{ basename($order->contract_file) }}</a></dd></div>

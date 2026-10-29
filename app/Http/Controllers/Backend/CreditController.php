@@ -72,10 +72,20 @@ class CreditController extends Controller
 
         return view('backend.credit.applications', [
             'applications' => $applications,
+            'statuses' => \App\Models\Credit\CreditStatus::orderBy('sort_order')->get(),
             // ümumi məbləği (faizi) əl ilə dəyişən əməkdaşların adı
             'editors' => \App\Models\User::whereIn('id', $applications->pluck('total_edited_by')->filter()->unique())
                 ->get()->mapWithKeys(fn ($u) => [$u->id => $u->full_name]),
         ]);
+    }
+
+    /** Statusu əl ilə dəyişmək — istənilən status (müraciətlər siyahısı və CRM sifariş səhifəsi) */
+    public function updateStatus(Request $request, CreditApplication $application)
+    {
+        $data = $request->validate(['status' => ['required', 'string', 'exists:credit_statuses,code']]);
+        $changed = app(\App\Services\Credit\CreditStatusService::class)->set($application, $data['status'], (int) auth('admin')->id(), 'manual');
+
+        return back()->with('success', $changed ? 'Kredit statusu dəyişdi.' : 'Status eynidir.');
     }
 
     public function terms()
