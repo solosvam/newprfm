@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Credit\CreditPeriod;
 use App\Models\Credit\CreditTermItem;
-use App\Models\Product\Gender;
 use App\Models\Product\Product;
 use Illuminate\Support\Collection;
 
@@ -25,66 +24,53 @@ class ProductDetailService
         ])->where('slug', $slug)->first();
     }
 
-    /**
-     * Bənzər məhsullar (məhsul səhifəsi və satışda olmayan ətrin əvəzləri). Ardıcıllıqla doldurulur:
-     *  1) tərkibcə (notlar) oxşar — ən çox ortaq not;
-     *  2) eyni növ, qiyməti ±30% — qiymətcə ən yaxın;
- * Hamısında cins nəzərə alınır (qadın / kişi + unisex).
-     *  3) həmin brendin digər ətirləri.
-     * Notlar yalnız az məhsulda yazıldığı üçün təkcə notlara görə seçəndə siyahı adətən boş qalırdı.
-     */
     public function similarProducts(Product $product, int $limit = 5): Collection
     {
-        // Cins: qadın ətrinə qadın + unisex, kişiyə kişi + unisex, unisex-ə hamısı.
-        // "Qadın üçün" və "Qadın" bazada ayrı cinslərdir — eyni sayılır.
-        $gender = fn ($name) => mb_strtolower(preg_replace('/\s+üçün$/u', '', trim((string) $name)));
-        $names = $product->genders->map(fn ($g) => $gender($g->name_az))->unique();
-        $allowed = $names->concat(['unisex']);
-        $genderIds = $names->isEmpty() || $product->genders->contains(fn ($g) => $gender($g->name_az) === 'unisex') ? collect()
-            : Gender::get(['id', 'name_az'])->filter(fn ($g) => $allowed->contains($gender($g->name_az)))->pluck('id');
-
-        $base = fn () => Product::query()
-            ->where('active', 1)->where('products.id', '!=', $product->id)
-            ->whereHas('variants', fn ($q) => $q->where('active', 1))
-            ->when($genderIds->isNotEmpty(), fn ($q) => $q->whereHas('genders', fn ($g) => $g->whereIn('genders.id', $genderIds)))
-            ->with(['brand', 'activeDiscount', 'type', 'images', 'genders',
-                'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'), 'variants.size']);
-        $list = collect();
-        $add = function ($query) use (&$list, $limit) {
-            if ($list->count() < $limit) {
-                $list = $list->concat($query->whereNotIn('products.id', $list->pluck('id'))->limit($limit - $list->count())->get());
-            }
-        };
-
         $ingredientIds = $product->ingredients->pluck('id');
-        if ($ingredientIds->isNotEmpty()) {
-            $add($base()
-                ->whereHas('ingredients', fn ($q) => $q->whereIn('ingredients.id', $ingredientIds))
-                ->withCount(['ingredients as shared_ingredients_count' => fn ($q) => $q->whereIn('ingredients.id', $ingredientIds)])
-                ->orderByDesc('shared_ingredients_count'));
+
+        if ($ingredientIds->isEmpty()) {
+            return collect();
         }
 
-        $price = (float) $product->variants->where('active', 1)->min('price');
-        if ($price > 0) {
-            $minPrice = '(select min(pv.price) from product_variants pv where pv.product_id = products.id and pv.active = 1)';
-            $add($base()
-                ->when($product->type_id, fn ($q) => $q->where('type_id', $product->type_id))
-                // rəqəmlər birbaşa (bizim hesabladığımız float): SQLite bağlanan dəyəri mətn kimi müqayisə edir
-                ->whereRaw(sprintf('%s between %.2F and %.2F', $minPrice, $price * 0.7, $price * 1.3))
-                ->orderByRaw(sprintf('abs(%s - %.2F)', $minPrice, $price)));
-        }
+        return Product::query()
+            ->where('id', '!=', $product->id)
+            ->where('active', 1)
+            ->whereHas('ingredients', fn ($query) => $query->whereIn('ingredients.id', $ingredientIds))
+            ->withCount([
+                'ingredients as shared_ingredients_count' =>
+                    fn ($query) => $query->whereIn('ingredients.id', $ingredientIds),
+            ])
+            ->with([
+                'brand',
+                'activeDiscount',
+                'type',
+                'images',
+                'genders',
+                'variants' => fn ($query) => $query->where('active', 1)->orderBy('price'),
+                'variants.size',
+            ])
+            ->orderByDesc('shared_ingredients_count')
+            ->limit($limit)
+            ->get();
+    }
 
-        if ($product->brand_id) {
-            $add($base()->where('brand_id', $product->brand_id)->latest('products.id'));
+    /** Satışda olmayan ətir üçün əvəzlər: əvvəl tərkibcə oxşar, çatmasa — həmin brendin aktiv ətirləri */
+    public function alternatives(Product $product, int $limit = 8): Collection
+    {
+        $list = $this->similarProducts($product, $limit);
+        if ($list->count() < $limit && $product->brand_id) {
+            $list = $list->concat(
+                Product::query()
+                    ->where('active', 1)->where('brand_id', $product->brand_id)
+                    ->where('id', '!=', $product->id)->whereNotIn('id', $list->pluck('id'))
+                    ->whereHas('variants', fn ($q) => $q->where('active', 1))
+                    ->with(['brand', 'activeDiscount', 'type', 'images', 'genders',
+                        'variants' => fn ($q) => $q->where('active', 1)->orderBy('price'), 'variants.size'])
+                    ->latest('id')->limit($limit - $list->count())->get()
+            );
         }
 
         return $list->values();
-    }
-
-    /** Satışda olmayan ətir üçün əvəzlər — bənzər məhsullarla eyni qayda, daha çox */
-    public function alternatives(Product $product, int $limit = 8): Collection
-    {
-        return $this->similarProducts($product, $limit);
     }
 
     public function ratings(Product $product): array

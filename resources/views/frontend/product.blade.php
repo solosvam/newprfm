@@ -251,17 +251,15 @@
         </div>
     </div>
 
-    @if(collect($similarProducts ?? [])->isNotEmpty())
-        <div class="section-head section-head--spaced">
-            <h2>{{ __('product_similar') }}</h2>
-        </div>
-        <div class="grid similar-products">
-            {{-- ana səhifədəki kart: hover-də bütün ölçülər, endirim nişanı, seçilmişlər --}}
-            @foreach ($similarProducts as $item)
-                @include('frontend.includes.product-card', ['product' => $item])
-            @endforeach
-        </div>
-    @endif
+    <div class="section-head section-head--spaced">
+        <h2>{{ __('product_similar') }}</h2>
+    </div>
+    <div class="grid similar-products">
+        {{-- ana səhifədəki kart: hover-də bütün ölçülər, endirim nişanı, seçilmişlər --}}
+        @foreach ($similarProducts ?? [] as $item)
+            @include('frontend.includes.product-card', ['product' => $item])
+        @endforeach
+    </div>
 
     {{-- Mobil: yapışan "Səbətə əlavə edin" paneli --}}
     @if($firstVariant)
