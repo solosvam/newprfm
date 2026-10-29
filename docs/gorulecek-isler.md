@@ -49,6 +49,9 @@ Son yenilənmə: 29 oktyabr 2026.
   - öz brendimizin ətirləri də stok kimi alış edilməlidir;
   - öz mallarımızın istehsalı və istehsala gedən xərclər (xammal, qablaşdırma və s.) uçotu.
 
+- [ ] **Admin panel üçün ayrıca favicon** — saytdakından fərqli (tabda admin dərhal seçilsin). Fayllar gələndə
+  `resources/views/partials/favicon.blade.php` admin layout-larında ayrıca partial ilə əvəzlənəcək.
+
 ## 2. Sayt — səbət və push bildirişləri
 
 - [ ] **Admin "Səbətdəki məhsullar" bölməsinin tamlığını yoxlamaq** (`CartsController` var).
