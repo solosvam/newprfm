@@ -66,12 +66,28 @@ class CreditController extends Controller
         return back()->with('success', 'Kredit faizləri yeniləndi!');
     }
 
-    public function applications()
+    public function applications(Request $request)
     {
-        $applications = CreditApplication::with(['order', 'customer', 'period', 'status'])->latest()->paginate(30);
+        // Süzgəclər (admin/orders kimi): axtarış, kredit statusu, Ferrum müqaviləsi var / yoxdur
+        $filters = [
+            'search' => trim((string) $request->query('q', '')),
+            'status' => (string) $request->query('status', ''),
+            'contract' => in_array($request->query('contract'), ['yes', 'no'], true) ? $request->query('contract') : '',
+        ];
+        $like = '%'.addcslashes($filters['search'], '%_\\').'%';
+
+        $applications = CreditApplication::with(['order', 'customer', 'period', 'status'])
+            ->when($filters['search'] !== '', fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('order', fn ($o) => $o->where('order_no', 'like', $like))
+                ->orWhereHas('customer', fn ($c) => $c->where('mobile', 'like', $like)->orWhere('name', 'like', $like)->orWhere('surname', 'like', $like))))
+            ->when($filters['status'] !== '', fn ($q) => $q->whereHas('status', fn ($s) => $s->where('code', $filters['status'])))
+            ->when($filters['contract'] === 'yes', fn ($q) => $q->whereHas('order', fn ($o) => $o->whereNotNull('contract_file')))
+            ->when($filters['contract'] === 'no', fn ($q) => $q->whereHas('order', fn ($o) => $o->whereNull('contract_file')))
+            ->latest()->paginate(30)->withQueryString();
 
         return view('backend.credit.applications', [
             'applications' => $applications,
+            'filters' => $filters,
             'statuses' => \App\Models\Credit\CreditStatus::orderBy('sort_order')->get(),
             // ümumi məbləği (faizi) əl ilə dəyişən əməkdaşların adı
             'editors' => \App\Models\User::whereIn('id', $applications->pluck('total_edited_by')->filter()->unique())

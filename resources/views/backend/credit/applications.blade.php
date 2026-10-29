@@ -10,8 +10,44 @@
         <h1 class="mb-0 pb-0 display-4">{{ $title }}</h1>
         @include('backend._layout.breadcrumb',['breadcrumbs'=>$breadcrumbs])
     </div>
+    {{-- Süzgəclər (GET) --}}
+    <form method="GET" action="{{ route('admin.credit.applications') }}" class="card mb-2">
+        <div class="card-body py-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4 col-xl-3">
+                    <label class="form-label text-small text-muted mb-1">Axtarış</label>
+                    <input type="search" name="q" value="{{ $filters['search'] }}" class="form-control form-control-sm" placeholder="Sifariş №, telefon, ad">
+                </div>
+                <div class="col-6 col-md-4 col-xl-3">
+                    <label class="form-label text-small text-muted mb-1">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">Hamısı</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status->code }}" @selected($filters['status'] === $status->code)>{{ $status->name_az }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <label class="form-label text-small text-muted mb-1">Ferrum müqaviləsi</label>
+                    <select name="contract" class="form-select form-select-sm">
+                        <option value="">Hamısı</option>
+                        <option value="yes" @selected($filters['contract'] === 'yes')>Var</option>
+                        <option value="no" @selected($filters['contract'] === 'no')>Yoxdur</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
+                    @if(array_filter($filters))
+                        <a href="{{ route('admin.credit.applications') }}" class="btn btn-outline-muted btn-sm">Sıfırla</a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </form>
+
     <div class="card">
         <div class="card-body table-responsive">
+            <div class="text-small text-muted mb-3">Cəmi: {{ $applications->total() }}</div>
             <table class="table">
                 <thead><tr><th>#</th><th>Tarix</th><th>Müştəri</th><th>Telefon</th><th>Sifariş</th><th>Qiymət</th><th>Müddət</th><th>Aylıq</th><th>Ümumi</th><th>Status</th></tr></thead>
                 <tbody>
@@ -67,7 +103,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="10" class="text-center">Hələ müraciət yoxdur.</td></tr>
+                        <tr><td colspan="10" class="text-center">{{ array_filter($filters) ? 'Süzgəcə uyğun müraciət yoxdur.' : 'Hələ müraciət yoxdur.' }}</td></tr>
                     @endforelse
                 </tbody>
             </table>
