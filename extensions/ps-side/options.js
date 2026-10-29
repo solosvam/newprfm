@@ -45,3 +45,9 @@ chrome.storage.local.get(['psNotifyMuted', 'psNotifyVolume', 'psNotifySounds'], 
 
 $('enabled').addEventListener('change', () => chrome.storage.local.set({ psNotifyMuted: !$('enabled').checked }, flash));
 $('volume').addEventListener('change', () => chrome.storage.local.set({ psNotifyVolume: Number($('volume').value) }, flash));
+
+// Admin tablarını "Admin" qrupuna yığmaq (admin-tabs.js) — susmaya görə açıq
+chrome.storage.local.get('psAdminGroup', ({ psAdminGroup }) => {
+    $('adminGroup').checked = psAdminGroup !== false;
+    $('adminGroup').addEventListener('change', () => chrome.storage.local.set({ psAdminGroup: $('adminGroup').checked }, flash));
+});

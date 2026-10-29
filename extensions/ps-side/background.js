@@ -1,5 +1,6 @@
-// config.js — PS_SITE; sounds.js — səs növləri (PS_SOUND_TYPES); notifications.js — admin bildirişləri (sistem bildirişi + səs)
-importScripts('config.js', 'sounds.js', 'notifications.js');
+// config.js — PS_SITE; sounds.js — səs növləri (PS_SOUND_TYPES); notifications.js — admin bildirişləri (sistem bildirişi + səs);
+// admin-tabs.js — admin tabları rəngli "Admin" qrupunda
+importScripts('config.js', 'sounds.js', 'notifications.js', 'admin-tabs.js');
 
 const ALLOWED = ['https://web.whatsapp.com/', 'https://www.instagram.com/direct/', 'https://business.facebook.com/'];
 // sağ klik menyusu: WhatsApp Web və Meta Business Suite (Messenger / Instagram Direct inbox)
@@ -156,6 +157,7 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install' || reason === 'update') injectWhatsapp();
     createMenus();
     notifySetup();
+    groupAllAdminTabs();
 });
 chrome.runtime.onStartup.addListener(applyAll);
 

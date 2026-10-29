@@ -11,3 +11,4 @@ button { border: 1px solid #1e88e5; background: #fff; color: #1e88e5; border-rad
 button:hover { background: #1e88e5; color: #fff; }
 .note:empty { display: none; }
 .note { grid-column: 1 / -1; color: #b26a00; font-size: 12px; }
+.section { margin-top: 24px; padding-top: 16px; border-top: 1px solid #eef0f5; }
