@@ -35,6 +35,9 @@
 <script src="{{asset('backend/js/vendor/datepicker/locales/bootstrap-datepicker.es.min.js')}}"></script>
 
 @yield('js_page')
+@can('crm')
+    <script src="{{ asset_v('backend/js/admin-notifications.js') }}" defer></script>
+@endcan
 <script src="{{ asset('backend/js/custom.js?v=' . time()) }}"></script>
 <script>
     let urls = {

@@ -152,6 +152,7 @@ class CreditApplicationController extends Controller
         });
 
         $request->session()->forget('credit.application');
+        app(\App\Services\Admin\AdminNotifier::class)->order($result); // operatorlara: admin paneldə zəng işarəsi
         return response()->json([
             'message' => __('credit_application_success'),
             'redirect' => route('checkout.success', $result),

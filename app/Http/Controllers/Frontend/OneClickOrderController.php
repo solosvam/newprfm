@@ -82,6 +82,7 @@ class OneClickOrderController extends Controller
             return $order;
         });
 
+        app(\App\Services\Admin\AdminNotifier::class)->order($order); // operatorlara: admin paneldə zəng işarəsi
         $redirect = URL::temporarySignedRoute('one-click.success', now()->addMinutes(30), ['order' => $order->id]);
 
         return response()->json(['ok' => true, 'redirect' => $redirect, 'order_no' => $order->order_no]);

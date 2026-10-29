@@ -301,6 +301,7 @@ class CheckoutController extends Controller
             }
 
             app(CartService::class)->clear($customer);
+            app(\App\Services\Admin\AdminNotifier::class)->order($order); // operatorlara: admin paneldə zəng işarəsi
 
             return response()->json([
                 'ok' => true, 'order_no' => $order->order_no,

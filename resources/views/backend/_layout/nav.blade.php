@@ -50,6 +50,31 @@
                 <i data-acorn-icon="light-off" class="dark" data-acorn-size="18"></i>
             </a>
         </li>
+        @can('crm')
+            {{-- Bildirişlər (Acorn notification-dropdown): asan sifariş, hissə-hissə müraciəti, sayt sifarişi — admin-notifications.js --}}
+            <li class="list-inline-item" id="adminNotifications"
+                data-feed-url="{{ route('admin.notifications.feed') }}" data-read-url="{{ route('admin.notifications.read') }}">
+                <a href="#" data-bs-toggle="dropdown" data-bs-target="#notifications" aria-haspopup="true" aria-expanded="false"
+                   class="notification-button" aria-label="Bildirişlər">
+                    <div class="position-relative d-inline-flex">
+                        <i data-acorn-icon="bell" data-acorn-size="18"></i>
+                        <span class="position-absolute notification-dot rounded-xl d-none" data-notifications-dot></span>
+                        <span class="admin-notifications__count d-none" data-notifications-count></span>
+                    </div>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end wide notification-dropdown scroll-out" id="notifications">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">Bildirişlər</span>
+                        <button type="button" class="btn btn-sm btn-link p-0" data-notifications-mute>Səsi söndür</button>
+                    </div>
+                    <div class="scroll">
+                        <ul class="list-unstyled border-last-none mb-0" data-notifications-list>
+                            <li class="text-muted">Bildiriş yoxdur</li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+        @endcan
     </ul>
     <!-- Icons Menu End -->
 

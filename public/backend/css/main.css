@@ -43,3 +43,10 @@ html[data-placement=horizontal] .nav-container .user-container .user .name {
         display: none;
     }
 }
+
+/* Zəng işarəsi: oxunmamış bildirişlərin sayı (admin-notifications.js) */
+.admin-notifications__count {
+    position: absolute; top: -8px; right: -10px; min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 8px; background: var(--danger); color: #fff; font-size: 10px; line-height: 16px; text-align: center;
+}
+.notification-dropdown .admin-notification--unread a { font-weight: 700; }

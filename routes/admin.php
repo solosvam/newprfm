@@ -320,6 +320,13 @@ Route::prefix('admin')
                     }
                 });
 
+            // Zəng işarəsi: yeni asan sifariş, hissə-hissə müraciəti, sayt sifarişi (AdminNotifier)
+            Route::middleware('can:crm')->controller(\App\Http\Controllers\Backend\AdminNotificationsController::class)
+                ->prefix('notifications')->name('notifications.')->group(function () {
+                    Route::get('/', 'feed')->middleware('throttle:120,1')->name('feed');
+                    Route::post('/read', 'read')->name('read');
+                });
+
             // Satış: ümumi sifariş siyahısı və səbətdəki mallar
             Route::middleware('can:crm')->group(function () {
                 Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
