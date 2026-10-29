@@ -1,5 +1,5 @@
-// config.js — PS_SITE; notifications.js — admin bildirişləri (sistem bildirişi + səs)
-importScripts('config.js', 'notifications.js');
+// config.js — PS_SITE; sounds.js — səs növləri (PS_SOUND_TYPES); notifications.js — admin bildirişləri (sistem bildirişi + səs)
+importScripts('config.js', 'sounds.js', 'notifications.js');
 
 const ALLOWED = ['https://web.whatsapp.com/', 'https://www.instagram.com/direct/', 'https://business.facebook.com/'];
 // sağ klik menyusu: WhatsApp Web və Meta Business Suite (Messenger / Instagram Direct inbox)

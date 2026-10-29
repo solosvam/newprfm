@@ -17,11 +17,15 @@ function notifyBadge(count) {
 // Səs yalnız səhifədə çalına bilər — gizli offscreen səhifə (bir dəfə yaradılır)
 async function notifySound(type) {
     if (await notifyMuted()) return;
+    const { psNotifySounds = {}, psNotifyVolume = 0.3 } = await chrome.storage.local.get(['psNotifySounds', 'psNotifyVolume']);
     if (!(await chrome.offscreen.hasDocument?.())) {
         await chrome.offscreen.createDocument({ url: 'offscreen.html', reasons: ['AUDIO_PLAYBACK'], justification: 'Yeni sifariş bildirişinin səsi' })
             .catch(() => {});
     }
-    chrome.runtime.sendMessage({ type: 'ps-notify-sound', sound: type }).catch(() => {});
+    chrome.runtime.sendMessage({
+        type: 'ps-notify-sound', sound: type, volume: psNotifyVolume,
+        key: psNotifySounds[type] || PS_SOUND_TYPES[type]?.default || 'ding',
+    }).catch(() => {});
 }
 
 // Admin paneli hazırda ekrandadırsa (aktiv tab, fokusda pəncərə) — səhifə özü səs çalır, təkrarlamırıq
