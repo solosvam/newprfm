@@ -58,7 +58,7 @@
         {{-- Filtrlər: seçim dəyişən kimi siyahı yenidən yüklənir (datatable.products.ajax.js); axtarışlı select2 --}}
         <div class="row g-2 mb-3" data-product-filters>
             @foreach($filters as $key => [$label, $options])
-                <div class="col-6 col-md-3 col-xl-2">
+                <div class="col-6 col-md">
                     {{-- Acorn "Select2 / Basic Single": sinifsiz select + boş option; görünüşü select2-nin bootstrap4 teması verir --}}
                     <select data-product-filter="{{ $key }}" data-placeholder="{{ $label }}" aria-label="{{ $label }}">
                         <option label="&nbsp;"></option>
@@ -66,6 +66,15 @@
                     </select>
                 </div>
             @endforeach
+            {{-- Axtarış — filtrlərin sırasında, Ölçü-dən sonra (datatable-search: data-datatable ilə cədvələ bağlanır) --}}
+            <div class="col-12 col-md">
+                <div class="search-input-container w-100 shadow bg-foreground">
+                    <input class="form-control datatable-search" placeholder="Axtar" aria-label="Axtar"
+                           data-datatable="#datatableProductsAjax">
+                    <span class="search-magnifier-icon"><i data-acorn-icon="search"></i></span>
+                    <span class="search-delete-icon d-none"><i data-acorn-icon="close"></i></span>
+                </div>
+            </div>
             <div class="col-auto d-flex align-items-center">
                 <button type="button" class="btn btn-sm btn-link px-1 d-none" data-product-filters-clear>Filtrləri təmizlə</button>
             </div>
@@ -73,23 +82,7 @@
 
         <div class="data-table-rows slim">
             <div class="row">
-                <div class="col-sm-12 col-md-5 col-lg-3 col-xxl-2 mb-1">
-                    <div class="d-inline-block float-md-start me-1 mb-1 search-input-container w-100 shadow bg-foreground">
-                        <input class="form-control datatable-search"
-                               placeholder="Axtar"
-                               data-datatable="#datatableProductsAjax">
-
-                        <span class="search-magnifier-icon">
-                            <i data-acorn-icon="search"></i>
-                        </span>
-
-                        <span class="search-delete-icon d-none">
-                            <i data-acorn-icon="close"></i>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="col-sm-12 col-md-7 col-lg-9 col-xxl-10 text-end mb-1">
+                <div class="col-12 text-end mb-1">
                     <div class="d-inline-block">
                         <button class="btn btn-icon btn-icon-only btn-foreground-alternate shadow datatable-print"
                                 data-bs-delay="0"
