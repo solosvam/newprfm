@@ -8,6 +8,7 @@
         accent: '#000',                                // brend adı
         text: '#1a1520', secondary: '#5f586b', muted: '#8a8198',
         border: '#ddd5ea', strong: '#cfc4e2',
+        pill: '#f7f4fc',                                  // cins | növ kapsulu
         card: '#fbf9f6', cardBorder: '#e6dfd4', cardSize: '#2a2433', cardPrice: '#1a1530', // qiymət sətirləri (açıq krem)
         icon: '#b8a07e', divider: '#e2d9cc',
         sale: '#d6283b', saleText: '#fff', oldPrice: '#4a4356',  // məhsul endirimi: stiker, yeni qiymət, köhnə qiymət (tünd — oxunsun)
@@ -166,8 +167,8 @@
         const subtitleY = nameY + lines.length * 51 + 10;
         const pricesHeight = rows * priceRow + (rows - 1) * priceGap;
         // Endirim: altbaşlığın altında qırmızı "Endirim 08.10.2026, 01:20-dək" sətri
-        const untilY = subtitleY + 46;
-        const pricesY = (product.discount ? untilY + 10 : subtitleY) + 28 + 36;
+        const untilY = subtitleY + 56; // kapsulun altından
+        const pricesY = (product.discount ? untilY + 10 : subtitleY + 10) + 28 + 36;
         canvas.width = 1080;
         const footer = 72;
         canvas.height = pricesY + pricesHeight + 40 + footer;
@@ -197,8 +198,13 @@
         ctx.drawImage(image, 540 - w / 2, imageY + imageSize / 2 - h / 2, w, h);
         text(ctx, product.brand.toLocaleUpperCase('az'), brandY, 28, 600, colors.accent, 900, 4);
         lines.forEach((line, index) => text(ctx, line, nameY + index * 51, 42, 700, colors.text));
-        // Cins | ətir növü: solğun görünürdü — qalın və tünd (ölçü və düzülüş eyni)
-        text(ctx, product.subtitle, subtitleY, 28, 600, colors.text, 900, 1);
+        // Cins | ətir növü: yumru künclü, yüngül kölgəli, nazik haşiyəli kapsulun içində — qalın və tünd
+        if (product.subtitle) {
+            ctx.font = `600 28px ${font}`;
+            const pillW = Math.min(960, ctx.measureText(String(product.subtitle)).width + 64);
+            box(ctx, 540 - pillW / 2, subtitleY - 12, pillW, 52, 26, colors.pill, colors.border, 10);
+            text(ctx, product.subtitle, subtitleY, 28, 600, colors.text, 900, 1);
+        }
 
         if (product.discount) {
             // şəklin solundakı boş yerdə dişli qırmızı stiker: "15%" + "ENDİRİM" (bir az əyilmiş)
