@@ -24,7 +24,6 @@ class LegacyRedirectController extends Controller
 
         $url = match (true) {
             $route === 'common/home' => route('home'),
-
             $route === 'product/product' => ($product = Product::where('old_id', $id('product_id') ?? 0)->first())
                 ? route('product', ['slug' => $product->slug]) : null,
 

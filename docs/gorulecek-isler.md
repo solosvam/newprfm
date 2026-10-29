@@ -42,7 +42,6 @@ Son yenilənmə: 28 oktyabr 2026.
   "Pul ver" seçilən anbarlarda köhnə qayda qalır. "Pul vermə" seçilənlərdə kuryerə pulla bağlı heç nə görünmür, yalnız "Götürdüm" seçilir;
   "Götürdüm" seçilən kimi anbara borc yaranır (kuryer "götürdüm, pul vermədim" seçmiş kimi).
 
-- [ ] **Telegram botda "Anbara rezerv et" mesajında qiymət olmasın.**
 - [ ] **Sifarişlər səhifəsi:**
   - sifarişə kuryer təyin olunubsa, kuryerin adı görünsün;
   - cədvəldə sətrin istənilən yerinə toxunanda sifarişin detalları açılsın.

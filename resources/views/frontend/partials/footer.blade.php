@@ -14,7 +14,10 @@
             <a href="{{ route('home') }}" class="logo logo--svg" aria-label="parfumshop">
                 @include('frontend.partials.logo')
             </a>
-            <p>{{ __('footer_intro') }}</p>
+            @php
+                $current = date('Y') - 2000;
+            @endphp
+            <p>{{ str_replace('{il}',$current,__('footer_intro')) }}</p>
             @if($socials)
                 <div class="fsocial">
                     @foreach($socials as $network => $url)

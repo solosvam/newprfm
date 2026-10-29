@@ -67,7 +67,7 @@ class TelegramWarehouseBot
         $allocation->loadMissing(['warehouse', 'orderItem.product.brand', 'orderItem.product.type', 'orderItem.product.genders', 'orderItem.product.images', 'orderItem.variant.size']);
         $label = $this->label($allocation->orderItem);
         $text = '✅ <b>'.e($label['full']).'</b> — '.$allocation->quantity.' ədəd sizdən seçildi. Zəhmət olmasa rezerv edin və təsdiqləyin.'
-            ."\n\n".$this->details($label)."\nAlış: ".number_format((float) $allocation->unit_cost, 2).' AZN';
+            ."\n\n".$this->details($label);
 
         return $this->post($allocation->warehouse, $this->render($text, ...self::RESERVE_WAITING), null, TelegramMessage::ALLOCATION, $allocation->id,
             fn (TelegramMessage $m) => [[['text' => '✅ Rezerv etdim', 'callback_data' => $m->id.':reserve']]],
@@ -155,6 +155,7 @@ class TelegramWarehouseBot
 
                 return;
             }
+
             $requestItem = WarehouseRequestItem::with('request')->findOrFail($message->subject_id);
             $requested = (int) $requestItem->requested_quantity;
             match ($action) {
