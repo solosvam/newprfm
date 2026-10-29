@@ -197,7 +197,8 @@
         ctx.drawImage(image, 540 - w / 2, imageY + imageSize / 2 - h / 2, w, h);
         text(ctx, product.brand.toLocaleUpperCase('az'), brandY, 28, 600, colors.accent, 900, 4);
         lines.forEach((line, index) => text(ctx, line, nameY + index * 51, 42, 700, colors.text));
-        text(ctx, product.subtitle, subtitleY, 28, 400, colors.secondary, 900, 1);
+        // Cins | ətir növü: solğun görünürdü — qalın və tünd (ölçü və düzülüş eyni)
+        text(ctx, product.subtitle, subtitleY, 28, 600, colors.text, 900, 1);
 
         if (product.discount) {
             // şəklin solundakı boş yerdə dişli qırmızı stiker: "15%" + "ENDİRİM" (bir az əyilmiş)

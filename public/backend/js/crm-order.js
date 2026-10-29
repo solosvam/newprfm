@@ -83,9 +83,10 @@
     }
 
     // Məhsulun kiçik şəkli; şəkil yoxdursa boş yer (sətirlər bərabər dursun)
-    const thumb = src => src
-        ? `<img class="crm-thumb" src="${esc(src)}" alt="" loading="lazy">`
-        : '<span class="crm-thumb" aria-hidden="true"></span>';
+    const thumb = (src, url) => {
+        const img = src ? `<img class="crm-thumb" src="${esc(src)}" alt="" loading="lazy">` : '<span class="crm-thumb" aria-hidden="true"></span>';
+        return url ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="crm-thumb-link" title="Saytda aç">${img}</a>` : img;
+    };
 
     // Son alış (yalnız crm.purchase_info icazəsi ilə serverdən gəlir); undefined — icazə yoxdur, null — alış olmayıb
     const purchaseText = v => v.last_purchase === undefined ? ''
@@ -105,7 +106,9 @@
         }
         els.results.innerHTML = list.map((p, i) => `
             <div class="crm-result" data-index="${i}">
-                <div class="crm-result__name">${thumb(p.image)}<div>${esc(p.name)}<span class="crm-result__brand">${esc([p.brand, p.type, p.gender].filter(Boolean).join(' · '))}</span>${purchaseLine(p.variants[0])}</div></div>
+                <div class="crm-result__name">${thumb(p.image, p.url)}<div>${p.url
+                    ? `<a href="${esc(p.url)}" target="_blank" rel="noopener" class="crm-result__link" title="Saytda aç">${esc(p.name)}</a>`
+                    : esc(p.name)}<span class="crm-result__brand">${esc([p.brand, p.type, p.gender].filter(Boolean).join(' · '))}</span>${purchaseLine(p.variants[0])}</div></div>
                 ${p.variants.length === 1
                     // Tək variant: seçim yoxdur, ox olmadan sadə sahə
                     ? `<div class="form-control crm-result__single" data-variant data-variant-id="${p.variants[0].id}">${esc(p.variants[0].label)} · ${money(p.variants[0].price)}</div>`

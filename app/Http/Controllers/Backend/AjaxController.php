@@ -134,6 +134,7 @@ class AjaxController extends Controller
         return response()->json($products->map(fn (Product $p) => [
             'id' => $p->id,
             'name' => $p->name,
+            'url' => route('product', $p->slug), // saytdakı səhifəsi — şəkil və ada klik yeni vərəqdə açır
             'brand' => $p->brand?->name,
             'type' => $p->type?->name_az,
             'gender' => $p->genders->first()?->name_az,
