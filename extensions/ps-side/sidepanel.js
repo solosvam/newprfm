@@ -3,6 +3,9 @@ const target = new URL(PS_SITE).origin;
 const queue = [];
 let ready = false;
 
+// ⚙ — extension ayarları (bildiriş səsləri)
+document.getElementById('settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
+
 // iframe-ə yalnız öz saytımıza göndəririk; iframe yüklənənə qədər növbədə saxlayırıq
 function post(message) {
     if (ready) frame.contentWindow.postMessage(message, target);
