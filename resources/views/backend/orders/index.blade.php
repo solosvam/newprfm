@@ -72,11 +72,12 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                         <tr>
-                            <th class="text-muted text-small text-uppercase">Sifariş</th>
+                            <th class="text-muted text-small text-uppercase">No</th>
                             <th class="text-muted text-small text-uppercase">Tarix</th>
                             <th class="text-muted text-small text-uppercase">Müştəri</th>
+                            <th class="text-muted text-small text-uppercase">Telefon</th>
+                            <th class="text-muted text-small text-uppercase">Müştəri tipi</th>
                             <th class="text-muted text-small text-uppercase">Mənbə</th>
-                            <th class="text-muted text-small text-uppercase">Ödəniş</th>
                             <th class="text-muted text-small text-uppercase text-end">Məbləğ</th>
                             <th class="text-muted text-small text-uppercase">Status</th>
                             <th></th>
@@ -89,27 +90,40 @@
                                     ? route('admin.crm.order', [$order->customer_id, $order->id])
                                     : ($order->one_click ? route('admin.easy-orders.show', $order) : null);
                                 $src = $order->one_click ? 'one_click' : $order->source;
+                                // Telefon gizli: 994****7575 (tam nömrə CRM-də)
+                                $phone = preg_replace('/\D+/', '', (string) ($order->customer?->mobile ?? $order->guest_mobile));
+                                $maskedPhone = strlen($phone) > 7 ? substr($phone, 0, 3).'****'.substr($phone, -4) : ($phone ?: '—');
                             @endphp
-                            <tr>
-                                <td class="fw-bold">{{ $order->order_no }}</td>
-                                <td class="text-alternate text-nowrap">{{ $order->created_at?->format('d.m.Y H:i') }}</td>
+                            {{-- Sətrin istənilən yerinə klik sifarişi açır (keçidlər öz işini görür) --}}
+                            <tr @if($url) data-href="{{ $url }}" style="cursor: pointer" @endif>
+                                <td class="text-alternate">{{ $orders->firstItem() + $loop->index }}</td>
+                                <td class="text-nowrap">
+                                    {{ $order->created_at?->format('d.m.Y H:i') }}
+                                    {{-- Uzun PS nömrəsi yer tutmasın: ⓘ-yə klik göstərir (üstünə gələndə də görünür) --}}
+                                    <button type="button" class="btn btn-link p-0 ms-1 align-baseline" data-order-no="{{ $order->order_no }}"
+                                            title="{{ $order->order_no }}" aria-label="Sifariş nömrəsi: {{ $order->order_no }}">ⓘ</button>
+                                    <span class="d-none fw-bold" data-order-no-text>{{ $order->order_no }}</span>
+                                </td>
                                 <td>
                                     @if($order->customer)
-                                        <a href="{{ route('admin.crm.customer', $order->customer_id) }}" class="body-link">{{ $order->customer->full_name }}</a>
-                                        <div class="text-small text-muted">{{ $order->customer->mobile }}</div>
+                                        <a href="{{ route('admin.crm.customer', $order->customer_id) }}" class="body-link fw-bold">{{ $order->customer->full_name }}</a>
                                     @else
-                                        <span class="text-muted">Qonaq</span>
-                                        <div class="text-small text-muted">{{ $order->guest_mobile }}</div>
+                                        <span class="fw-bold">Qonaq</span>
                                     @endif
                                 </td>
-                                <td class="text-alternate">{{ $sources[$src] ?? 'Digər' }}</td>
-                                <td class="text-alternate">
-                                    {{ $order->paymentMethod?->name_az ?? $order->paymentMethod?->code }}
-                                    @if($order->payment_status === 'paid')
-                                        <span class="badge bg-outline-success ms-1">Ödənilib</span>
+                                <td class="text-nowrap">{{ $maskedPhone }}</td>
+                                <td>
+                                    {{-- Sifariş tarixçəsinə görə; qonağın telefonu da yoxdursa — bilinmir, təxmin edilmir --}}
+                                    @if(!$order->customer_id && !$order->guest_mobile)
+                                        <span class="text-muted">—</span>
+                                    @elseif($order->previous_orders > 0)
+                                        <span class="badge bg-outline-primary">Təkrar müştəri</span>
+                                    @else
+                                        <span class="badge bg-outline-success">Yeni müştəri</span>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td>{{ $sources[$src] ?? 'Digər' }}</td>
+                                <td class="text-end text-nowrap fw-bold">
                                     @if($order->isCancelled() && $order->cancelledAmount() > 0)
                                         {{-- tam ləğv: yekun 0-dır — sifarişin ilkin məbləği göstərilir --}}
                                         {{ number_format($order->originalTotal(), 2, '.', ' ') }} ₼
@@ -124,13 +138,11 @@
                                     <span class="badge bg-outline-{{ $statusColor[$order->status?->code] ?? 'secondary' }}">{{ $order->status?->name_az ?? '—' }}</span>
                                 </td>
                                 <td class="text-end">
-                                    @if($url)
-                                        <a href="{{ $url }}" class="btn btn-primary btn-sm">Aç</a>
-                                    @endif
+                                    @if($url)<a href="{{ $url }}" class="btn btn-primary btn-sm">Aç</a>@endif
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8" class="text-center text-muted py-5">Sifariş tapılmadı</td></tr>
+                            <tr><td colspan="9" class="text-center text-muted py-5">Sifariş tapılmadı</td></tr>
                         @endforelse
                         </tbody>
                     </table>
@@ -139,4 +151,25 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('js_page')
+    <script>
+        // ⓘ — PS nömrəsini göstərir / gizlədir
+        document.querySelectorAll('[data-order-no]').forEach(button => button.addEventListener('click', () => {
+            const text = button.nextElementSibling;
+            text.classList.toggle('d-none');
+            button.classList.toggle('d-none', !text.classList.contains('d-none'));
+        }));
+        document.querySelectorAll('[data-order-no-text]').forEach(text => text.addEventListener('click', event => {
+            event.stopPropagation();
+            text.classList.add('d-none');
+            text.previousElementSibling.classList.remove('d-none');
+        }));
+        // Sətrə klik — sifariş açılır; keçid, düymə, PS nömrəsi və ya mətn seçimi olanda yox
+        document.querySelectorAll('tr[data-href]').forEach(row => row.addEventListener('click', event => {
+            if (event.target.closest('a, button, [data-order-no-text]') || window.getSelection()?.toString()) return;
+            location.href = row.dataset.href;
+        }));
+    </script>
 @endsection

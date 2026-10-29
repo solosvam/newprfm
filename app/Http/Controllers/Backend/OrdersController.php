@@ -28,6 +28,12 @@ class OrdersController extends Controller
 
         $orders = Order::with(['status', 'customer', 'paymentMethod'])
             ->withSum('itemCancellations as cancelled_amount', 'amount')
+            // Müştəri tipi: bu sifarişdən əvvəl sifarişi var — təkrar (qonaqda telefonla)
+            ->select('orders.*')
+            ->selectSub(fn ($q) => $q->from('orders as previous')->selectRaw('count(*)')
+                ->whereColumn('previous.id', '<', 'orders.id')
+                ->where(fn ($w) => $w->whereColumn('previous.customer_id', 'orders.customer_id')
+                    ->orWhere(fn ($g) => $g->whereNull('orders.customer_id')->whereColumn('previous.guest_mobile', 'orders.guest_mobile'))), 'previous_orders')
             ->when($status === 'active', fn ($q) => $q->whereIn('order_status_id',
                 $statuses->whereIn('code', array_keys(AdminDashboard::ACTIVE_STATUSES))->pluck('id')))
             ->when($status === 'courier_late', fn ($q) => $q

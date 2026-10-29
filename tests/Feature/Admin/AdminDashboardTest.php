@@ -302,9 +302,10 @@ class AdminDashboardTest extends TestCase
         $get = fn (array $q) => $this->actingAs($this->admin, 'admin')->get(route('admin.orders.index', $q))->assertOk()->getContent();
 
         $all = $get([]);
-        foreach (['PS-1001', 'PS-1002', 'PS-1003', 'PS-1004', 'Aysel Məmmədova', '994559998877'] as $text) {
+        foreach (['PS-1001', 'PS-1002', 'PS-1003', 'PS-1004', 'Aysel Məmmədova', '994****8877'] as $text) {
             $this->assertStringContainsString($text, $all);
         }
+        $this->assertStringNotContainsString('994559998877', $all); // telefon siyahıda gizlidir
         $active = $get(['status' => 'active']);
         $this->assertStringContainsString('PS-1001', $active);
         $this->assertStringNotContainsString('PS-1003', $active);
