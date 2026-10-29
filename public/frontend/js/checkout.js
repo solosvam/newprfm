@@ -410,6 +410,19 @@
         return null;
     }
 
+    function highlightTerms() {
+        const box = els.creditTerms?.closest('.installment__terms');
+        if (!box) return;
+        box.classList.remove('is-required');
+        void box.offsetWidth; // animasiya hər dəfə yenidən başlasın
+        box.classList.add('is-required');
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        els.creditTerms.focus({ preventScroll: true });
+    }
+    els.creditTerms?.addEventListener('change', () => {
+        if (els.creditTerms.checked) els.creditTerms.closest('.installment__terms')?.classList.remove('is-required');
+    });
+
     els.placeOrder.addEventListener('click', async () => {
         const button = els.placeOrder;
         if (button.disabled) return;
@@ -417,6 +430,8 @@
         const validationError = validateBeforeSubmit();
         if (validationError) {
             showError(validationError);
+            // Kredit şərtləri seçilməyibsə — checkbox-u göstər: ekrana gətir, qırmızı çərçivə və titrəmə
+            if (validationError === t.errTerms) highlightTerms();
             return;
         }
 

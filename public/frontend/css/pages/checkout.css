@@ -192,6 +192,16 @@
 }
 .checkout-check input { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
 .installment__terms a { text-decoration: underline; text-underline-offset: 2px; }
+/* Şərtlər qəbul edilməyib — qırmızı çərçivə, titrəmə və bir neçə dəfə yanıb-sönmə (checkout.js highlightTerms) */
+.installment__terms.is-required {
+    padding: 10px 12px; border: 2px solid var(--danger); border-radius: 10px; color: var(--danger);
+    animation: terms-shake .45s ease-in-out, terms-blink 1s ease-in-out .45s 3;
+}
+.installment__terms.is-required a { color: var(--danger); font-weight: 600; }
+.installment__terms.is-required input { outline: 2px solid var(--danger); outline-offset: 2px; }
+@keyframes terms-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@keyframes terms-blink { 0%, 100% { background: transparent; } 50% { background: color-mix(in srgb, var(--danger) 14%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .installment__terms.is-required { animation: none; } }
 .checkout-note { margin-top: 14px; }
 
 .checkout-error { margin: 0; }
