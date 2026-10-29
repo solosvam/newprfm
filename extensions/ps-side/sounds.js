@@ -9,6 +9,9 @@ const PS_SOUNDS = {
     alarm: { label: 'Həyəcan (4 dəfə)', notes: [880, 660, 880, 660] },
     soft: { label: 'Yumşaq aşağı', notes: [392, 330] },
 };
+// "file" — extension qovluğundakı sounds/{növ}.mp3 (kompüterdə əl ilə qoyulur, sounds/README.txt)
+const PS_SOUND_FILE = 'file';
+const psSoundFileUrl = (type) => chrome.runtime.getURL(`sounds/${type}.mp3`);
 const PS_SOUND_TYPES = {
     one_click: { label: 'Yeni asan sifariş', default: 'double' },
     credit: { label: 'Hissə-hissə müraciəti', default: 'rising' },
@@ -32,4 +35,29 @@ function psPlayNotes(notes, volume = 0.3) {
         osc.start(start);
         osc.stop(start + 0.17);
     });
+}
+
+// Növ üçün seçilən səsi çalır: qovluqdakı fayl (alınmasa — susmaya görə ton) və ya hazır ton
+async function psPlaySound(type, key, volume = 0.3) {
+    if (key === PS_SOUND_FILE) {
+        try {
+            const audio = new Audio(psSoundFileUrl(type));
+            audio.volume = Math.min(1, Math.max(0, volume * 2));
+            await audio.play();
+            return true;
+        } catch {
+            key = PS_SOUND_TYPES[type]?.default;
+        }
+    }
+    psPlayNotes((PS_SOUNDS[key] || PS_SOUNDS.ding).notes, volume);
+    return false;
+}
+
+// Qovluqda fayl varmı (ayarlarda xəbərdarlıq üçün)
+async function psSoundFileExists(type) {
+    try {
+        return (await fetch(psSoundFileUrl(type))).ok;
+    } catch {
+        return false;
+    }
 }

@@ -15,21 +15,31 @@ chrome.storage.local.get(['psNotifyMuted', 'psNotifyVolume', 'psNotifySounds'], 
         label.htmlFor = 'sound-' + type;
         const select = document.createElement('select');
         select.id = 'sound-' + type;
+        select.append(new Option(`Qovluqdan fayl (sounds/${type}.mp3)`, PS_SOUND_FILE));
         Object.entries(PS_SOUNDS).forEach(([key, sound]) => select.append(new Option(sound.label, key)));
         select.value = psNotifySounds[type] || info.default;
         const play = document.createElement('button');
         play.type = 'button';
         play.textContent = 'Dinlə';
-        const preview = () => psPlayNotes(PS_SOUNDS[select.value].notes, Number($('volume').value));
+        const note = document.createElement('div');
+        note.className = 'note';
+        // Qovluqdan fayl seçilibsə — fayl yerindədirmi
+        const check = async () => {
+            note.textContent = select.value === PS_SOUND_FILE && !(await psSoundFileExists(type))
+                ? `sounds/${type}.mp3 tapılmadı — hazır ton çalınacaq. Faylı extension qovluğundakı sounds/ qovluğuna qoyun.` : '';
+        };
+        const preview = () => psPlaySound(type, select.value, Number($('volume').value));
         play.addEventListener('click', preview);
         select.addEventListener('change', () => {
             chrome.storage.local.get('psNotifySounds', ({ psNotifySounds: current = {} }) => {
                 chrome.storage.local.set({ psNotifySounds: { ...current, [type]: select.value } }, flash);
             });
+            check();
             preview();
         });
-        row.append(label, select, play);
+        row.append(label, select, play, note);
         $('types').append(row);
+        check();
     });
 });
 
