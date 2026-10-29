@@ -635,10 +635,14 @@ class CrmController extends Controller
             'reason' => ['required', Rule::in(array_diff(array_keys(OrderItemCancellation::REASONS), ['door_refused']))],
             'note' => ['nullable', 'required_if:reason,other', 'string', 'max:2000'],
             'customer_agreed' => ['accepted'],
+            // Kredit: Ferrum-dakı müraciət də ləğv olunmalıdır — operator təsdiqləyir
+            'ferrum_cancelled' => [Rule::requiredIf($order->paymentMethod?->code === 'installment'), 'accepted'],
         ], [
             'reason.required' => 'Səbəbi seçin.',
             'note.required_if' => '"Digər" səbəbdə qeyd yazın.',
             'customer_agreed.accepted' => 'Müştəri ilə razılaşdırıldığını təsdiqləyin.',
+            'ferrum_cancelled.required' => 'Ferrum-dakı müraciətin ləğv edildiyini və ya təsdiqlənmədiyini təsdiqləyin.',
+            'ferrum_cancelled.accepted' => 'Ferrum-dakı müraciətin ləğv edildiyini və ya təsdiqlənmədiyini təsdiqləyin.',
         ]);
 
         $actor = (int) auth('admin')->id();

@@ -43,6 +43,13 @@ class OrderStatusService
             'order_id' => $order->id, 'status_id' => $status->id, 'user_id' => $actor,
             'note' => $note, 'created_at' => now(), 'updated_at' => now(),
         ]);
+        // Kredit müraciəti sifarişlə birlikdə: icraya götürüldü → "Təsdiqlənib", Parfumshop ləğv etdi → "Ləğv edilib".
+        // ("İmtina edilib" — Ferrum-un cavabıdır, yalnız əl ilə qoyulur.)
+        if (in_array($code, ['preparing', 'cancelled'], true) && $order->loadMissing('paymentMethod')->paymentMethod?->code === 'installment'
+            && ($credit = $order->creditApplication()->first())) {
+            app(\App\Services\Credit\CreditStatusService::class)
+                ->set($credit, $code === 'preparing' ? 'approved' : 'cancelled', $actor, 'order');
+        }
         if ($code === 'delivered') {
             app(BonusService::class)->earnOnDelivery($order); // sifariş bonusu — yalnız təhvildə
             app(ReferralService::class)->rewardForDeliveredOrder($order); // dəvət olunanın ilk sifarişi → referal bonusları

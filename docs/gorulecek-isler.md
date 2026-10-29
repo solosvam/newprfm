@@ -42,12 +42,6 @@ Son yenilənmə: 29 oktyabr 2026.
   "Pul ver" seçilən anbarlarda köhnə qayda qalır. "Pul vermə" seçilənlərdə kuryerə pulla bağlı heç nə görünmür, yalnız "Götürdüm" seçilir;
   "Götürdüm" seçilən kimi anbara borc yaranır (kuryer "götürdüm, pul vermədim" seçmiş kimi).
 
-- [ ] **Hissə-hissə ödənişin statusu sifarişlə birlikdə.** Sifariş icraya götürüləndə statusu avtomatik "Təsdiq olundu" olsun;
-  sifariş ləğv ediləndə hissə-hissə ödəniş də "İmtina" olsun.
-  29 oktyabr: Ferrum-a doldurulanda → "Yoxlanılır", müqavilə (PDF) yüklənəndə → "Təsdiqlənib", istənilən status əl ilə dəyişir.
-  Açıq sual: "icraya götürüləndə təsdiq" hələ lazımdırmı (təsdiq artıq müqavilədən gəlir); ləğvdə "İmtina" yoxsa "Ləğv edilib".
-- [ ] **Kredit sifarişində sifarişin tam ləğvi və qapıda imtina** hələ bağlıdır (məhsul ləğvi 29 oktyabrda açıldı — Ferrum xəbərdarlığı ilə,
-  təsdiqlənmiş kreditdə bağlı).
 - [ ] **Borclar üçün ayrıca bölmə** — "borclu olduqlarım" və "mənə borcu olanlar". Müştərilər və anbarlar bölməsindən ayrıdır
   (nə müştəriyə, nə anbara aiddir). Açıq sual: bölmənin adı (məs. "Borclar", "Debitor / kreditor", "Qarşı tərəflər").
 - [ ] **Stok alışı və öz istehsalımız:**

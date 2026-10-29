@@ -428,6 +428,17 @@
                         <input class="form-check-input" type="checkbox" name="customer_agreed" value="1" required>
                         <span class="form-check-label">Müştəri ilə danışılıb, razıdır</span>
                     </label>
+                    @if($order->paymentMethod?->code === 'installment')
+                        {{-- Kredit: sifariş burada ləğv olunur, Ferrum-dakı müraciət isə orada ayrıca ləğv edilməlidir --}}
+                        <div class="alert alert-warning mb-3">
+                            <strong>Diqqət:</strong> bu kredit sifarişidir. Ferrum-da müraciət təsdiqlənibsə, əvvəl onu Ferrum-da ləğv edin.
+                            Kredit müraciətinin statusu "Ləğv edilib" olacaq.
+                        </div>
+                        <label class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="ferrum_cancelled" value="1" required>
+                            <span class="form-check-label">Ferrum-da müraciət ləğv edilib və ya təsdiqlənməyib</span>
+                        </label>
+                    @endif
                     <div class="od-cancel-result">
                         <div><span>Məhsullar</span><b>{{ number_format($op['items'], 2) }} AZN</b></div>
                         @if($op['fees'] > 0)<div><span>Çatdırılma / qablaşdırma</span><b>{{ number_format($op['fees'], 2) }} AZN</b></div>@endif

@@ -141,7 +141,6 @@ class OrderItemCancellationService
         return match (true) {
             $order->isCancelled() => 'Sifariş artıq ləğv edilib.',
             $order->status?->code === 'delivered' => 'Təhvil verilmiş sifariş ləğv edilmir.',
-            $order->paymentMethod?->code === 'installment' => 'Hissə-hissə (kredit) sifarişinin ləğvi hələ dəstəklənmir.',
             $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
             default => null,
         };

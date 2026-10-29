@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Kredit müraciətinin status tarixçəsi.
  * source: manual — əməkdaş əl ilə; ferrum_fill — extension Ferrum formasını doldurdu (Yoxlanılır);
- * contract — Ferrum müqaviləsi (PDF) bağlandı (Təsdiqlənib).
+ * contract — Ferrum müqaviləsi (PDF) bağlandı (Təsdiqlənib); order — sifariş icraya götürüldü / ləğv edildi.
  */
 return new class extends Migration
 {

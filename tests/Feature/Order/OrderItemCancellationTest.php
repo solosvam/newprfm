@@ -333,12 +333,38 @@ class OrderItemCancellationTest extends TestCase
         $this->assertNull($service->orderBlockReason($this->order(['order_status_id' => 15]))); // yolda da olar
         $this->assertNotNull($service->orderBlockReason($this->order(['order_status_id' => 17]))); // təhvil verilib
         $this->assertNotNull($service->orderBlockReason($this->order(['order_status_id' => 18]))); // artıq ləğv
-        $this->assertNotNull($service->orderBlockReason($this->order(['payment_method_id' => 4]))); // kredit
+        $this->assertNull($service->orderBlockReason($this->order(['payment_method_id' => 4]))); // kredit — açıqdır
 
         $order = $this->order();
         $service->cancelOrder($order, 'not_in_stock', null, 7);
         $this->expectException(ValidationException::class);
         $service->cancelOrder($order->fresh(), 'not_in_stock', null, 7);
+    }
+
+    public function test_credit_status_follows_order_start_and_cancel(): void
+    {
+        Schema::create('credit_statuses', function (Blueprint $t) { $t->id(); $t->string('code'); });
+        DB::table('credit_statuses')->insert([['id' => 1, 'code' => 'pending'], ['id' => 3, 'code' => 'approved'], ['id' => 5, 'code' => 'cancelled']]);
+        Schema::create('credit_applications', function (Blueprint $t) {
+            $t->id(); $t->integer('customer_id'); $t->integer('order_id'); $t->integer('credit_period_id')->nullable(); $t->decimal('interest_rate', 5, 2)->default(0);
+            $t->decimal('total', 10, 2); $t->decimal('standard_total', 10, 2)->nullable(); $t->unsignedBigInteger('total_edited_by')->nullable();
+            $t->decimal('monthly', 10, 2)->default(0); $t->integer('credit_status_id')->nullable(); $t->timestamps();
+        });
+        Schema::create('credit_periods', function (Blueprint $t) { $t->id(); $t->integer('month'); });
+        (require database_path('migrations/2026_10_29_120000_create_credit_status_logs.php'))->up();
+
+        $order = $this->order(['payment_method_id' => 4, 'payment_status' => 'pending', 'bonus_earned' => 0, 'order_status_id' => 11]); // "Sifariş verildi"
+        DB::table('credit_applications')->insert(['customer_id' => 1, 'order_id' => $order->id, 'total' => 395, 'credit_status_id' => 1]);
+        $status = fn () => DB::table('credit_applications')->where('order_id', $order->id)->value('credit_status_id');
+
+        // icraya götürüldü → Təsdiqlənib
+        app(\App\Services\OrderStatusService::class)->set($order, 'preparing', 7);
+        $this->assertSame(3, $status());
+
+        // Parfumshop sifarişi tam ləğv etdi → Ləğv edilib
+        app(OrderItemCancellationService::class)->cancelOrder($order->fresh(), 'not_in_stock', null, 7);
+        $this->assertSame(5, $status());
+        $this->assertSame(['order', 'order'], DB::table('credit_status_logs')->pluck('source')->all());
     }
 
     // ---- Müştərinin saytdan öz imtinası ----

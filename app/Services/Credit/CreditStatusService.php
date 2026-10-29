@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Kredit müraciətinin statusu: əl ilə (istənilən status) və avtomatik keçidlər.
  *  - Ferrum formasını extension doldurdu → "Yoxlanılır" (yalnız "Gözləmədə"dirsə);
- *  - Ferrum müqaviləsi (PDF) bağlandı → "Təsdiqlənib".
+ *  - Ferrum müqaviləsi (PDF) bağlandı və ya sifariş icraya götürüldü → "Təsdiqlənib";
+ *  - Parfumshop sifarişi ləğv etdi → "Ləğv edilib" (OrderStatusService::set).
  * Hər dəyişiklik credit_status_logs-a yazılır.
  */
 final class CreditStatusService
@@ -18,7 +19,7 @@ final class CreditStatusService
     public const REVIEWING = 'reviewing';
     public const APPROVED = 'approved';
 
-    public const SOURCES = ['manual' => 'Əl ilə', 'ferrum_fill' => 'Ferrum-a dolduruldu', 'contract' => 'Müqavilə yükləndi'];
+    public const SOURCES = ['manual' => 'Əl ilə', 'ferrum_fill' => 'Ferrum-a dolduruldu', 'contract' => 'Müqavilə yükləndi', 'order' => 'Sifariş statusu'];
 
     /** Statusu dəyişir; $onlyFrom verilibsə yalnız indiki status onlardandırsa. Dəyişibsə true */
     public function set(CreditApplication $application, string $code, ?int $userId, string $source, ?array $onlyFrom = null): bool
