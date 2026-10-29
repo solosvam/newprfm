@@ -14,7 +14,7 @@ Formu **göndərmir** — operator yoxlayıb özü göndərir.
 2. Extension-u açın → sifariş nömrəsini (PS…) və ya ID-ni yazın → **Çək**.
 3. Hər sətrə klik — dəyər kopyalanır. Forma qoşulandan sonra **Ferrum-a doldur**.
 
-Ayarlar (⚙): məlumatın çəkildiyi sayt — parfumshop.az və ya lokal (localhost).
+Ayarlar (⚙): məlumatın çəkildiyi sayt — last.parfumshop.az (susmaya görə) və ya lokal https://parfumshop.test.
 
 ## Təhlükəsizlik
 - Parol saxlanmır: admin sessiyasının cookie-si ilə işləyir.

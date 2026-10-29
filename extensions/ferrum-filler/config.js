@@ -1,10 +1,8 @@
 // Parfumshop → Ferrum: ayarlar və Ferrum formasında seçilən sabit dəyərlər.
+// Birinci — susmaya görə (köhnə seçim siyahıda yoxdursa da bu götürülür)
 export const SITES = [
-    { id: 'prod', label: 'parfumshop.az', url: 'https://parfumshop.az' },
     { id: 'last', label: 'last.parfumshop.az', url: 'https://last.parfumshop.az' },
-    { id: 'test', label: 'Lokal — parfumshop.test', url: 'http://parfumshop.test' },
     { id: 'test-https', label: 'Lokal — parfumshop.test (https)', url: 'https://parfumshop.test' },
-    { id: 'local', label: 'Lokal (localhost)', url: 'http://localhost' },
 ];
 
 export const FERRUM_HOST = 'pm.ferrumcapital.az';
