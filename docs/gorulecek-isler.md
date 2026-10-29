@@ -3,7 +3,7 @@
 Layihə üzrə **yeganə** görüləcək işlər sənədi. Yeni iş əlavə olunanda, iş bitəndə və ya qərar veriləndə yalnız bu fayl yenilənir.
 Əvvəlki `docs/order-fulfillment-plan.md` və `docs/backlog.md` bu fayla birləşdirilib silinib.
 
-Son yenilənmə: 28 oktyabr 2026.
+Son yenilənmə: 29 oktyabr 2026.
 
 ---
 
@@ -42,11 +42,14 @@ Son yenilənmə: 28 oktyabr 2026.
   "Pul ver" seçilən anbarlarda köhnə qayda qalır. "Pul vermə" seçilənlərdə kuryerə pulla bağlı heç nə görünmür, yalnız "Götürdüm" seçilir;
   "Götürdüm" seçilən kimi anbara borc yaranır (kuryer "götürdüm, pul vermədim" seçmiş kimi).
 
-- [ ] **Sifarişlər səhifəsi:**
-  - sifarişə kuryer təyin olunubsa, kuryerin adı görünsün;
-  - cədvəldə sətrin istənilən yerinə toxunanda sifarişin detalları açılsın.
-- [ ] **Hissə-hissə ödənişin statusu sifarişlə birlikdə.** Sifariş detallarında hissə-hissə ödəniş olanda altında "Gözləyir" yazılır.
-  Sifariş icraya götürüləndə hissə-hissə ödənişin statusu avtomatik "Təsdiq olundu" olsun; sifariş ləğv ediləndə hissə-hissə ödəniş də "İmtina" olsun.
+- [ ] **Sifarişlər səhifəsi (admin/orders):** sifarişə kuryer təyin olunubsa, kuryerin adı görünsün.
+  (Sətrə klik, No, gizli telefon, Yeni / Təkrar müştəri — 29 oktyabrda edildi.)
+- [ ] **Hissə-hissə ödənişin statusu sifarişlə birlikdə.** Sifariş icraya götürüləndə statusu avtomatik "Təsdiq olundu" olsun;
+  sifariş ləğv ediləndə hissə-hissə ödəniş də "İmtina" olsun.
+  29 oktyabr: Ferrum-a doldurulanda → "Yoxlanılır", müqavilə (PDF) yüklənəndə → "Təsdiqlənib", istənilən status əl ilə dəyişir.
+  Açıq sual: "icraya götürüləndə təsdiq" hələ lazımdırmı (təsdiq artıq müqavilədən gəlir); ləğvdə "İmtina" yoxsa "Ləğv edilib".
+- [ ] **Kredit sifarişində sifarişin tam ləğvi və qapıda imtina** hələ bağlıdır (məhsul ləğvi 29 oktyabrda açıldı — Ferrum xəbərdarlığı ilə,
+  təsdiqlənmiş kreditdə bağlı).
 - [ ] **Borclar üçün ayrıca bölmə** — "borclu olduqlarım" və "mənə borcu olanlar". Müştərilər və anbarlar bölməsindən ayrıdır
   (nə müştəriyə, nə anbara aiddir). Açıq sual: bölmənin adı (məs. "Borclar", "Debitor / kreditor", "Qarşı tərəflər").
 - [ ] **Stok alışı və öz istehsalımız:**
