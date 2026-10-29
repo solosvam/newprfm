@@ -34,17 +34,19 @@ async function request(path, options = {}) {
     return { ok: true, data: body, site: site.label };
 }
 
-function checkOrder(ref) {
-    return request(`/admin/ferrum/contract/${encodeURIComponent(ref)}`);
+// fin — Ferrum sətrindəki FİN: server müştərinin FİN-i ilə tutuşdurur (fin_match)
+function checkOrder(ref, fin = '') {
+    return request(`/admin/ferrum/contract/${encodeURIComponent(ref)}` + (fin ? `?fin=${encodeURIComponent(fin)}` : ''));
 }
 
-function uploadContract({ orderId, csrf, base64, appNo }) {
+function uploadContract({ orderId, csrf, base64, appNo, fin }) {
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const form = new FormData();
     form.append('file', new Blob([bytes], { type: 'application/pdf' }), 'contract.pdf');
     if (appNo) form.append('ferrum_app_no', appNo);
+    form.append('ferrum_fin', fin || ''); // server yenidən yoxlayır
     return request(`/admin/ferrum/orders/${Number(orderId)}/contract`, { method: 'POST', body: form, headers: { 'X-CSRF-TOKEN': csrf } });
 }
 
@@ -63,7 +65,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
         return;
     }
     if (message?.type === 'contract-check') {
-        checkOrder(String(message.ref || '')).then(reply);
+        checkOrder(String(message.ref || ''), String(message.fin || '')).then(reply);
         return true;
     }
     if (message?.type === 'contract-upload') {

@@ -56,6 +56,9 @@ Ferrum-da `pm.ferrumcapital.az/pasm` cədvəlində hər sətrin çap düyməsini
 3. `background.js` PDF-i parfumshop-a göndərir: `POST /admin/ferrum/orders/{id}/contract` (admin sessiyası + CSRF,
    token `GET /admin/ferrum/contract/{ref}` cavabından). Fayl `storage/app/private/contracts/{sifariş}_{PFL-APP-…}.pdf`,
    yol `orders.contract_file`-a yazılır. Admin sifariş səhifəsində "Kredit müqaviləsi" linki (yalnız `ferrum` icazəsi ilə).
+**FİN yoxlaması:** başqasının müqaviləsi başqa sifarişə bağlanmasın deyə sətirdəki FİN (sütun başlığı "FİN" / "PİN" / "Pin kod")
+parfumshop-dakı müştərinin FİN-i ilə tutuşdurulur — uyğun deyilsə "Yüklə" açılmır, server də yükləmədə yenidən yoxlayıb rədd edir.
+FİN-in özü extension-a qaytarılmır, yalnız "uyğundur / deyil". Sətirdə FİN tapılmasa bağlamaq olmur.
 Yükləmə və baxış `sensitive_access_logs`-a yazılır. Yalnız taksit sifarişləri, yalnız PDF (fayl `%PDF-` ilə başlamalıdır).
 
 ## Kredit müraciətinin statusu

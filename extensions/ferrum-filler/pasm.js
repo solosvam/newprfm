@@ -17,6 +17,22 @@
     }
     // Xana-xana axtarılır: sətrin bütöv mətnində qonşu xana bitişik gəlir (PFL-APP-002227 + 6EPCQU9 → …22276EPCQU9)
     const appNo = (row) => ([...row.cells].map((cell) => cell.textContent.match(APP_NO)?.[0]).find(Boolean) || '').toUpperCase();
+    // Müştərinin FİN-i: sütun başlığına görə ("FİN" / "PİN" / "Pin kod"). Başlıq tapılmasa — sətirdə FİN-ə oxşayan
+    // (7 simvol, hərf və rəqəm) yeganə xana; bir neçədirsə (məs. müraciət kodu da 7 simvoldur) — bilinmir, bağlamaq olmaz.
+    const FIN = /^[0-9A-Z]{7}$/;
+    function finOf(row) {
+        const table = row.closest('table');
+        const headers = [...(table?.querySelectorAll('thead th, thead td') || [])];
+        const fromGrid = headers.length ? headers : [...(row.closest('[class*="grid" i]')?.querySelectorAll('th') || [])];
+        const index = fromGrid.findIndex((th) => /\b[FP][IİI]N\b|PİNKOD|PINKOD/.test(th.textContent.toLocaleUpperCase('az').replace(/\s+/g, ' ')));
+        if (index >= 0 && row.cells[index]) {
+            const value = row.cells[index].textContent.trim().toUpperCase();
+            return FIN.test(value) ? value : '';
+        }
+        const candidates = [...row.cells].map((cell) => cell.textContent.trim().toUpperCase())
+            .filter((value) => FIN.test(value) && /\d/.test(value) && /[A-Z]/.test(value));
+        return candidates.length === 1 ? candidates[0] : '';
+    }
     // Blazor sətri yenidən çəkə bilər — müraciət nömrəsi ilə təzə sətir tapılır
     const findRow = (no) => [...document.querySelectorAll('tr')].find((tr) => appNo(tr) === no && printButton(tr));
 
@@ -88,6 +104,7 @@
     function openDialog(row) {
         host?.remove();
         const no = appNo(row);
+        const fin = finOf(row);
         host = el('div');
         const root = host.attachShadow({ mode: 'closed' });
         root.append(el('style', { text: STYLE }));
@@ -108,25 +125,33 @@
                 event.preventDefault();
                 const ref = input.value.trim();
                 if (!ref) return input.focus();
+                if (!fin) return setStatus('Bu sətirdə müştərinin FİN-i tapılmadı — müqaviləni bağlamaq olmaz.', 'error');
                 check.disabled = true;
                 setStatus('Yoxlanır…');
-                const result = await chrome.runtime.sendMessage({ type: 'contract-check', ref }).catch(() => null);
+                const result = await chrome.runtime.sendMessage({ type: 'contract-check', ref, fin }).catch(() => null);
                 check.disabled = false;
                 if (!result?.ok) return setStatus(result?.error || 'Extension cavab vermədi — səhifəni yeniləyin.', 'error');
-                order = result.data;
+                const found = result.data;
                 info.replaceChildren(...[
-                    el('div', { class: 'order', text: `${order.order_no} · ${order.customer || '—'} · ${money(order.total)}` }),
-                    order.cancelled ? el('div', { class: 'warn', text: 'Sifariş ləğv olunub.' }) : null,
-                    order.has_contract ? el('div', { class: 'warn', text: 'Sifarişdə artıq müqavilə var — yenisi ilə əvəz olunacaq.' }) : null,
+                    el('div', { class: 'order', text: `${found.order_no} · ${found.customer || '—'} · ${money(found.total)}` }),
+                    found.cancelled ? el('div', { class: 'warn', text: 'Sifariş ləğv olunub.' }) : null,
+                    found.has_contract ? el('div', { class: 'warn', text: 'Sifarişdə artıq müqavilə var — yenisi ilə əvəz olunacaq.' }) : null,
                 ].filter(Boolean));
-                setStatus('');
+                // Başqasının müqaviləsi başqa sifarişə bağlanmasın: FİN eyni olmalıdır (server yükləmədə yenidən yoxlayır)
+                if (found.fin_match !== true) {
+                    return setStatus(found.fin_match === null
+                        ? 'Müştərinin FİN-i parfumshop-da yazılmayıb — bağlamaq olmaz.'
+                        : `FİN uyğun gəlmir: Ferrum-da ${fin}, bu sifarişin müştərisində başqadır. Başqa sifariş nömrəsini yoxlayın.`, 'error');
+                }
+                order = found;
+                setStatus(`✓ FİN uyğundur (${fin})`, 'ok');
                 check.hidden = true;
                 upload.hidden = false;
                 upload.focus();
             },
         },
         el('div', { class: 'head' }, el('strong', { text: 'Parfumshop-a bağla' }), el('button', { type: 'button', class: 'x', text: '×', 'aria-label': 'Bağla', onclick: close })),
-        el('div', { class: 'muted', text: no ? `Müraciət: ${no}` : 'Müraciət nömrəsi sətirdə tapılmadı' }),
+        el('div', { class: 'muted', text: [no ? `Müraciət: ${no}` : 'Müraciət nömrəsi sətirdə tapılmadı', fin ? `FİN: ${fin}` : 'FİN tapılmadı'].join(' · ') }),
         el('label', { text: 'Parfumshop sifariş nömrəsi' }), input, info, status,
         el('div', { class: 'actions' }, check, upload));
 
@@ -140,7 +165,7 @@
                 if (!target) throw new Error('Sətir cədvəldə tapılmadı — səhifəni yeniləyin.');
                 const pdf = await capturePdf(target);
                 setStatus('Parfumshop-a yüklənir…');
-                const result = await chrome.runtime.sendMessage({ type: 'contract-upload', orderId: order.id, csrf: order.csrf, base64: pdf.base64, appNo: no || null });
+                const result = await chrome.runtime.sendMessage({ type: 'contract-upload', orderId: order.id, csrf: order.csrf, base64: pdf.base64, appNo: no || null, fin });
                 if (!result?.ok) throw new Error(result?.error || 'Yüklənmədi.');
                 setStatus(`✓ ${result.data.message} Fayl: ${result.data.file}`, 'ok');
                 upload.hidden = true;

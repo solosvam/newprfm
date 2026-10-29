@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Parfumshop → Ferrum",
   "short_name": "PS Ferrum",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Parfumshop sifarişinin müştəri və kredit məlumatlarını Ferrum Capital formasına doldurur, Ferrum müqaviləsini (PDF) sifarişə bağlayır.",
   "action": {
     "default_popup": "popup.html",

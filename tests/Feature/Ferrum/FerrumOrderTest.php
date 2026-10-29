@@ -121,23 +121,34 @@ class FerrumOrderTest extends TestCase
         $this->assertArrayNotHasKey('fin', $check);
 
         $pdf = fn () => UploadedFile::fake()->createWithContent('contract.pdf', "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF");
-        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => 'pfl-app-002227'])
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => 'pfl-app-002227', 'ferrum_fin' => '5abc12d'])
             ->assertOk()->assertJsonPath('file', 'PS260930000077_PFL-APP-002227.pdf');
         $this->assertSame('contracts/PS260930000077_PFL-APP-002227.pdf', DB::table('orders')->where('id', 77)->value('contract_file'));
         $this->assertTrue(Storage::disk('local')->exists('contracts/PS260930000077_PFL-APP-002227.pdf'));
         $this->assertTrue($this->getJson('/admin/ferrum/contract/77')->json('has_contract'));
 
         // yenisi köhnəni əvəz edir
-        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => 'PFL-APP-002300'])->assertOk();
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => 'PFL-APP-002300', 'ferrum_fin' => '5ABC12D'])->assertOk();
         $this->assertFalse(Storage::disk('local')->exists('contracts/PS260930000077_PFL-APP-002227.pdf'));
 
         $this->get('/admin/ferrum/orders/77/contract')->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertSame(2, DB::table('sensitive_access_logs')->where('action', 'ferrum_contract_upload')->count());
         $this->assertSame(1, DB::table('sensitive_access_logs')->where('action', 'ferrum_contract_view')->count());
 
+        // FİN: yoxlama cavabında yalnız uyğunluq (FİN-in özü yox); yükləmədə server yenidən yoxlayır
+        $this->assertTrue($this->getJson('/admin/ferrum/contract/77?fin=5abc12d')->json('fin_match'));
+        $this->assertFalse($this->getJson('/admin/ferrum/contract/77?fin=9ZZZ99Z')->json('fin_match'));
+        $this->assertStringNotContainsString('5ABC12D', $this->getJson('/admin/ferrum/contract/77?fin=x')->getContent());
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_fin' => '9ZZZ99Z'])->assertUnprocessable()->assertJsonValidationErrors('ferrum_fin');
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf()])->assertUnprocessable()->assertJsonValidationErrors('ferrum_fin');
+        DB::table('customer_credit_profiles')->where('customer_id', 5)->update(['fin' => null]);
+        $this->assertNull($this->getJson('/admin/ferrum/contract/77?fin=5ABC12D')->json('fin_match'));
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_fin' => '5ABC12D'])->assertUnprocessable();
+        DB::table('customer_credit_profiles')->where('customer_id', 5)->update(['fin' => '5abc12d']);
+
         // PDF olmayan fayl və şübhəli müraciət nömrəsi qəbul olunmur
-        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => UploadedFile::fake()->createWithContent('x.pdf', '<html>')])->assertUnprocessable();
-        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => '../x'])->assertUnprocessable();
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => UploadedFile::fake()->createWithContent('x.pdf', '<html>'), 'ferrum_fin' => '5ABC12D'])->assertUnprocessable();
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf(), 'ferrum_app_no' => '../x', 'ferrum_fin' => '5ABC12D'])->assertUnprocessable();
     }
 
     public function test_credit_status_follows_ferrum_fill_contract_and_manual_changes(): void
@@ -149,7 +160,7 @@ class FerrumOrderTest extends TestCase
         $this->assertSame(2, $status());
 
         $pdf = UploadedFile::fake()->createWithContent('c.pdf', "%PDF-1.4\n%%EOF");
-        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf, 'ferrum_app_no' => 'PFL-APP-002227'])->assertOk();
+        $this->postJson('/admin/ferrum/orders/77/contract', ['file' => $pdf, 'ferrum_app_no' => 'PFL-APP-002227', 'ferrum_fin' => '5ABC12D'])->assertOk();
         $this->assertSame(3, $status());
 
         // təkrar doldurma təsdiqlənmiş müraciəti geri qaytarmır

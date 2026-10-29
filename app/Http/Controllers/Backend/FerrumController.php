@@ -124,10 +124,13 @@ class FerrumController extends Controller
         return response()->file($path, ['Cache-Control' => 'no-store']);
     }
 
-    /** Müqavilə bağlamazdan əvvəl: operator düzgün sifarişi seçdiyini görsün (həssas məlumat yoxdur) + POST üçün CSRF token */
-    public function contractOrder(string $ref): JsonResponse
+    /**
+     * Müqavilə bağlamazdan əvvəl: operator düzgün sifarişi seçdiyini görsün + POST üçün CSRF token.
+     * ?fin= — Ferrum sətrindəki FİN: müştərinin FİN-i ilə tutuşdurulur (FİN-in özü cavabda yoxdur).
+     */
+    public function contractOrder(Request $request, string $ref): JsonResponse
     {
-        $order = $this->findInstallmentOrder($ref, ['customer']);
+        $order = $this->findInstallmentOrder($ref, ['customer.creditProfile']);
         if ($order instanceof JsonResponse) {
             return $order;
         }
@@ -139,8 +142,20 @@ class FerrumController extends Controller
             'total' => (float) $order->total,
             'has_contract' => (bool) $order->contract_file,
             'cancelled' => $order->isCancelled(),
+            'fin_match' => $this->finMatches($order, (string) $request->query('fin', '')),
             'csrf' => csrf_token(),
         ])->header('Cache-Control', 'no-store');
+    }
+
+    /** Ferrum-dakı FİN müştərinin FİN-i ilə eynidirmi; parfumshop-da FİN yoxdursa null */
+    private function finMatches(Order $order, string $ferrumFin): ?bool
+    {
+        $fin = strtoupper(trim((string) $order->customer?->creditProfile?->fin));
+        if ($fin === '') {
+            return null;
+        }
+
+        return $fin === strtoupper(trim($ferrumFin));
     }
 
     /** Ferrum-un çap etdiyi müqavilə: {sifariş}_{müraciət}.pdf adı ilə saxlanır, köhnəsi silinir */
@@ -150,7 +165,15 @@ class FerrumController extends Controller
         $data = $request->validate([
             'file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
             'ferrum_app_no' => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9-]+$/'],
-        ]);
+            'ferrum_fin' => ['required', 'string', 'max:20'],
+        ], ['ferrum_fin.required' => 'Ferrum sətrində FİN tapılmadı — müqavilə bağlanmadı.']);
+        // Başqasının müqaviləsi başqa sifarişə bağlanmasın: Ferrum-dakı FİN müştərinin FİN-i ilə eyni olmalıdır
+        $match = $this->finMatches($order->loadMissing('customer.creditProfile'), $data['ferrum_fin']);
+        if ($match !== true) {
+            throw ValidationException::withMessages(['ferrum_fin' => $match === null
+                ? 'Müştərinin FİN-i parfumshop-da yazılmayıb — müqavilə bağlanmadı.'
+                : 'Ferrum-dakı FİN bu sifarişin müştərisinin FİN-i ilə uyğun gəlmir — müqavilə bağlanmadı.']);
+        }
         if (file_get_contents($request->file('file')->getRealPath(), false, null, 0, 5) !== '%PDF-') {
             throw ValidationException::withMessages(['file' => 'Fayl PDF deyil.']);
         }
