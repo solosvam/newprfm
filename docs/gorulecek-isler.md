@@ -49,6 +49,8 @@ Son yenilənmə: 29 oktyabr 2026.
   - öz brendimizin ətirləri də stok kimi alış edilməlidir;
   - öz mallarımızın istehsalı və istehsala gedən xərclər (xammal, qablaşdırma və s.) uçotu.
 
+- [ ] **Asan sifarişlər: ləğv etmək imkanı yoxdur.** "Əlaqə saxla" / "Tamamla" ilə sifarişin içinə daxil olanda sifarişi ləğv etmək olmur —
+  ləğv düyməsi (səbəb ilə) əlavə olunmalıdır.
 - [ ] **Admin panel üçün ayrıca favicon** — saytdakından fərqli (tabda admin dərhal seçilsin). Fayllar gələndə
   `resources/views/partials/favicon.blade.php` admin layout-larında ayrıca partial ilə əvəzlənəcək.
 
