@@ -448,13 +448,13 @@ class ProductsController extends Controller
 
     public function listData(Request $request)
     {
-        $products = Product::with([
-            'brand',
-            'type',
-            'images',
-            'variants',
-            'categories',
-        ])
+        // Siyahıya lazım olanlar sorğuda hesablanır (bütün şəkil və ölçüləri yükləmək 4000+ məhsulda ağır idi)
+        $products = Product::with(['brand', 'type'])
+            ->select('products.*')
+            ->addSelect(['first_image' => \App\Models\Product\ProductImage::select('image')
+                ->whereColumn('product_id', 'products.id')->orderBy('sort_order')->orderBy('id')->limit(1)])
+            ->withCount(['categories', 'variants'])
+            ->withMin(['variants as min_price' => fn ($q) => $q->where('active', 1)], 'price')
             // Aktiv və deaktiv birlikdə gəlir: axtarış bütün katalogda aparılır, axtarış boşdursa
             // cədvəl yalnız seçilmiş bölməni göstərir (datatable.products.ajax.js)
             // Siyahının üstündəki filtrlər (brend, kateqoriya, tip, ölçü) — hamısı birlikdə tətbiq olunur
@@ -466,35 +466,18 @@ class ProductsController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        return $products->map(function ($product) {
-            $activeVariants = $product->variants
-                ->where('active', 1);
-
-            return [
-                'id' => $product->id,
-
-                'image' => $product->images
-                    ->first()?->image,
-
-                'brand' => $product->brand?->name ?? '-',
-
-                'name' => $product->name,
-
-                'type' => $product->type?->name_az ?? '-',
-
-                'variant_count' => $product->variants->count(),
-
-                'price' => $activeVariants
-                    ->sortBy('price')
-                    ->first()?->price,
-
-                'category_count' => $product->categories->count(),
-
-                'ingredient_count' => (int) $product->ingredients_count,
-
-                'active' => (int) $product->active,
-            ];
-        })->values();
+        return $products->map(fn ($product) => [
+            'id' => $product->id,
+            'image' => $product->first_image,
+            'brand' => $product->brand?->name ?? '-',
+            'name' => $product->name,
+            'type' => $product->type?->name_az ?? '-',
+            'variant_count' => (int) $product->variants_count,
+            'price' => $product->min_price,
+            'category_count' => (int) $product->categories_count,
+            'ingredient_count' => (int) $product->ingredients_count,
+            'active' => (int) $product->active,
+        ])->values();
     }
 
 

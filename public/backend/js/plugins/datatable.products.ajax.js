@@ -34,6 +34,8 @@ class ProductsAjax {
             buttons: ['copy', 'excel', 'csv', 'print'],
             info: true,
             processing: true,
+            // Yalnız görünən səhifənin sətirləri çəkilir — 4000+ məhsulun hamısı (və şəkilləri) DOM-a yığılmır
+            deferRender: true,
 
             ajax: {
                 url: jQuery('#datatableProductsAjax').data('url'),
@@ -106,8 +108,9 @@ class ProductsAjax {
 
                         return `
                             <img
-                                src="/frontend/uploads/products/${data}"
+                                src="/image/product/200/${encodeURIComponent(data)}"
                                 class="card-img rounded-xl sh-6 sw-6"
+                                loading="lazy"
                                 alt="${row.name || ''}"
                             >
                         `;
