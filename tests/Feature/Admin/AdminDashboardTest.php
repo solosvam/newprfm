@@ -32,7 +32,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('order_statuses', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->boolean('active')->default(true), $t->integer('sort_order')->default(0)]);
         Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->integer('sort_order')->default(0)]);
         DB::table('payment_methods')->insert([['id' => 1, 'code' => 'cash', 'name_az' => 'Qapıda nağd'], ['id' => 2, 'code' => 'card_online', 'name_az' => 'Kartla onlayn'], ['id' => 3, 'code' => 'birbank_installment', 'name_az' => 'Birbank taksit'], ['id' => 4, 'code' => 'installment', 'name_az' => 'Hissə-hissə ödəniş']]);
-        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->string('order_no')->nullable(), $t->string('guest_mobile')->nullable(), $t->string('payment_status')->nullable(), $t->timestamps()]);
+        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->string('order_no')->nullable(), $t->string('guest_mobile')->nullable(), $t->string('payment_status')->nullable(), $t->unsignedBigInteger('courier_id')->nullable(), $t->timestamps()]);
         Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->unsignedBigInteger('product_id')->nullable(), $t->integer('quantity')->default(1), $t->integer('cancelled_quantity')->default(0), $t->decimal('total', 12, 2)->default(0)]);
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->unsignedBigInteger('brand_id')->nullable()]);
@@ -306,6 +306,11 @@ class AdminDashboardTest extends TestCase
             $this->assertStringContainsString($text, $all);
         }
         $this->assertStringNotContainsString('994559998877', $all); // telefon siyahıda gizlidir
+
+        // kuryer təyin olunubsa adı statusun altında
+        $courier = User::forceCreate(['name' => 'Kənan', 'surname' => 'Əliyev']);
+        DB::table('orders')->where('id', $late->id)->update(['courier_id' => $courier->id]);
+        $this->assertStringContainsString('Kənan Əliyev', $get([]));
         $active = $get(['status' => 'active']);
         $this->assertStringContainsString('PS-1001', $active);
         $this->assertStringNotContainsString('PS-1003', $active);

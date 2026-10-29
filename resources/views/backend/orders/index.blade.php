@@ -136,6 +136,10 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-outline-{{ $statusColor[$order->status?->code] ?? 'secondary' }}">{{ $order->status?->name_az ?? '—' }}</span>
+                                    {{-- Kuryer təyin olunubsa — adı statusun altında --}}
+                                    @if($order->courier)
+                                        <div class="text-small text-nowrap mt-1" title="Kuryer">🚚 {{ $order->courier->full_name }}</div>
+                                    @endif
                                 </td>
                                 <td class="text-end">
                                     @if($url)<a href="{{ $url }}" class="btn btn-primary btn-sm">Aç</a>@endif

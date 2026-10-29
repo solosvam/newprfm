@@ -26,7 +26,7 @@ class OrdersController extends Controller
         $payment = (string) $request->query('payment', '');
         $search = trim((string) $request->query('q', ''));
 
-        $orders = Order::with(['status', 'customer', 'paymentMethod'])
+        $orders = Order::with(['status', 'customer', 'paymentMethod', 'courier'])
             ->withSum('itemCancellations as cancelled_amount', 'amount')
             // Müştəri tipi: bu sifarişdən əvvəl sifarişi var — təkrar (qonaqda telefonla)
             ->select('orders.*')

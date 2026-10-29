@@ -42,8 +42,6 @@ Son yenilənmə: 29 oktyabr 2026.
   "Pul ver" seçilən anbarlarda köhnə qayda qalır. "Pul vermə" seçilənlərdə kuryerə pulla bağlı heç nə görünmür, yalnız "Götürdüm" seçilir;
   "Götürdüm" seçilən kimi anbara borc yaranır (kuryer "götürdüm, pul vermədim" seçmiş kimi).
 
-- [ ] **Sifarişlər səhifəsi (admin/orders):** sifarişə kuryer təyin olunubsa, kuryerin adı görünsün.
-  (Sətrə klik, No, gizli telefon, Yeni / Təkrar müştəri — 29 oktyabrda edildi.)
 - [ ] **Hissə-hissə ödənişin statusu sifarişlə birlikdə.** Sifariş icraya götürüləndə statusu avtomatik "Təsdiq olundu" olsun;
   sifariş ləğv ediləndə hissə-hissə ödəniş də "İmtina" olsun.
   29 oktyabr: Ferrum-a doldurulanda → "Yoxlanılır", müqavilə (PDF) yüklənəndə → "Təsdiqlənib", istənilən status əl ilə dəyişir.
