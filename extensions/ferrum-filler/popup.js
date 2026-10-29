@@ -158,7 +158,8 @@ function render() {
         section('Ünvan', el('div', { class: 'fields' }, field('Ünvan', d.address?.full))),
         section('Məhsullar', el('div', { class: 'items' },
             ...d.items.map((it) => el('div', { class: 'item' },
-                el('div', {}, [it.brand, it.product].filter(Boolean).join(' '), el('small', { text: [it.size, `${it.quantity} ədəd × ${money(it.unit_price)}`].filter(Boolean).join(' · ') })),
+                el('div', {}, [it.brand, it.product].filter(Boolean).join(' '), el('small', { text: [it.size, `${it.quantity} ədəd × ${money(it.unit_price)}`,
+                    d.credit ? `Ferrum-a: ${ferrumUnitPrice(it, d)} ₼` : null].filter(Boolean).join(' · ') })),
                 el('b', { text: money(it.total) }))),
             el('div', { class: 'item' }, el('b', { text: 'Sifariş cəmi' }), el('b', { text: money(o.total) })))),
         section('Şəxsiyyət vəsiqəsi', cards),
@@ -239,6 +240,19 @@ function itemName(it) {
     return [brand, product, it.size].filter(Boolean).join(' ');
 }
 
+/*
+ * Ferrum-a yazılan vahid qiymət: müştərinin seçdiyi müddətin faizi gəlinmiş məbləğ.
+ * Kreditin ümumi məbləği (faizlə; operator kampaniya üçün dəyişibsə — razılaşdırılan) məhsullara qiymət payına görə bölünür.
+ * Yuvarlaqlaşdırma: kəsr ≥ 0.10 → yuxarı, < 0.10 → aşağı (124.10 → 125, 124.09 → 124).
+ */
+function ferrumUnitPrice(item, order) {
+    const goods = order.items.reduce((sum, it) => sum + Number(it.unit_price) * Number(it.quantity), 0);
+    const factor = order.credit?.total && goods > 0 ? Number(order.credit.total) / goods : 1;
+    const cents = Math.round(Number(item.unit_price) * factor * 100);
+    const whole = Math.floor(cents / 100);
+    return cents % 100 >= 10 ? whole + 1 : whole;
+}
+
 async function buildPlan() {
     const d = state.order;
     const c = d.customer;
@@ -264,7 +278,7 @@ async function buildPlan() {
         products: FERRUM.products,
         category: FERRUM.category,
         subcategory: FERRUM.subcategory,
-        items: d.items.map((it) => ({ name: itemName(it), price: String(Number(it.unit_price)), quantity: String(it.quantity) })),
+        items: d.items.map((it) => ({ name: itemName(it), price: String(ferrumUnitPrice(it, d)), quantity: String(it.quantity) })),
         phones,
         work: d.work?.workplace ? { name: d.work.workplace, salary: d.work.salary === null ? null : String(Number(d.work.salary)) } : null,
         document: null, // Sənədlər bölməsinə heç nə yüklənmir

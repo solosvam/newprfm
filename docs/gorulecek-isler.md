@@ -76,8 +76,6 @@ Son yenilənmə: 29 oktyabr 2026.
 ## 3. Brauzer extension-ları
 
 - [ ] **ferrum-filler** (`extensions/ferrum-filler/README.md`): real Ferrum formasında yoxlayıb tamamlamaq.
-- [ ] **ferrum-filler: Ferrum-a doldurulan qiymət.** Müştərinin aylıq seçimindən sonrakı rəqəm, yəni üzərinə faiz gəlinmiş məbləğ doldurulmalıdır.
-  Yuvarlaqlaşdırma: kəsr hissəsi 0.10 və çoxdursa yuxarı, azdırsa aşağı — məs. 124.10 → 125, 124.09 → 124.
 
 - [ ] **ferrum-filler: kredit müqaviləsini (PDF) sifarişə bağlamaq — real Ferrum-da yoxlamaq** (28 oktyabr yazıldı, v0.6.0).
   Ferrum `/pasm` cədvəlində hər sətrin çap düyməsinin yanında "Parfumshop-a bağla": sifariş nömrəsi yoxlanır, extension çap düyməsini

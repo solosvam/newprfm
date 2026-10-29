@@ -35,6 +35,8 @@ gedişat Ferrum səhifəsinin sol yuxarı küncündə görünür:
    VİP (+1%) — limit çatmayanda Ferrum müştəriyə tez zəng edir. Yeni müştəridə limit 0 → həmişə VİP.
    Limit PinKod axtarışı ilə avtomatik gəlir (0 da ola bilər). İlkin ödəniş = 0.
 4. Mallar: hər məhsul üçün modal — Gözəllik və sağlamlıq / Ətirlər, Ətir dəstləri, "Brend Məhsul Ölçü", qiymət, say.
+   Qiymət — faiz gəlinmiş vahid qiymət: kreditin ümumi məbləği (razılaşdırılan) məhsullara qiymət payına görə bölünür,
+   kəsr ≥ 0.10 olanda yuxarı, < 0.10 olanda aşağı yuvarlaqlaşdırılır (124.10 → 125, 124.09 → 124). Popup-da "Ferrum-a: …" görünür.
 5. Telefonlar: öz nömrəsi (Mobil, Sahibi "Öz", Əlaqəlilik "Öz"); yeni müştəridə əlavə 2 qohum (Qohum).
    Nömrə `(0XX)-XXX-XX-XX`.
 6. İş yeri: adı və əmək haqqı.
