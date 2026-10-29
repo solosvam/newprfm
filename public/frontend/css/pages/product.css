@@ -30,6 +30,8 @@
 .crumb a { color: var(--text-secondary); }
 h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 20px; }
+/* Cins · ətir növü — solğun görünürdü: daha qalın və kontrastlı (ölçü və düzülüş eyni) */
+.product-header .subtitle { color: var(--text); font-weight: 600; }
 
 .fav { position: absolute; top: 14px; right: 14px; color: var(--text-muted); }
 
