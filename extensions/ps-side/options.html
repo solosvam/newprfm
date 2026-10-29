@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="az">
+<head>
+    <meta charset="utf-8">
+    <title>Parfumshop Assistant — bildiriş səsləri</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<main>
+    <h1>Bildiriş səsləri</h1>
+    <p class="muted">Yeni sifariş və müraciətlər admin tabı açıq olmasa da sistem bildirişi və səslə gəlir (hər 30 saniyədən bir yoxlanır).</p>
+
+    <label class="switch"><input type="checkbox" id="enabled"> <span>Səs açıqdır</span></label>
+
+    <div class="row">
+        <label for="volume">Səs gücü</label>
+        <input type="range" id="volume" min="0.05" max="1" step="0.05">
+    </div>
+
+    <div id="types"></div>
+
+    <p class="muted" id="saved" hidden>Yadda saxlandı ✓</p>
+</main>
+<script src="sounds.js"></script>
+<script src="options.js"></script>
+</body>
+</html>

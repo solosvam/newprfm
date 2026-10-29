@@ -1,3 +1,6 @@
+// config.js — PS_SITE; notifications.js — admin bildirişləri (sistem bildirişi + səs)
+importScripts('config.js', 'notifications.js');
+
 const ALLOWED = ['https://web.whatsapp.com/', 'https://www.instagram.com/direct/', 'https://business.facebook.com/'];
 // sağ klik menyusu: WhatsApp Web və Meta Business Suite (Messenger / Instagram Direct inbox)
 const CHAT_PAGES = ['https://web.whatsapp.com/*', 'https://business.facebook.com/*'];
@@ -152,6 +155,7 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     // Chrome-un öz yenilənməsində tablar skripti manifest-dən onsuz da alır — təkrar yerləşdirmirik
     if (reason === 'install' || reason === 'update') injectWhatsapp();
     createMenus();
+    notifySetup();
 });
 chrome.runtime.onStartup.addListener(applyAll);
 
