@@ -1,5 +1,5 @@
 // config.js — PS_SITE; sounds.js — səs növləri (PS_SOUND_TYPES); notifications.js — admin bildirişləri (sistem bildirişi + səs);
-// admin-tabs.js — admin tabları rəngli "Admin" qrupunda
+// admin-tabs.js — Parfumshop tabları rəngli qruplarda: "Admin" (qırmızı) və "Sayt" (mavi)
 importScripts('config.js', 'sounds.js', 'notifications.js', 'admin-tabs.js');
 
 const ALLOWED = ['https://web.whatsapp.com/', 'https://www.instagram.com/direct/', 'https://business.facebook.com/'];
@@ -157,7 +157,7 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install' || reason === 'update') injectWhatsapp();
     createMenus();
     notifySetup();
-    groupAllAdminTabs();
+    groupAllParfumshopTabs();
 });
 chrome.runtime.onStartup.addListener(applyAll);
 
