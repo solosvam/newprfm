@@ -20,6 +20,15 @@ class ProductsAjax {
     _createInstance() {
         const _this = this;
 
+        // Server aktiv və deaktiv məhsulları birlikdə verir. Axtarış boşdursa — yalnız seçilmiş bölmə (tab),
+        // mətn yazılıbsa — bütün kataloq (status "Aktiv" sütununda görünür)
+        const tabActive = jQuery('#datatableProductsAjax').data('status') !== 'inactive';
+        jQuery.fn.dataTable.ext.search.push((settings, data, index, row) => {
+            if (settings.nTable.id !== 'datatableProductsAjax') return true;
+            if ((settings.oPreviousSearch.sSearch || '').trim() !== '') return true;
+            return (parseInt(row.active) === 1) === tabActive;
+        });
+
         this._datatable = jQuery('#datatableProductsAjax').DataTable({
             scrollX: true,
             buttons: ['copy', 'excel', 'csv', 'print'],

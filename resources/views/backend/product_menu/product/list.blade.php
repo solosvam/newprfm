@@ -152,7 +152,7 @@
 
             <div class="data-table-responsive-wrapper">
                 <table id="datatableProductsAjax" class="data-table nowrap w-100"
-                       data-url="{{ route('admin.product.list.data', ['status' => $status]) }}">
+                       data-url="{{ route('admin.product.list.data') }}" data-status="{{ $status }}">
                     <thead>
                     <tr>
                         <th class="text-muted text-small text-uppercase">#</th>

@@ -48,15 +48,13 @@ class ProductListTabsTest extends TestCase
         return $user;
     }
 
-    public function test_list_data_is_filtered_by_tab(): void
+    public function test_list_data_returns_active_and_inactive_for_catalog_wide_search(): void
     {
         $this->actingAs($this->admin(), 'admin');
 
-        $this->getJson(route('admin.product.list.data'))->assertOk()
-            ->assertJsonCount(1)->assertJsonPath('0.name', 'Sauvage');
-
-        $this->getJson(route('admin.product.list.data', ['status' => 'inactive']))->assertOk()
-            ->assertJsonCount(2)->assertJsonPath('0.name', 'Dune')->assertJsonPath('1.name', 'Fahrenheit');
+        // Tab süzgəci brauzerdədir (axtarış boşdursa); axtarış bütün katalogda — server hamısını status ilə verir
+        $rows = collect($this->getJson(route('admin.product.list.data'))->assertOk()->json());
+        $this->assertSame(['Dune' => 0, 'Fahrenheit' => 0, 'Sauvage' => 1], $rows->pluck('active', 'name')->sortKeys()->all());
     }
 
     public function test_list_data_is_filtered_by_brand_category_type_and_size(): void
@@ -82,9 +80,8 @@ class ProductListTabsTest extends TestCase
         $this->assertSame(['Chance'], $names(['category' => 1]));
         $this->assertSame(['Bleu'], $names(['type' => 2]));
         $this->assertSame(['Bleu', 'Sauvage'], $names(['size' => 2]));
-        // Filtrlər birlikdə tətbiq olunur; tab (aktiv / deaktiv) da qüvvədə qalır
+        // Filtrlər birlikdə tətbiq olunur
         $this->assertSame(['Bleu'], $names(['brand' => 2, 'size' => 2]));
-        $this->assertSame([], $names(['brand' => 2, 'status' => 'inactive']));
 
         // Səhifədə filtr siyahıları: yalnız məhsulu olan brend və ölçülər
         $this->get(route('admin.product.list'))->assertOk()->assertSee('data-product-filter="brand"', false)->assertSee('Chanel')->assertSee('100 ml');
@@ -95,10 +92,10 @@ class ProductListTabsTest extends TestCase
         $this->actingAs($this->admin(), 'admin');
 
         $this->get(route('admin.product.list'))->assertOk()
-            ->assertSee(route('admin.product.list.data', ['status' => 'active']), false)
+            ->assertSee('data-status="active"', false)
             ->assertSeeInOrder(['Aktiv', '1', 'Deaktiv', '2']);
 
         $this->get(route('admin.product.list', ['status' => 'inactive']))->assertOk()
-            ->assertSee(route('admin.product.list.data', ['status' => 'inactive']), false);
+            ->assertSee('data-status="inactive"', false);
     }
 }

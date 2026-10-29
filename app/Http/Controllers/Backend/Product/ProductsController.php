@@ -455,7 +455,8 @@ class ProductsController extends Controller
             'variants',
             'categories',
         ])
-            ->where('active', $this->listStatus($request) === 'inactive' ? '!=' : '=', 1)
+            // Aktiv və deaktiv birlikdə gəlir: axtarış bütün katalogda aparılır, axtarış boşdursa
+            // cədvəl yalnız seçilmiş bölməni göstərir (datatable.products.ajax.js)
             // Siyahının üstündəki filtrlər (brend, kateqoriya, tip, ölçü) — hamısı birlikdə tətbiq olunur
             ->when($request->filled('brand'), fn ($q) => $q->where('brand_id', (int) $request->query('brand')))
             ->when($request->filled('type'), fn ($q) => $q->where('type_id', (int) $request->query('type')))
