@@ -7,6 +7,7 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="referrer" content="no-referrer">
     <meta name="theme-color" content="#2b1f4a">
+    @include('partials.favicon')
     <title>{{ $access->warehouse->name_az }} — Parfumshop sorğuları</title>
     <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/warehouse-portal.css') }}">
 </head>

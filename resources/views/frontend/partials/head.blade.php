@@ -1,10 +1,5 @@
 <meta charset="UTF-8">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('frontend/images/favicon/apple-touch-icon.png') }}">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('frontend/images/favicon/favicon-32x32.png') }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ asset('frontend/images/favicon/favicon-16x16.png') }}">
-<link rel="icon" type="image/x-icon" href="{{ asset('frontend/images/favicon/favicon.ico') }}">
-<link rel="icon" type="image/png" sizes="192x192" href="{{ asset('frontend/images/favicon/android-chrome-192x192.png') }}">
-<link rel="icon" type="image/png" sizes="512x512" href="{{ asset('frontend/images/favicon/android-chrome-512x512.png') }}">
+@include('partials.favicon')
 <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 <meta name="theme-color" content="#2b1f4a">
 <meta name="apple-mobile-web-app-capable" content="yes">
