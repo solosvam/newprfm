@@ -66,6 +66,7 @@
 <link rel="stylesheet" href="{{ asset_v('frontend/css/main.css') }}">
 @yield('page-css')
 <link rel="stylesheet" href="{{ asset_v('frontend/css/responsive.css') }}">
+<link rel="stylesheet" href="{{ asset_v('frontend/css/components/pwa-install.css') }}">
 @if(config('services.onesignal.app_id'))
 <link rel="stylesheet" href="{{ asset_v('frontend/css/components/push-ios.css') }}">
 @endif

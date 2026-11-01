@@ -4,6 +4,7 @@
 <script defer src="{{ asset_v('frontend/js/cart-store.js') }}"></script>
 <script defer src="{{ asset_v('frontend/js/main.js') }}"></script>
 <script defer src="{{ asset_v('frontend/js/voice-search.js') }}"></script>
+<script defer src="{{ asset_v('frontend/js/pwa.js') }}"></script>
 @if(config('services.onesignal.app_id'))
     <script defer src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"></script>
     <script defer src="{{ asset_v('frontend/js/push.js') }}"></script>

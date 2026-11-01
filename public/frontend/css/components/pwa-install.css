@@ -1,0 +1,47 @@
+/* Saytı tətbiq kimi quraşdırma paneli — yalnız mobil (pwa.js) */
+.pwa-install {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 1100;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(26, 21, 32, .18);
+    padding: 14px 44px 14px 14px;
+    transform: translateY(calc(100% + 24px));
+    transition: transform .25s ease;
+}
+.pwa-install.is-open { transform: translateY(0); }
+.pwa-install__icon { flex: 0 0 48px; width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--border); }
+.pwa-install__body { min-width: 0; }
+.pwa-install__title { font-weight: 600; margin: 0 0 4px; }
+.pwa-install__text { margin: 0 0 10px; color: var(--text-secondary); font-size: 14px; line-height: 1.45; }
+.pwa-install__btn { padding: 8px 20px; }
+.pwa-install__steps { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; }
+.pwa-install__share {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    vertical-align: -4px;
+    color: var(--accent);
+}
+.pwa-install__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+body:has(.pwa-install.is-open) .advisor-fab { opacity: 0; pointer-events: none; }
