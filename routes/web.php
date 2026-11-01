@@ -117,6 +117,10 @@ Route::get('/image/product/{size}/{image}', [ProductImageController::class, 'sho
 Route::post('/popup/{popup}/event', [\App\Http\Controllers\Frontend\PopupController::class, 'event'])
     ->whereNumber('popup')->middleware('throttle:60,1')->name('popup.event');
 
+// Ana ekran (PWA): quraşdırma və açılış statistikası (pwa.js)
+Route::post('/pwa/event', [\App\Http\Controllers\Frontend\PwaController::class, 'event'])
+    ->middleware('throttle:30,1')->name('pwa.event');
+
 
 /*
 |--------------------------------------------------------------------------

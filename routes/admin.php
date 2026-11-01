@@ -26,6 +26,7 @@ use App\Http\Controllers\Backend\CartsController;
 use App\Http\Controllers\Backend\PagesController;
 use App\Http\Controllers\Backend\PopupsController;
 use App\Http\Controllers\Backend\PriceAlertsController;
+use App\Http\Controllers\Backend\PwaStatsController;
 use App\Http\Controllers\Backend\StatisticsController;
 use App\Http\Controllers\Backend\FeaturedProductsController;
 use App\Http\Controllers\Backend\ReferralsController;
@@ -204,6 +205,10 @@ Route::prefix('admin')
             Route::get('/statistics', [StatisticsController::class, 'index'])
                 ->middleware('can:statistics')
                 ->name('statistics');
+
+            Route::get('/pwa', [PwaStatsController::class, 'index'])
+                ->middleware('can:statistics')
+                ->name('pwa');
 
             Route::get('/logout', [AuthController::class, 'logout'])
                 ->name('logout');

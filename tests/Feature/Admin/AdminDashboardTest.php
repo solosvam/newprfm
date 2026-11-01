@@ -382,6 +382,29 @@ class AdminDashboardTest extends TestCase
         }
     }
 
+    public function test_pwa_page_requires_permission_and_renders(): void
+    {
+        (require database_path('migrations/2026_11_01_120000_create_pwa_events.php'))->up();
+        $this->actingAs($this->admin, 'admin')->get(route('admin.pwa'))->assertForbidden();
+
+        Permission::create(['name' => 'statistics', 'guard_name' => 'admin']);
+        $this->admin->givePermissionTo('statistics');
+        $event = fn (string $event, string $device, string $platform, array $extra = []) => DB::table('pwa_events')->insert($extra + [
+            'event' => $event, 'device_id' => $device, 'platform' => $platform, 'created_at' => now(),
+        ]);
+        $event('install', 'a1', 'android', ['model' => 'SM-S918B', 'os_version' => '14.0', 'browser' => 'Chrome', 'browser_version' => '141.0']);
+        $event('open', 'a1', 'android', ['model' => 'SM-S918B', 'os_version' => '14.0', 'browser' => 'Chrome', 'browser_version' => '141.0', 'customer_id' => 5]);
+        $event('install', 'i1', 'ios', ['screen' => '393x852', 'os_version' => '18.6', 'browser' => 'Safari', 'dark' => true]);
+        $event('install', 'old', 'ios', ['screen' => '390x844', 'created_at' => now()->subDays(60)]);
+
+        $html = $this->actingAs($this->admin->fresh(), 'admin')->get(route('admin.pwa', ['period' => '30']))->assertOk()->getContent();
+        foreach (['Ana ekran (tətbiq)', 'SM-S918B', 'iPhone 14 Pro, 15, 15 Pro, 16', 'Android 14.0', 'iOS 18.6', 'Chrome 141', 'Qaranlıq', 'cəmi: 3', '1 cihaz · 1 müştəri'] as $text) {
+            $this->assertStringContainsString($text, $html);
+        }
+        $this->assertStringNotContainsString('iPhone 12–14, 16e', $html); // 60 gün əvvəlki — dövrdən kənar
+        $this->assertStringContainsString('iPhone 12–14, 16e', $this->get(route('admin.pwa', ['period' => 'all']))->getContent());
+    }
+
     public function test_statistics_page_requires_permission_and_renders(): void
     {
         $this->actingAs($this->admin, 'admin')->get(route('admin.statistics'))->assertForbidden();

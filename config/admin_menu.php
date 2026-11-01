@@ -17,6 +17,7 @@ return [
             ['title' => 'Price listlər', 'route' => 'admin.price-lists.index', 'permission' => 'crm'],
             ['separator' => true],
             ['title' => 'Statistika', 'route' => 'admin.statistics', 'permission' => 'statistics'],
+            ['title' => 'Ana ekran (tətbiq)', 'route' => 'admin.pwa', 'permission' => 'statistics'],
         ],
     ],
     [

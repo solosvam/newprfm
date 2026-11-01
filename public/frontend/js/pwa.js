@@ -7,6 +7,9 @@
  *    Safari 26+ — Paylaş ünvan sətrindəki menyunun (≡) içindədir; köhnə Safari və Chrome — Paylaş düyməsi birbaşa görünür;
  *    Instagram / Facebook / TikTok və s. daxili brauzeri ana ekrana əlavə edə bilmir — "Safari-də açın".
  *  - Bağlanan panel həmin gün bir daha göstərilmir, ertəsi gün yenidən çıxır; tətbiq kimi açılıbsa (standalone) heç göstərilmir.
+ *  - Statistika (/pwa/event → admin "Ana ekran"): Android-də "appinstalled" = quraşdırma; ana ekrandan açılanda
+ *    sessiyada bir "open", cihazın ilk açılışı həm də quraşdırma sayılır (iPhone-da quraşdırma hadisəsi yoxdur).
+ *    Cihaz — localStorage-da təsadüfi id; model və Android versiyası Client Hints-dən (yalnız Chrome).
  * Mətnlər #app-data → pwa-dan gəlir.
  */
 (function () {
@@ -18,6 +21,55 @@
         });
     }
 
+    const store = {
+        get: (k, s = localStorage) => { try { return s.getItem(k); } catch (e) { return null; } },
+        set: (k, v, s = localStorage) => { try { s.setItem(k, v); return true; } catch (e) { return false; } },
+    };
+    function deviceId() {
+        let id = store.get('ps_pwa_device');
+        if (!id) {
+            id = window.crypto?.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+            if (!store.set('ps_pwa_device', id)) return null;
+        }
+        return id;
+    }
+    async function track(event, method) {
+        const device = deviceId();
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!device || !token) return;
+        const body = {
+            event, method, device,
+            screen: screen.width + 'x' + screen.height,
+            dpr: Math.round((window.devicePixelRatio || 1) * 10) / 10,
+            lang: (navigator.language || '').slice(0, 10),
+            dark: window.matchMedia('(prefers-color-scheme: dark)').matches,
+        };
+        try {
+            const hints = await navigator.userAgentData?.getHighEntropyValues?.(['model', 'platformVersion']);
+            if (hints) { body.model = hints.model || null; body.os = hints.platformVersion || null; }
+        } catch (e) { /* */ }
+        fetch('/pwa/event', {
+            method: 'POST', keepalive: true, credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token},
+            body: JSON.stringify(body),
+        }).catch(() => { /* statistika əsas işə mane olmamalıdır */ });
+    }
+    function markInstalled(method) {
+        if (store.get('ps_pwa_installed') === '1') return;
+        store.set('ps_pwa_installed', '1');
+        track('install', method);
+    }
+
+    const launched = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    if (launched) {
+        markInstalled('first_open');
+        if (store.get('ps_pwa_open', sessionStorage) !== '1') {
+            store.set('ps_pwa_open', '1', sessionStorage);
+            track('open');
+        }
+    }
+    window.addEventListener('appinstalled', () => markInstalled('prompt'));
+
     let t = null;
     try {
         t = JSON.parse(document.getElementById('app-data')?.textContent || '{}').pwa || null;
@@ -26,8 +78,7 @@
     }
     if (!t) return;
 
-    const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-    if (standalone) return;
+    if (launched) return;
 
     const DISMISSED_KEY = 'ps_pwa_dismissed';
     const today = () => new Date().toDateString(); // cihazın öz günü

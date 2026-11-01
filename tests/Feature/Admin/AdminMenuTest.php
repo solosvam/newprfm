@@ -22,7 +22,7 @@ class AdminMenuTest extends TestCase
 
     public function test_separator_before_statistics_is_shown_with_permission(): void
     {
-        $this->assertSame(['Sifarişlər', 'Asan sifarişlər', 'Kredit müraciətləri', 'Anbarlar', 'Price listlər', '---', 'Statistika'],
+        $this->assertSame(['Sifarişlər', 'Asan sifarişlər', 'Kredit müraciətləri', 'Anbarlar', 'Price listlər', '---', 'Statistika', 'Ana ekran (tətbiq)'],
             $this->menuFor(['crm', 'credit.menu', 'statistics']));
     }
 
@@ -33,7 +33,7 @@ class AdminMenuTest extends TestCase
 
     public function test_leading_separator_is_dropped(): void
     {
-        $this->assertSame(['Statistika'], $this->menuFor(['statistics']));
+        $this->assertSame(['Statistika', 'Ana ekran (tətbiq)'], $this->menuFor(['statistics']));
     }
 
     public function test_search_pages_skip_separators(): void
