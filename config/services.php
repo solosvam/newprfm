@@ -65,6 +65,8 @@ return [
     // Anbarlara sorğu / seçim bildirişləri (sorğu tipi Telegram olan anbarlar) — köhnə sistemin botu
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        // "@idver" yazanın ID-si / nömrəsi bu çata göndərilir (TelegramIdBot)
+        'id_chat' => env('TELEGRAM_ID_CHAT'),
     ],
 
     'parfumshop_sms' => [

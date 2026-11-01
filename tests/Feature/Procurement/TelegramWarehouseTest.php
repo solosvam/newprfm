@@ -197,6 +197,33 @@ class TelegramWarehouseTest extends TestCase
         $this->assertSame('Bu çatın ID-si: <code>-100555</code> (Aksin — Parfumshop)', $this->sentTo('sendMessage')[0]['text']);
     }
 
+    public function test_idver_sends_id_name_and_shared_phone_to_the_configured_chat(): void
+    {
+        config(['services.telegram.id_chat' => '700']);
+        $from = ['id' => 4242, 'first_name' => 'Fərid', 'last_name' => 'Quliyev', 'username' => 'farid_k'];
+        $private = ['id' => 4242, 'type' => 'private'];
+
+        $this->webhook(['message' => ['message_id' => 1, 'text' => '@idver', 'chat' => $private, 'from' => $from]])->assertOk();
+        [$report, $answer] = $this->sentTo('sendMessage');
+        $this->assertSame('700', $report['chat_id']);
+        $this->assertStringContainsString('Ad: Fərid Quliyev', $report['text']);
+        $this->assertStringContainsString('Username: @farid_k', $report['text']);
+        $this->assertStringContainsString('Telegram ID: <code>4242</code>', $report['text']);
+        $this->assertSame(4242, $answer['chat_id']);
+        $this->assertTrue($answer['reply_markup']['keyboard'][0][0]['request_contact']);
+
+        // Nömrəni paylaşdı → təyin olunmuş çata
+        $this->webhook(['message' => ['message_id' => 2, 'chat' => $private, 'from' => $from,
+            'contact' => ['phone_number' => '994501234567', 'user_id' => 4242, 'first_name' => 'Fərid']]])->assertOk();
+        $this->assertStringContainsString('Nömrə: +994501234567', $this->sentTo('sendMessage')[2]['text']);
+
+        // Başqasının kontaktı və qrupda @idver — işlənmir
+        $this->webhook(['message' => ['message_id' => 3, 'chat' => $private, 'from' => $from,
+            'contact' => ['phone_number' => '994559999999', 'user_id' => 1, 'first_name' => 'Başqa']]])->assertOk();
+        $this->webhook(['message' => ['message_id' => 4, 'text' => '/idver', 'chat' => ['id' => -100555, 'type' => 'group'], 'from' => $from]])->assertOk();
+        $this->assertCount(4, $this->sentTo('sendMessage'));
+    }
+
     public function test_unanswered_request_gets_reminders_in_working_hours_and_they_are_removed_after_the_answer(): void
     {
         $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-15 12:00', 'Asia/Baku'));
