@@ -21,20 +21,15 @@ class CourierTelegram
     {
     }
 
-    /** $from — sifarişi ötürən kuryer (operator təyin edibsə null) */
+    /** $from — sifarişi ötürən kuryer (operator təyin edibsə null). Yalnız bildiriş və "Sifarişi aç" düyməsi — sifarişin məlumatı linkdədir */
     public function orderAssigned(Order $order, User $courier, ?User $from, int $actor): ?SmsLog
     {
-        $order->loadMissing(['customer', 'address', 'items.allocations.warehouse']);
-        $collect = $order->payment_status === 'cod' ? number_format((float) $order->total, 2).' AZN' : null;
-        $warehouses = $order->items->flatMap->allocations->where('status', '!=', 'cancelled')->pluck('warehouse.name_az')->filter()->unique();
-        $text = ($from ? '🔁 <b>'.e(trim($from->full_name)).' sizə '.e($order->order_no).' sifarişini ötürdü</b>' : '📦 <b>Sizə yeni sifariş: '.e($order->order_no).'</b>')
-            ."\n\nMüştəri: ".e(trim($order->customer?->name.' '.$order->customer?->surname) ?: '—')
-            ."\nÜnvan: ".e($order->address?->shortLine() ?: '—').($order->meeting_place ? ' · '.e($order->meeting_place) : '')
-            .($warehouses->isNotEmpty() ? "\nAnbarlar: ".e($warehouses->implode(', ')) : '')
-            ."\n".($collect ? 'Müştəridən alınacaq: <b>'.$collect.'</b>' : 'Ödənilib')
-            ."\n\n".'<a href="'.e(route('admin.courier.order', $order)).'">Sifarişi aç</a>';
+        $text = $from
+            ? '🔁 <b>'.e(trim($from->full_name)).' sizə '.e($order->order_no).' sifarişini ötürdü</b>'
+            : '📦 <b>Sizə sifariş təyin olundu: '.e($order->order_no).'</b>';
+        $button = ['inline_keyboard' => [[['text' => 'Sifarişi aç', 'url' => route('admin.courier.order', $order)]]]];
 
-        return $this->send($courier, $text, 'courier_order', $order->getMorphClass(), $order->id, $actor);
+        return $this->send($courier, $text, 'courier_order', $order->getMorphClass(), $order->id, $actor, $button);
     }
 
     public function moneyCollected(MoneyMovement $movement, User $courier, User $head, int $balanceAfterCents): ?SmsLog
@@ -46,7 +41,7 @@ class CourierTelegram
         return $this->send($courier, $text, 'courier_collect', 'money_movement', $movement->id, $head->id);
     }
 
-    private function send(User $to, string $text, string $context, string $subjectType, int $subjectId, int $actor): ?SmsLog
+    private function send(User $to, string $text, string $context, string $subjectType, int $subjectId, int $actor, ?array $markup = null): ?SmsLog
     {
         $chat = trim((string) $to->telegram_id);
         if ($chat === '' || !$this->api->configured()) {
@@ -55,7 +50,8 @@ class CourierTelegram
         $log = ['context' => $context, 'channel' => 'telegram', 'subject_type' => $subjectType, 'subject_id' => $subjectId,
             'msisdn' => $chat, 'message' => Str::limit(strip_tags($text), 1000), 'created_by' => $actor ?: null, 'created_at' => now()];
         try {
-            $sent = $this->api->call('sendMessage', ['chat_id' => $chat, 'text' => $text, 'parse_mode' => 'HTML', 'disable_web_page_preview' => true]);
+            $sent = $this->api->call('sendMessage', ['chat_id' => $chat, 'text' => $text, 'parse_mode' => 'HTML', 'disable_web_page_preview' => true]
+                + ($markup ? ['reply_markup' => $markup] : []));
             $log += ['status' => SmsLog::SENT, 'provider_id' => (string) ($sent['message_id'] ?? '')];
         } catch (Throwable $e) {
             if (!app()->runningUnitTests()) {

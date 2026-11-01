@@ -6,7 +6,7 @@ namespace App\Services\Telegram;
  * Botun şəxsi çatında "@idver" (və ya /idver): yazanın Telegram ID-si və adı təyin olunmuş çata
  * (TELEGRAM_ID_CHAT — məs. adminin özü və ya qrup) göndərilir — əməkdaşın "Telegram ID" xanasını doldurmaq üçün.
  * Yazana ID-si və "📱 Nömrəmi göndər" düyməsi qayıdır: nömrəni paylaşsa, o da həmin çata gedir
- * (bot nömrəni yalnız adam özü paylaşanda görür).
+ * (bot nömrəni yalnız adam özü paylaşanda görür). Təyin olunmuş çatın sahibi özü yazıbsa — yalnız ID-si qayıdır.
  */
 class TelegramIdBot
 {
@@ -27,8 +27,8 @@ class TelegramIdBot
             if ((string) ($message['contact']['user_id'] ?? '') !== (string) ($from['id'] ?? '-')) {
                 return false;
             }
-            $this->report($from, $message['contact']['phone_number'] ?? null);
-            $this->api->call('sendMessage', ['chat_id' => $from['id'], 'text' => 'Təşəkkürlər, nömrəniz göndərildi.',
+            $sent = $this->report($from, $message['contact']['phone_number'] ?? null);
+            $this->api->call('sendMessage', ['chat_id' => $from['id'], 'text' => $sent ? 'Təşəkkürlər, nömrəniz göndərildi.' : 'Nömrə qəbul olundu.',
                 'reply_markup' => ['remove_keyboard' => true]]);
 
             return true;
@@ -49,12 +49,12 @@ class TelegramIdBot
         return true;
     }
 
-    /** Təyin olunmuş çata: ad, @username, ID, nömrə (varsa). Çat yazılmayıbsa — false */
+    /** Təyin olunmuş çata: ad, @username, ID, nömrə (varsa). Göndərilmədisə — false */
     private function report(array $from, ?string $phone): bool
     {
         $target = trim((string) config('services.telegram.id_chat'));
-        if ($target === '') {
-            return false;
+        if ($target === '' || $target === (string) ($from['id'] ?? '')) {
+            return false; // çat yoxdur və ya yazan çatın sahibidir — ID-ni onsuz da cavabda görür
         }
         $name = trim(($from['first_name'] ?? '').' '.($from['last_name'] ?? ''));
         $phone = $phone ? '+'.ltrim($phone, '+') : null;

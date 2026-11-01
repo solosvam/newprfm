@@ -245,8 +245,10 @@ class CourierFlowTest extends TestCase
         $s->transferCourier($order, $anar->fresh(), $head->id);
         $sent = \App\Models\SmsLog::where('context', 'courier_order')->sole();
         $this->assertSame(['111', 'sent', 'telegram'], [$sent->msisdn, $sent->status, $sent->channel]);
-        $this->assertStringContainsString('Rauf sizə PS1 sifarişini ötürdü', $sent->message);
-        $this->assertStringContainsString('120.00 AZN', $sent->message);
+        $this->assertSame('🔁 Rauf sizə PS1 sifarişini ötürdü', $sent->message); // yalnız bildiriş — məlumat linkdədir
+        $request = collect(\Illuminate\Support\Facades\Http::recorded())->first()[0]->data();
+        $this->assertSame('Sifarişi aç', $request['reply_markup']['inline_keyboard'][0][0]['text']);
+        $this->assertSame(route('admin.courier.order', $order), $request['reply_markup']['inline_keyboard'][0][0]['url']);
 
         // Anarda 50 AZN şirkət pulu var
         $f->record($f->system('cash'), $f->courierAccount($anar), 50, 'courier_advance', [], 7);

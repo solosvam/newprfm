@@ -222,6 +222,12 @@ class TelegramWarehouseTest extends TestCase
             'contact' => ['phone_number' => '994559999999', 'user_id' => 1, 'first_name' => 'Başqa']]])->assertOk();
         $this->webhook(['message' => ['message_id' => 4, 'text' => '/idver', 'chat' => ['id' => -100555, 'type' => 'group'], 'from' => $from]])->assertOk();
         $this->assertCount(4, $this->sentTo('sendMessage'));
+
+        // Təyin olunmuş çatın sahibi özü yazıb — yalnız ona ID-si, ayrıca hesabat yox
+        $this->webhook(['message' => ['message_id' => 5, 'text' => '@idver', 'chat' => ['id' => 700, 'type' => 'private'], 'from' => ['id' => 700, 'first_name' => 'Rufat']]])->assertOk();
+        $sent = $this->sentTo('sendMessage');
+        $this->assertCount(5, $sent);
+        $this->assertSame('Sizin Telegram ID: <code>700</code>', $sent[4]['text']);
     }
 
     public function test_unanswered_request_gets_reminders_in_working_hours_and_they_are_removed_after_the_answer(): void
