@@ -54,8 +54,8 @@
     </div></div>
 </div>
 
-<div class="modal modal-right fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-lg"><form class="modal-content" method="POST" action="{{ route('admin.stock.purchases.store') }}" data-once>
+<div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><form class="modal-content" method="POST" action="{{ route('admin.stock.purchases.store') }}" data-once>
         @csrf
         <div class="modal-header"><h5 class="modal-title" id="purchaseModalTitle">Yeni alış — hədiyyə kartları</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
         <div class="modal-body">
@@ -73,15 +73,15 @@
                 @foreach($oldLines as $i => $line)
                     <div class="border rounded-md p-3 mb-3" data-line>
                         <div class="row g-2">
-                            <div class="col-sm-3"><label class="form-label">Nominal</label>
+                            <div class="col-md-2"><label class="form-label">Nominal</label>
                                 <select name="lines[{{ $i }}][denomination]" class="form-select" data-denomination>
                                     @foreach(GiftCard::DENOMINATIONS as $d)<option value="{{ $d }}" @selected((int) ($line['denomination'] ?? 0) === $d)>{{ GiftCard::label($d) }}</option>@endforeach
                                 </select></div>
-                            <div class="col-sm-3"><label class="form-label">İlk barkod</label>
+                            <div class="col-md-4"><label class="form-label">İlk barkod</label>
                                 <input type="text" name="lines[{{ $i }}][barcode_from]" class="form-control" inputmode="numeric" maxlength="13" value="{{ $line['barcode_from'] ?? '' }}" data-from required></div>
-                            <div class="col-sm-3"><label class="form-label">Son barkod</label>
+                            <div class="col-md-4"><label class="form-label">Son barkod</label>
                                 <input type="text" name="lines[{{ $i }}][barcode_to]" class="form-control" inputmode="numeric" maxlength="13" value="{{ $line['barcode_to'] ?? '' }}" data-to required></div>
-                            <div class="col-sm-3"><label class="form-label">Bir kartın qiyməti, ₼</label>
+                            <div class="col-md-2"><label class="form-label">1 kart, ₼</label>
                                 <input type="number" step="0.01" min="0" name="lines[{{ $i }}][unit_cost]" class="form-control" value="{{ $line['unit_cost'] ?? '' }}" required></div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-2">
@@ -91,12 +91,12 @@
                     </div>
                 @endforeach
             </div>
-            <button type="button" class="btn btn-outline-primary btn-sm mb-3" id="addPurchaseLine">+ Sətir əlavə et</button>
+            <div class="mb-3"><button type="button" class="btn btn-outline-primary btn-sm" id="addPurchaseLine">+ Sətir əlavə et</button></div>
 
             <label class="form-label" for="purchaseNote">Qeyd</label>
             <textarea id="purchaseNote" name="note" class="form-control" rows="2" maxlength="500">{{ old('note') }}</textarea>
             <div class="form-text mt-3">
-                Qiymət — çap xərcidir (kartın nominalı bizim mal deyil). Barkod: 13 rəqəm, ilk 7-si nominalı göstərir —
+                "1 kart" — bir kartın çap xərcidir (kartın nominalı bizim mal deyil). Barkod: 13 rəqəm, ilk 7-si nominalı göstərir —
                 HK 100: 1000100…, HK 200: 1000200…, HK 500: 1000500…, HK 1000: 1001000…. Ödənişi Maliyyədə "Məxaric" kimi yazın.
             </div>
         </div>
