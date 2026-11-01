@@ -20,9 +20,11 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('telegram_id', 32)->nullable()->after('mobile');
-        });
+        if (!Schema::hasColumn('users', 'telegram_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('telegram_id', 32)->nullable()->after('mobile');
+            });
+        }
 
         foreach (self::PERMISSIONS as $name => $description) {
             DB::table('permissions')->updateOrInsert(
@@ -30,7 +32,9 @@ return new class extends Migration
                 ['description' => $description, 'created_at' => now(), 'updated_at' => now()]
             );
         }
-        DB::table('roles')->updateOrInsert(['name' => 'Baş kuryer', 'guard_name' => 'admin'], ['created_at' => now(), 'updated_at' => now()]);
+        // Prodda roles.description məcburidir (testdəki spatie cədvəlində sütun yoxdur)
+        $roleExtra = Schema::hasColumn('roles', 'description') ? ['description' => 'Kuryer; digər kuryerlərin balansını görür və pulunu özünə köçürür'] : [];
+        DB::table('roles')->updateOrInsert(['name' => 'Baş kuryer', 'guard_name' => 'admin'], $roleExtra + ['created_at' => now(), 'updated_at' => now()]);
         $role = DB::table('roles')->where('name', 'Baş kuryer')->where('guard_name', 'admin')->value('id');
         foreach (DB::table('permissions')->whereIn('name', array_keys(self::PERMISSIONS))->where('guard_name', 'admin')->pluck('id') as $permission) {
             DB::table('role_has_permissions')->insertOrIgnore(['permission_id' => $permission, 'role_id' => $role]);
