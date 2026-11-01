@@ -4,7 +4,7 @@
  *  - Android / Chrome: brauzerin "beforeinstallprompt" hadisəsi saxlanılır, mobil ekranda öz panelimiz
  *    "Quraşdır" düyməsi ilə göstərilir; basanda brauzerin quraşdırma pəncərəsi açılır.
  *  - iPhone / iPad: brauzer quraşdırma pəncərəsi vermir — "Paylaş → Ana ekrana əlavə et" təlimatı.
- *  - Bağlanan panel 14 gün göstərilmir; tətbiq kimi açılıbsa (standalone) heç göstərilmir.
+ *  - Bağlanan panel həmin gün bir daha göstərilmir, ertəsi gün yenidən çıxır; tətbiq kimi açılıbsa (standalone) heç göstərilmir.
  * Mətnlər #app-data → pwa-dan gəlir.
  */
 (function () {
@@ -28,9 +28,9 @@
     if (standalone) return;
 
     const DISMISSED_KEY = 'ps_pwa_dismissed';
-    const SNOOZE_MS = 14 * 24 * 3600 * 1000;
+    const today = () => new Date().toDateString(); // cihazın öz günü
     const snoozed = () => {
-        try { return Date.now() - Number(localStorage.getItem(DISMISSED_KEY) || 0) < SNOOZE_MS; } catch (e) { return false; }
+        try { return localStorage.getItem(DISMISSED_KEY) === today(); } catch (e) { return false; }
     };
     const mobile = () => window.matchMedia('(max-width: 760px)').matches;
 
@@ -47,7 +47,7 @@
     function close(remember) {
         if (!box) return;
         if (remember) {
-            try { localStorage.setItem(DISMISSED_KEY, String(Date.now())); } catch (e) { /* */ }
+            try { localStorage.setItem(DISMISSED_KEY, today()); } catch (e) { /* */ }
         }
         const node = box;
         box = null;
