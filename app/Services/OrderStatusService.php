@@ -135,10 +135,11 @@ class OrderStatusService
             .($missing->isNotEmpty() ? ' — seçilməyib: '.$missing->implode(', ') : '').'.';
     }
 
-    public function assignCourier(Order $order, User $courier, int $actor): void
+    /** @param  array<int, bool>|null  $courierPays  anbar id => kuryer anbara pul verirmi (null — dəyişmir) */
+    public function assignCourier(Order $order, User $courier, int $actor, ?array $courierPays = null): void
     {
         abort_unless(FinanceService::isCourier($courier) && $courier->active, 422, 'Seçilən əməkdaş aktiv kuryer deyil.');
-        $changed = DB::transaction(function () use ($order, $courier, $actor) {
+        $changed = DB::transaction(function () use ($order, $courier, $actor, $courierPays) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             if (($block = $this->courierBlock($locked)) !== null) {
                 throw ValidationException::withMessages(['courier' => $block]);
@@ -154,6 +155,12 @@ class OrderStatusService
                 ]);
             }
             app(FinanceService::class)->courierAccount($courier);
+            // Götürülməmiş hissələr üçün "pul ver / pul vermə" (götürülmüşün ödənişi artıq həll olunub)
+            foreach ($courierPays ?? [] as $warehouseId => $pays) {
+                OrderItemAllocation::whereIn('order_item_id', $locked->items()->select('id'))->where('warehouse_id', (int) $warehouseId)
+                    ->whereNotIn('status', [OrderItemAllocation::PICKED, ...OrderItemAllocation::SUPPLY_INACTIVE])
+                    ->update(['courier_pays' => (bool) $pays]);
+            }
 
             return $changed;
         });

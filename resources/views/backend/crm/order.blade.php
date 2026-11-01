@@ -401,6 +401,20 @@
                     @empty
                         <p class="text-muted">Aktiv kuryer yoxdur. Əməkdaşa "Kuryer" rolunu verin.</p>
                     @endforelse
+                    @if(($courierWarehouses ?? collect())->isNotEmpty())
+                        <div class="mt-4 mb-2 fw-bold">Anbarlara pulu kuryer versin?</div>
+                        @foreach($courierWarehouses as $row)
+                            <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                                <span>{{ $row['warehouse']?->name_az ?? 'Anbar' }} <span class="text-muted small">· {{ number_format($row['cost'], 2) }} AZN</span></span>
+                                <input type="hidden" name="pays[{{ $row['warehouse']?->id }}]" value="0">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" name="pays[{{ $row['warehouse']?->id }}]" value="1" @checked($row['pays'])
+                                           aria-label="{{ $row['warehouse']?->name_az }}: kuryer pul versin">
+                                </div>
+                            </div>
+                        @endforeach
+                        <div class="form-text">Söndürülən anbarda kuryer pul vermir və pulla bağlı heç nə görmür — yalnız "Götürdüm" basır, anbara borc qalır.</div>
+                    @endif
                     <div class="form-text mt-3">Sifarişin əvvəlindən sonuna eyni kuryer işləyir. Kuryer məhsul götürəndən sonra dəyişmək olmaz.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary" @disabled(empty($couriers) || $couriers->isEmpty())>Təyin et</button></div>

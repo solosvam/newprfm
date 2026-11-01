@@ -63,6 +63,7 @@ class OrderRefundTest extends TestCase
             '2026_10_06_203155_add_fee_type_to_order_item_cancellations.php',
             '2026_09_29_170000_create_payment_refund_items_table.php',
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
+            '2026_11_02_100000_add_courier_pays_to_order_item_allocations.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();
         }

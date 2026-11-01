@@ -54,9 +54,9 @@
     @if($code === 'courier_assigned')
     <h2 class="small-title">Anbarlardan götürmə</h2>
     @php
-        // Anbardan hər şey götürülüb və ödənilibsə anbar məlumatı göstərilmir — yalnız "götürüldü" sətri
+        // Anbardan hər şey götürülüb və ödənilibsə (və ya pulu şirkət ödəyir) anbar məlumatı göstərilmir — yalnız "götürüldü" sətri
         $doneGroups = $byWarehouse->filter(fn ($rows) => $rows->every(fn ($r) => $r['a']->status === Part::PICKED
-            && (int) round($r['a']->quantity * (float) $r['a']->unit_cost * 100) <= ($paid[$r['a']->id] ?? 0)));
+            && (!$r['a']->courier_pays || (int) round($r['a']->quantity * (float) $r['a']->unit_cost * 100) <= ($paid[$r['a']->id] ?? 0))));
         $pickedCount = $doneGroups->flatten(1)->sum(fn ($r) => $r['a']->quantity);
     @endphp
     @if($pickedCount)
@@ -84,7 +84,7 @@
                     $cost = (int) round($part->quantity * (float) $part->unit_cost * 100);
                     $left = $cost - ($paid[$part->id] ?? 0);
                     $canAct = true;  // bu bölmə yalnız toplama mərhələsində görünür
-                    $canPay = true;
+                    $canPay = $part->courier_pays; // "pul vermə" — kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" (anbara borc qalır)
                 @endphp
                 <div class="courier-part courier-part--{{ $part->status }}">
                     <div class="courier-part__top">
@@ -96,7 +96,8 @@
                     </div>
                     <div class="courier-part__info">
                         <span class="badge {{ ['picked' => 'bg-success', 'problem' => 'bg-danger'][$part->status] ?? 'bg-outline-primary' }}">{{ $part->label() }}</span>
-                        @if($left > 0)
+                        @if(!$canPay)
+                        @elseif($left > 0)
                             <span>Anbara ödəniş: <b>{{ $money($left) }}</b></span>
                         @else
                             <span class="text-success">Anbara ödənilib</span>
@@ -182,7 +183,7 @@
                             </div>
                             <div class="courier-part__qty">× {{ $part->quantity }}</div>
                         </div>
-                        @php $paidBack = $paid[$part->id] ?? 0; @endphp
+                        @php $paidBack = $part->courier_pays ? ($paid[$part->id] ?? 0) : 0; // pulu şirkət ödəyibsə — anbar şirkətə qaytarır @endphp
                         <form method="POST" action="{{ route('admin.courier.returned', [$order, $part->id]) }}" data-once class="mt-2">
                             @csrf
                             @if($paidBack > 0)

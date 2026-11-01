@@ -133,10 +133,14 @@ class ProcurementService
             $this->ensure($quantity > 0 && $quantity <= $item->activeQuantity() - $selected, 'Seçilən say sifarişin qalan miqdarından çoxdur.');
             $this->ensure($offer->unit_cost !== null && $quantity <= $offer->available_quantity - $warehouseSelected,
                 'Seçilən say anbarın təklif etdiyi qalan miqdardan çoxdur.');
+            // Kuryer təyinindən sonra əlavə seçim: həmin anbarın "pul ver / pul vermə" seçimi saxlanır
+            $courierPays = OrderItemAllocation::whereIn('order_item_id', $order->items()->select('id'))
+                ->where('warehouse_id', $requestItem->request->warehouse_id)->where('status', '!=', 'cancelled')->latest('id')->value('courier_pays');
             $allocation = $item->allocations()->create([
                 'warehouse_id' => $requestItem->request->warehouse_id,
                 'warehouse_offer_id' => $offer->id, 'quantity' => $quantity,
-                'unit_cost' => $offer->unit_cost, 'status' => 'selected', 'created_by' => $actor, 'idempotency_key' => $key,
+                'unit_cost' => $offer->unit_cost, 'courier_pays' => $courierPays ?? true,
+                'status' => 'selected', 'created_by' => $actor, 'idempotency_key' => $key,
             ]);
             $allocation->logs()->create(['from_status' => null, 'to_status' => 'selected', 'user_id' => $actor, 'created_at' => now()]);
             app(OrderStatusService::class)->syncSupply($order, $actor);

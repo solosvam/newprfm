@@ -86,6 +86,6 @@ class OrderItemAllocation extends Model
 
     protected function casts(): array
     {
-        return ['unit_cost' => 'decimal:2'];
+        return ['unit_cost' => 'decimal:2', 'courier_pays' => 'boolean'];
     }
 }

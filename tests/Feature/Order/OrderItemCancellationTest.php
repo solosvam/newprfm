@@ -54,6 +54,7 @@ class OrderItemCancellationTest extends TestCase
         (require database_path('migrations/2026_09_29_160000_create_order_item_cancellations_table.php'))->up();
         (require database_path('migrations/2026_10_06_203155_add_fee_type_to_order_item_cancellations.php'))->up();
         (require database_path('migrations/2026_09_29_190000_add_supply_flow_to_order_item_allocations.php'))->up();
+        (require database_path('migrations/2026_11_02_100000_add_courier_pays_to_order_item_allocations.php'))->up();
         (require database_path('migrations/2026_10_10_160000_make_order_item_cancellations_created_by_nullable.php'))->up();
 
         DB::table('order_statuses')->insert(['id' => 2, 'code' => 'courier']);

@@ -51,6 +51,7 @@ class FinanceTest extends TestCase
             '2026_09_29_150000_create_procurement_tables.php',
             '2026_09_29_150000_create_payment_items_table.php',
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
+            '2026_11_02_100000_add_courier_pays_to_order_item_allocations.php',
             '2026_09_29_200000_create_finance_tables.php',
             '2026_10_15_240000_convert_owner_to_person_accounts.php',
             '2026_10_16_100000_create_finance_categories.php',

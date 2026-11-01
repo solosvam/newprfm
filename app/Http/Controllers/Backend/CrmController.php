@@ -361,6 +361,13 @@ class CrmController extends Controller
             'startBlock' => app(OrderStatusService::class)->startBlock($order),
             'courierBlock' => app(OrderStatusService::class)->courierBlock($order),
             'couriers' => $this->couriers(),
+            // Kuryer pəncərəsi: götürülməmiş hissəsi olan anbarlar və "kuryer pul versin" seçimi
+            'courierWarehouses' => \App\Models\Procurement\OrderItemAllocation::with('warehouse')
+                ->whereIn('order_item_id', $order->items()->select('id'))
+                ->whereNotIn('status', [\App\Models\Procurement\OrderItemAllocation::PICKED, ...\App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE])
+                ->get()->groupBy('warehouse_id')
+                ->map(fn ($parts) => ['warehouse' => $parts->first()->warehouse, 'pays' => $parts->every('courier_pays'),
+                    'cost' => $parts->sum(fn ($p) => $p->quantity * (float) $p->unit_cost)])->values(),
             'requests' => $requests,
             'staff' => $staff,
             'warehouses' => \App\Models\Procurement\Warehouse::where('active', true)->orderBy('name_az')->get(),
@@ -695,10 +702,11 @@ class CrmController extends Controller
     public function assignCourier(Request $request, Customer $customer, Order $order, OrderStatusService $statuses): RedirectResponse
     {
         abort_unless($order->customer_id === $customer->id, 404);
-        $data = $request->validate(['courier_id' => ['required', 'integer']], ['courier_id.required' => 'Kuryeri seçin.']);
+        $data = $request->validate(['courier_id' => ['required', 'integer'], 'pays' => ['nullable', 'array'], 'pays.*' => ['boolean']],
+            ['courier_id.required' => 'Kuryeri seçin.']);
         $courier = $this->couriers()->firstWhere('id', (int) $data['courier_id']);
         abort_if(!$courier, 422, 'Kuryer tapılmadı.');
-        $statuses->assignCourier($order, $courier, (int) auth('admin')->id());
+        $statuses->assignCourier($order, $courier, (int) auth('admin')->id(), $data['pays'] ?? null);
 
         return back()->with('success', 'Kuryer təyin olundu: '.trim($courier->full_name).'.');
     }

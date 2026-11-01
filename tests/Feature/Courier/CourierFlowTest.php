@@ -51,6 +51,7 @@ class CourierFlowTest extends TestCase
             '2026_09_27_210000_create_payment_operations_and_saved_cards.php',
             '2026_09_29_150000_create_procurement_tables.php',
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
+            '2026_11_02_100000_add_courier_pays_to_order_item_allocations.php',
             '2026_09_29_200000_create_finance_tables.php',
             '2026_10_16_100000_create_finance_categories.php',
         ] as $file) {
@@ -280,6 +281,54 @@ class CourierFlowTest extends TestCase
 
         // Anarın öz tarixçəsində
         $this->actingAs($anar, 'admin')->get(route('admin.dashboard'))->assertOk()->assertSee('Baş kuryerə təhvil');
+    }
+
+    /** Operator anbar üçün "pul vermə" seçdi: kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" — anbara borc qalır */
+    public function test_courier_does_not_pay_the_warehouse_when_the_operator_says_so(): void
+    {
+        (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
+        Schema::table('users', fn (Blueprint $t) => [$t->boolean('active')->default(true), $t->string('telegram_id')->nullable()]);
+        // Kuryerin sifariş səhifəsi üçün
+        Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->string('mobile')->nullable(), $t->string('mobile_2')->nullable(), $t->timestamps()]);
+        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->string('city')->nullable(), $t->string('address')->nullable(), $t->boolean('on_call')->default(false), $t->timestamps()]);
+        Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable()]);
+        Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
+        Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->integer('size_id')->nullable()]);
+        Schema::table('products', fn (Blueprint $t) => $t->integer('brand_id')->nullable());
+        Schema::table('orders', fn (Blueprint $t) => [$t->unsignedBigInteger('customer_address_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->nullable(),
+            $t->string('meeting_place')->nullable(), $t->boolean('gift_wrap')->default(false)]);
+        DB::table('customers')->insert(['id' => 1, 'name' => 'Aysel', 'mobile' => '0501234567']);
+        \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
+        $courier = User::forceCreate(['name' => 'Fərid']);
+        $courier->assignRole(FinanceService::COURIER_ROLE);
+
+        // Kuryer hələ təyin olunmayıb: anbar seçilib → operator kuryeri "pul vermə" ilə təyin edir
+        $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'total' => 120, 'payment_status' => 'cod']);
+        $order->items()->create(['quantity' => 1]);
+        $wh = Warehouse::create(['name_az' => 'A']);
+        $p = app(ProcurementService::class);
+        $p->createRequests($order, [$wh->id], [$order->items()->first()->id], 7);
+        $offer = $p->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 1, 'unit_cost' => '80', 'source' => 'phone'], 7);
+        $part = $p->allocate($order, $offer->id, 1, 7);
+        $this->assertTrue($part->fresh()->courier_pays); // standart — köhnə qayda
+        app(OrderStatusService::class)->assignCourier($order->fresh(), $courier->fresh(), 7, [$wh->id => false]);
+        $this->assertFalse($part->fresh()->courier_pays);
+        $this->assertSame('courier_assigned', $this->statusCode($order));
+
+        $this->actingAs($courier, 'admin');
+        $html = $this->get(route('admin.courier.order', $order))->assertOk()->getContent();
+        $this->assertStringNotContainsString('Anbara ödəniş', $html);
+        $this->assertStringNotContainsString('ödədim', $html);
+        $this->assertStringContainsString('Götürdüm', $html);
+        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertForbidden();
+
+        $this->post(route('admin.courier.pick', [$order, $part->id]))->assertSessionHas('success');
+        $f = app(FinanceService::class);
+        $f->syncAccounts();
+        $this->assertSame('picked', $part->fresh()->status);
+        $this->assertSame(8000, $f->warehouseDebts()[$wh->id]);                         // anbara borc qalır
+        $this->assertSame(0, (int) ($f->balances()[$f->courierAccount($courier)->id] ?? 0)); // kuryerin pulu ilə əlaqəsi yoxdur
     }
 
     /** "80.00 AZN ödədim, götürdüm": məbləğ yazılmır — qalıq ödənilir və götürülür; "Ödənişsiz götürdüm" — borc qalır, sonra "ödədim" */

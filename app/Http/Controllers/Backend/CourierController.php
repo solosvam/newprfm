@@ -74,6 +74,7 @@ class CourierController extends Controller
     {
         $this->authorizeCourier($order);
         $part = OrderItemAllocation::with('warehouse')->whereIn('order_item_id', $order->items()->select('id'))->findOrFail($allocation);
+        abort_unless($part->courier_pays, 403, 'Bu anbara pulu şirkət ödəyir — yalnız "Götürdüm" seçin.');
         $left = (int) round($part->quantity * (float) $part->unit_cost * 100) - ($finance->allocationPaid([$part->id])[$part->id] ?? 0);
         $pick = $request->boolean('pick');
 
@@ -160,7 +161,7 @@ class CourierController extends Controller
         [$part, $amount] = DB::transaction(function () use ($order, $allocation, $procurement, $finance, $refunded) {
             $part = $procurement->markReturned($order, $allocation, $this->me());
             $paid = $finance->allocationPaid([$part->id])[$part->id] ?? 0;
-            if (!$refunded || $paid <= 0) {
+            if (!$refunded || $paid <= 0 || !$part->courier_pays) { // pulu şirkət ödəyibsə anbar şirkətə qaytarır
                 return [$part, 0];
             }
             $finance->record($finance->warehouseAccount($part->warehouse), $finance->courierAccount(auth('admin')->user()), $paid / 100, 'warehouse_refund', [
