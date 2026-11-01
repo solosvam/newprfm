@@ -3,7 +3,9 @@
  *  - Service worker: /OneSignalSDKWorker.js (push + offline səhifə) — OneSignal ilə eyni fayl, eyni scope.
  *  - Android / Chrome: brauzerin "beforeinstallprompt" hadisəsi saxlanılır, mobil ekranda öz panelimiz
  *    "Quraşdır" düyməsi ilə göstərilir; basanda brauzerin quraşdırma pəncərəsi açılır.
- *  - iPhone / iPad: brauzer quraşdırma pəncərəsi vermir — "Paylaş → Ana ekrana əlavə et" təlimatı.
+ *  - iPhone / iPad: brauzer quraşdırma pəncərəsi vermir — brauzerə görə təlimat (iosSteps):
+ *    Safari 26+ — Paylaş ünvan sətrindəki menyunun (≡) içindədir; köhnə Safari və Chrome — Paylaş düyməsi birbaşa görünür;
+ *    Instagram / Facebook / TikTok və s. daxili brauzeri ana ekrana əlavə edə bilmir — "Safari-də açın".
  *  - Bağlanan panel həmin gün bir daha göstərilmir, ertəsi gün yenidən çıxır; tətbiq kimi açılıbsa (standalone) heç göstərilmir.
  * Mətnlər #app-data → pwa-dan gəlir.
  */
@@ -43,6 +45,23 @@
     const share = '<svg class="pwa-install__share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
         + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/>'
         + '<path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+    const menu = '<svg class="pwa-install__share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        + 'stroke-linecap="round" aria-hidden="true"><path d="M5 7h14"/><path d="M5 12h14"/><path d="M5 17h14"/></svg>';
+
+    /** iPhone təlimatı — brauzerə görə (User-Agent) */
+    function iosGuide() {
+        if (/Instagram|FBAN|FBAV|FB_IAB|musical_ly|Bytedance|Line\/|Snapchat|Pinterest|GSA\//.test(ua)) {
+            return '<p class="pwa-install__text">' + esc(t.iosInApp) + '</p>';
+        }
+        return '<ol class="pwa-install__steps"><li>' + iosSteps().join('</li><li>') + '</li></ol>';
+    }
+    function iosSteps() {
+        const add = esc(t.iosStep2);
+        const safari = !/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/.test(ua);
+        const safariVersion = Number((ua.match(/Version\/(\d+)/) || [])[1] || 0);
+        if (safari && safariVersion >= 26) return [esc(t.iosMenu) + ' ' + menu, esc(t.iosShare) + ' ' + share, add];
+        return [esc(t.iosStep1) + ' ' + share, add];
+    }
 
     function close(remember) {
         if (!box) return;
@@ -72,7 +91,7 @@
             + (deferred
                 ? '<p class="pwa-install__text">' + esc(t.text) + '</p>'
                   + '<button type="button" class="btn btn-dark pwa-install__btn">' + esc(t.install) + '</button>'
-                : '<ol class="pwa-install__steps"><li>' + esc(t.iosStep1) + ' ' + share + '</li><li>' + esc(t.iosStep2) + '</li></ol>')
+                : iosGuide())
             + '</div>';
         box.querySelector('.pwa-install__close').addEventListener('click', () => close(true));
         box.querySelector('.pwa-install__btn')?.addEventListener('click', async () => {

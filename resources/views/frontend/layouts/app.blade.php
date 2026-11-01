@@ -53,6 +53,9 @@
             'install' => __('pwa_install'),
             'iosStep1' => __('pwa_ios_step1'),
             'iosStep2' => __('pwa_ios_step2'),
+            'iosMenu' => __('pwa_ios_menu'),
+            'iosShare' => __('pwa_ios_share'),
+            'iosInApp' => __('pwa_ios_inapp'),
             'close' => __('push_ios_close'),
         ],
         // hissə-hissə: hər müddətin minimum məbləği {ay: min} (CreditPeriod::availableFor ilə eyni) — yalnız @section('credit-rule') olan səhifələrdə
