@@ -62,6 +62,12 @@ class FinanceService
      */
     public function courierHistory(FinanceAccount $account, int $limit = 50): Collection
     {
+        return $this->courierLedger($account)->take($limit)->values();
+    }
+
+    /** Kuryerin bütün haqq-hesabı (yenisi yuxarıda) — qalıq hər sətirdə bütün tarixçə üzrə hesablanır, filtr onu dəyişmir */
+    public function courierLedger(FinanceAccount $account): Collection
+    {
         $running = 0;
 
         return MoneyMovement::with(['from', 'to', 'order', 'category', 'user'])
@@ -75,7 +81,7 @@ class FinanceService
 
                 return ['m' => $m, 'delta' => $delta, 'after' => $running, 'other' => $other];
             })
-            ->reverse()->take($limit)->values();
+            ->reverse()->values();
     }
 
     /** Kuryerlər və anbarlar üçün hesablar yoxdursa yaradılır */

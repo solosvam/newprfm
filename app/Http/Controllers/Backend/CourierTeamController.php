@@ -46,21 +46,58 @@ class CourierTeamController extends Controller
         return view('backend.courier.team', ['couriers' => $couriers, 'me' => auth('admin')->id()]);
     }
 
-    public function show(User $courier, FinanceService $finance, OrderStatusService $statuses): View
+    /**
+     * Arxiv filtri: a_from / a_to (son dəyişiklik tarixi), a_status, a_q (sifariş nömrəsi və ya müştəri);
+     * tarixçə filtri: h_from / h_to, h_kind. Səhifələr: page (arxiv), hpage (tarixçə).
+     */
+    public function show(Request $request, User $courier, FinanceService $finance, OrderStatusService $statuses): View
     {
         abort_unless(FinanceService::isCourier($courier), 404);
         $account = $finance->courierAccount($courier);
         $balance = (int) ($finance->balances()[$account->id] ?? 0);
         $me = auth('admin')->user();
+        $f = $request->validate([
+            'a_from' => ['nullable', 'date'], 'a_to' => ['nullable', 'date'], 'a_status' => ['nullable', 'string', 'max:30'], 'a_q' => ['nullable', 'string', 'max:60'],
+            'h_from' => ['nullable', 'date'], 'h_to' => ['nullable', 'date'], 'h_kind' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        // Arxiv: aktiv olmayan sifarişlər
+        $archive = Order::where('courier_id', $courier->id)
+            ->whereDoesntHave('status', fn ($q) => $q->whereIn('code', self::ACTIVE))
+            ->when($f['a_from'] ?? null, fn ($q, $d) => $q->whereDate('updated_at', '>=', $d))
+            ->when($f['a_to'] ?? null, fn ($q, $d) => $q->whereDate('updated_at', '<=', $d))
+            ->when($f['a_status'] ?? null, fn ($q, $code) => $q->whereHas('status', fn ($s) => $s->where('code', $code)))
+            ->when(trim((string) ($f['a_q'] ?? '')), function ($q, $text) {
+                $like = '%'.addcslashes($text, '%_\\').'%';
+                $q->where(fn ($w) => $w->where('order_no', 'like', $like)
+                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', $like)->orWhere('surname', 'like', $like)));
+            });
+        $archiveStatuses = \App\Models\Order\OrderStatus::whereIn('id', Order::where('courier_id', $courier->id)->select('order_status_id'))
+            ->whereNotIn('code', self::ACTIVE)->orderBy('id')->pluck('name_az', 'code');
+
+        // Tarixçə: qalıq bütün tarixçə üzrə, sonra filtr
+        $ledger = $finance->courierLedger($account);
+        $kinds = $ledger->pluck('m.kind')->unique()->mapWithKeys(fn ($k) => [$k => \App\Models\Finance\MoneyMovement::KINDS[$k][0] ?? $k])->sort();
+        $history = $ledger
+            ->when($f['h_from'] ?? null, fn ($rows, $d) => $rows->filter(fn ($r) => $r['m']->occurred_at->toDateString() >= $d))
+            ->when($f['h_to'] ?? null, fn ($rows, $d) => $rows->filter(fn ($r) => $r['m']->occurred_at->toDateString() <= $d))
+            ->when($f['h_kind'] ?? null, fn ($rows, $k) => $rows->filter(fn ($r) => $r['m']->kind === $k))
+            ->values();
+        $hPage = max(1, (int) $request->query('hpage', 1));
+        $historyPage = new \Illuminate\Pagination\LengthAwarePaginator($history->forPage($hPage, 30)->values(), $history->count(), 30, $hPage,
+            ['path' => $request->url(), 'pageName' => 'hpage', 'query' => $request->except('hpage'), 'fragment' => 'history']);
 
         return view('backend.courier.team-show', [
             'courier' => $courier,
             'balance' => $balance,
-            'history' => $finance->courierHistory($account, 100),
+            'filters' => $f,
+            'history' => $historyPage,
+            'historyTotals' => ['in' => $history->where('delta', '>', 0)->sum('delta'), 'out' => -$history->where('delta', '<', 0)->sum('delta')],
+            'kinds' => $kinds,
             'active' => $this->activeOrders($courier)->with(['status', 'customer', 'address', 'items.product', 'items.allocations.warehouse'])->orderBy('id')->get(),
-            'archive' => Order::with(['status', 'customer'])->where('courier_id', $courier->id)
-                ->whereDoesntHave('status', fn ($q) => $q->whereIn('code', self::ACTIVE))
-                ->orderByDesc('id')->paginate(20)->withQueryString(),
+            'archive' => (clone $archive)->with(['status', 'customer'])->orderByDesc('updated_at')->orderByDesc('id')->paginate(20)->withQueryString()->fragment('archive'),
+            'archiveTotals' => ['count' => (clone $archive)->count(), 'sum' => (float) (clone $archive)->sum('total')],
+            'archiveStatuses' => $archiveStatuses,
             'statuses' => $statuses,
             'canCollect' => $me->can('courier.collect') && FinanceService::isCourier($me) && $me->id !== $courier->id && $balance > 0,
         ]);

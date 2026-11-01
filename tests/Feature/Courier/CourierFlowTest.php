@@ -269,6 +269,15 @@ class CourierFlowTest extends TestCase
         $this->assertStringContainsString('Rauf balansınızdan 30.00 AZN götürdü', $collect->message);
         $this->assertStringContainsString('Qalıq: 20.00 AZN', $collect->message);
 
+        // Filtrlər: tarixçə növə görə (qalıq bütün tarixçə üzrə qalır), arxiv statusa / axtarışa görə
+        $html = $this->get(route('admin.courier.team.show', ['courier' => $anar, 'h_kind' => 'courier_advance']))->assertOk()->getContent();
+        $this->assertStringContainsString('Avans / qaytarma aldı', $html);
+        $this->assertStringNotContainsString('Baş kuryerə təhvil —', $html);
+        $this->assertStringContainsString('1 hərəkət', $html);
+        DB::table('orders')->where('id', $order->id)->update(['order_status_id' => DB::table('order_statuses')->where('code', 'delivered')->value('id')]);
+        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_status' => 'delivered', 'a_q' => 'PS1']))->assertOk()->assertSee('1 sifariş · 120.00 AZN');
+        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_q' => 'yoxdur']))->assertOk()->assertSee('Filtrə uyğun sifariş yoxdur.');
+
         // Anarın öz tarixçəsində
         $this->actingAs($anar, 'admin')->get(route('admin.dashboard'))->assertOk()->assertSee('Baş kuryerə təhvil');
     }

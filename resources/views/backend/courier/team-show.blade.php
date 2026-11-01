@@ -84,9 +84,32 @@
         <div class="card"><div class="card-body text-center text-muted py-4">Aktiv sifariş yoxdur.</div></div>
     @endforelse
 
-    <h2 class="small-title mt-5">Sifariş arxivi</h2>
+    {{-- Sifariş arxivi --}}
+    <h2 class="small-title mt-5" id="archive">Sifariş arxivi</h2>
+    @php $aActive = collect(['a_from', 'a_to', 'a_status', 'a_q'])->contains(fn ($k) => filled($filters[$k] ?? null)); @endphp
+    <details class="courier-more mb-3" @if($aActive) open @endif>
+        <summary class="btn btn-outline-primary w-100">Filter @if($aActive)<span class="badge bg-primary ms-2">aktiv</span>@endif</summary>
+        <form method="get" action="{{ route('admin.courier.team.show', $courier) }}#archive" class="courier-more__form">
+            @foreach(request()->only(['h_from', 'h_to', 'h_kind']) as $key => $value)<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endforeach
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixdən</label><input type="date" name="a_from" class="form-control" value="{{ $filters['a_from'] ?? '' }}"></div>
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixədək</label><input type="date" name="a_to" class="form-control" value="{{ $filters['a_to'] ?? '' }}"></div>
+            </div>
+            <label class="form-label text-small mb-1">Status</label>
+            <select name="a_status" class="form-select mb-2">
+                <option value="">Hamısı</option>
+                @foreach($archiveStatuses as $code => $name)<option value="{{ $code }}" @selected(($filters['a_status'] ?? '') === $code)>{{ $name }}</option>@endforeach
+            </select>
+            <input type="search" name="a_q" class="form-control mb-2" maxlength="60" placeholder="Sifariş nömrəsi və ya müştəri" value="{{ $filters['a_q'] ?? '' }}">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                @if($aActive)<a href="{{ route('admin.courier.team.show', array_merge(['courier' => $courier], request()->only(['h_from', 'h_to', 'h_kind']))) }}#archive" class="btn btn-outline-secondary">Təmizlə</a>@endif
+            </div>
+        </form>
+    </details>
+    <div class="text-muted text-small mb-2">{{ $archiveTotals['count'] }} sifariş · {{ number_format($archiveTotals['sum'], 2) }} AZN</div>
     @if($archive->isEmpty())
-        <div class="card"><div class="card-body text-center text-muted py-4">Arxiv boşdur.</div></div>
+        <div class="card"><div class="card-body text-center text-muted py-4">{{ $aActive ? 'Filtrə uyğun sifariş yoxdur.' : 'Arxiv boşdur.' }}</div></div>
     @else
         <div class="card"><div class="card-body courier-history">
             @foreach($archive as $order)
@@ -102,7 +125,30 @@
         <div class="mt-3">@include('backend._layout.simple-pagination', ['paginator' => $archive])</div>
     @endif
 
-    <h2 class="small-title mt-5">Haqq-hesab tarixçəsi</h2>
+    {{-- Haqq-hesab tarixçəsi: qalıq bütün tarixçə üzrədir, filtr yalnız sətirləri seçir --}}
+    <h2 class="small-title mt-5" id="history">Haqq-hesab tarixçəsi</h2>
+    @php $hActive = collect(['h_from', 'h_to', 'h_kind'])->contains(fn ($k) => filled($filters[$k] ?? null)); @endphp
+    <details class="courier-more mb-3" @if($hActive) open @endif>
+        <summary class="btn btn-outline-primary w-100">Filter @if($hActive)<span class="badge bg-primary ms-2">aktiv</span>@endif</summary>
+        <form method="get" action="{{ route('admin.courier.team.show', $courier) }}#history" class="courier-more__form">
+            @foreach(request()->only(['a_from', 'a_to', 'a_status', 'a_q']) as $key => $value)<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endforeach
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixdən</label><input type="date" name="h_from" class="form-control" value="{{ $filters['h_from'] ?? '' }}"></div>
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixədək</label><input type="date" name="h_to" class="form-control" value="{{ $filters['h_to'] ?? '' }}"></div>
+            </div>
+            <label class="form-label text-small mb-1">Növ</label>
+            <select name="h_kind" class="form-select mb-2">
+                <option value="">Hamısı</option>
+                @foreach($kinds as $code => $name)<option value="{{ $code }}" @selected(($filters['h_kind'] ?? '') === $code)>{{ $name }}</option>@endforeach
+            </select>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                @if($hActive)<a href="{{ route('admin.courier.team.show', array_merge(['courier' => $courier], request()->only(['a_from', 'a_to', 'a_status', 'a_q']))) }}#history" class="btn btn-outline-secondary">Təmizlə</a>@endif
+            </div>
+        </form>
+    </details>
+    <div class="text-muted text-small mb-2">{{ $history->total() }} hərəkət · <span class="text-warning">+{{ $money($historyTotals['in']) }}</span> · <span class="text-success">−{{ $money($historyTotals['out']) }}</span></div>
     @include('backend.courier._history', ['history' => $history, 'self' => false])
+    <div class="mt-3">@include('backend._layout.simple-pagination', ['paginator' => $history])</div>
 </div>
 @endsection
