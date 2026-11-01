@@ -47,6 +47,8 @@ class UserController extends Controller
         $admin->surname = $request->surname;
         $admin->email = $request->email;
         $admin->mobile = $request->mobile;
+        // Şəxsi Telegram çatının id-si (rəqəm): bota /start yazanda bot göstərir — kuryer bildirişləri
+        $admin->telegram_id = preg_match('/^\d{3,20}$/', trim((string) $request->telegram_id)) ? trim((string) $request->telegram_id) : null;
         $admin->active = $request->active;
         if($request->password){
             $admin->password = Hash::make($request->password);

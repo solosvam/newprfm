@@ -137,8 +137,8 @@ class OrderStatusService
 
     public function assignCourier(Order $order, User $courier, int $actor): void
     {
-        abort_unless($courier->hasRole(FinanceService::COURIER_ROLE, 'admin') && $courier->active, 422, 'Seçilən əməkdaş aktiv kuryer deyil.');
-        DB::transaction(function () use ($order, $courier, $actor) {
+        abort_unless(FinanceService::isCourier($courier) && $courier->active, 422, 'Seçilən əməkdaş aktiv kuryer deyil.');
+        $changed = DB::transaction(function () use ($order, $courier, $actor) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             if (($block = $this->courierBlock($locked)) !== null) {
                 throw ValidationException::withMessages(['courier' => $block]);
@@ -154,7 +154,18 @@ class OrderStatusService
                 ]);
             }
             app(FinanceService::class)->courierAccount($courier);
+
+            return $changed;
         });
+        if ($changed) {
+            $this->notifyCourier($order, $courier, null, $actor);
+        }
+    }
+
+    /** Kuryerə Telegram: sifariş ona təhkim olundu (xəta əməliyyatı pozmur) */
+    private function notifyCourier(Order $order, User $courier, ?User $from, int $actor): void
+    {
+        rescue(fn () => app(\App\Services\Telegram\CourierTelegram::class)->orderAssigned($order->fresh(), $courier, $from, $actor), null, !app()->runningUnitTests());
     }
 
     /*
@@ -249,14 +260,10 @@ class OrderStatusService
         });
     }
 
-    /** Aktiv kuryerlər (rol yoxdursa — boş) */
+    /** Aktiv kuryerlər, baş kuryer daxil (rol yoxdursa — boş) */
     public function couriers()
     {
-        try {
-            return User::role(FinanceService::COURIER_ROLE, 'admin')->where('active', 1)->orderBy('name')->get();
-        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
-            return collect();
-        }
+        return FinanceService::courierUsers()->where('active', 1)->orderBy('name')->get();
     }
 
     /** Kuryerin sifarişi başqa kuryerə ötürməsinə mane olan səbəb (yoxdursa null) */
@@ -275,11 +282,11 @@ class OrderStatusService
     /** Kuryer öz sifarişini başqa kuryerə ötürür (məs. anbarlar ona uzaqdır) — toplamadan əvvəl */
     public function transferCourier(Order $order, User $to, int $actor): void
     {
-        DB::transaction(function () use ($order, $to, $actor) {
+        $from = DB::transaction(function () use ($order, $to, $actor) {
             $locked = $this->courierOrder($order, $actor);
             $this->ensure(($block = $this->transferBlock($locked)) === null, (string) $block);
             $this->ensure($to->id !== $actor, 'Başqa kuryer seçin.');
-            $this->ensure($to->active && $to->hasRole(FinanceService::COURIER_ROLE, 'admin'), 'Seçilən əməkdaş aktiv kuryer deyil.');
+            $this->ensure($to->active && FinanceService::isCourier($to), 'Seçilən əməkdaş aktiv kuryer deyil.');
             $from = User::find($actor);
             $locked->forceFill(['courier_id' => $to->id])->save();
             DB::table('order_status_logs')->insert([
@@ -288,7 +295,10 @@ class OrderStatusService
                 'created_at' => now(), 'updated_at' => now(),
             ]);
             app(FinanceService::class)->courierAccount($to);
+
+            return $from;
         });
+        $this->notifyCourier($order, $to, $from, $actor);
     }
 
     /** Sifariş kilidlənir; yalnız ona təyin olunmuş kuryer */

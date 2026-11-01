@@ -34,6 +34,8 @@ class SmsLog extends Model
     /** Şablonsuz göndərilən SMS-lərin konteksti */
     public const CONTEXTS = [
         'otp' => 'Təsdiq kodu (OTP)',
+        'courier_order' => 'Kuryerə sifariş təhkim olundu (Telegram)',
+        'courier_collect' => 'Kuryerin pulu baş kuryerə köçürüldü (Telegram)',
     ];
 
     public $timestamps = false;

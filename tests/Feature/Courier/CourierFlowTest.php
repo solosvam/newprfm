@@ -213,6 +213,64 @@ class CourierFlowTest extends TestCase
         $this->assertStringContainsString('götürülüb', (string) $s->transferBlock($order->fresh()));
     }
 
+    /** Baş kuryer: kuryerlər səhifəsi, kuryerin pulunu özünə köçürmə; kuryerə Telegram — sifariş ötürüləndə və pul götürüləndə */
+    public function test_head_courier_sees_team_collects_money_and_couriers_get_telegram(): void
+    {
+        (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
+        Schema::table('users', fn (Blueprint $t) => $t->boolean('active')->default(true));
+        Schema::table('permissions', fn (Blueprint $t) => $t->string('description')->nullable());
+        (require database_path('migrations/2026_09_21_150000_create_sms_templates_table.php'))->up();
+        (require database_path('migrations/2026_09_30_100000_create_sms_logs_and_warehouse_sms.php'))->up();
+        (require database_path('migrations/2026_10_10_180000_add_delivery_status_to_sms_logs.php'))->up();
+        (require database_path('migrations/2026_10_15_160000_create_telegram_messages.php'))->up();
+        (require database_path('migrations/2026_11_01_140000_head_courier.php'))->up();
+        Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->timestamps()]);
+        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->string('city')->nullable(), $t->string('address')->nullable(), $t->boolean('on_call')->default(false), $t->timestamps()]);
+        Schema::table('orders', fn (Blueprint $t) => [$t->unsignedBigInteger('customer_address_id')->nullable(), $t->string('meeting_place')->nullable(), $t->boolean('gift_wrap')->default(false)]);
+        DB::table('customers')->insert(['id' => 1, 'name' => 'Aysel', 'surname' => 'Quliyeva']);
+        \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
+        config(['services.telegram.bot_token' => 'test-token']);
+        \Illuminate\Support\Facades\Http::fake(['api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => ['message_id' => 5]])]);
+
+        $anar = User::forceCreate(['name' => 'Anar', 'telegram_id' => '111']);
+        $anar->assignRole(FinanceService::COURIER_ROLE);
+        $head = User::forceCreate(['name' => 'Rauf']);
+        $head->assignRole(FinanceService::HEAD_COURIER_ROLE);
+        $s = app(OrderStatusService::class);
+        $f = app(FinanceService::class);
+
+        // Baş kuryer də kuryerdir: siyahıda var, sifarişi Anara ötürür → Anara Telegram
+        $this->assertEqualsCanonicalizing(['Anar', 'Rauf'], $s->couriers()->pluck('name')->all());
+        [$order] = $this->assigned($head);
+        $s->transferCourier($order, $anar->fresh(), $head->id);
+        $sent = \App\Models\SmsLog::where('context', 'courier_order')->sole();
+        $this->assertSame(['111', 'sent', 'telegram'], [$sent->msisdn, $sent->status, $sent->channel]);
+        $this->assertStringContainsString('Rauf sizə PS1 sifarişini ötürdü', $sent->message);
+        $this->assertStringContainsString('120.00 AZN', $sent->message);
+
+        // Anarda 50 AZN şirkət pulu var
+        $f->record($f->system('cash'), $f->courierAccount($anar), 50, 'courier_advance', [], 7);
+
+        $this->actingAs($anar, 'admin')->get(route('admin.courier.team'))->assertForbidden(); // adi kuryer
+        $this->actingAs($head, 'admin')->get(route('admin.courier.team'))->assertOk()->assertSee('Anar')->assertSee('50.00 AZN');
+        $this->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('Hesabıma köçür')->assertSee('PS1');
+
+        $this->post(route('admin.courier.team.collect', $anar), ['amount' => 60])->assertSessionHasErrors('amount');
+        $this->post(route('admin.courier.team.collect', $head), ['amount' => 1])->assertSessionHasErrors('amount'); // özündən
+        $this->post(route('admin.courier.team.collect', $anar), ['amount' => 30, 'note' => 'axşam'])->assertSessionHas('success');
+
+        $balances = $f->balances();
+        $this->assertSame(2000, (int) $balances[$f->courierAccount($anar)->id]);
+        $this->assertSame(3000, (int) $balances[$f->courierAccount($head)->id]);
+        $this->assertSame('courier_collect', \App\Models\Finance\MoneyMovement::latest('id')->value('kind'));
+        $collect = \App\Models\SmsLog::where('context', 'courier_collect')->sole();
+        $this->assertStringContainsString('Rauf balansınızdan 30.00 AZN götürdü', $collect->message);
+        $this->assertStringContainsString('Qalıq: 20.00 AZN', $collect->message);
+
+        // Anarın öz tarixçəsində
+        $this->actingAs($anar, 'admin')->get(route('admin.dashboard'))->assertOk()->assertSee('Baş kuryerə təhvil');
+    }
+
     /** "80.00 AZN ödədim, götürdüm": məbləğ yazılmır — qalıq ödənilir və götürülür; "Ödənişsiz götürdüm" — borc qalır, sonra "ödədim" */
     public function test_courier_pays_the_remaining_cost_and_picks_in_one_step(): void
     {

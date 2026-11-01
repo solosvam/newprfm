@@ -189,7 +189,7 @@ class CourierController extends Controller
     private function authorizeCourier(Order $order): void
     {
         $user = auth('admin')->user();
-        abort_unless($user?->hasRole(FinanceService::COURIER_ROLE, 'admin') && (int) $order->courier_id === (int) $user->id, 403, 'Bu sifariş sizə təyin olunmayıb.');
+        abort_unless(FinanceService::isCourier($user) && (int) $order->courier_id === (int) $user->id, 403, 'Bu sifariş sizə təyin olunmayıb.');
     }
 
     private function me(): int

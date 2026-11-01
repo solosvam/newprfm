@@ -25,6 +25,8 @@ class MoneyMovement extends Model
         'warehouse_refund' => ['Anbar pulu qaytardı', ['warehouse'], ['courier', 'cash', 'card', 'bank', 'person']],
         'courier_handover' => ['Kuryer pulu təhvil verdi', ['courier'], ['cash']], // kuryer yalnız nağd verir
         'courier_advance' => ['Kuryerə avans / qaytarma', ['cash', 'card', 'bank'], ['courier']],
+        // Baş kuryer kuryerin balansındakı pulu özünə köçürür (courier.collect) — şirkətin pulu kuryerdən kuryerə keçir
+        'courier_collect' => ['Baş kuryerə təhvil', ['courier'], ['courier']],
         // Sistem (avtomatik) — əl ilə seçilmir
         'customer_payment' => ['Müştəri ödənişi', ['customer'], ['online', 'courier', 'cash']],
         'customer_refund' => ['Müştəriyə qaytarma', ['online', 'courier', 'cash'], ['customer']],
@@ -35,13 +37,13 @@ class MoneyMovement extends Model
     public const KIND_CATEGORY = [
         'customer_payment' => 'sale', 'customer_refund' => 'customer_refund',
         'warehouse_payment' => 'warehouse', 'warehouse_refund' => 'warehouse_refund',
-        'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer',
+        'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer', 'courier_collect' => 'transfer',
     ];
 
     /** İstiqamət qrupları: şirkətə gələn, şirkətdən çıxan, daxili / şəxslə köçürmə */
     public const IN_KINDS = ['income', 'customer_payment', 'warehouse_refund'];
     public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment'];
-    public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover'];
+    public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover', 'courier_collect'];
 
     /** "Yeni əməliyyat" pəncərəsi: Məxaric / Mədaxil / Köçürmə (kuryerə köçürmə — avans, kuryerdən — təhvil) */
     public const MANUAL = ['outgo', 'income', 'transfer', 'courier_advance', 'courier_handover'];

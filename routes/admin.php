@@ -100,6 +100,14 @@ Route::prefix('admin')
                     Route::post('/order/{order}/transfer', 'transfer')->name('transfer');
                 });
 
+            // Baş kuryer: bütün kuryerlər — balans, haqq-hesab, sifarişlər; pulu özünə köçürmə
+            Route::controller(\App\Http\Controllers\Backend\CourierTeamController::class)
+                ->prefix('courier/team')->name('courier.team')->middleware(['can:courier.team', 'throttle:60,1'])->group(function () {
+                    Route::get('/', 'index');
+                    Route::get('/{courier}', 'show')->whereNumber('courier')->name('.show');
+                    Route::post('/{courier}/collect', 'collect')->whereNumber('courier')->middleware('can:courier.collect')->name('.collect');
+                });
+
             // Ferrum Chrome extension-u (extensions/ferrum-filler): sifariş + kredit məlumatları JSON
             Route::middleware(['can:ferrum', 'throttle:30,1'])->controller(FerrumController::class)
                 ->prefix('ferrum')->name('ferrum.')->group(function () {

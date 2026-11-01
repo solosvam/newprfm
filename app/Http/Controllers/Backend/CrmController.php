@@ -703,14 +703,10 @@ class CrmController extends Controller
         return back()->with('success', 'Kuryer təyin olundu: '.trim($courier->full_name).'.');
     }
 
-    /** "Kuryer" rolundakı aktiv əməkdaşlar */
+    /** Aktiv kuryerlər (baş kuryer daxil) */
     private function couriers()
     {
-        try {
-            return \App\Models\User::role(\App\Services\FinanceService::COURIER_ROLE, 'admin')->where('active', 1)->orderBy('name')->get();
-        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
-            return collect();
-        }
+        return \App\Services\FinanceService::courierUsers()->where('active', 1)->orderBy('name')->get();
     }
 
     /** Ödənişlər → Geri qaytarmalar → "Karta qaytar": ləğv olunan məhsulun pulu Birbank ilə qaytarılır */

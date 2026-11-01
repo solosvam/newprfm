@@ -26,6 +26,20 @@ use Illuminate\Validation\ValidationException;
 class FinanceService
 {
     public const COURIER_ROLE = 'Kuryer';
+    /** Baş kuryer də kuryerdir (öz sifarişləri), üstəlik digər kuryerləri görür və pulunu özünə köçürür (courier.team, courier.collect) */
+    public const HEAD_COURIER_ROLE = 'Baş kuryer';
+    public const COURIER_ROLES = [self::COURIER_ROLE, self::HEAD_COURIER_ROLE];
+
+    public static function isCourier(?User $user): bool
+    {
+        return (bool) $user?->hasAnyRole(self::COURIER_ROLES);
+    }
+
+    /** Kuryer rollarındakı əməkdaşlar (rol yaradılmayıbsa — boş, xəta yox) */
+    public static function courierUsers()
+    {
+        return User::whereHas('roles', fn ($q) => $q->whereIn('name', self::COURIER_ROLES)->where('guard_name', 'admin'));
+    }
 
     public function system(string $code): FinanceAccount
     {
@@ -42,14 +56,32 @@ class FinanceService
         return FinanceAccount::firstOrCreate(['type' => 'warehouse', 'warehouse_id' => $warehouse->id], ['name' => $warehouse->name_az]);
     }
 
-    /** "Kuryer" rolundakı əməkdaşlar və anbarlar üçün hesablar yoxdursa yaradılır */
+    /**
+     * Kuryerin haqq-hesab tarixçəsi: hər hərəkət kuryer baxımından (+ ona gələn, − ondan çıxan)
+     * və ondan sonrakı qalıq. Son $limit qeyd, yenisi yuxarıda.
+     */
+    public function courierHistory(FinanceAccount $account, int $limit = 50): Collection
+    {
+        $running = 0;
+
+        return MoneyMovement::with(['from', 'to', 'order', 'category', 'user'])
+            ->where(fn ($q) => $q->where('from_account_id', $account->id)->orWhere('to_account_id', $account->id))
+            ->orderBy('occurred_at')->orderBy('id')->get()
+            ->map(function ($m) use ($account, &$running) {
+                $cents = (int) round((float) $m->amount * 100);
+                $delta = $m->to_account_id === $account->id ? $cents : -$cents;
+                $running += $delta;
+                $other = $m->to_account_id === $account->id ? $m->from : $m->to;
+
+                return ['m' => $m, 'delta' => $delta, 'after' => $running, 'other' => $other];
+            })
+            ->reverse()->take($limit)->values();
+    }
+
+    /** Kuryerlər və anbarlar üçün hesablar yoxdursa yaradılır */
     public function syncAccounts(): void
     {
-        try {
-            User::role(self::COURIER_ROLE, 'admin')->get()->each(fn ($u) => $this->courierAccount($u));
-        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
-            // Rol hələ yaradılmayıb
-        }
+        self::courierUsers()->get()->each(fn ($u) => $this->courierAccount($u));
         Warehouse::all()->each(fn ($w) => $this->warehouseAccount($w));
     }
 

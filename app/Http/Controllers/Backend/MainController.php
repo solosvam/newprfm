@@ -14,7 +14,7 @@ class MainController extends Controller
         $user = auth('admin')->user();
         $courier = null;
         $dashboard = null;
-        if ($user?->hasRole(\App\Services\FinanceService::COURIER_ROLE, 'admin')) {
+        if (\App\Services\FinanceService::isCourier($user)) {
             $finance = app(\App\Services\FinanceService::class);
             $account = $finance->courierAccount($user);
             $orders = \App\Models\Order\Order::with(['status', 'address', 'customer', 'items.allocations', 'items.product'])
@@ -29,7 +29,7 @@ class MainController extends Controller
                 'deliveredToday' => \App\Models\Order\Order::where('courier_id', $user->id)
                     ->whereHas('status', fn ($q) => $q->where('code', 'delivered'))->whereDate('updated_at', today())->count(),
                 'statuses' => app(\App\Services\OrderStatusService::class),
-                'history' => $this->courierHistory($account),
+                'history' => $finance->courierHistory($account),
             ];
         } else {
             // Əməliyyat paneli: nəyə baxmaq lazımdır. Ətraflı analitika — Statistika səhifəsində (StatisticsController)
@@ -54,25 +54,6 @@ class MainController extends Controller
         return view('backend.pages.index', compact('courier', 'dashboard'));
     }
 
-    /**
-     * Kuryerin haqq-hesab tarixçəsi: hər hərəkət kuryer baxımından (+ ona gələn, − ondan çıxan)
-     * və ondan sonrakı qalıq. Son 50 qeyd, yenisi yuxarıda.
-     */
-    private function courierHistory(\App\Models\Finance\FinanceAccount $account)
-    {
-        $running = 0;
-        return \App\Models\Finance\MoneyMovement::with(['from', 'to', 'order', 'category'])
-            ->where(fn ($q) => $q->where('from_account_id', $account->id)->orWhere('to_account_id', $account->id))
-            ->orderBy('occurred_at')->orderBy('id')->get()
-            ->map(function ($m) use ($account, &$running) {
-                $cents = (int) round((float) $m->amount * 100);
-                $delta = $m->to_account_id === $account->id ? $cents : -$cents;
-                $running += $delta;
-                $other = $m->to_account_id === $account->id ? $m->from : $m->to;
-                return ['m' => $m, 'delta' => $delta, 'after' => $running, 'other' => $other];
-            })
-            ->reverse()->take(50)->values();
-    }
 
     public function shortcuts()
     {
