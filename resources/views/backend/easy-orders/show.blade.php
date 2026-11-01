@@ -136,7 +136,7 @@
                     @csrf
                     @method('DELETE')
                     <span class="text-muted small">Müştəri sifarişdən imtina edibsə və ya sifariş səhvdirsə.</span>
-                    <button class="btn btn-outline-danger text-nowrap" type="submit">Sifarişi ləğv et</button>
+                    <button class="btn btn-danger text-nowrap" type="submit">Sifarişi ləğv et</button>
                 </form>
             </div></div>
         </div>
