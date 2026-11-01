@@ -52,6 +52,15 @@ return [
                     ['title' => 'Notlar', 'route' => 'admin.ingredient.list', 'permission' => 'ingredient.menu'],
                 ],
             ],
+            ['separator' => true],
+            [
+                'title'    => 'Stok',
+                'id'       => 'stockMenu',
+                'children' => [
+                    ['title' => 'Alışlar', 'route' => 'admin.stock.purchases', 'permission' => 'stock'],
+                    ['title' => 'Hədiyyə kartları', 'route' => 'admin.stock.cards', 'permission' => 'stock'],
+                ],
+            ],
         ],
     ],
     [
@@ -65,15 +74,6 @@ return [
             ['title' => 'Vitrin (Populyar)', 'route' => 'admin.featured.index', 'permission' => 'site.featured'],
             ['title' => 'Məlumat səhifələri', 'route' => 'admin.pages.index', 'permission' => 'site.pages'],
             ['title' => 'FAQ', 'route' => 'admin.faq.list', 'permission' => 'site.faq'],
-        ],
-    ],
-    [
-        'title'    => 'Stok',
-        'icon'     => 'boxes',
-        'id'       => 'stockMenu',
-        'children' => [
-            ['title' => 'Alışlar', 'route' => 'admin.stock.purchases', 'permission' => 'stock'],
-            ['title' => 'Hədiyyə kartları', 'route' => 'admin.stock.cards', 'permission' => 'stock'],
         ],
     ],
     [
