@@ -296,6 +296,11 @@
             els.earnedBonusText.textContent = String(t.earnedBonus || '').replace(':amount', money(earned));
         }
 
+        // Birbank taksit faizsizdir: aylıq = yekun / ay
+        document.querySelectorAll('[data-birbank-monthly]').forEach(el => {
+            el.textContent = state.total > 0 ? money(state.total / Number(el.dataset.months)) + (t.perMonth || '') : '—';
+        });
+
         syncBonus();
         updateCredit();
     }

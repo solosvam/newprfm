@@ -107,7 +107,10 @@
                                 @foreach([2, 3, 6] as $months)
                                     <label class="installment__period">
                                         <input type="radio" name="birbank_installment_months" value="{{ $months }}">
-                                        <span class="installment__months">{{ $months }} ay</span>
+                                        <span class="installment__months">{{ $months }} {{ __('checkout_months') }}</span>
+                                        {{-- faizsiz: aylıq = yekun / ay (checkout.js) --}}
+                                        <span class="installment__monthly" data-birbank-monthly data-months="{{ $months }}">—</span>
+                                        <span class="installment__rate">{{ __('checkout_credit_no_interest') }}</span>
                                     </label>
                                 @endforeach
                             </div>
