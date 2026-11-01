@@ -3,14 +3,15 @@
  * Ayrıca sw.js yoxdur — eyni scope-da ("/") iki service worker ola bilməz, ikincisi push-u sındırardı.
  * Qeydiyyatı OneSignal (push.js) və pwa.js eyni ünvanla edir — biri digərini əvəz etmir.
  * Səhifələr keşlənmir (qiymət, stok, səbət həmişə serverdən): yalnız naviqasiya alınmayanda offline.html.
+ * offline.html başqa fayla müraciət etmir (loqo içindədir) — dəyişəndə PS_CACHE versiyasını artırın.
  */
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
 
-const PS_CACHE = 'ps-pwa-v1';
+const PS_CACHE = 'ps-pwa-v2';
 const PS_OFFLINE = '/offline.html';
 
 self.addEventListener('install', (event) => {
-    event.waitUntil(caches.open(PS_CACHE).then((cache) => cache.addAll([PS_OFFLINE, '/pwa/logo.svg'])));
+    event.waitUntil(caches.open(PS_CACHE).then((cache) => cache.addAll([PS_OFFLINE])));
     self.skipWaiting();
 });
 
