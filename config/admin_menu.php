@@ -68,6 +68,15 @@ return [
         ],
     ],
     [
+        'title'    => 'Stok',
+        'icon'     => 'boxes',
+        'id'       => 'stockMenu',
+        'children' => [
+            ['title' => 'Alışlar', 'route' => 'admin.stock.purchases', 'permission' => 'stock'],
+            ['title' => 'Hədiyyə kartları', 'route' => 'admin.stock.cards', 'permission' => 'stock'],
+        ],
+    ],
+    [
         'title'    => 'Maliyyə',
         'icon'     => 'wallet',
         'id'       => 'financeMenu',

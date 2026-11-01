@@ -214,6 +214,17 @@ Route::prefix('admin')
                 ->middleware('can:statistics')
                 ->name('statistics');
 
+            // Stok: alışlar və hədiyyə kartları
+            Route::prefix('stock')->name('stock.')->middleware('can:stock')->controller(\App\Http\Controllers\Backend\StockController::class)->group(function () {
+                Route::get('/purchases', 'purchases')->name('purchases');
+                Route::post('/purchases', 'storePurchase')->name('purchases.store');
+                Route::get('/purchases/{purchase}', 'showPurchase')->whereNumber('purchase')->name('purchases.show');
+                Route::get('/gift-cards', 'cards')->name('cards');
+                Route::get('/gift-cards/{card}', 'showCard')->whereNumber('card')->name('cards.show');
+                Route::post('/gift-cards/{card}/sell', 'sell')->whereNumber('card')->name('cards.sell');
+                Route::post('/gift-cards/{card}/return', 'returnToStock')->whereNumber('card')->name('cards.return');
+            });
+
             Route::get('/pwa', [PwaStatsController::class, 'index'])
                 ->middleware('can:statistics')
                 ->name('pwa');
