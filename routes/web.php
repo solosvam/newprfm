@@ -266,6 +266,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/credit', 'edit')->name('profile.credit');
         Route::post('/profile/credit', 'update')->name('profile.credit.update');
         Route::post('/profile/credit/ocr', 'ocr')->middleware('throttle:10,1')->name('profile.credit.ocr');
+        Route::post('/profile/credit/name', 'updateName')->middleware('throttle:10,1')->name('profile.credit.name');
         Route::get('/profile/credit/image/{side}', 'image')->whereIn('side', ['front', 'back'])->name('profile.credit.image');
 
     });

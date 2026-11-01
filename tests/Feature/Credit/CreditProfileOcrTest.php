@@ -59,6 +59,27 @@ class CreditProfileOcrTest extends TestCase
             ->assertJsonPath('fields.fin', '5XYZ12A');
     }
 
+    public function test_lost_letters_are_restored_from_the_customers_own_spelling(): void
+    {
+        // OCR Ü-nü itirib: "GULNAR" → hesabdakı "Gülnar"
+        $this->vision(str_replace('GÜLNAR', 'GULNAR', self::CARD));
+        $this->actingAs($this->customer('Gülnar', 'Testova'))->sendCard()->assertOk()
+            ->assertJsonPath('card.name', 'Gülnar')
+            ->assertJsonPath('name_match', true);
+    }
+
+    public function test_customer_fixes_the_account_name_to_the_card(): void
+    {
+        config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:']);
+        \Illuminate\Support\Facades\DB::purge('sqlite');
+        \Illuminate\Support\Facades\Schema::create('customers', fn (\Illuminate\Database\Schema\Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->timestamps()]);
+        $customer = Customer::forceCreate(['name' => 'Rəşad', 'surname' => 'Aliyev']);
+
+        $this->actingAs($customer)->postJson('/profile/credit/name', ['name' => 'Rəşad', 'surname' => 'Əliyev'])->assertOk();
+        $this->assertSame('Əliyev', $customer->fresh()->surname);
+        $this->postJson('/profile/credit/name', ['name' => '<b>x</b>', 'surname' => 'Əliyev'])->assertUnprocessable();
+    }
+
     public function test_not_an_id_card(): void
     {
         $this->vision("Chanel Bleu\n100 ml");

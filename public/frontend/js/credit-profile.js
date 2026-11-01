@@ -182,6 +182,24 @@ $(function () {
                     kind = 'bad';
                 }
                 ocrMessage(kind, lines);
+                // Uyğunsuzluq: müştəri təsdiqlə hesabdakı ad-soyadı vəsiqədəki kimi düzəldir
+                const card = response.card || {};
+                if (response.name_match === false && card.name && card.surname) {
+                    const full = card.name + ' ' + card.surname;
+                    $('<button type="button" class="btn btn-outline credit-ocr-fix">')
+                        .text(String(form.data('name-fix')).replace(':name', full))
+                        .appendTo(ocrStatus)
+                        .on('click', function () {
+                            if (!window.confirm(String(form.data('name-fix-confirm')).replace(':name', full))) return;
+                            const button = $(this).prop('disabled', true);
+                            $.post(form.data('name-url'), { name: card.name, surname: card.surname, _token: form.find('input[name="_token"]').val() })
+                                .done(function (res) { ocrMessage('ok', [res.message]); })
+                                .fail(function (xhr) {
+                                    button.prop('disabled', false);
+                                    ocrMessage('bad', [(xhr.responseJSON || {}).message || genericError]);
+                                });
+                        });
+                }
             })
             .fail(function (xhr) {
                 const json = xhr.responseJSON || {};

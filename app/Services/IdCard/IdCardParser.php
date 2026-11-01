@@ -41,16 +41,52 @@ class IdCardParser
             $type = 'old';
         }
 
+        $fatherLine = $this->valueAfter($lines, $keys, fn ($k) => str_contains($k, 'ATASININ') || str_contains($k, 'PATRONYMIC'));
+        $surname = $this->valueAfter($lines, $keys, fn ($k) => str_contains($k, 'SOYADI') || str_contains($k, 'SURNAME'));
+        $name = $this->valueAfter($lines, $keys, fn ($k) => (str_contains($k, 'GIVEN NAME') || preg_match('/(^|[ \/])ADI( |\/|$)/', $k))
+            && !str_contains($k, 'ATASININ') && !str_contains($k, 'SOYADI') && !str_contains($k, 'PATRONYMIC'));
+
+        // OCR başlıqları oxumayıbsa (yalnız dəyərlər): "OĞLU/QIZI" ilə bitən sətir ata adıdır, ondan əvvəlki iki sətir ad və soyaddır
+        if ($surname === null || $name === null || $fatherLine === null) {
+            [$posSurname, $posName, $posFather] = $this->positional($lines, $keys);
+            $surname ??= $posSurname;
+            $name ??= $posName;
+            $fatherLine ??= $posFather;
+        }
+
         return [
             'type' => $type,
             'series' => $series,
             'number' => $number,
             'fin' => $this->fin($lines, $keys, $mrz, $number),
-            'surname' => $this->name($this->valueAfter($lines, $keys, fn ($k) => str_contains($k, 'SOYADI') || str_contains($k, 'SURNAME'))),
-            'name' => $this->name($this->valueAfter($lines, $keys, fn ($k) => (str_contains($k, 'GIVEN NAME') || preg_match('/(^|[ \/])ADI( |\/|$)/', $k))
-                && !str_contains($k, 'ATASININ') && !str_contains($k, 'SOYADI') && !str_contains($k, 'PATRONYMIC'))),
-            'father_name' => $this->fatherName($this->valueAfter($lines, $keys, fn ($k) => str_contains($k, 'ATASININ') || str_contains($k, 'PATRONYMIC'))),
+            'surname' => $this->name($surname),
+            'name' => $this->name($name),
+            'father_name' => $this->fatherName($fatherLine),
         ];
+    }
+
+    /** @return array{0: ?string, 1: ?string, 2: ?string} soyad, ad, ata adı (başlıqsız mətndə mövqeyə görə) */
+    private function positional(array $lines, array $keys): array
+    {
+        foreach ($keys as $i => $key) {
+            if (!preg_match('/^[A-Z]+( [A-Z]+)* (OGLU|QIZI)$/', $key) || $this->isLabel($key)) {
+                continue;
+            }
+
+            $found = [];
+            for ($j = $i - 1; $j >= 0 && count($found) < 2; $j--) {
+                if ($this->isLabel($keys[$j])) {
+                    break;
+                }
+                if (preg_match('/^[\p{L} \-\']{2,}$/u', $lines[$j])) {
+                    $found[] = $lines[$j];
+                }
+            }
+
+            return count($found) === 2 ? [$found[1], $found[0], $lines[$i]] : [null, null, $lines[$i]];
+        }
+
+        return [null, null, null];
     }
 
     /** Böyük hərf, Azərbaycan hərfləri latına (Ə→E, İ→I …), yalnız A-Z 0-9 boşluq / < */
@@ -187,7 +223,13 @@ class IdCardParser
 
     private function name(?string $value): ?string
     {
-        return $value === null ? null : $this->titleCase($value);
+        if ($value === null) {
+            return null;
+        }
+        $title = $this->titleCase($value);
+
+        // OCR nöqtəni itirir (İBRAHİMOV → IBRAHIMOV): ad/soyad "I" ilə başlayırsa demək olar həmişə "İ"-dir (İbrahimov, İsmayılov)
+        return str_starts_with($value, 'I') ? 'İ'.mb_substr($title, 1) : $title;
     }
 
     /** "AĞAHÜSEYN OĞLU" → "Ağahüseyn", "MAHMUD QIZI" → "Mahmud", "VALEHOVİÇ" → "Valeh" */
@@ -199,11 +241,11 @@ class IdCardParser
         $value = preg_replace('/\s+(OĞLU|OGLU|QIZI|QİZİ|QIZİ)$/iu', '', trim($value));
         $value = preg_replace('/(OVİÇ|OVIÇ|OVIC|EVİÇ|EVIÇ|EVIC|OVNA|EVNA)$/iu', '', $value);
 
-        return $value === '' ? null : $this->titleCase($value);
+        return $value === '' ? null : $this->name($value); // baş "I" → "İ" (İlham) — ad kimi
     }
 
     /** Azərbaycan qaydası ilə: I→ı, İ→i; sözün birinci hərfi böyük */
-    private function titleCase(string $value): string
+    public function titleCase(string $value): string
     {
         $lower = mb_strtolower(strtr($value, ['I' => 'ı', 'İ' => 'i']), 'UTF-8');
 

@@ -72,7 +72,10 @@
                       data-ocr-done="{{ __('credit_ocr_done') }}"
                       data-ocr-nothing="{{ __('credit_ocr_nothing') }}"
                       data-ocr-not-card="{{ __('credit_ocr_not_card') }}"
-                      data-ocr-name-mismatch="{{ __('credit_ocr_name_mismatch') }}">
+                      data-ocr-name-mismatch="{{ __('credit_ocr_name_mismatch') }}"
+                      data-name-url="{{ route('profile.credit.name') }}"
+                      data-name-fix="{{ __('credit_ocr_name_fix') }}"
+                      data-name-fix-confirm="{{ __('credit_ocr_name_fix_confirm') }}">
                     @csrf
 
                     <section class="credit-section credit-section--documents">

@@ -33,6 +33,21 @@ class CreditProfileController extends Controller
         return $reader->read($request, $request->user());
     }
 
+    /**
+     * Vəsiqədəki ad hesabdakından fərqlidirsə müştəri təsdiqlə hesabdakı ad-soyadı vəsiqədəki kimi düzəldir
+     * (OCR cavabındakı "card" — kredit səhifəsində "Hesabımdakı adı düzəlt" düyməsi).
+     */
+    public function updateName(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:30', 'regex:/^[\p{L} \-\']+$/u'],
+            'surname' => ['required', 'string', 'max:30', 'regex:/^[\p{L} \-\']+$/u'],
+        ]);
+        $request->user()->forceFill(['name' => trim($data['name']), 'surname' => trim($data['surname'])])->save();
+
+        return response()->json(['message' => __('credit_ocr_name_fixed')]);
+    }
+
     public function update(Request $request)
     {
         $user = $request->user();

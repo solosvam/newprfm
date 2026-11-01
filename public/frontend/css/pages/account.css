@@ -532,6 +532,7 @@
 .credit-ocr.is-loading { color: var(--text-muted); }
 .credit-ocr.is-ok { color: var(--success, #2f7d4f); }
 .credit-ocr.is-bad { color: var(--warning, #b54708); }
+.credit-ocr-fix { margin-top: 8px; padding: 6px 12px; font-size: 13px; }
 .credit-field input.is-autofilled,
 .credit-idcard select.is-autofilled + .select2-container.select2-container--default .select2-selection--single { background: color-mix(in srgb, var(--success, #2f7d4f) 8%, var(--bg)) !important; }
 

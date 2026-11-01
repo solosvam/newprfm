@@ -13,6 +13,7 @@ class IdCardReader
         private GoogleVisionOcr $ocr,
         private IdCardParser $parser,
         private NameMatcher $matcher,
+        private NameSpelling $spelling,
     ) {}
 
     public function read(Request $request, Customer $customer): JsonResponse
@@ -38,6 +39,11 @@ class IdCardReader
             ]), 422);
         }
 
+        // İtmiş hərflər (AGAHUSEYN → Ağahüseyn): əvvəl müştərinin öz yazılışı, sonra bazadakı ən çox işlənən
+        $card['name'] = $this->spelling->restore($card['name'], [$customer->name]);
+        $card['surname'] = $this->spelling->restore($card['surname'], [$customer->surname]);
+        $card['father_name'] = $this->spelling->restore($card['father_name'], [rescue(fn () => $customer->creditProfile?->father_name, null, false)]);
+
         $fields = array_filter([
             'father_name' => $card['father_name'],
             'fin' => $card['fin'],
@@ -49,6 +55,8 @@ class IdCardReader
             'fields' => (object) $fields,
             'is_id_card' => $card['type'] !== null,
             'card_name' => trim(($card['name'] ?? '').' '.($card['surname'] ?? '')) ?: null,
+            // Uyğunsuzluqda müştəri hesabdakı adı vəsiqədəki kimi düzəldə bilər (profile.credit.name)
+            'card' => ['name' => $card['name'], 'surname' => $card['surname']],
             'name_match' => $matcher->matches($card['name'], $card['surname'], $customer->name, $customer->surname),
         ]);
     }

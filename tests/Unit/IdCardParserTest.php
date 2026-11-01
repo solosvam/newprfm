@@ -117,6 +117,13 @@ class IdCardParserTest extends TestCase
         $this->assertSame(['AZE', '12345678', '4ABCD5E'], [$r['series'], $r['number'], $r['fin']]);
     }
 
+    public function test_values_without_labels_are_found_by_the_patronymic_line(): void
+    {
+        $card = $this->parse("AZƏRBAYCAN RESPUBLİKASI\nTESTOVA\nGULNAR\nILHAM QIZI\nAA1234567");
+
+        $this->assertSame(['Testova', 'Gulnar', 'İlham'], [$card['surname'], $card['name'], $card['father_name']]);
+    }
+
     public function test_not_an_id_card(): void
     {
         $r = $this->parse("Chanel Bleu\n100 ml\nEAU DE PARFUM");
