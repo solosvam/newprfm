@@ -65,7 +65,7 @@
                                     <label class="col-lg-2 col-md-3 col-sm-4 col-form-label">Telegram ID</label>
                                     <div class="col-sm-8 col-md-9 col-lg-10">
                                         <input type="text" class="form-control" name="telegram_id" value="{{ $user->telegram_id }}" inputmode="numeric" placeholder="Məs. 123456789" />
-                                        <div class="form-text">Kuryer bildirişləri üçün: əməkdaş Telegram-da bota @idver yazır — ID-si (və paylaşsa nömrəsi) təyin olunmuş çata gəlir; /start da ID-ni göstərir.</div>
+                                        <div class="form-text">Kuryer bildirişləri üçün: əməkdaş Telegram-da bota @idver yazır, bot ona ID-sini göstərir.</div>
                                     </div>
                                 </div>
 
