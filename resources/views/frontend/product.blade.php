@@ -119,6 +119,24 @@
                 </div>
             </div>
 
+            {{-- Birbank taksit: endirimli qiymət 2 / 3 / 6 aya faizsiz bölünür (main.js ölçü dəyişəndə yeniləyir) --}}
+            @if(($birbankInstallment ?? false) && $initialPrice > 0)
+                <div class="birbank-taksit" data-birbank-taksit>
+                    <div class="birbank-taksit__head">
+                        <span class="birbank-taksit__title">{{ __('product_birbank_installment') }}</span>
+                        <span class="birbank-taksit__badge">{{ __('product_interest_free') }}</span>
+                    </div>
+                    <div class="birbank-taksit__months">
+                        @foreach([2, 3, 6] as $months)
+                            <span class="birbank-taksit__item" data-birbank-months="{{ $months }}">
+                                <b data-birbank-monthly>{{ number_format($initialPrice / $months, 2) }} ₼</b>
+                                <span>× {{ $months }} {{ __('product_month') }}</span>
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- Endirim: faiz + bitməyə geri sayım (main.js → [data-countdown]) --}}
             @if($saleDiscount)
                 <div class="sale-box">

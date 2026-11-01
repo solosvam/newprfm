@@ -41,6 +41,15 @@ h1.title { font-size: 30px; margin: 6px 0 4px; color: var(--text); }
 .price-qty-row .price-row { margin: 0; }
 .price-qty-row .qty { margin: 0; }
 
+/* Birbank taksit: 2 / 3 / 6 aylıq məbləğ, faizsiz */
+.birbank-taksit { margin: -4px 0 16px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.birbank-taksit__head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.birbank-taksit__title { font-weight: 600; font-size: 14px; color: var(--text); }
+.birbank-taksit__badge { padding: 2px 8px; border-radius: 999px; background: rgba(46, 160, 67, .12); color: #2e8b3e; font-size: 12px; font-weight: 600; }
+.birbank-taksit__months { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.birbank-taksit__item { display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 10px; background: var(--bg); font-size: 12px; color: var(--text-secondary); text-align: center; }
+.birbank-taksit__item b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+
 .size-pill { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 600; margin-bottom: 16px; cursor: pointer; line-height: 1.25; }
 .size-pill__price { font-size: 12px; font-weight: 500; opacity: .8; white-space: nowrap; }
 /* seçili düymənin fonunda qırmızı/boz oxunmur — ağ (cari rəng) */

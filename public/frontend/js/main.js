@@ -349,9 +349,11 @@
             if (first) { first.checked = true; first.dispatchEvent(new Event('change', { bubbles: true })); }
         }
 
-        // Birbank is always displayed as six interest-free installments.
-        const headline = installment.querySelector('[data-installment-headline]');
-        if (headline) headline.textContent = (price / 6).toFixed(2) + ' ₼ x 6 ay';
+        // Birbank taksit: endirimli qiymət, faizsiz — aylıq = qiymət / ay
+        buybox.querySelectorAll('[data-birbank-months]').forEach(item => {
+            const cell = item.querySelector('[data-birbank-monthly]');
+            if (cell) cell.textContent = (price / Number(item.dataset.birbankMonths)).toFixed(2) + ' ₼';
+        });
         const selected = buybox.querySelector('[data-add-to-cart]');
         if (selected && variant) selected.dataset.variantId = variant.dataset.variantId;
     }

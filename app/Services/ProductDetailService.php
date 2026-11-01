@@ -99,6 +99,8 @@ class ProductDetailService
             'product' => $product,
             'similarProducts' => $this->similarProducts($product),
             'creditPeriods' => $this->creditPeriods(),
+            // Birbank taksit (2 / 3 / 6 ay, faizsiz) — ödəniş üsulu aktivdirsə məhsul səhifəsində aylıq məbləğlər
+            'birbankInstallment' => rescue(fn () => \App\Models\Payment\PaymentMethod::where('code', 'birbank_installment')->where('active', 1)->exists(), false, false),
             'creditTermItems' => CreditTermItem::orderBy('sort_order')->orderBy('id')->get(),
             'creditProfileComplete' => auth()->check() && (bool) auth()->user()->creditProfile?->isComplete(),
             // "Qiymət enəndə xəbər ver": müştərinin bu məhsulda aktiv abunə olduğu ölçülər
