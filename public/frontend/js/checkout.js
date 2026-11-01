@@ -194,8 +194,13 @@
             if (target) target.textContent = state.total > 0 ? money(creditFor(radio).monthly) + (t.perMonth || '') : '—';
         });
 
-        if (!els.creditSummary) return;
         const selected = periodRadios.find(r => r.checked);
+        // Sağdakı "Yekun": hissə-hissədə seçilmiş müddətin ümumi məbləği (faizlə), qalan hallarda adi yekun
+        const shown = selectedCode() === INSTALLMENT && selected && state.total > 0 ? creditFor(selected).sum : state.total;
+        if (els.total) els.total.textContent = money(shown);
+        if (els.mobileTotal) els.mobileTotal.textContent = money(shown);
+
+        if (!els.creditSummary) return;
         els.creditSummary.hidden = !selected || state.total <= 0;
 
         if (selected && state.total > 0) {
