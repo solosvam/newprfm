@@ -107,7 +107,7 @@ class CourierFlowTest extends TestCase
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
     }
 
-    public function test_customer_gets_one_sms_when_the_courier_starts_delivery(): void
+    public function test_no_sms_when_the_courier_starts_delivery(): void
     {
         Schema::create('customers', function (Blueprint $t) {
             $t->id(); $t->string('name')->nullable(); $t->string('surname')->nullable(); $t->string('mobile')->nullable(); $t->decimal('bonus_balance', 12, 2)->default(0); $t->timestamps();
@@ -116,6 +116,7 @@ class CourierFlowTest extends TestCase
         (require database_path('migrations/2026_09_30_100000_create_sms_logs_and_warehouse_sms.php'))->up();
         (require database_path('migrations/2026_10_10_180000_add_delivery_status_to_sms_logs.php'))->up();
         (require database_path('migrations/2026_10_10_200000_sms_templates_name_variable.php'))->up();
+        (require database_path('migrations/2026_11_01_130000_drop_order_sent_sms_template.php'))->up();
         DB::table('customers')->insert(['id' => 1, 'name' => 'Aysel', 'surname' => 'Quliyeva', 'mobile' => '0501234567', 'bonus_balance' => 7.5]);
         config(['services.parfumshop_sms.login' => 'login', 'services.parfumshop_sms.password' => 'secret']);
         \Illuminate\Support\Facades\Http::fake(['apps.lsim.az/*' => \Illuminate\Support\Facades\Http::response(['obj' => 9, 'errorCode' => 0])]);
@@ -128,12 +129,10 @@ class CourierFlowTest extends TestCase
         $s->startDelivery($order, $courier->id);
         $s->startDelivery($order, $courier->id); // təkrar klik
 
-        $log = \App\Models\SmsLog::where('context', 'order_sent')->sole();
-        $this->assertSame('994501234567', preg_replace('/\D/', '', '994'.ltrim($log->msisdn, '0')));
-        $this->assertStringContainsString('Hormetli Aysel,', $log->message);
-        $this->assertStringContainsString('120.00', $log->message);
-        $this->assertSame((string) $order->id, (string) $log->subject_id);
-        \Illuminate\Support\Facades\Http::assertSentCount(1);
+        // "Yola çıxdım" SMS-i ləğv olunub (2026_11_01_130000) — yalnız status dəyişir
+        $this->assertSame('sent', $this->statusCode($order));
+        $this->assertSame(0, \App\Models\SmsLog::count());
+        \Illuminate\Support\Facades\Http::assertNothingSent();
     }
 
     public function test_returning_part_keeps_warehouse_debt_until_returned(): void

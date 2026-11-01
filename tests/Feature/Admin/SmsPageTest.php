@@ -43,7 +43,7 @@ class SmsPageTest extends TestCase
         $this->actingAs($this->admin, 'admin')->get(route('admin.sms-template.index'))
             ->assertOk()
             ->assertSee('1 543')
-            ->assertSee('Kuryer "Yola çıxdım" basanda')
+            ->assertSee('Operator CRM-də sifarişi ləğv edəndə')
             ->assertSee('Qoşulmayıb');
     }
 
@@ -59,11 +59,18 @@ class SmsPageTest extends TestCase
             preg_match_all("/'code'\\s*=>\\s*'([a-z_]+)'|'(warehouse_[a-z]+)'\\s*=>\\s*\\[/", $source, $m);
             $codes = array_merge($codes, array_filter($m[1]), array_filter($m[2]));
         }
-        // Sonradan silinən şablon (2026_10_10_200000_sms_templates_name_variable)
-        $codes = array_diff(array_unique($codes), ['website_order_accepted']);
+        // Sonradan silinən şablonlar (2026_10_10_200000_sms_templates_name_variable, 2026_11_01_130000_drop_order_sent_sms_template)
+        $codes = array_diff(array_unique($codes), ['website_order_accepted', 'order_sent']);
 
         $this->assertGreaterThanOrEqual(11, count($codes));
         $this->assertSame([], array_values(array_diff($codes, array_keys(SmsTemplateController::USAGE))), 'Yeni şablon əlavə olunub — SmsTemplateController::USAGE-ə yazın');
+    }
+
+    public function test_order_sent_template_is_dropped(): void
+    {
+        (require database_path('migrations/2026_11_01_130000_drop_order_sent_sms_template.php'))->up();
+
+        $this->assertFalse(DB::table('sms_templates')->where('code', 'order_sent')->exists());
     }
 
     public function test_name_migration_drops_the_unused_template_and_switches_to_the_name_variable(): void

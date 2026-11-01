@@ -3,7 +3,6 @@
     // Hər şablonda istifadə oluna bilən dəyişənlər ({name} — ad, {fullname} — ad və soyad; ikisi də işləyir)
     $variables = [
         'crm_order_accepted' => ['name', 'fullname', 'bonus'],
-        'order_sent' => ['name', 'fullname', 'order_no', 'total', 'total_bonus'],
         'crm_order_cancelled' => ['name', 'fullname', 'order_no'],
         'easy_order_registration_bonus' => ['bonus'],
         'easy_order_registration' => [],
