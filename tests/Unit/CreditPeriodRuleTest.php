@@ -7,9 +7,9 @@ use PHPUnit\Framework\TestCase;
 
 class CreditPeriodRuleTest extends TestCase
 {
-    private function period(int $month, ?float $min): CreditPeriod
+    private function period(int $month, ?float $min, float $rate = 0): CreditPeriod
     {
-        return new CreditPeriod(['month' => $month, 'min_amount' => $min]);
+        return new CreditPeriod(['month' => $month, 'min_amount' => $min, 'interest_rate' => $rate]);
     }
 
     public function test_period_without_minimum_is_always_available(): void
@@ -25,5 +25,19 @@ class CreditPeriodRuleTest extends TestCase
         $this->assertTrue($this->period(12, 200)->availableFor(200.01));
         $this->assertFalse($this->period(15, 500)->availableFor(450));
         $this->assertTrue($this->period(15, 500)->availableFor(500.5));
+    }
+
+    /** Minimumla faizli yekun məbləğ müqayisə olunur (№23): 9 ay 25%, 12 ay 33.3%, 15 ay 37%, min 200 */
+    public function test_minimum_is_checked_against_the_total_with_interest(): void
+    {
+        foreach ([180, 199, 237, 299] as $price) {
+            foreach ([[9, 25], [12, 33.3], [15, 37]] as [$months, $rate]) {
+                $this->assertTrue($this->period($months, 200, $rate)->availableFor($price), "$price ₼, $months ay");
+            }
+        }
+        $this->assertFalse($this->period(9, 200, 25)->availableFor(150));    // 187.50
+        $this->assertFalse($this->period(12, 200, 33.3)->availableFor(150)); // 199.95
+        $this->assertTrue($this->period(15, 200, 37)->availableFor(150));    // 205.50
+        $this->assertFalse($this->period(9, 200, 25)->availableFor(160));    // 200.00 — daxil deyil
     }
 }

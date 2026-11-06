@@ -339,9 +339,9 @@
                 radio.dataset.monthly = monthly.toFixed(2);
                 radio.dataset.total = total.toFixed(2);
             }
-            // müddət yalnız məbləğ onun minimumundan yuxarı olanda (CreditPeriod::availableFor)
+            // müddət yalnız faizli yekun məbləğ onun minimumundan yuxarı olanda (CreditPeriod::availableFor)
             const min = appData.creditRule?.mins?.[months];
-            row.hidden = min != null && creditPrice <= min;
+            row.hidden = min != null && Math.round(total * 100) / 100 <= min;
         });
         const checked = installment.querySelector('tr[data-month]:not([hidden]) input[name="installment"]:checked');
         if (!checked) {

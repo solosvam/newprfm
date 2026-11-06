@@ -51,12 +51,14 @@ function initCreditApplicationModal() {
     let creditRule = null;
     try { creditRule = JSON.parse(document.getElementById('app-data')?.textContent || '{}').creditRule || null; } catch (e) {}
 
-    // müddət yalnız qiymət onun minimumundan yuxarı olanda (CreditPeriod::availableFor)
+    // müddət yalnız faizli yekun məbləğ onun minimumundan yuxarı olanda (CreditPeriod::availableFor)
     function filterPeriods(price) {
         const inputs = [...periodOptions.querySelectorAll('input[name=credit_period_id]')];
         inputs.forEach(input => {
+            // faizli yekun məbləğ minimumdan yuxarı olmalıdır (CreditPeriod::availableFor)
             const min = creditRule?.mins?.[Number(input.dataset.months)];
-            input.closest('label').hidden = min != null && price <= min;
+            const total = Math.round(price * (1 + (Number(input.dataset.rate) || 0) / 100) * 100) / 100;
+            input.closest('label').hidden = min != null && total <= min;
         });
         const checked = inputs.find(input => input.checked);
         if (!checked || checked.closest('label').hidden) {

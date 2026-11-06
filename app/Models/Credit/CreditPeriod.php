@@ -30,10 +30,15 @@ class CreditPeriod extends Model
         Cache::forget(self::RULE_CACHE);
     }
 
-    /** Müddət yalnız məbləğ min_amount-dan YUXARI olanda təklif olunur (admin → Kredit → Faizlər; boş — məhdudiyyət yoxdur) */
+    /**
+     * Müddət yalnız bu müddətin FAİZLİ yekun məbləği min_amount-dan YUXARI olanda təklif olunur
+     * (admin → Kredit → Faizlər; boş — məhdudiyyət yoxdur). Məs. 199 ₼ 9 ay 25%-lə 248.75 ₼ > 200 — göstərilir.
+     * JS-də eyni qayda: main.js, checkout.js, credit-application.js (qiymət × (1 + faiz / 100) > min).
+     */
     public function availableFor(float $amount): bool
     {
-        return $this->min_amount === null || round($amount, 2) > (float) $this->min_amount;
+        return $this->min_amount === null
+            || round($amount * (1 + (float) $this->interest_rate / 100), 2) > (float) $this->min_amount;
     }
 
     public function unavailableMessage(): string

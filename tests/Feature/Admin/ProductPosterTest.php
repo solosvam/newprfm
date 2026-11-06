@@ -98,7 +98,8 @@ class ProductPosterTest extends TestCase
 
         $this->assertCount(1, $data['variants']);
         $this->assertSame('30 ml', $data['variants'][0]['size']);
-        $this->assertSame([3, 6], array_column($data['credit'], 'months')); // 194 ≤ 200 — 9 və 12 ay yoxdur
+        // minimum faizli yekunla: 9 ay 194 × 1.25 = 242.50 > 200 — var; 12 ay 258.60 — var
+        $this->assertSame([3, 6, 9, 12], array_column($data['credit'], 'months'));
         $this->assertSame(['months' => 3, 'monthly' => '64.67', 'total' => '194.00', 'free' => true], $data['credit'][0]);
         $this->assertSame(['months' => 6, 'monthly' => '38.03', 'total' => '228.14', 'free' => false], $data['credit'][1]);
         $this->assertStringContainsString('30-ml', $data['filename']);

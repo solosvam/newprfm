@@ -47,7 +47,7 @@
         $initialRegular = (float) ($firstVariant?->price ?? 0);
         $saleDiscount = $product->visibleDiscount();
         $firstPeriod = $creditPeriods->first();
-        // müddət məbləğ onun minimumundan yuxarı olanda görünür (CreditPeriod::availableFor); variant dəyişəndə main.js yeniləyir.
+        // müddət faizli yekun məbləğ onun minimumundan yuxarı olanda görünür (CreditPeriod::availableFor); variant dəyişəndə main.js yeniləyir.
         // Hissə-hissə ödənişə məhsul endirimi tətbiq olunmur — kredit cədvəli adi qiymətlə
         $firstAvailablePeriod = $creditPeriods->first(fn ($p) => $p->availableFor($initialRegular));
     @endphp

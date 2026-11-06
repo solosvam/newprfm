@@ -169,14 +169,15 @@
         };
     }
 
-    // müddət yalnız məbləğ onun minimumundan yuxarı olanda (CreditPeriod::availableFor) — məbləğ dəyişəndə yenilənir
+    // müddət yalnız faizli yekun məbləğ onun minimumundan yuxarı olanda (CreditPeriod::availableFor) — məbləğ dəyişəndə yenilənir
     let creditRule = null;
     try { creditRule = JSON.parse(document.getElementById('app-data')?.textContent || '{}').creditRule || null; } catch (e) {}
 
     function filterPeriods() {
         periodRadios.forEach(radio => {
+            // faizli yekun məbləğ minimumdan yuxarı olmalıdır (CreditPeriod::availableFor)
             const min = creditRule?.mins?.[Number(radio.dataset.months)];
-            const hide = min != null && state.total <= min;
+            const hide = min != null && creditFor(radio).sum <= min;
             radio.closest('label').hidden = hide;
             if (hide && radio.checked) {
                 radio.checked = false;
