@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Finance\FinanceAccount;
 use App\Models\Finance\FinanceCategory;
 use App\Models\Finance\MoneyMovement;
+use App\Models\Order\Order;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentOperation;
 use App\Models\Procurement\OrderItemAllocation;
@@ -233,6 +234,39 @@ class FinanceService
                 'created_by' => $actor,
                 'occurred_at' => now(),
             ]);
+        });
+    }
+
+    /** Ferrum hesabı: code = ferrum, yoxdursa adı "Ferrum" olan şirkət hesabı */
+    public function ferrumAccount(): ?FinanceAccount
+    {
+        return FinanceAccount::where('code', 'ferrum')->first()
+            ?? FinanceAccount::whereRaw('lower(name) = ?', ['ferrum'])->whereIn('type', FinanceAccount::OWN)->orderByDesc('active')->first();
+    }
+
+    /**
+     * Hissə-hissə sifariş təhvil veriləndə (bir dəfə): Müştəri → Ferrum (kreditin yekunu, "Satış"),
+     * Ferrum → Kənar (Ferrum-un çıxdığı faiz). Ferrum pulu sonra köçürür — hesabın qalığı onun verəcəyi puldur.
+     */
+    public function recordCreditReceivable(Order $order, ?int $actor = null): void
+    {
+        $credit = $order->creditApplication()->first();
+        if (!$credit || (float) $credit->total <= 0) return;
+        if (!$ferrum = $this->ferrumAccount()) {
+            report(new \RuntimeException('Ferrum maliyyə hesabı tapılmadı — sifariş '.$order->order_no));
+            return;
+        }
+        if (MoneyMovement::where('kind', 'customer_payment')->where('order_id', $order->id)->where('to_account_id', $ferrum->id)->exists()) return;
+        $rate = $credit->bank_fee_rate !== null ? rtrim(rtrim(number_format((float) $credit->bank_fee_rate, 2, '.', ''), '0'), '.') : null;
+        DB::transaction(function () use ($order, $credit, $ferrum, $actor, $rate) {
+            $this->record($this->system('customer'), $ferrum, (float) $credit->total, 'customer_payment', [
+                'order_id' => $order->id, 'note' => 'Hissə-hissə ödəniş (Ferrum)'.($credit->period ? ' — '.$credit->period->month.' ay' : ''),
+            ], $actor);
+            if (($fee = $credit->bankFee()) > 0) {
+                $this->record($ferrum, $this->system('external'), $fee, 'credit_fee', [
+                    'order_id' => $order->id, 'note' => 'Ferrum '.$rate.'% çıxır',
+                ], $actor);
+            }
         });
     }
 

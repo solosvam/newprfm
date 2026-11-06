@@ -43,6 +43,8 @@ class ReferralRewardTest extends TestCase
         });
         Schema::create('order_statuses', function (Blueprint $t) { $t->id(); $t->string('code'); });
         Schema::create('payment_methods', function (Blueprint $t) { $t->id(); $t->string('code'); });
+        // Hissə-hissə sifariş təhvildə Ferrum-a yazılır (FinanceService::recordCreditReceivable) — müraciət yoxdursa heç nə
+        Schema::create('credit_applications', function (Blueprint $t) { $t->id(); $t->unsignedBigInteger('order_id'); $t->decimal('total', 12, 2)->default(0); $t->decimal('bank_fee_rate', 5, 2)->nullable(); $t->timestamps(); });
         Schema::create('orders', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->unsignedBigInteger('payment_method_id')->nullable();

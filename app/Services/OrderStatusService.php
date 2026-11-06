@@ -53,6 +53,9 @@ class OrderStatusService
         if ($code === 'delivered') {
             app(BonusService::class)->earnOnDelivery($order); // sifariş bonusu — yalnız təhvildə
             app(ReferralService::class)->rewardForDeliveredOrder($order); // dəvət olunanın ilk sifarişi → referal bonusları
+            if ($order->loadMissing('paymentMethod')->paymentMethod?->code === 'installment') {
+                app(FinanceService::class)->recordCreditReceivable($order, $actor); // Ferrum-un köçürəcəyi pul — Ferrum hesabına
+            }
         }
 
         return true;

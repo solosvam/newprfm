@@ -263,6 +263,18 @@
                                         <span class="badge bg-outline-primary">{{ $order->creditApplication->status?->name_az ?? '—' }}</span>
                                     @endcan
                                 </dd></div>
+                                {{-- Ferrum-un çıxdığı faiz və bizə qalacaq pul — yalnız maliyyə icazəsi ilə (faiz sifariş yarananda yazılıb) --}}
+                                @can('finance')
+                                    @php $credit = $order->creditApplication; @endphp
+                                    <div><dt>Bizə qalacaq</dt><dd>
+                                        @if($credit->bank_fee_rate !== null)
+                                            <b>{{ number_format($credit->netAmount(), 2) }} AZN</b>
+                                            <span class="d-block small text-muted">{{ number_format((float) $credit->total, 2) }} − Ferrum {{ rtrim(rtrim(number_format((float) $credit->bank_fee_rate, 2), '0'), '.') }}% ({{ number_format($credit->bankFee(), 2) }})</span>
+                                        @else
+                                            <span class="text-muted">Çıxılacaq faiz yazılmayıb</span>
+                                        @endif
+                                    </dd></div>
+                                @endcan
                             @endif
                             @if($order->contract_file)
                                 @can('ferrum')

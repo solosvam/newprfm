@@ -28,21 +28,23 @@ class MoneyMovement extends Model
         // Baş kuryer kuryerin balansındakı pulu özünə köçürür (courier.collect) — şirkətin pulu kuryerdən kuryerə keçir
         'courier_collect' => ['Baş kuryerə təhvil', ['courier'], ['courier']],
         // Sistem (avtomatik) — əl ilə seçilmir
-        'customer_payment' => ['Müştəri ödənişi', ['customer'], ['online', 'courier', 'cash']],
+        'customer_payment' => ['Müştəri ödənişi', ['customer'], ['online', 'courier', 'cash', 'bank']], // bank — hissə-hissə (Ferrum)
+        // Hissə-hissə: Ferrum ümumi məbləğdən öz faizini çıxır (credit_applications.bank_fee_rate)
+        'credit_fee' => ['Ferrum komissiyası', ['bank'], ['external']],
         'customer_refund' => ['Müştəriyə qaytarma', ['online', 'courier', 'cash'], ['customer']],
         'reversal' => ['Əks əməliyyat', [], []],
     ];
 
     /** Növün öz kateqoriyası (FinanceCategory::code); Mədaxil / Məxaricdə kateqoriyanı istifadəçi seçir */
     public const KIND_CATEGORY = [
-        'customer_payment' => 'sale', 'customer_refund' => 'customer_refund',
+        'customer_payment' => 'sale', 'customer_refund' => 'customer_refund', 'credit_fee' => 'credit_fee',
         'warehouse_payment' => 'warehouse', 'warehouse_refund' => 'warehouse_refund',
         'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer', 'courier_collect' => 'transfer',
     ];
 
     /** İstiqamət qrupları: şirkətə gələn, şirkətdən çıxan, daxili / şəxslə köçürmə */
     public const IN_KINDS = ['income', 'customer_payment', 'warehouse_refund'];
-    public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment'];
+    public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment', 'credit_fee'];
     public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover', 'courier_collect'];
 
     /** "Yeni əməliyyat" pəncərəsi: Məxaric / Mədaxil / Köçürmə (kuryerə köçürmə — avans, kuryerdən — təhvil) */
