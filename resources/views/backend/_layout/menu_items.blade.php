@@ -14,6 +14,9 @@
                     <i data-acorn-icon="{{ $item['icon'] }}" class="icon" data-acorn-size="18"></i>
                 @endif
                 <span class="label">{{ $item['title'] }}</span>
+                @if(($item['badge_count'] ?? 0) > 0)
+                    <span class="badge rounded-pill bg-danger menu-badge">{{ $item['badge_count'] }}</span>
+                @endif
             </a>
             <ul id="{{ $item['id'] }}">
                 @include('backend._layout.menu_items', ['items' => $item['children']])
@@ -24,6 +27,9 @@
                     <i data-acorn-icon="{{ $item['icon'] }}" class="icon" data-acorn-size="18"></i>
                 @endif
                 <span class="label">{{ $item['title'] }}</span>
+                @if(($item['badge_count'] ?? 0) > 0)
+                    <span class="badge rounded-pill bg-danger menu-badge">{{ $item['badge_count'] }}</span>
+                @endif
             </a>
         @endif
     </li>

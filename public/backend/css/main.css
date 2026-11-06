@@ -53,6 +53,8 @@ html[data-placement=horizontal] .nav-container .user-container .user .name {
 
 /* Mobil: istifadəçinin adı loqonun yanında (nav.blade.php) */
 .nav-mobile-user { display: none; }
+/* Menyu sayı (məs. təsdiqlənməmiş rəylər) */
+.menu-badge { margin-left: 6px; padding: 2px 6px; font-size: 10px; line-height: 1.2; vertical-align: middle; }
 html[data-dimension=mobile] .nav-container .nav-mobile-user {
     display: block; align-self: center; min-width: 0; max-width: 40vw; margin-left: 12px; padding-left: 12px;
     border-left: 1px solid rgba(255, 255, 255, .45); color: #fff; font-size: 13px; line-height: 1.2;

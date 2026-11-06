@@ -2,11 +2,21 @@
 
 namespace App\Services;
 
+use App\Models\Product\ProductReview;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
 class AdminMenuService
 {
+    /** Menyu bəndlərinin yanındakı saylar (badge açarı => say) */
+    private function badgeCount(string $key): int
+    {
+        return match ($key) {
+            'reviews.pending' => ProductReview::where('active', false)->count(),
+            default => 0,
+        };
+    }
+
     public function items(): array
     {
         return $this->visible(config('admin_menu', []));
@@ -32,8 +42,12 @@ class AdminMenuService
                 if (!$item['children']) {
                     continue;
                 }
+                // bölmənin sayı — içindəki bəndlərin cəmi
+                $item['badge_count'] = array_sum(array_map(fn ($child) => $child['badge_count'] ?? 0, $item['children']));
             } elseif (empty($item['route']) || !Route::has($item['route'])) {
                 continue;
+            } else {
+                $item['badge_count'] = !empty($item['badge']) ? $this->badgeCount($item['badge']) : 0;
             }
 
             $result[] = $item;

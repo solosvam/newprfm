@@ -3,6 +3,7 @@
 // Admin menyusu və axtarış eyni mənbədən qidalanır.
 // Bölmələr gündəlik işə görə sıralanıb; hər bəndin görünməsi öz icazəsindən asılıdır (route-dakı can: ilə eyni).
 // ['separator' => true] — alt menyuda ayırıcı xətt (kənarda və ya ardıcıl qalanları AdminMenuService atır).
+// 'badge' => açar — AdminMenuService::BADGES-dəki say; > 0 olanda bəndin və valideyn bölmələrin yanında göstərilir.
 
 return [
     [
@@ -39,7 +40,7 @@ return [
         'children' => [
             ['title' => 'Məhsullar', 'route' => 'admin.product.list', 'permission' => 'products.menu'],
             ['title' => 'Endirimdəki məhsullar', 'route' => 'admin.product-discounts.index', 'permission' => 'product.discount'],
-            ['title' => 'Rəylər', 'route' => 'admin.product.review.list', 'permission' => 'product.reviews'],
+            ['title' => 'Rəylər', 'route' => 'admin.product.review.list', 'permission' => 'product.reviews', 'badge' => 'reviews.pending'],
             ['title' => 'Axtarış idarəetməsi', 'route' => 'admin.product.search-aliases.index', 'permission' => 'product.search'],
             [
                 'title'    => 'Məlumat kitabçası',
