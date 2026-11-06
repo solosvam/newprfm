@@ -37,7 +37,8 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->redirectGuestsTo(function (Request $request) {
-            if ($request->is('admin') || $request->is('admin/*')) {
+            // Kuryer tətbiqi ayrıca giriş səhifəsi olmadan admin girişindən istifadə edir (girişdən sonra geri qayıdır)
+            if ($request->is('admin') || $request->is('admin/*') || $request->is('kuryer') || $request->is('kuryer/*')) {
                 return route('admin.login.form');
             }
 
@@ -48,7 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Saytın 404 səhifəsi; admin, anbar portalı (/w/...), JSON və GET olmayan sorğular standart cavabı alır
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
             if ($request->expectsJson() || !$request->isMethod('GET')
-                || $request->is('admin', 'admin/*', 'w/*', 'warehouse-portal/*')) {
+                || $request->is('admin', 'admin/*', 'kuryer', 'kuryer/*', 'w/*', 'warehouse-portal/*')) {
                 return null;
             }
 

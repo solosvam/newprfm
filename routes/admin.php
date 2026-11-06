@@ -81,25 +81,12 @@ Route::prefix('admin')
         |--------------------------------------------------------------------------
         */
 
-        Route::middleware('auth:admin')->group(function () {
+        Route::middleware(['auth:admin', \App\Http\Middleware\CouriersToCourierApp::class])->group(function () {
 
-            // Kuryer: öz sifarişləri (CourierController rolu və sifarişin kuryerini yoxlayır)
-            Route::controller(\App\Http\Controllers\Backend\CourierController::class)
-                ->prefix('courier')->name('courier.')->middleware('throttle:60,1')->group(function () {
-                    Route::get('/order/{order}', 'order')->name('order');
-                    Route::post('/order/{order}/parts/{allocation}/pick', 'pick')->name('pick');
-                    Route::post('/order/{order}/parts/{allocation}/pay', 'pay')->name('pay');
-                    Route::post('/order/{order}/parts/{allocation}/problem', 'problem')->name('problem');
-                    Route::post('/order/{order}/start', 'start')->name('start');
-                    Route::post('/order/{order}/meeting-place', 'meetingPlace')->name('meeting-place');
-                    Route::post('/order/{order}/deliver', 'deliver')->name('deliver');
-                    Route::post('/order/{order}/delivery-problem', 'deliveryProblem')->name('delivery-problem');
-                    Route::post('/order/{order}/items/{item}/refuse', 'refuse')->name('refuse');
-                    Route::post('/order/{order}/parts/{allocation}/returned', 'returned')->name('returned');
-                    Route::post('/order/{order}/transfer', 'transfer')->name('transfer');
-                });
+            // Kuryerin ekranları kuryer tətbiqindədir (routes/courier.php, /kuryer). Köhnə link (Telegram) — oraya
+            Route::get('/courier/order/{order}', fn (string $order) => redirect()->route('kuryer.order', $order))->whereNumber('order')->name('courier.order');
 
-            // Baş kuryer: bütün kuryerlər — balans, haqq-hesab, sifarişlər; pulu özünə köçürmə
+            // Kuryerlər (adminlər üçün; baş kuryer eyni səhifələri kuryer tətbiqində görür — CouriersToCourierApp)
             Route::controller(\App\Http\Controllers\Backend\CourierTeamController::class)
                 ->prefix('courier/team')->name('courier.team')->middleware(['can:courier.team', 'throttle:60,1'])->group(function () {
                     Route::get('/', 'index');

@@ -323,6 +323,9 @@ Route::get('/payment/birbank/return/{payment}', [BirbankPaymentController::class
 
 require __DIR__ . '/admin.php';
 
+// Kuryer tətbiqi (PWA) — /kuryer
+require __DIR__ . '/courier.php';
+
 
 /*
 |--------------------------------------------------------------------------

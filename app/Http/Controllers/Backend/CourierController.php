@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
- * Kuryerin iş ekranı: ona təyin olunmuş sifariş — depolardan götürmə, depoya ödəniş, çatdırılma.
+ * Kuryer tətbiqi (/kuryer, routes/courier.php): ona təyin olunmuş sifariş — depolardan götürmə, depoya ödəniş, çatdırılma.
  * Yalnız "Kuryer" rolu və yalnız öz sifarişləri (orders.courier_id).
  */
 class CourierController extends Controller
@@ -33,7 +33,7 @@ class CourierController extends Controller
         $parts = $rows(OrderItemAllocation::SUPPLY_INACTIVE, true);            // toplama
         $returning = $rows([OrderItemAllocation::RETURNING]);                  // qapıda imtina → depoya aparılacaq
 
-        return view('backend.courier.order', [
+        return view('courier-app.order', [
             'order' => $order,
             'byWarehouse' => $parts->groupBy(fn ($row) => $row['a']->warehouse_id),
             'returning' => $returning->groupBy(fn ($row) => $row['a']->warehouse_id),
@@ -116,7 +116,7 @@ class CourierController extends Controller
         $data = $request->validate(['collected' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99']]);
         $statuses->deliver($order, $this->me(), isset($data['collected']) ? (float) $data['collected'] : null);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Sifariş '.$order->order_no.' təhvil verildi.');
+        return redirect()->route('kuryer.home')->with('success', 'Sifariş '.$order->order_no.' təhvil verildi.');
     }
 
     public function deliveryProblem(Request $request, Order $order, OrderStatusService $statuses): RedirectResponse
@@ -176,7 +176,7 @@ class CourierController extends Controller
         abort_if(!$to, 422, 'Kuryer tapılmadı.');
         $statuses->transferCourier($order, $to, $this->me());
 
-        return redirect()->route('admin.dashboard')->with('success', 'Sifariş '.$order->order_no.' '.trim($to->full_name).' adlı kuryerə ötürüldü.');
+        return redirect()->route('kuryer.home')->with('success', 'Sifariş '.$order->order_no.' '.trim($to->full_name).' adlı kuryerə ötürüldü.');
     }
 
     private function authorizeCourier(Order $order): void

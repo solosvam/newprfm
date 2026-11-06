@@ -46,7 +46,7 @@ class CourierTeamController extends Controller
             // Deaktiv kuryer yalnız balansı varsa görünür
             ->filter(fn ($row) => $row['user']->active || $row['balance'] !== 0)->values();
 
-        return view('backend.courier.team', ['couriers' => $couriers, 'me' => auth('admin')->id()]);
+        return view($this->view('team'), ['couriers' => $couriers, 'me' => auth('admin')->id()]);
     }
 
     /**
@@ -103,7 +103,7 @@ class CourierTeamController extends Controller
         $historyPage = new \Illuminate\Pagination\LengthAwarePaginator($history->forPage($hPage, 30)->values(), $history->count(), 30, $hPage,
             ['path' => $request->url(), 'pageName' => 'hpage', 'query' => $request->except('hpage'), 'fragment' => 'history']);
 
-        return view('backend.courier.team-show', [
+        return view($this->view('team-show'), [
             'courier' => $courier,
             'balance' => $balance,
             'filters' => $f,
@@ -170,5 +170,11 @@ class CourierTeamController extends Controller
         return Order::where('courier_id', $courier->id)
             ->where(fn ($q) => $q->whereHas('status', fn ($s) => $s->whereIn('code', self::ACTIVE))
                 ->orWhereHas('items.allocations', fn ($a) => $a->where('status', OrderItemAllocation::RETURNING)));
+    }
+
+    /** Kuryer tətbiqindən (/kuryer/kuryerler) — tətbiqin səhifəsi, admin paneldən — panelin səhifəsi */
+    private function view(string $name): string
+    {
+        return request()->routeIs('kuryer.*') ? 'courier-app.'.$name : 'backend.courier.'.$name;
     }
 }

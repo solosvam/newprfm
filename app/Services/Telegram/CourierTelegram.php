@@ -29,7 +29,7 @@ class CourierTelegram
             (bool) $from => '🔁 <b>'.e(trim($from->full_name)).' sizə '.e($order->order_no).' sifarişini ötürdü</b>',
             default => '📦 <b>Sizə sifariş təyin olundu: '.e($order->order_no).'</b>',
         };
-        $button = ['inline_keyboard' => [[['text' => 'Sifarişi aç', 'url' => route('admin.courier.order', $order)]]]];
+        $button = ['inline_keyboard' => [[['text' => 'Sifarişi aç', 'url' => route('kuryer.order', $order)]]]];
 
         return $this->send($courier, $text, 'courier_order', $order->getMorphClass(), $order->id, $actor, $button);
     }

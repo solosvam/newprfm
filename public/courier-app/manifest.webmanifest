@@ -1,0 +1,19 @@
+{
+    "id": "/kuryer",
+    "name": "ParfumShop Kuryer",
+    "short_name": "Kuryer",
+    "description": "Kuryerin sifarişləri, depolardan götürmə və çatdırılma",
+    "lang": "az",
+    "start_url": "/kuryer",
+    "scope": "/kuryer",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#f4f2f7",
+    "theme_color": "#5b2a86",
+    "icons": [
+        { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png" },
+        { "src": "/pwa/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "/pwa/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

@@ -283,18 +283,18 @@ class CourierFlowTest extends TestCase
         $this->assertSame('🔁 Rauf sizə PS1 sifarişini ötürdü', $sent->message); // yalnız bildiriş — məlumat linkdədir
         $request = collect(\Illuminate\Support\Facades\Http::recorded())->first()[0]->data();
         $this->assertSame('Sifarişi aç', $request['reply_markup']['inline_keyboard'][0][0]['text']);
-        $this->assertSame(route('admin.courier.order', $order), $request['reply_markup']['inline_keyboard'][0][0]['url']);
+        $this->assertSame(route('kuryer.order', $order), $request['reply_markup']['inline_keyboard'][0][0]['url']);
 
         // Anarda 50 AZN şirkət pulu var
         $f->record($f->system('cash'), $f->courierAccount($anar), 50, 'courier_advance', [], 7);
 
-        $this->actingAs($anar, 'admin')->get(route('admin.courier.team'))->assertForbidden(); // adi kuryer
-        $this->actingAs($head, 'admin')->get(route('admin.courier.team'))->assertOk()->assertSee('Anar')->assertSee('50.00 AZN');
-        $this->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('Hesabıma köçür')->assertSee('PS1');
+        $this->actingAs($anar, 'admin')->get(route('kuryer.team'))->assertForbidden(); // adi kuryer
+        $this->actingAs($head, 'admin')->get(route('kuryer.team'))->assertOk()->assertSee('Anar')->assertSee('50.00 AZN');
+        $this->get(route('kuryer.team.show', $anar))->assertOk()->assertSee('Hesabıma köçür')->assertSee('PS1');
 
-        $this->post(route('admin.courier.team.collect', $anar), ['amount' => 60])->assertSessionHasErrors('amount');
-        $this->post(route('admin.courier.team.collect', $head), ['amount' => 1])->assertSessionHasErrors('amount'); // özündən
-        $this->post(route('admin.courier.team.collect', $anar), ['amount' => 30, 'note' => 'axşam'])->assertSessionHas('success');
+        $this->post(route('kuryer.team.collect', $anar), ['amount' => 60])->assertSessionHasErrors('amount');
+        $this->post(route('kuryer.team.collect', $head), ['amount' => 1])->assertSessionHasErrors('amount'); // özündən
+        $this->post(route('kuryer.team.collect', $anar), ['amount' => 30, 'note' => 'axşam'])->assertSessionHas('success');
 
         $balances = $f->balances();
         $this->assertSame(2000, (int) $balances[$f->courierAccount($anar)->id]);
@@ -305,20 +305,20 @@ class CourierFlowTest extends TestCase
         $this->assertStringContainsString('Qalıq: 20.00 AZN', $collect->message);
 
         // Filtrlər: tarixçə növə görə (qalıq bütün tarixçə üzrə qalır), arxiv statusa / axtarışa görə
-        $html = $this->get(route('admin.courier.team.show', ['courier' => $anar, 'h_kind' => 'courier_advance']))->assertOk()->getContent();
+        $html = $this->get(route('kuryer.team.show', ['courier' => $anar, 'h_kind' => 'courier_advance']))->assertOk()->getContent();
         $this->assertStringContainsString('Avans / qaytarma aldı', $html);
         $this->assertStringNotContainsString('Baş kuryerə təhvil —', $html);
         $this->assertStringContainsString('1 hərəkət', $html);
         DB::table('orders')->where('id', $order->id)->update(['order_status_id' => DB::table('order_statuses')->where('code', 'delivered')->value('id')]);
-        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_status' => 'delivered', 'a_q' => 'PS1']))->assertOk()->assertSee('1 sifariş · 120.00 AZN');
-        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_q' => 'yoxdur']))->assertOk()->assertSee('Filtrə uyğun sifariş yoxdur.');
+        $this->get(route('kuryer.team.show', ['courier' => $anar, 'a_status' => 'delivered', 'a_q' => 'PS1']))->assertOk()->assertSee('1 sifariş · 120.00 AZN');
+        $this->get(route('kuryer.team.show', ['courier' => $anar, 'a_q' => 'yoxdur']))->assertOk()->assertSee('Filtrə uyğun sifariş yoxdur.');
         // Baş kuryer: filtrsiz — yalnız bu gün; filtrdə ən çox 3 gün geriyə (daha əvvəlki tarix yazsa da); admin hamısını görür
         DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()->subDays(2)]);
-        $this->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('0 sifariş · 0.00 AZN')->assertSee('Bu günün siyahısı.');
-        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_from' => now()->subDays(10)->toDateString()]))
+        $this->get(route('kuryer.team.show', $anar))->assertOk()->assertSee('0 sifariş · 0.00 AZN')->assertSee('Bu günün siyahısı.');
+        $this->get(route('kuryer.team.show', ['courier' => $anar, 'a_from' => now()->subDays(10)->toDateString()]))
             ->assertOk()->assertSee('1 sifariş · 120.00 AZN')->assertSee('Ən çox 3 gün geriyə')->assertSee('min="'.today()->subDays(3)->toDateString().'"', false);
         DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()->subDays(5)]);
-        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_from' => now()->subDays(10)->toDateString()]))->assertOk()->assertSee('0 sifariş · 0.00 AZN');
+        $this->get(route('kuryer.team.show', ['courier' => $anar, 'a_from' => now()->subDays(10)->toDateString()]))->assertOk()->assertSee('0 sifariş · 0.00 AZN');
         $admin = User::forceCreate(['name' => 'Admin']);
         $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'courier.team', 'guard_name' => 'admin']));
         $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('1 sifariş · 120.00 AZN')->assertDontSee('Bu günün siyahısı');
@@ -326,31 +326,30 @@ class CourierFlowTest extends TestCase
         DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()]);
 
         // Anarın öz tarixçəsində
-        $this->actingAs($anar, 'admin')->get(route('admin.dashboard'))->assertOk()->assertSee('Baş kuryerə təhvil');
+        $this->actingAs($anar, 'admin')->get(route('kuryer.account'))->assertOk()->assertSee('Baş kuryerə təhvil');
 
         // Baş kuryer Anarın sifarişini (heç nə götürülməyib) Vüsala ötürür — hər ikisinə Telegram
         DB::table('orders')->where('id', $order->id)->update(['order_status_id' => DB::table('order_statuses')->where('code', 'courier_assigned')->value('id')]);
         $vusal = User::forceCreate(['name' => 'Vüsal', 'telegram_id' => '222']);
         $vusal->assignRole(FinanceService::COURIER_ROLE);
-        $this->actingAs($anar, 'admin')->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $vusal->id])->assertForbidden();
-        $this->actingAs($head, 'admin')->get(route('admin.courier.team.show', $anar))->assertSee('Başqa kuryerə ötür');
-        $this->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $anar->id])->assertSessionHasErrors('status');
-        $this->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $vusal->id])->assertSessionHas('success');
+        $this->actingAs($anar, 'admin')->post(route('kuryer.team.transfer', [$anar, $order]), ['courier_id' => $vusal->id])->assertForbidden();
+        $this->actingAs($head, 'admin')->get(route('kuryer.team.show', $anar))->assertSee('Başqa kuryerə ötür');
+        $this->post(route('kuryer.team.transfer', [$anar, $order]), ['courier_id' => $anar->id])->assertSessionHasErrors('status');
+        $this->post(route('kuryer.team.transfer', [$anar, $order]), ['courier_id' => $vusal->id])->assertSessionHas('success');
         $this->assertSame($vusal->id, (int) $order->fresh()->courier_id);
         $this->assertStringContainsString('Baş kuryer (Rauf) sifarişi ötürdü: Anar → Vüsal', DB::table('order_status_logs')->where('kind', 'courier_change')->latest('id')->value('note'));
         $messages = \App\Models\SmsLog::where('context', 'courier_order')->pluck('message', 'msisdn');
         $this->assertSame('🔁 Rauf Anar adlı kuryerin PS1 sifarişini sizə ötürdü', $messages['222']);
         $this->assertSame('↪️ Rauf PS1 sifarişini sizdən Vüsal adlı kuryerə ötürdü', $messages['111']);
         // Artıq Anarın sifarişi deyil
-        $this->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $head->id])->assertNotFound();
+        $this->post(route('kuryer.team.transfer', [$anar, $order]), ['courier_id' => $head->id])->assertNotFound();
     }
 
-    /** Operator depo üçün "pul vermə" seçdi: kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" — depoya borc qalır */
-    public function test_courier_does_not_pay_the_warehouse_when_the_operator_says_so(): void
+    /** Kuryer tətbiqinin səhifələri üçün cədvəllər, "Kuryer" rolu; kuryeri qaytarır */
+    private function courierAppTables(): User
     {
         (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
         Schema::table('users', fn (Blueprint $t) => [$t->boolean('active')->default(true), $t->string('telegram_id')->nullable()]);
-        // Kuryerin sifariş səhifəsi üçün
         Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->string('mobile')->nullable(), $t->string('mobile_2')->nullable(), $t->timestamps()]);
         Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->string('city')->nullable(), $t->string('address')->nullable(), $t->boolean('on_call')->default(false), $t->timestamps()]);
         Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable()]);
@@ -364,6 +363,62 @@ class CourierFlowTest extends TestCase
         \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
         $courier = User::forceCreate(['name' => 'Fərid']);
         $courier->assignRole(FinanceService::COURIER_ROLE);
+
+        Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->string('image'), $t->integer('sort_order')->default(0)]);
+
+        return $courier;
+    }
+
+    /** /kuryer: girişsiz — admin girişinə, kuryer admin panelə girəndə — tətbiqə, admin — tətbiqə yox */
+    public function test_courier_app_access_and_redirects(): void
+    {
+        $courier = $this->courierAppTables();
+        [$order] = $this->assigned($courier);
+
+        $this->get(route('kuryer.home'))->assertRedirect(route('admin.login.form'));
+        $this->actingAs($courier, 'admin');
+        $this->get(route('admin.dashboard'))->assertRedirect(route('kuryer.home'));
+        $this->get('/admin/orders')->assertRedirect(route('kuryer.home'));
+        $this->get('/admin/courier/order/'.$order->id)->assertRedirect(route('kuryer.order', $order)); // köhnə Telegram linki
+        $this->get(route('admin.logout'))->assertRedirect(route('admin.login.form'));            // çıxış toxunulmur
+
+        $admin = User::forceCreate(['name' => 'Admin']);
+        $this->actingAs($admin, 'admin')->get(route('kuryer.home'))->assertRedirect(route('admin.dashboard'));
+
+        $sw = $this->get(route('kuryer.sw'))->assertOk();
+        $this->assertSame('/kuryer', $sw->headers->get('Service-Worker-Allowed'));
+        $this->assertStringContainsString('application/javascript', $sw->headers->get('Content-Type'));
+    }
+
+    /** Tətbiqin səhifələri: öz CSS / JS-i (admin panelin heç nəyi yüklənmir), aktiv sifariş, məhsulun şəkli */
+    public function test_courier_app_pages(): void
+    {
+        $courier = $this->courierAppTables();
+        [$order] = $this->assigned($courier);
+        $productId = DB::table('products')->insertGetId(['name' => 'Sauvage']);
+        $order->items()->update(['product_id' => $productId]);
+        DB::table('product_images')->insert(['product_id' => $productId, 'image' => 'sauvage.jpg']);
+        $this->actingAs($courier, 'admin');
+
+        $home = $this->get(route('kuryer.home'))->assertOk()->getContent();
+        $this->assertStringContainsString('courier-app/app.css', $home);
+        $this->assertStringContainsString('courier-app/manifest.webmanifest', $home);
+        $this->assertStringNotContainsString('backend/', $home);
+        $this->assertStringContainsString(route('kuryer.order', $order), $home);
+        $this->assertMatchesRegularExpression('/Aktiv<\/div>\s*<div class="stat__value accent">1</', $home);
+
+        $page = $this->get(route('kuryer.order', $order))->assertOk()->getContent();
+        $this->assertStringNotContainsString('backend/', $page);
+        $this->assertStringContainsString('data-zoom="'.asset('frontend/uploads/products/sauvage.jpg').'"', $page);
+        $this->assertStringContainsString(route('kuryer.pick', [$order, $order->items()->first()->allocations()->first()->id]), $page);
+
+        $this->get(route('kuryer.account'))->assertOk()->assertSee('Haqq-hesab tarixçəsi')->assertSee(route('admin.logout'), false);
+    }
+
+    /** Operator depo üçün "pul vermə" seçdi: kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" — depoya borc qalır */
+    public function test_courier_does_not_pay_the_warehouse_when_the_operator_says_so(): void
+    {
+        $courier = $this->courierAppTables();
 
         // Kuryer hələ təyin olunmayıb: depo seçilib → operator kuryeri "pul vermə" ilə təyin edir
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'total' => 120, 'payment_status' => 'cod']);
@@ -379,19 +434,19 @@ class CourierFlowTest extends TestCase
         $this->assertSame('courier_assigned', $this->statusCode($order));
 
         $this->actingAs($courier, 'admin');
-        $html = $this->get(route('admin.courier.order', $order))->assertOk()->getContent();
+        $html = $this->get(route('kuryer.order', $order))->assertOk()->getContent();
         $this->assertStringNotContainsString('Depoya ödəniş', $html);
         $this->assertStringNotContainsString('ödədim', $html);
         $this->assertStringContainsString('Götürdüm', $html);
         $this->assertStringNotContainsString('Operatorun qeydi', $html);
         // Operatorun kuryerə qeydi — kuryerin səhifəsində rəngli blokda
         $order->forceFill(['courier_note' => 'Saat 18:00-dan sonra çatdırın'])->save();
-        $html = $this->get(route('admin.courier.order', $order))->assertOk()->getContent();
+        $html = $this->get(route('kuryer.order', $order))->assertOk()->getContent();
         $this->assertStringContainsString('Operatorun qeydi', $html);
         $this->assertStringContainsString('Saat 18:00-dan sonra çatdırın', $html);
-        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertForbidden();
+        $this->post(route('kuryer.pay', [$order, $part->id]), ['pick' => 1])->assertForbidden();
 
-        $this->post(route('admin.courier.pick', [$order, $part->id]))->assertSessionHas('success');
+        $this->post(route('kuryer.pick', [$order, $part->id]))->assertSessionHas('success');
         $f = app(FinanceService::class);
         $f->syncAccounts();
         $this->assertSame('picked', $part->fresh()->status);
@@ -411,13 +466,13 @@ class CourierFlowTest extends TestCase
         $f = app(FinanceService::class);
         $this->actingAs($courier, 'admin');
 
-        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', '80.00 AZN depoya ödəndi, götürüldü.');
+        $this->post(route('kuryer.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', '80.00 AZN depoya ödəndi, götürüldü.');
         $this->assertSame('picked', $part->fresh()->status);
         $this->assertSame(8000, $f->allocationPaid([$part->id])[$part->id]);
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
 
         // Təkrar basılsa ikinci dəfə ödənmir
-        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', 'Depoya artıq ödənilib, götürüldü.');
+        $this->post(route('kuryer.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', 'Depoya artıq ödənilib, götürüldü.');
         $this->assertSame(8000, $f->allocationPaid([$part->id])[$part->id]);
     }
 
