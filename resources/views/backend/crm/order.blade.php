@@ -325,6 +325,7 @@
                                 @else<span class="text-muted">Təyin edilməyib</span>@endif
                             </dd></div>
                             <div class="od-facts__wide"><dt>Müştərinin qeydi</dt><dd>{{ $order->customer_note ?: '—' }}</dd></div>
+                            <div class="od-facts__wide"><dt>Kuryer üçün qeyd</dt><dd>@if($order->courier_note)<span class="text-warning fw-bold">{{ $order->courier_note }}</span>@else — @endif</dd></div>
                         </dl>
                     </div>
                 </div>
@@ -415,6 +416,21 @@
                         @endforeach
                         <div class="form-text">Söndürülən anbarda kuryer pul vermir və pulla bağlı heç nə görmür — yalnız "Götürdüm" basır, anbara borc qalır.</div>
                     @endif
+                    {{-- Kuryerə qeyd: varsa — vurğulanır, operator gözdən keçirib təsdiqləyir (dəyişə də bilər) --}}
+                    <div class="mt-4 {{ $order->courier_note ? 'alert alert-warning mb-0' : '' }}">
+                        @if($order->courier_note)
+                            <div class="fw-bold mb-2">Kuryerə qeyd var — gözdən keçirin</div>
+                        @else
+                            <label for="courierNote" class="fw-bold mb-2">Kuryer üçün qeyd <span class="text-muted small fw-normal">(istəyə görə)</span></label>
+                        @endif
+                        <textarea class="form-control" name="courier_note" id="courierNote" rows="3" maxlength="1000" aria-label="Kuryer üçün qeyd">{{ old('courier_note', $order->courier_note) }}</textarea>
+                        @if($order->courier_note)
+                            <label class="form-check mt-2 mb-0">
+                                <input class="form-check-input" type="checkbox" name="note_reviewed" value="1" required>
+                                <span class="form-check-label">Qeydi gözdən keçirdim — kuryerə göstərilsin</span>
+                            </label>
+                        @endif
+                    </div>
                     <div class="form-text mt-3">Sifarişin əvvəlindən sonuna eyni kuryer işləyir. Kuryer məhsul götürəndən sonra dəyişmək olmaz.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary" @disabled(empty($couriers) || $couriers->isEmpty())>Təyin et</button></div>

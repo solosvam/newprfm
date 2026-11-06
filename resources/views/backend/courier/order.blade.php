@@ -36,6 +36,14 @@
     </div>
     @include('backend.procurement.feedback')
 
+    @if($order->courier_note)
+        {{-- Operatorun kuryerə qeydi — rəngli, hər şeydən əvvəl --}}
+        <div class="courier-note mb-4" role="note">
+            <div class="courier-note__title"><i data-acorn-icon="warning-hexagon" data-acorn-size="16"></i> Operatorun qeydi</div>
+            <div class="courier-note__text">{{ $order->courier_note }}</div>
+        </div>
+    @endif
+
     @if($cancelled)
         {{-- Ləğv edilmiş sifariş: kuryerə yalnız anbara qaytarılacaq mallar lazımdır --}}
         <div class="courier-cancelled mb-4">

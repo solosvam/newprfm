@@ -62,3 +62,9 @@
 .courier-picked { padding: 12px 16px; border-radius: var(--border-radius-md); background: rgba(var(--success-rgb, 57, 148, 46), .1); color: var(--success); font-weight: 600; }
 .courier-refuse + .courier-refuse { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--separator); }
 .courier-refund { padding: 10px 12px; border-radius: var(--border-radius-md); background: var(--background); }
+
+/* Operatorun kuryerə qeydi */
+.courier-note { padding: 14px 16px; border-radius: var(--border-radius-md); border-left: 4px solid var(--warning); background: rgba(var(--warning-rgb, 235, 182, 30), .14); color: var(--body); }
+.courier-note__title { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-weight: 700; color: var(--warning); }
+.courier-note__text { white-space: pre-line; font-size: 15px; }
+.courier-note--compact { padding: 8px 12px; font-size: 13px; white-space: pre-line; }

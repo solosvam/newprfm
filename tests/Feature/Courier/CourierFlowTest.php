@@ -297,7 +297,7 @@ class CourierFlowTest extends TestCase
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->integer('size_id')->nullable()]);
         Schema::table('products', fn (Blueprint $t) => $t->integer('brand_id')->nullable());
         Schema::table('orders', fn (Blueprint $t) => [$t->unsignedBigInteger('customer_address_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->nullable(),
-            $t->string('meeting_place')->nullable(), $t->boolean('gift_wrap')->default(false)]);
+            $t->string('meeting_place')->nullable(), $t->boolean('gift_wrap')->default(false), $t->text('customer_note')->nullable(), $t->text('courier_note')->nullable()]);
         DB::table('customers')->insert(['id' => 1, 'name' => 'Aysel', 'mobile' => '0501234567']);
         \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
         $courier = User::forceCreate(['name' => 'Fərid']);
@@ -321,6 +321,12 @@ class CourierFlowTest extends TestCase
         $this->assertStringNotContainsString('Anbara ödəniş', $html);
         $this->assertStringNotContainsString('ödədim', $html);
         $this->assertStringContainsString('Götürdüm', $html);
+        $this->assertStringNotContainsString('Operatorun qeydi', $html);
+        // Operatorun kuryerə qeydi — kuryerin səhifəsində rəngli blokda
+        $order->forceFill(['courier_note' => 'Saat 18:00-dan sonra çatdırın'])->save();
+        $html = $this->get(route('admin.courier.order', $order))->assertOk()->getContent();
+        $this->assertStringContainsString('Operatorun qeydi', $html);
+        $this->assertStringContainsString('Saat 18:00-dan sonra çatdırın', $html);
         $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertForbidden();
 
         $this->post(route('admin.courier.pick', [$order, $part->id]))->assertSessionHas('success');

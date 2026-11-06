@@ -488,6 +488,7 @@
                 ? Number(root.querySelector('input[name="crm_credit_period"]:checked')?.value) || null : null,
             credit_total: code === 'installment' && creditOverride !== null ? creditOverride : null,
             gift_wrap: els.giftWrap.checked,
+            courier_note: root.querySelector('#crmOrderCourierNote')?.value.trim() || null,
             // qiymət əl ilə dəyişibsə — seçilən bonus faizi (server də yoxlayır)
             bonus_percent: priceChanged() ? manualBonusPercent : null,
         };

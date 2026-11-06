@@ -412,6 +412,7 @@ class CrmController extends Controller
             // Kreditin razılaşdırılan ümumi məbləği (kampaniya) — yalnız crm.credit_total icazəsi ilə
             'credit_total' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'gift_wrap' => ['nullable', 'boolean'],
+            'courier_note' => ['nullable', 'string', 'max:1000'],
             // Operator qiyməti əl ilə dəyişibsə — bonus faizi 0..admin ayarı (standart 0)
             'bonus_percent' => ['nullable', 'integer', 'min:0', 'max:'.(int) floor((float) \App\Models\Setting::valueOf('order_bonus_percent', 5))],
         ], [
@@ -534,6 +535,7 @@ class CrmController extends Controller
                 'created_by' => auth()->id(),
                 'order_status_id' => $initialStatus->id,
                 'gift_wrap' => $giftWrap,
+                'courier_note' => trim((string) ($data['courier_note'] ?? '')) ?: null,
                 // qiymət əl ilə dəyişibsə — operatorun seçdiyi faiz (standart 0); yoxdursa sifariş anındakı admin faizi (sabitlənir)
                 'bonus_percent' => $manualPrice ? (int) ($data['bonus_percent'] ?? 0) : app(\App\Services\BonusService::class)->currentPercent(),
                 'subtotal' => $subtotal,
@@ -707,10 +709,16 @@ class CrmController extends Controller
     public function assignCourier(Request $request, Customer $customer, Order $order, OrderStatusService $statuses): RedirectResponse
     {
         abort_unless($order->customer_id === $customer->id, 404);
-        $data = $request->validate(['courier_id' => ['required', 'integer'], 'pays' => ['nullable', 'array'], 'pays.*' => ['boolean']],
-            ['courier_id.required' => 'Kuryeri seçin.']);
+        $data = $request->validate([
+            'courier_id' => ['required', 'integer'], 'pays' => ['nullable', 'array'], 'pays.*' => ['boolean'],
+            'courier_note' => ['nullable', 'string', 'max:1000'],
+            // Sifarişdə kuryerə qeyd varsa — operator onu gözdən keçirdiyini təsdiqləyir
+            'note_reviewed' => [Rule::requiredIf(filled($order->courier_note)), 'accepted'],
+        ], ['courier_id.required' => 'Kuryeri seçin.', 'note_reviewed.required' => 'Kuryerə qeydi gözdən keçirdiyinizi təsdiqləyin.',
+            'note_reviewed.accepted' => 'Kuryerə qeydi gözdən keçirdiyinizi təsdiqləyin.']);
         $courier = $this->couriers()->firstWhere('id', (int) $data['courier_id']);
         abort_if(!$courier, 422, 'Kuryer tapılmadı.');
+        $order->forceFill(['courier_note' => trim((string) ($data['courier_note'] ?? '')) ?: null])->save();
         $statuses->assignCourier($order, $courier, (int) auth('admin')->id(), $data['pays'] ?? null);
 
         return back()->with('success', 'Kuryer təyin olundu: '.trim($courier->full_name).'.');

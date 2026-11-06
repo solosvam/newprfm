@@ -100,6 +100,9 @@
                 <span>Hədiyyəlik bükülsün</span>
                 <small class="text-muted ms-auto">{{ $giftFee > 0 ? '+' . number_format($giftFee, 2) . ' ₼' : 'Pulsuz' }}</small>
             </label>
+            {{-- Kuryerə qeyd: kuryer təyin olunanda operator gözdən keçirir, kuryerin səhifəsində rəngli görünür --}}
+            <label for="crmOrderCourierNote" class="form-label mt-3 mb-1">Kuryer üçün qeyd <span class="text-muted small">(istəyə görə)</span></label>
+            <textarea class="form-control" id="crmOrderCourierNote" rows="2" maxlength="1000" placeholder="Məs.: saat 18:00-dan sonra çatdırın, qapıda zəng etməyin…"></textarea>
         </div>
 
         {{-- 4. Ödəniş --}}

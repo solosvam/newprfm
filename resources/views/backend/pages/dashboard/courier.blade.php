@@ -54,6 +54,7 @@
                 <span>{!! $collect > 0 ? 'Alınacaq: <b>'.number_format($collect, 2).' AZN</b>' : '<span class="text-success">Ödənilib</span>' !!}</span>
                 @if($order->gift_wrap)<span class="badge bg-outline-secondary">Hədiyyəlik</span>@endif
             </div>
+            @if($order->courier_note)<div class="courier-note courier-note--compact mt-2"><b>Qeyd:</b> {{ $order->courier_note }}</div>@endif
         </div>
     </a>
 @empty
