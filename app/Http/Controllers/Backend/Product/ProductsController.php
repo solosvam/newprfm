@@ -134,7 +134,7 @@ class ProductsController extends Controller
 
                     $manager
                         ->decode($image)
-                        ->cover(600, 600)
+                        ->contain(600, 600, 'ffffff') // kəsmədən: bütöv şəkil kvadrata, boş yerlər ağ (hündür / enli şəkil)
                         ->save($path, quality: 82);
 
                     ProductImage::create([
@@ -214,7 +214,7 @@ class ProductsController extends Controller
             try {
                 $manager
                     ->decode($contents)
-                    ->cover(600, 600)
+                    ->contain(600, 600, 'ffffff') // kəsmədən: bütöv şəkil kvadrata, boş yerlər ağ (hündür / enli şəkil)
                     ->save($path, quality: 82);
             } catch (Throwable $exception) {
                 report($exception);
@@ -401,7 +401,7 @@ class ProductsController extends Controller
 
                     $manager
                         ->decode($image)
-                        ->cover(600, 600)
+                        ->contain(600, 600, 'ffffff') // kəsmədən: bütöv şəkil kvadrata, boş yerlər ağ (hündür / enli şəkil)
                         ->save($path, quality: 82);
 
                     ProductImage::create([
