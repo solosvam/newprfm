@@ -33,7 +33,10 @@ class SmsTemplateController extends Controller
     public function index(Request $request, SmsService $sms)
     {
         $tab = in_array($request->query('tab'), ['log', 'problems'], true) ? $request->query('tab') : 'templates';
+        // Sonradan əlavə olunan alt şablon (məs. crm_order_accepted_no_bonus) əsas şablonun yanında görünsün
         $templates = SmsTemplate::orderBy('id')->get();
+        $ids = $templates->pluck('id', 'code');
+        $templates = $templates->sortBy(fn ($t) => [$ids[preg_replace('/_no_bonus$/', '', $t->code)] ?? $t->id, $t->id])->values();
 
         $logs = null;
         if ($tab !== 'templates') {
