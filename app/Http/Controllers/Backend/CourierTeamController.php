@@ -99,6 +99,7 @@ class CourierTeamController extends Controller
             'archiveTotals' => ['count' => (clone $archive)->count(), 'sum' => (float) (clone $archive)->sum('total')],
             'archiveStatuses' => $archiveStatuses,
             'statuses' => $statuses,
+            'couriers' => $statuses->couriers()->reject(fn ($u) => $u->id === $courier->id)->values(),
             'canCollect' => $me->can('courier.collect') && FinanceService::isCourier($me) && $me->id !== $courier->id && $balance > 0,
         ]);
     }
@@ -133,6 +134,18 @@ class CourierTeamController extends Controller
         rescue(fn () => $telegram->moneyCollected($movement, $courier, $me, $after), null, !app()->runningUnitTests());
 
         return back()->with('success', number_format((float) $movement->amount, 2).' AZN '.trim($courier->full_name).' adlı kuryerdən hesabınıza köçürüldü.');
+    }
+
+    /** Baş kuryer kuryerin sifarişini başqa kuryerə ötürür (toplamadan əvvəl — OrderStatusService::transferBlock) */
+    public function transfer(Request $request, User $courier, Order $order, OrderStatusService $statuses): RedirectResponse
+    {
+        abort_unless(FinanceService::isCourier($courier) && (int) $order->courier_id === (int) $courier->id, 404);
+        $data = $request->validate(['courier_id' => ['required', 'integer']], ['courier_id.required' => 'Kuryeri seçin.']);
+        $to = $statuses->couriers()->firstWhere('id', (int) $data['courier_id']);
+        abort_if(!$to, 422, 'Kuryer tapılmadı.');
+        $statuses->transferCourier($order, $to, (int) auth('admin')->id(), byHead: true);
+
+        return back()->with('success', 'Sifariş '.$order->order_no.' '.trim($to->full_name).' adlı kuryerə ötürüldü.');
     }
 
     private function activeOrders(User $courier)

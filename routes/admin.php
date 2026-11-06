@@ -106,6 +106,7 @@ Route::prefix('admin')
                     Route::get('/', 'index');
                     Route::get('/{courier}', 'show')->whereNumber('courier')->name('.show');
                     Route::post('/{courier}/collect', 'collect')->whereNumber('courier')->middleware('can:courier.collect')->name('.collect');
+                    Route::post('/{courier}/orders/{order}/transfer', 'transfer')->whereNumber(['courier', 'order'])->name('.transfer');
                 });
 
             // Ferrum Chrome extension-u (extensions/ferrum-filler): sifariş + kredit məlumatları JSON

@@ -281,6 +281,22 @@ class CourierFlowTest extends TestCase
 
         // Anarın öz tarixçəsində
         $this->actingAs($anar, 'admin')->get(route('admin.dashboard'))->assertOk()->assertSee('Baş kuryerə təhvil');
+
+        // Baş kuryer Anarın sifarişini (heç nə götürülməyib) Vüsala ötürür — hər ikisinə Telegram
+        DB::table('orders')->where('id', $order->id)->update(['order_status_id' => DB::table('order_statuses')->where('code', 'courier_assigned')->value('id')]);
+        $vusal = User::forceCreate(['name' => 'Vüsal', 'telegram_id' => '222']);
+        $vusal->assignRole(FinanceService::COURIER_ROLE);
+        $this->actingAs($anar, 'admin')->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $vusal->id])->assertForbidden();
+        $this->actingAs($head, 'admin')->get(route('admin.courier.team.show', $anar))->assertSee('Başqa kuryerə ötür');
+        $this->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $anar->id])->assertSessionHasErrors('status');
+        $this->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $vusal->id])->assertSessionHas('success');
+        $this->assertSame($vusal->id, (int) $order->fresh()->courier_id);
+        $this->assertStringContainsString('Baş kuryer (Rauf) sifarişi ötürdü: Anar → Vüsal', DB::table('order_status_logs')->where('kind', 'courier_change')->latest('id')->value('note'));
+        $messages = \App\Models\SmsLog::where('context', 'courier_order')->pluck('message', 'msisdn');
+        $this->assertSame('🔁 Rauf Anar adlı kuryerin PS1 sifarişini sizə ötürdü', $messages['222']);
+        $this->assertSame('↪️ Rauf PS1 sifarişini sizdən Vüsal adlı kuryerə ötürdü', $messages['111']);
+        // Artıq Anarın sifarişi deyil
+        $this->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $head->id])->assertNotFound();
     }
 
     /** Operator anbar üçün "pul vermə" seçdi: kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" — anbara borc qalır */

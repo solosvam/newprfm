@@ -78,6 +78,28 @@
                         @endforeach
                     </div>
                 @endforeach
+                {{-- Başqa kuryerə ötür — heç nə götürülməyibsə (kuryerin özündəki qayda ilə eyni) --}}
+                @if($code === 'courier_assigned')
+                    @php $transferBlock = $statuses->transferBlock($order); @endphp
+                    @if(!$transferBlock && $couriers->isNotEmpty())
+                        <details class="courier-more mt-3 mb-0">
+                            <summary class="btn btn-outline-secondary w-100">Başqa kuryerə ötür</summary>
+                            <form method="POST" action="{{ route('admin.courier.team.transfer', [$courier, $order]) }}" data-once class="courier-more__form"
+                                  onsubmit="return confirm('Sifariş {{ $order->order_no }} seçilən kuryerə ötürülsün?')">
+                                @csrf
+                                <label class="form-label" for="transfer-{{ $order->id }}">Kuryer</label>
+                                <select id="transfer-{{ $order->id }}" name="courier_id" class="form-select" required>
+                                    <option value="">— seçin —</option>
+                                    @foreach($couriers as $c)<option value="{{ $c->id }}">{{ trim($c->full_name) }}</option>@endforeach
+                                </select>
+                                <button class="btn btn-primary w-100 mt-2">Ötür</button>
+                                <div class="text-muted small mt-1">Hər iki kuryerə Telegram bildirişi gedir.</div>
+                            </form>
+                        </details>
+                    @elseif($transferBlock)
+                        <div class="text-muted small mt-2">{{ $transferBlock }}</div>
+                    @endif
+                @endif
             </div>
         </div>
     @empty

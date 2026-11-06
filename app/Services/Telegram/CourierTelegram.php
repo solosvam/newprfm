@@ -22,14 +22,24 @@ class CourierTelegram
     }
 
     /** $from — sifarişi ötürən kuryer (operator təyin edibsə null). Yalnız bildiriş və "Sifarişi aç" düyməsi — sifarişin məlumatı linkdədir */
-    public function orderAssigned(Order $order, User $courier, ?User $from, int $actor): ?SmsLog
+    public function orderAssigned(Order $order, User $courier, ?User $from, int $actor, ?User $head = null): ?SmsLog
     {
-        $text = $from
-            ? '🔁 <b>'.e(trim($from->full_name)).' sizə '.e($order->order_no).' sifarişini ötürdü</b>'
-            : '📦 <b>Sizə sifariş təyin olundu: '.e($order->order_no).'</b>';
+        $text = match (true) {
+            $head && $from && $from->id !== $head->id => '🔁 <b>'.e(trim($head->full_name)).' '.e(trim($from->full_name)).' adlı kuryerin '.e($order->order_no).' sifarişini sizə ötürdü</b>',
+            (bool) $from => '🔁 <b>'.e(trim($from->full_name)).' sizə '.e($order->order_no).' sifarişini ötürdü</b>',
+            default => '📦 <b>Sizə sifariş təyin olundu: '.e($order->order_no).'</b>',
+        };
         $button = ['inline_keyboard' => [[['text' => 'Sifarişi aç', 'url' => route('admin.courier.order', $order)]]]];
 
         return $this->send($courier, $text, 'courier_order', $order->getMorphClass(), $order->id, $actor, $button);
+    }
+
+    /** Baş kuryer kuryerin sifarişini başqasına ötürdü — köhnə kuryerə (sifariş onun siyahısından çıxdı) */
+    public function orderTakenAway(Order $order, User $courier, User $to, User $head): ?SmsLog
+    {
+        $text = '↪️ <b>'.e(trim($head->full_name)).' '.e($order->order_no).' sifarişini sizdən '.e(trim($to->full_name)).' adlı kuryerə ötürdü</b>';
+
+        return $this->send($courier, $text, 'courier_order', $order->getMorphClass(), $order->id, $head->id);
     }
 
     public function moneyCollected(MoneyMovement $movement, User $courier, User $head, int $balanceAfterCents): ?SmsLog

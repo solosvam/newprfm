@@ -286,26 +286,37 @@ class OrderStatusService
         };
     }
 
-    /** Kuryer öz sifarişini başqa kuryerə ötürür (məs. anbarlar ona uzaqdır) — toplamadan əvvəl */
-    public function transferCourier(Order $order, User $to, int $actor): void
+    /**
+     * Sifarişi başqa kuryerə ötürmək — toplamadan əvvəl (məs. anbarlar ona uzaqdır).
+     * Kuryer öz sifarişini ötürür; $byHead — baş kuryer (courier.team) istənilən kuryerin sifarişini ötürür, köhnə kuryerə də bildiriş gedir.
+     */
+    public function transferCourier(Order $order, User $to, int $actor, bool $byHead = false): void
     {
-        $from = DB::transaction(function () use ($order, $to, $actor) {
-            $locked = $this->courierOrder($order, $actor);
+        [$from, $head] = DB::transaction(function () use ($order, $to, $actor, $byHead) {
+            $locked = $byHead
+                ? Order::with(['status', 'items.allocations', 'items.product'])->lockForUpdate()->findOrFail($order->id)
+                : $this->courierOrder($order, $actor);
+            $this->ensure($locked->courier_id !== null, 'Sifarişə kuryer təyin olunmayıb.');
             $this->ensure(($block = $this->transferBlock($locked)) === null, (string) $block);
-            $this->ensure($to->id !== $actor, 'Başqa kuryer seçin.');
+            $this->ensure($to->id !== (int) $locked->courier_id, 'Başqa kuryer seçin.');
             $this->ensure($to->active && FinanceService::isCourier($to), 'Seçilən əməkdaş aktiv kuryer deyil.');
-            $from = User::find($actor);
+            $from = User::find($locked->courier_id);
+            $head = $byHead ? User::find($actor) : null;
             $locked->forceFill(['courier_id' => $to->id])->save();
             DB::table('order_status_logs')->insert([
                 'order_id' => $locked->id, 'status_id' => $locked->order_status_id, 'user_id' => $actor, 'kind' => 'courier_change',
-                'note' => 'Kuryer sifarişi ötürdü: '.trim((string) $from?->full_name).' → '.trim((string) $to->full_name),
+                'note' => ($head ? 'Baş kuryer ('.trim((string) $head->full_name).') sifarişi ötürdü: ' : 'Kuryer sifarişi ötürdü: ')
+                    .trim((string) $from?->full_name).' → '.trim((string) $to->full_name),
                 'created_at' => now(), 'updated_at' => now(),
             ]);
             app(FinanceService::class)->courierAccount($to);
 
-            return $from;
+            return [$from, $head];
         });
-        $this->notifyCourier($order, $to, $from, $actor);
+        rescue(fn () => app(\App\Services\Telegram\CourierTelegram::class)->orderAssigned($order->fresh(), $to, $from, $actor, $head), null, !app()->runningUnitTests());
+        if ($head && $from && $from->id !== $head->id) {
+            rescue(fn () => app(\App\Services\Telegram\CourierTelegram::class)->orderTakenAway($order->fresh(), $from, $to, $head), null, !app()->runningUnitTests());
+        }
     }
 
     /** Sifariş kilidlənir; yalnız ona təyin olunmuş kuryer */
