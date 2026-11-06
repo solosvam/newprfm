@@ -25,6 +25,9 @@ class CourierTeamController extends Controller
     /** Kuryerin işdə olan sifarişləri: toplanır / yoldadır / ünvandadır və ya depoya qaytarılacaq malı var */
     public const ACTIVE = ['courier_assigned', 'sent'];
 
+    /** Baş kuryer (kuryer) arxivdə və tarixçədə ən çox neçə gün geriyə baxa bilər; adminə məhdudiyyət yoxdur */
+    public const COURIER_DAYS_BACK = 3;
+
     public function index(FinanceService $finance): View
     {
         $balances = $finance->balances();
@@ -49,6 +52,7 @@ class CourierTeamController extends Controller
     /**
      * Arxiv filtri: a_from / a_to (son dəyişiklik tarixi), a_status, a_q (sifariş nömrəsi və ya müştəri);
      * tarixçə filtri: h_from / h_to, h_kind. Səhifələr: page (arxiv), hpage (tarixçə).
+     * Baxan kuryerdirsə (baş kuryer) — hər iki siyahı son COURIER_DAYS_BACK gündən o yana getmir (filtrsiz də).
      */
     public function show(Request $request, User $courier, FinanceService $finance, OrderStatusService $statuses): View
     {
@@ -60,11 +64,14 @@ class CourierTeamController extends Controller
             'a_from' => ['nullable', 'date'], 'a_to' => ['nullable', 'date'], 'a_status' => ['nullable', 'string', 'max:30'], 'a_q' => ['nullable', 'string', 'max:60'],
             'h_from' => ['nullable', 'date'], 'h_to' => ['nullable', 'date'], 'h_kind' => ['nullable', 'string', 'max:30'],
         ]);
+        $minDate = FinanceService::isCourier($me) ? today()->subDays(self::COURIER_DAYS_BACK)->toDateString() : null;
+        // Sorğuda istifadə olunan "tarixdən": yazılan tarix, amma həddən əvvəl deyil (filtr formasında yazılan qalır)
+        $since = fn (?string $from) => $minDate && (!$from || \Illuminate\Support\Carbon::parse($from)->toDateString() < $minDate) ? $minDate : $from;
 
         // Arxiv: aktiv olmayan sifarişlər
         $archive = Order::where('courier_id', $courier->id)
             ->whereDoesntHave('status', fn ($q) => $q->whereIn('code', self::ACTIVE))
-            ->when($f['a_from'] ?? null, fn ($q, $d) => $q->whereDate('updated_at', '>=', $d))
+            ->when($since($f['a_from'] ?? null), fn ($q, $d) => $q->whereDate('updated_at', '>=', $d))
             ->when($f['a_to'] ?? null, fn ($q, $d) => $q->whereDate('updated_at', '<=', $d))
             ->when($f['a_status'] ?? null, fn ($q, $code) => $q->whereHas('status', fn ($s) => $s->where('code', $code)))
             ->when(trim((string) ($f['a_q'] ?? '')), function ($q, $text) {
@@ -79,7 +86,7 @@ class CourierTeamController extends Controller
         $ledger = $finance->courierLedger($account);
         $kinds = $ledger->pluck('m.kind')->unique()->mapWithKeys(fn ($k) => [$k => \App\Models\Finance\MoneyMovement::KINDS[$k][0] ?? $k])->sort();
         $history = $ledger
-            ->when($f['h_from'] ?? null, fn ($rows, $d) => $rows->filter(fn ($r) => $r['m']->occurred_at->toDateString() >= $d))
+            ->when($since($f['h_from'] ?? null), fn ($rows, $d) => $rows->filter(fn ($r) => $r['m']->occurred_at->toDateString() >= $d))
             ->when($f['h_to'] ?? null, fn ($rows, $d) => $rows->filter(fn ($r) => $r['m']->occurred_at->toDateString() <= $d))
             ->when($f['h_kind'] ?? null, fn ($rows, $k) => $rows->filter(fn ($r) => $r['m']->kind === $k))
             ->values();
@@ -91,6 +98,7 @@ class CourierTeamController extends Controller
             'courier' => $courier,
             'balance' => $balance,
             'filters' => $f,
+            'minDate' => $minDate,
             'history' => $historyPage,
             'historyTotals' => ['in' => $history->where('delta', '>', 0)->sum('delta'), 'out' => -$history->where('delta', '<', 0)->sum('delta')],
             'kinds' => $kinds,

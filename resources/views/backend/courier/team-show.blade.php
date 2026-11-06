@@ -114,8 +114,8 @@
         <form method="get" action="{{ route('admin.courier.team.show', $courier) }}#archive" class="courier-more__form">
             @foreach(request()->only(['h_from', 'h_to', 'h_kind']) as $key => $value)<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endforeach
             <div class="row g-2 mb-2">
-                <div class="col-6"><label class="form-label text-small mb-1">Tarixdən</label><input type="date" name="a_from" class="form-control" value="{{ $filters['a_from'] ?? '' }}"></div>
-                <div class="col-6"><label class="form-label text-small mb-1">Tarixədək</label><input type="date" name="a_to" class="form-control" value="{{ $filters['a_to'] ?? '' }}"></div>
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixdən</label><input type="date" name="a_from" class="form-control" value="{{ $filters['a_from'] ?? '' }}" @if($minDate) min="{{ $minDate }}" @endif></div>
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixədək</label><input type="date" name="a_to" class="form-control" value="{{ $filters['a_to'] ?? '' }}" @if($minDate) min="{{ $minDate }}" @endif></div>
             </div>
             <label class="form-label text-small mb-1">Status</label>
             <select name="a_status" class="form-select mb-2">
@@ -129,6 +129,7 @@
             </div>
         </form>
     </details>
+    @if($minDate)<div class="text-muted text-small mb-1">Son {{ \App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK }} gün göstərilir.</div>@endif
     <div class="text-muted text-small mb-2">{{ $archiveTotals['count'] }} sifariş · {{ number_format($archiveTotals['sum'], 2) }} AZN</div>
     @if($archive->isEmpty())
         <div class="card"><div class="card-body text-center text-muted py-4">{{ $aActive ? 'Filtrə uyğun sifariş yoxdur.' : 'Arxiv boşdur.' }}</div></div>
@@ -155,8 +156,8 @@
         <form method="get" action="{{ route('admin.courier.team.show', $courier) }}#history" class="courier-more__form">
             @foreach(request()->only(['a_from', 'a_to', 'a_status', 'a_q']) as $key => $value)<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endforeach
             <div class="row g-2 mb-2">
-                <div class="col-6"><label class="form-label text-small mb-1">Tarixdən</label><input type="date" name="h_from" class="form-control" value="{{ $filters['h_from'] ?? '' }}"></div>
-                <div class="col-6"><label class="form-label text-small mb-1">Tarixədək</label><input type="date" name="h_to" class="form-control" value="{{ $filters['h_to'] ?? '' }}"></div>
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixdən</label><input type="date" name="h_from" class="form-control" value="{{ $filters['h_from'] ?? '' }}" @if($minDate) min="{{ $minDate }}" @endif></div>
+                <div class="col-6"><label class="form-label text-small mb-1">Tarixədək</label><input type="date" name="h_to" class="form-control" value="{{ $filters['h_to'] ?? '' }}" @if($minDate) min="{{ $minDate }}" @endif></div>
             </div>
             <label class="form-label text-small mb-1">Növ</label>
             <select name="h_kind" class="form-select mb-2">
@@ -169,6 +170,7 @@
             </div>
         </form>
     </details>
+    @if($minDate)<div class="text-muted text-small mb-1">Son {{ \App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK }} gün göstərilir.</div>@endif
     <div class="text-muted text-small mb-2">{{ $history->total() }} hərəkət · <span class="text-warning">+{{ $money($historyTotals['in']) }}</span> · <span class="text-success">−{{ $money($historyTotals['out']) }}</span></div>
     @include('backend.courier._history', ['history' => $history, 'self' => false])
     <div class="mt-3">@include('backend._layout.simple-pagination', ['paginator' => $history])</div>

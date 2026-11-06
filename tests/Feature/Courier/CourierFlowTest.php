@@ -312,6 +312,15 @@ class CourierFlowTest extends TestCase
         DB::table('orders')->where('id', $order->id)->update(['order_status_id' => DB::table('order_statuses')->where('code', 'delivered')->value('id')]);
         $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_status' => 'delivered', 'a_q' => 'PS1']))->assertOk()->assertSee('1 sifariş · 120.00 AZN');
         $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_q' => 'yoxdur']))->assertOk()->assertSee('Filtrə uyğun sifariş yoxdur.');
+        // Baş kuryer 3 gündən o yana baxa bilməz (daha əvvəlki tarix yazsa da); admin hamısını görür
+        DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()->subDays(5)]);
+        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_from' => now()->subDays(10)->toDateString()]))
+            ->assertOk()->assertSee('0 sifariş · 0.00 AZN')->assertSee('Son 3 gün göstərilir.')->assertSee('min="'.today()->subDays(3)->toDateString().'"', false);
+        $admin = User::forceCreate(['name' => 'Admin']);
+        $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'courier.team', 'guard_name' => 'admin']));
+        $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('1 sifariş · 120.00 AZN')->assertDontSee('Son 3 gün');
+        $this->actingAs($head, 'admin');
+        DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()]);
 
         // Anarın öz tarixçəsində
         $this->actingAs($anar, 'admin')->get(route('admin.dashboard'))->assertOk()->assertSee('Baş kuryerə təhvil');
