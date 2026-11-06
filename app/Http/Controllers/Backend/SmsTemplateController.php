@@ -16,7 +16,7 @@ class SmsTemplateController extends Controller
      * (dəyişsə də, aktiv olsa da SMS getmir).
      */
     public const USAGE = [
-        'crm_order_accepted' => null,
+        'crm_order_accepted' => 'Operator CRM-də sifariş yaradanda müştəriyə ({bonus} — təhvildə yazılacaq bonus)',
         'crm_order_cancelled' => 'Operator CRM-də sifarişi ləğv edəndə müştəriyə',
         'easy_order_registration_bonus' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (qeydiyyat bonusu varsa)',
         'easy_order_registration' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (bonus yoxdursa)',

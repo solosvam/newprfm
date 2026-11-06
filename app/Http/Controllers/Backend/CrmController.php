@@ -581,6 +581,11 @@ class CrmController extends Controller
 
         // Kart / Birbank: müştəriyə SMS ilə ödəniş linki (login olmadan ödəyir)
         $message = "Sifariş {$order->order_no} yaradıldı.";
+        // Müştəriyə "sifarişiniz qəbul olundu" SMS-i (şablon: crm_order_accepted, aktivdirsə)
+        $accepted = app(\App\Services\Crm\OrderAcceptedSms::class)->send($order, auth('admin')->id());
+        if ($accepted !== null) {
+            $message .= $accepted ? ' Müştəriyə SMS göndərildi.' : ' Müştəriyə SMS göndərmək alınmadı.';
+        }
         if (in_array($code, Order::ONLINE_PAYMENT_CODES, true)) {
             try {
                 app(OrderPayLinkService::class)->sendSms($order);
