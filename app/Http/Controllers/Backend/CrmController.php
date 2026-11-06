@@ -713,7 +713,7 @@ class CrmController extends Controller
             'courier_id' => ['required', 'integer'], 'pays' => ['nullable', 'array'], 'pays.*' => ['boolean'],
             'courier_note' => ['nullable', 'string', 'max:1000'],
             // Sifarişdə kuryerə qeyd varsa — operator onu gözdən keçirdiyini təsdiqləyir
-            'note_reviewed' => [Rule::requiredIf(filled($order->courier_note)), 'accepted'],
+            'note_reviewed' => filled($order->courier_note) ? ['required', 'accepted'] : ['exclude'], // 'accepted' boş sahədə də işləyir
         ], ['courier_id.required' => 'Kuryeri seçin.', 'note_reviewed.required' => 'Kuryerə qeydi gözdən keçirdiyinizi təsdiqləyin.',
             'note_reviewed.accepted' => 'Kuryerə qeydi gözdən keçirdiyinizi təsdiqləyin.']);
         $courier = $this->couriers()->firstWhere('id', (int) $data['courier_id']);
