@@ -5,9 +5,11 @@
 @php
     $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN';
     $stepLabels = ['courier_assigned' => 'Toplanır', 'sent' => 'Yoldadır'];
+    // aktiv — hələ təhvil verilməyib (təhvildən sonra yalnız anbara qaytarılası qalanlar sayılmır)
+    $activeCount = $courier['orders']->filter(fn ($o) => in_array($o->status?->code, ['courier_assigned', 'sent'], true))->count();
 @endphp
 <div class="courier-summary mb-4">
-    <div class="card"><div class="card-body">
+    <div class="card courier-summary__wide"><div class="card-body">
         @if($courier['balance'] > 0)
             <div class="courier-summary__label">Şirkətə təhvil verməlisiniz</div>
             <div class="courier-summary__value text-warning">{{ $money($courier['balance']) }}</div>
@@ -18,6 +20,10 @@
             <div class="courier-summary__label">Hesablaşma</div>
             <div class="courier-summary__value">0.00 AZN</div>
         @endif
+    </div></div>
+    <div class="card"><div class="card-body">
+        <div class="courier-summary__label">Aktiv sifarişlər</div>
+        <div class="courier-summary__value {{ $activeCount ? 'text-primary' : '' }}">{{ $activeCount }}</div>
     </div></div>
     <div class="card"><div class="card-body">
         <div class="courier-summary__label">Bu gün təhvil verilib</div>
