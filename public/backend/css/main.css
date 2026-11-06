@@ -50,3 +50,11 @@ html[data-placement=horizontal] .nav-container .user-container .user .name {
     border-radius: 8px; background: var(--danger); color: #fff; font-size: 10px; line-height: 16px; text-align: center;
 }
 .notification-dropdown .admin-notification--unread a { font-weight: 700; }
+
+/* Mobil: istifadəçinin adı loqonun yanında (nav.blade.php) */
+.nav-mobile-user { display: none; }
+html[data-dimension=mobile] .nav-container .nav-mobile-user {
+    display: block; align-self: center; min-width: 0; max-width: 40vw; margin-left: 12px; padding-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, .45); color: #fff; font-size: 13px; line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

@@ -5,6 +5,8 @@
             <div class="img"></div>
         </a>
     </div>
+    {{-- Mobildə istifadəçinin adı loqonun yanında (istifadəçi menyusu mobildə gizlənir) --}}
+    <div class="nav-mobile-user" title="{{ trim(admin()->name.' '.admin()->surname) }}">{{ trim(admin()->name.' '.admin()->surname) }}</div>
     <!-- Logo End -->
 
     <!-- User Menu Start -->
