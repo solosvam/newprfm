@@ -12,7 +12,7 @@
                     <th>Ödəniş üsulu</th>
                     <th>Ödəniş statusu</th>
                     <th>Sifariş statusu</th>
-                    <th>Source</th>
+                    <th>Mənbə</th>
                     <th class="text-end">Məbləğ</th>
                     <th class="text-end" style="width:80px;">Edit</th>
                 </tr>
