@@ -499,3 +499,7 @@ footer .logo--svg { color: var(--on-accent-bg); }
 /* admin popup-u künc/zolaq mövqeyində açıqdırsa — FAB gizlənsin */
 body:has(.site-popup--corner, .site-popup--bar) .advisor-fab { opacity: 0; pointer-events: none; }
 .advisor-fab { transition: bottom .25s ease, opacity .2s ease; }
+
+/* Bütün sürüşmə zolaqları gizli (Windows-da kobud görünür): sürüşmə işləyir, zolaq görünmür */
+html, body, * { scrollbar-width: none !important; -ms-overflow-style: none; }
+::-webkit-scrollbar { display: none; width: 0; height: 0; }

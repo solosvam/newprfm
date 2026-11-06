@@ -11,10 +11,11 @@ class AdminMenuService
     /** Menyu bəndlərinin yanındakı saylar (badge açarı => say) */
     private function badgeCount(string $key): int
     {
-        return match ($key) {
+        // say alınmasa menyu yenə də açılmalıdır
+        return (int) rescue(fn () => match ($key) {
             'reviews.pending' => ProductReview::where('active', false)->count(),
             default => 0,
-        };
+        }, 0, false);
     }
 
     public function items(): array
