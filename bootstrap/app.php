@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Qısa domen (paf.az) — sessiyadan əvvəl, hər sorğuda: eyni yolu əsas sayta yönləndirir
         $middleware->prepend(\App\Http\Middleware\RedirectShortDomain::class);
+        // throttle:N,M — hər route-un öz sayğacı (ThrottlePerRoute)
+        $middleware->alias(['throttle' => \App\Http\Middleware\ThrottlePerRoute::class]);
         // Telegram webhook-u xaricdən gəlir — CSRF tokeni yoxdur (yoxlama gizli başlıqladır)
         $middleware->validateCsrfTokens(except: ['telegram/webhook']);
         // Locale needs the session started by the web middleware group.
