@@ -52,7 +52,7 @@ class CourierTeamController extends Controller
     /**
      * Arxiv filtri: a_from / a_to (son dəyişiklik tarixi), a_status, a_q (sifariş nömrəsi və ya müştəri);
      * tarixçə filtri: h_from / h_to, h_kind. Səhifələr: page (arxiv), hpage (tarixçə).
-     * Baxan kuryerdirsə (baş kuryer) — hər iki siyahı son COURIER_DAYS_BACK gündən o yana getmir (filtrsiz də).
+     * Baxan kuryerdirsə (baş kuryer): filtrsiz — yalnız bu gün; filtrdə ən çox COURIER_DAYS_BACK gün geriyə.
      */
     public function show(Request $request, User $courier, FinanceService $finance, OrderStatusService $statuses): View
     {
@@ -65,8 +65,17 @@ class CourierTeamController extends Controller
             'h_from' => ['nullable', 'date'], 'h_to' => ['nullable', 'date'], 'h_kind' => ['nullable', 'string', 'max:30'],
         ]);
         $minDate = FinanceService::isCourier($me) ? today()->subDays(self::COURIER_DAYS_BACK)->toDateString() : null;
-        // Sorğuda istifadə olunan "tarixdən": yazılan tarix, amma həddən əvvəl deyil (filtr formasında yazılan qalır)
-        $since = fn (?string $from) => $minDate && (!$from || \Illuminate\Support\Carbon::parse($from)->toDateString() < $minDate) ? $minDate : $from;
+        // Sorğuda istifadə olunan "tarixdən": kuryerə tarix yazılmayıbsa — bu gün, yazılıbsa — həddən əvvəl deyil
+        $since = function (?string $from) use ($minDate) {
+            if (!$minDate) {
+                return $from;
+            }
+            if (!$from) {
+                return today()->toDateString();
+            }
+
+            return max(\Illuminate\Support\Carbon::parse($from)->toDateString(), $minDate);
+        };
 
         // Arxiv: aktiv olmayan sifarişlər
         $archive = Order::where('courier_id', $courier->id)

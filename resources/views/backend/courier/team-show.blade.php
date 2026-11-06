@@ -129,7 +129,7 @@
             </div>
         </form>
     </details>
-    @if($minDate)<div class="text-muted text-small mb-1">Son {{ \App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK }} gün göstərilir.</div>@endif
+    @if($minDate)<div class="text-muted text-small mb-1">{{ filled($filters['a_from'] ?? null) ? 'Ən çox '.\App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK.' gün geriyə baxmaq olar.' : 'Bu günün siyahısı. Əvvəlki günlər — filtrdən (ən çox '.\App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK.' gün).' }}</div>@endif
     <div class="text-muted text-small mb-2">{{ $archiveTotals['count'] }} sifariş · {{ number_format($archiveTotals['sum'], 2) }} AZN</div>
     @if($archive->isEmpty())
         <div class="card"><div class="card-body text-center text-muted py-4">{{ $aActive ? 'Filtrə uyğun sifariş yoxdur.' : 'Arxiv boşdur.' }}</div></div>
@@ -170,7 +170,7 @@
             </div>
         </form>
     </details>
-    @if($minDate)<div class="text-muted text-small mb-1">Son {{ \App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK }} gün göstərilir.</div>@endif
+    @if($minDate)<div class="text-muted text-small mb-1">{{ filled($filters['h_from'] ?? null) ? 'Ən çox '.\App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK.' gün geriyə baxmaq olar.' : 'Bu günün siyahısı. Əvvəlki günlər — filtrdən (ən çox '.\App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK.' gün).' }}</div>@endif
     <div class="text-muted text-small mb-2">{{ $history->total() }} hərəkət · <span class="text-warning">+{{ $money($historyTotals['in']) }}</span> · <span class="text-success">−{{ $money($historyTotals['out']) }}</span></div>
     @include('backend.courier._history', ['history' => $history, 'self' => false])
     <div class="mt-3">@include('backend._layout.simple-pagination', ['paginator' => $history])</div>

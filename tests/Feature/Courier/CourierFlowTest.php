@@ -312,13 +312,16 @@ class CourierFlowTest extends TestCase
         DB::table('orders')->where('id', $order->id)->update(['order_status_id' => DB::table('order_statuses')->where('code', 'delivered')->value('id')]);
         $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_status' => 'delivered', 'a_q' => 'PS1']))->assertOk()->assertSee('1 sifariş · 120.00 AZN');
         $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_q' => 'yoxdur']))->assertOk()->assertSee('Filtrə uyğun sifariş yoxdur.');
-        // Baş kuryer 3 gündən o yana baxa bilməz (daha əvvəlki tarix yazsa da); admin hamısını görür
-        DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()->subDays(5)]);
+        // Baş kuryer: filtrsiz — yalnız bu gün; filtrdə ən çox 3 gün geriyə (daha əvvəlki tarix yazsa da); admin hamısını görür
+        DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()->subDays(2)]);
+        $this->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('0 sifariş · 0.00 AZN')->assertSee('Bu günün siyahısı.');
         $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_from' => now()->subDays(10)->toDateString()]))
-            ->assertOk()->assertSee('0 sifariş · 0.00 AZN')->assertSee('Son 3 gün göstərilir.')->assertSee('min="'.today()->subDays(3)->toDateString().'"', false);
+            ->assertOk()->assertSee('1 sifariş · 120.00 AZN')->assertSee('Ən çox 3 gün geriyə')->assertSee('min="'.today()->subDays(3)->toDateString().'"', false);
+        DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()->subDays(5)]);
+        $this->get(route('admin.courier.team.show', ['courier' => $anar, 'a_from' => now()->subDays(10)->toDateString()]))->assertOk()->assertSee('0 sifariş · 0.00 AZN');
         $admin = User::forceCreate(['name' => 'Admin']);
         $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'courier.team', 'guard_name' => 'admin']));
-        $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('1 sifariş · 120.00 AZN')->assertDontSee('Son 3 gün');
+        $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $anar))->assertOk()->assertSee('1 sifariş · 120.00 AZN')->assertDontSee('Bu günün siyahısı');
         $this->actingAs($head, 'admin');
         DB::table('orders')->where('id', $order->id)->update(['updated_at' => now()]);
 
