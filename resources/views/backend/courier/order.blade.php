@@ -96,9 +96,12 @@
                 @endphp
                 <div class="courier-part courier-part--{{ $part->status }}">
                     <div class="courier-part__top">
-                        <div>
+                        <div class="courier-part__product">
+                            @include('backend.courier._thumb', ['product' => $item->product])
+                            <div>
                             <div class="courier-part__name">{{ $item->product?->name }}</div>
                             <div class="text-muted small">{{ collect([$item->product?->brand?->name, $item->variant?->size?->name_az])->filter()->implode(' · ') }}</div>
+                            </div>
                         </div>
                         <div class="courier-part__qty">× {{ $part->quantity }}</div>
                     </div>
@@ -185,9 +188,12 @@
                 @foreach($rows as ['item' => $item, 'a' => $part])
                     <div class="courier-part courier-part--returning">
                         <div class="courier-part__top">
-                            <div>
+                            <div class="courier-part__product">
+                                @include('backend.courier._thumb', ['product' => $item->product])
+                                <div>
                                 <div class="courier-part__name">{{ $item->product?->name }}</div>
                                 <div class="text-muted small">{{ collect([$item->product?->brand?->name, $item->variant?->size?->name_az])->filter()->implode(' · ') }}</div>
+                                </div>
                             </div>
                             <div class="courier-part__qty">× {{ $part->quantity }}</div>
                         </div>
