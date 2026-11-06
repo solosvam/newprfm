@@ -281,7 +281,11 @@
 
         const chips = el('div', 'as-chips');
         product.variants.forEach((variant) => {
-            const chip = el('span', variant.match ? 'as-chip is-match' : 'as-chip');
+            // ölçüyə basanda — həmin ölçünün posteri (iri həcm + hissə-hissə qrafiki)
+            const chip = el('button', variant.match ? 'as-chip is-match' : 'as-chip');
+            chip.type = 'button';
+            chip.title = `${variant.size} üçün poster`;
+            chip.addEventListener('click', () => makePoster(product, chip, variant.id));
             chip.append(el('span', null, variant.size));
             // məhsul endirimi: köhnə qiymət üstündən xətt
             if (Number(variant.regular_price) > Number(variant.price)) chip.append(el('s', 'as-muted', variant.regular_price));
@@ -345,7 +349,7 @@
             : 'Avtomatik kopyalanmadı — "Kopyala" basın və ya PNG-ni endirin.', ok ? 'ok' : 'bad');
     }
 
-    function makePoster(product, button) {
+    function makePoster(product, button, variantId = null) {
         if (poster.busy || !window.ProductPoster) return;
         poster.busy = true;
         button.disabled = true;
@@ -359,7 +363,7 @@
         posterStatus(`${product.brand ? product.brand + ' ' : ''}${product.name} — poster hazırlanır…`);
         poster.box.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        const url = body.dataset.posterUrl.replace('__ID__', encodeURIComponent(product.id));
+        const url = body.dataset.posterUrl.replace('__ID__', encodeURIComponent(product.id)) + (variantId ? `?variant=${encodeURIComponent(variantId)}` : '');
         const task = fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin', cache: 'no-store' })
             .then(async (response) => {
                 const data = await response.json().catch(() => ({}));

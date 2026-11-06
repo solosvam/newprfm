@@ -171,7 +171,12 @@
         const pricesY = (product.discount ? untilY + 10 : subtitleY + 10) + 28 + 36;
         canvas.width = 1080;
         const footer = 72;
-        canvas.height = pricesY + pricesHeight + 40 + footer;
+        // Bir ölçünün posteri: altda hissə-hissə ödəniş qrafiki (müddət, aylıq, ümumi, faizsiz / faizlə)
+        const credit = Array.isArray(product.credit) ? product.credit : [];
+        const creditRow = 64, creditHead = 128;
+        const creditY = pricesY + pricesHeight + 36;
+        const creditHeight = credit.length ? creditHead + credit.length * creditRow + 24 : 0;
+        canvas.height = pricesY + pricesHeight + 40 + (credit.length ? creditHeight + 20 : 0) + footer;
         const height = canvas.height;
         ctx.fillStyle = colors.background;
         ctx.fillRect(0, 0, 1080, height);
@@ -218,12 +223,15 @@
             const y = pricesY + index * (priceRow + priceGap);
             box(ctx, rowX, y, rowWidth, priceRow, 22, colors.card, colors.cardBorder, 18);
 
-            ctx.font = `500 40px ${font}`;
+            // tək ölçünün posterində həcm iri və qalın
+            const sizeFont = credit.length || rows === 1 ? `700 60px ${font}` : `500 40px ${font}`;
+            ctx.font = sizeFont;
             const sizeWidth = ctx.measureText(variant.size).width;
             const iconSize = 50, iconGap = 34;
             const groupLeft = rowX + (dividerX - rowX) / 2 - (iconSize + iconGap + sizeWidth) / 2;
             bottleIcon(ctx, groupLeft, y + priceRow / 2 - iconSize / 2, iconSize);
             ctx.fillStyle = colors.cardSize;
+            ctx.font = sizeFont;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillText(variant.size, groupLeft + iconSize + iconGap, y + priceRow / 2 + 2);
@@ -264,6 +272,48 @@
                 ctx.stroke();
             }
         });
+        if (credit.length) {
+            const left = 60, width = 960;
+            box(ctx, left, creditY, width, creditHeight, 22, colors.card, colors.cardBorder, 18);
+            text(ctx, 'Hissə-hissə ödəniş', creditY + 26, 34, 700, colors.text);
+            const cols = [left + 150, left + 420, left + 670, left + 860]; // müddət, aylıq, ümumi, faiz
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.font = `600 24px ${font}`;
+            ctx.fillStyle = colors.muted;
+            ['Müddət', 'Aylıq ödəniş', 'Ümumi məbləğ'].forEach((label, i) => ctx.fillText(label, cols[i], creditY + 100));
+            credit.forEach((row, index) => {
+                const y = creditY + creditHead + index * creditRow;
+                ctx.strokeStyle = colors.divider;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(left + 30, y);
+                ctx.lineTo(left + width - 30, y);
+                ctx.stroke();
+                const mid = y + creditRow / 2;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = colors.text;
+                ctx.font = `700 34px ${font}`;
+                ctx.fillText(`${row.months} ay`, cols[0], mid);
+                ctx.font = `700 34px ${priceFont}`;
+                ctx.fillStyle = colors.cardPrice;
+                ctx.fillText(`${row.monthly} ₼`, cols[1], mid);
+                ctx.font = `500 30px ${priceFont}`;
+                ctx.fillStyle = colors.secondary;
+                ctx.fillText(`${row.total} ₼`, cols[2], mid);
+                // faizsiz — yaşıl, faizlə — boz kapsul
+                const label = row.free ? 'Faizsiz' : 'Faizlə';
+                ctx.font = `700 24px ${font}`;
+                const pillW = ctx.measureText(label).width + 36;
+                box(ctx, cols[3] - pillW / 2, mid - 21, pillW, 42, 21, row.free ? '#e3f4e6' : colors.pill, row.free ? '#bfe3c6' : colors.border);
+                ctx.fillStyle = row.free ? '#1f7a3a' : colors.secondary;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(label, cols[3], mid + 1);
+            });
+        }
+
         // Aşağı zolaq
         ctx.fillStyle = colors.band;
         ctx.fillRect(0, height - footer, 1080, footer);

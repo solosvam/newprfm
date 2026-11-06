@@ -83,6 +83,30 @@ class ProductPosterTest extends TestCase
             ->assertJsonPath('caption', "Burberry Her Intense 2024\nQadın üçün | Eau de Parfum\n30 ml — 194 ₼\n50 ml — 233.50 ₼\n100 ml — 299 ₼");
     }
 
+    /** Bir ölçünün posteri: yalnız o ölçü və hissə-hissə qrafiki (adi qiymətlə, məbləğə uyğun müddətlər) */
+    public function test_single_size_poster_has_installment_schedule(): void
+    {
+        Schema::create('credit_periods', fn (Blueprint $t) => [$t->id(), $t->integer('month'), $t->decimal('interest_rate', 5, 2), $t->decimal('min_amount', 10, 2)->nullable(),
+            $t->boolean('active')->default(true), $t->integer('sort_order')->default(0), $t->timestamps()]);
+        DB::table('credit_periods')->insert([
+            ['month' => 3, 'interest_rate' => 0, 'min_amount' => null], ['month' => 6, 'interest_rate' => 17.6, 'min_amount' => null],
+            ['month' => 9, 'interest_rate' => 25, 'min_amount' => 200], ['month' => 12, 'interest_rate' => 33.3, 'min_amount' => 200],
+        ]);
+        $variant = DB::table('product_variants')->where('size_id', 1)->value('id'); // 30 ml — 194
+
+        $data = app(\App\Services\ProductPosterData::class)->for(\App\Models\Product\Product::find(1), (int) $variant);
+
+        $this->assertCount(1, $data['variants']);
+        $this->assertSame('30 ml', $data['variants'][0]['size']);
+        $this->assertSame([3, 6], array_column($data['credit'], 'months')); // 194 ≤ 200 — 9 və 12 ay yoxdur
+        $this->assertSame(['months' => 3, 'monthly' => '64.67', 'total' => '194.00', 'free' => true], $data['credit'][0]);
+        $this->assertSame(['months' => 6, 'monthly' => '38.03', 'total' => '228.14', 'free' => false], $data['credit'][1]);
+        $this->assertStringContainsString('30-ml', $data['filename']);
+        $this->assertStringContainsString("3 ay — 64.67 ₼/ay, cəmi 194.00 ₼ (faizsiz)", $data['caption']);
+        $this->assertStringNotContainsString('50 ml', $data['caption']);
+        $this->assertNull(app(\App\Services\ProductPosterData::class)->for(\App\Models\Product\Product::find(1))['credit']); // ümumi posterdə yoxdur
+    }
+
     public function test_missing_image_or_active_sizes_cannot_create_poster(): void
     {
         $this->actingAs($this->admin(), 'admin');

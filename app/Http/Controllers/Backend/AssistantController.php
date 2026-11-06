@@ -141,9 +141,10 @@ class AssistantController extends Controller
     }
 
     /** Paneldə poster: məhsul siyahısındakı posterin eyni məlumatı (CRM icazəsi ilə) */
-    public function poster(Product $product, ProductPosterData $poster): JsonResponse
+    /** ?variant=ID — bir ölçünün posteri (iri həcm + hissə-hissə qrafiki) */
+    public function poster(Request $request, Product $product, ProductPosterData $poster): JsonResponse
     {
-        $data = $poster->for($product);
+        $data = $poster->for($product, $request->integer('variant') ?: null);
 
         return $data
             ? response()->json($data)

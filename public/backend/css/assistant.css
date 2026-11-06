@@ -79,6 +79,9 @@ body {
     display: inline-flex; gap: 4px; padding: 2px 6px; border-radius: 6px; font-size: 12px;
     background: var(--as-bg); border: 1px solid var(--as-border);
 }
+/* ölçü düyməsi — həmin ölçünün posteri */
+button.as-chip { font-family: inherit; color: inherit; line-height: inherit; cursor: pointer; }
+button.as-chip:hover { border-color: #2b1f4a; }
 .as-chip.is-match { background: #2b1f4a; border-color: #2b1f4a; color: #fff; }
 .as-chip.is-match strong { color: #BDA4E5; }
 
