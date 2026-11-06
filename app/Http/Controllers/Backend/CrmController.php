@@ -712,10 +712,7 @@ class CrmController extends Controller
         $data = $request->validate([
             'courier_id' => ['required', 'integer'], 'pays' => ['nullable', 'array'], 'pays.*' => ['boolean'],
             'courier_note' => ['nullable', 'string', 'max:1000'],
-            // Sifarişdə kuryerə qeyd varsa — operator onu gözdən keçirdiyini təsdiqləyir
-            'note_reviewed' => filled($order->courier_note) ? ['required', 'accepted'] : ['exclude'], // 'accepted' boş sahədə də işləyir
-        ], ['courier_id.required' => 'Kuryeri seçin.', 'note_reviewed.required' => 'Kuryerə qeydi gözdən keçirdiyinizi təsdiqləyin.',
-            'note_reviewed.accepted' => 'Kuryerə qeydi gözdən keçirdiyinizi təsdiqləyin.']);
+        ], ['courier_id.required' => 'Kuryeri seçin.']);
         $courier = $this->couriers()->firstWhere('id', (int) $data['courier_id']);
         abort_if(!$courier, 422, 'Kuryer tapılmadı.');
         $order->forceFill(['courier_note' => trim((string) ($data['courier_note'] ?? '')) ?: null])->save();
