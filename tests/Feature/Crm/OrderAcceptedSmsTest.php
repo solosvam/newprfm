@@ -50,9 +50,9 @@ class OrderAcceptedSmsTest extends TestCase
         $this->assertSame([['994501234567', 'Hormetli Aysel Məmmədova, sifarishiniz PS261106000001 qebul olundu. Bonus 7.50 AZN.']], $this->sent);
     }
 
-    public function test_bonus_sentence_dropped_when_no_bonus(): void
+    public function test_no_bonus_template_when_no_bonus(): void
     {
-        DB::table('sms_templates')->update(['template' => 'Hormetli {name}, sizin sifarishiniz qebul olundu. Qazanacaginiz bonus {bonus} AZN. Bizi secdiyiniz ucun teshekkur edirik!']);
+        DB::table('sms_templates')->insert(['code' => 'crm_order_accepted_no_bonus', 'template' => 'Hormetli {name}, sizin sifarishiniz qebul olundu. Bizi secdiyiniz ucun teshekkur edirik!', 'active' => 1]);
         self::$bonus = 0;
         app(OrderAcceptedSms::class)->send($this->order());
         $this->assertSame('Hormetli Aysel, sizin sifarishiniz qebul olundu. Bizi secdiyiniz ucun teshekkur edirik!', $this->sent[0][1]);

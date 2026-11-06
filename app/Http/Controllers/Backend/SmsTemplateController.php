@@ -17,6 +17,7 @@ class SmsTemplateController extends Controller
      */
     public const USAGE = [
         'crm_order_accepted' => 'Operator CRM-də sifariş yaradanda müştəriyə ({bonus} — təhvildə yazılacaq bonus)',
+        'crm_order_accepted_no_bonus' => 'Operator CRM-də sifariş yaradanda müştəriyə — bonus yazılmayacaqsa (məs. bonusla ödəniş)',
         'crm_order_cancelled' => 'Operator CRM-də sifarişi ləğv edəndə müştəriyə',
         'easy_order_registration_bonus' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (qeydiyyat bonusu varsa)',
         'easy_order_registration' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (bonus yoxdursa)',
