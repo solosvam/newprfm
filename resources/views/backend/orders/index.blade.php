@@ -76,10 +76,11 @@
                             <th class="text-muted text-small text-uppercase">Tarix</th>
                             <th class="text-muted text-small text-uppercase">Müştəri</th>
                             <th class="text-muted text-small text-uppercase">Telefon</th>
-                            <th class="text-muted text-small text-uppercase">Müştəri tipi</th>
                             <th class="text-muted text-small text-uppercase">Mənbə</th>
+                            <th class="text-muted text-small text-uppercase">Ödəniş</th>
                             <th class="text-muted text-small text-uppercase text-end">Məbləğ</th>
                             <th class="text-muted text-small text-uppercase">Status</th>
+                            <th class="text-muted text-small text-uppercase">Kuryer</th>
                             <th></th>
                         </tr>
                         </thead>
@@ -112,17 +113,8 @@
                                     @endif
                                 </td>
                                 <td class="text-nowrap">{{ $maskedPhone }}</td>
-                                <td>
-                                    {{-- Sifariş tarixçəsinə görə; qonağın telefonu da yoxdursa — bilinmir, təxmin edilmir --}}
-                                    @if(!$order->customer_id && !$order->guest_mobile)
-                                        <span class="text-muted">—</span>
-                                    @elseif($order->previous_orders > 0)
-                                        <span class="badge bg-outline-primary">Təkrar müştəri</span>
-                                    @else
-                                        <span class="badge bg-outline-success">Yeni müştəri</span>
-                                    @endif
-                                </td>
                                 <td>{{ $sources[$src] ?? 'Digər' }}</td>
+                                <td class="text-small">{{ $order->paymentMethod?->name_az ?? '—' }}</td>
                                 <td class="text-end text-nowrap fw-bold">
                                     @if($order->isCancelled() && $order->cancelledAmount() > 0)
                                         {{-- tam ləğv: yekun 0-dır — sifarişin ilkin məbləği göstərilir --}}
@@ -136,9 +128,12 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-outline-{{ $statusColor[$order->status?->code] ?? 'secondary' }}">{{ $order->status?->name_az ?? '—' }}</span>
-                                    {{-- Kuryer təyin olunubsa — adı statusun altında --}}
+                                </td>
+                                <td class="text-nowrap">
                                     @if($order->courier)
-                                        <div class="text-small text-nowrap mt-1" title="Kuryer">🚚 {{ $order->courier->full_name }}</div>
+                                        <span class="badge bg-primary">{{ $order->courier->full_name }}</span>
+                                    @else
+                                        <span class="text-muted text-small">Təyin olunmayıb</span>
                                     @endif
                                 </td>
                                 <td class="text-end">
@@ -146,7 +141,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="text-center text-muted py-5">Sifariş tapılmadı</td></tr>
+                            <tr><td colspan="10" class="text-center text-muted py-5">Sifariş tapılmadı</td></tr>
                         @endforelse
                         </tbody>
                     </table>
