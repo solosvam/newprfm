@@ -80,6 +80,16 @@ return [
         'key' => env('GOOGLE_MAPS_KEY'),
     ],
 
+    // Google ilə giriş (OAuth "Web application" client). Qaytarma ünvanı saytın öz ünvanından qurulur: /auth/google/callback.
+    // login_public=false — düymə yalnız /google-preview/{preview_key} açılmış brauzerdə görünür (sınaq üçün).
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => null,
+        'login_public' => (bool) env('GOOGLE_LOGIN_PUBLIC', false),
+        'preview_key' => env('GOOGLE_LOGIN_PREVIEW_KEY'),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-5-mini'),

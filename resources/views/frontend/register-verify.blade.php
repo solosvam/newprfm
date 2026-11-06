@@ -11,7 +11,7 @@
         <div class="auth-page">
             <div class="auth-card">
                 <h1 class="auth-title">{{ __('auth_verify_account') }}</h1>
-                <p class="auth-subtext">{{ __('auth_an_otp_was_sent_to_mobile') }} {{ $maskedMobile }}</p>
+                <p class="auth-subtext">{{ __('auth_an_otp_was_sent_to_mobile', ['mobile' => $maskedMobile]) }}</p>
 
                 @if(session('success'))
                     <p class="auth-subtext">{{ session('success') }}</p>

@@ -129,7 +129,7 @@ class RegisterController extends Controller
         $customer = $this->pendingCustomer($request);
         app(RegistrationOtpService::class)->send($customer, $sms);
 
-        return back()->with('success', __('auth_an_otp_was_sent_to_mobile'));
+        return back()->with('success', __('auth_an_otp_was_sent_to_mobile', ['mobile' => '+994 '.substr($customer->mobile, 3, 2).' *** ** '.substr($customer->mobile, -2)]));
     }
 
     private function pendingCustomer(Request $request): Customer

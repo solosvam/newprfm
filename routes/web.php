@@ -185,6 +185,21 @@ Route::middleware(['web', 'guest', 'throttle:10,1'])
         Route::post('/register/resend', 'resend')->name('front.register.resend');
     });
 
+// Google ilə giriş (GoogleAuthController). /auth/google — həm giriş, həm də profildən bağlama.
+Route::controller(\App\Http\Controllers\Frontend\GoogleAuthController::class)->middleware('throttle:20,1')->group(function () {
+    Route::get('/google-preview/{key}', 'preview')->name('auth.google.preview');
+    Route::get('/auth/google', 'redirect')->name('auth.google');
+    Route::get('/auth/google/callback', 'callback')->name('auth.google.callback');
+    Route::middleware('guest')->group(function () {
+        Route::get('/auth/google/complete', 'complete')->name('auth.google.complete');
+        Route::post('/auth/google/complete', 'storeComplete')->name('auth.google.complete.store');
+        Route::get('/auth/google/verify', 'showVerify')->name('auth.google.verify');
+        Route::post('/auth/google/verify', 'verify')->name('auth.google.verify.store');
+        Route::post('/auth/google/resend', 'resend')->name('auth.google.resend');
+    });
+    Route::post('/profile/google/disconnect', 'disconnect')->middleware('auth')->name('profile.google.disconnect');
+});
+
 // Dostunu dəvət et: qısa dəvət linki /r/{code}
 Route::get('/r/{code}', [\App\Http\Controllers\Frontend\ReferralController::class, 'track'])
     ->where('code', '[A-Za-z0-9]{4,12}')

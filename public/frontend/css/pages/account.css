@@ -559,3 +559,10 @@
 .infinite-sentinel__button { width: auto; height: 40px; margin: 0; padding: 0 18px; font-size: 14px; }
 @keyframes infinite-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .infinite-sentinel__spinner { animation-duration: 2s; } }
+
+/* Şəxsi məlumatlar: Google ilə giriş */
+.account-google { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 28px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius, 8px); }
+.account-google__info { display: flex; align-items: center; gap: 12px; }
+.account-google__info svg { flex-shrink: 0; }
+.account-google__title { font-weight: 700; color: var(--text); }
+.account-google__status { font-size: 13px; color: var(--text-secondary); }

@@ -83,3 +83,17 @@
 
     .auth-card--wide .auth-benefits { flex-direction: row; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
 }
+
+/* Google ilə giriş */
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; font-size: 12px; color: var(--text-muted); text-transform: lowercase; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.auth-google-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; min-height: 46px; padding: 0 16px; border: 1px solid var(--border); border-radius: var(--radius, 8px);
+    background: var(--surface, #fff); color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none;
+    transition: border-color .15s, background-color .15s;
+}
+.auth-google-btn:hover { border-color: var(--text-muted); background: var(--surface-2); color: var(--text); }
+.auth-google-btn svg { flex-shrink: 0; }
+.auth-google-account { display: flex; align-items: center; gap: 8px; margin: -4px 0 18px; padding: 10px 12px; border-radius: var(--radius, 8px); background: var(--surface-2); font-size: 13px; color: var(--text); word-break: break-all; }
+.auth-google-account svg { flex-shrink: 0; color: var(--text-muted); }

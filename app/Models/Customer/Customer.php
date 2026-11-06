@@ -20,6 +20,7 @@ class Customer extends Authenticatable
         'crm' => 'CRM (operator)',
         'assistant' => 'Operator paneli (extension)',
         'easy_order' => 'Asan sifarişdən',
+        'google' => 'Saytda qeydiyyat (Google)',
         'legacy' => 'Köhnə sistemdən',
     ];
 
@@ -45,6 +46,7 @@ class Customer extends Authenticatable
         'bonus_balance',
         'registration_otp_hash',
         'registration_otp_expires_at',
+        'google_id',
     ];
 
     protected $hidden = [

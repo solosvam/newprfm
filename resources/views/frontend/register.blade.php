@@ -34,6 +34,8 @@
                     @endforeach
                 </ul>
 
+                @include('frontend.partials.google-button', ['top' => true, 'label' => __('auth_register_with_google')])
+
                 @if(session()->has('register.customer_id'))
                     <p class="auth-subtext"><a href="{{ route('front.register.verify') }}">{{ __('auth_verify_account') }}</a></p>
                 @endif
