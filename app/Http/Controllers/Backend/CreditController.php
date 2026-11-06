@@ -25,6 +25,7 @@ class CreditController extends Controller
             'periods.*.id' => ['nullable', 'integer'],
             'periods.*.month' => ['required', 'integer', 'min:1', 'max:120'],
             'periods.*.interest_rate' => ['required', 'numeric', 'min:0', 'max:999.99'],
+            'periods.*.bank_fee_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'periods.*.min_amount' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'periods.*.active' => ['nullable', 'boolean'],
         ]);
@@ -49,6 +50,7 @@ class CreditController extends Controller
                 $period->fill([
                     'month' => $row['month'],
                     'interest_rate' => $row['interest_rate'],
+                    'bank_fee_rate' => ($row['bank_fee_rate'] ?? '') === '' ? null : $row['bank_fee_rate'],
                     'min_amount' => ($row['min_amount'] ?? '') === '' ? null : $row['min_amount'],
                     'active' => $row['active'] ?? false,
                     'sort_order' => $index + 1,

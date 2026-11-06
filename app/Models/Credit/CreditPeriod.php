@@ -7,11 +7,12 @@ use Illuminate\Support\Facades\Cache;
 
 class CreditPeriod extends Model
 {
-    protected $fillable = ['month', 'interest_rate', 'min_amount', 'active', 'sort_order'];
+    protected $fillable = ['month', 'interest_rate', 'bank_fee_rate', 'min_amount', 'active', 'sort_order'];
 
     protected $casts = [
         'month' => 'integer',
         'interest_rate' => 'decimal:2',
+        'bank_fee_rate' => 'decimal:2', // Ferrum-un ümumi məbləğdən çıxdığı faiz (bizə qalan: total × (1 − faiz / 100))
         'min_amount' => 'decimal:2',
         'active' => 'boolean',
         'sort_order' => 'integer',

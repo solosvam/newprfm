@@ -22,6 +22,8 @@
             <strong>Minimum məbləğ</strong> — müddət saytda yalnız məbləğ bu həddən <strong>yuxarı</strong> olanda görünür
             (məhsul səhifəsi, checkout, kredit müraciəti). Məsələn, 12 ay üçün 200 yazsanız, 200 ₼ və aşağı məbləğdə 12 ay təklif olunmur.
             Boş saxlasanız — məhdudiyyət yoxdur.
+            <br><strong>Çıxılacaq faiz</strong> — hissə-hissə ödəniş təsdiqlənəndən sonra Ferrum müştərinin ümumi məbləğindən bu faizi çıxıb qalanını bizə köçürür.
+            Məsələn, 6 ay: müştəri 17.6% artıq ödəyir, cəmi 500 ₼; çıxılacaq faiz 16% → bank hesabına 420 ₼ oturur.
         </div>
     </div>
 
@@ -31,17 +33,21 @@
                 @csrf
                 <div id="creditPeriods">
                     @forelse(old('periods', $periods->map(fn($p) => [
-                        'id'=>$p->id, 'month'=>$p->month, 'interest_rate'=>$p->interest_rate, 'min_amount'=>$p->min_amount, 'active'=>$p->active
+                        'id'=>$p->id, 'month'=>$p->month, 'interest_rate'=>$p->interest_rate, 'bank_fee_rate'=>$p->bank_fee_rate, 'min_amount'=>$p->min_amount, 'active'=>$p->active
                     ])->toArray()) as $index => $period)
                         <div class="row g-2 mb-2 credit-period-row">
                             <input type="hidden" class="period-id" value="{{ $period['id'] ?? '' }}">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label">Ay</label>
                                 <input type="number" min="1" class="form-control period-month" value="{{ $period['month'] ?? '' }}" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label">Faiz (%)</label>
                                 <input type="number" min="0" step="0.01" class="form-control period-rate" value="{{ $period['interest_rate'] ?? '' }}" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Çıxılacaq faiz (%)</label>
+                                <input type="number" min="0" max="100" step="0.01" class="form-control period-fee" value="{{ isset($period['bank_fee_rate']) && $period['bank_fee_rate'] !== null ? $period['bank_fee_rate'] : '' }}" placeholder="—">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Minimum məbləğ (₼)</label>
@@ -60,8 +66,9 @@
                     @empty
                         <div class="row g-2 mb-2 credit-period-row">
                             <input type="hidden" class="period-id">
-                            <div class="col-md-3"><label class="form-label">Ay</label><input type="number" min="1" class="form-control period-month" required></div>
-                            <div class="col-md-3"><label class="form-label">Faiz (%)</label><input type="number" min="0" step="0.01" class="form-control period-rate" required></div>
+                            <div class="col-md-2"><label class="form-label">Ay</label><input type="number" min="1" class="form-control period-month" required></div>
+                            <div class="col-md-2"><label class="form-label">Faiz (%)</label><input type="number" min="0" step="0.01" class="form-control period-rate" required></div>
+                            <div class="col-md-2"><label class="form-label">Çıxılacaq faiz (%)</label><input type="number" min="0" max="100" step="0.01" class="form-control period-fee" placeholder="—"></div>
                             <div class="col-md-3"><label class="form-label">Minimum məbləğ (₼)</label><input type="number" min="0" step="0.01" class="form-control period-min" placeholder="məhdudiyyət yoxdur"></div>
                             <div class="col-md-2 d-flex align-items-end pb-2"><div class="form-check form-switch"><input class="form-check-input period-active" type="checkbox" value="1" checked><label class="form-check-label">Aktiv</label></div></div>
                             <div class="col-md-1 d-flex align-items-end"><button class="btn btn-outline-danger remove-period mb-1" type="button">-</button></div>
@@ -88,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
             row.querySelector('.period-id').name = `periods[${index}][id]`;
             row.querySelector('.period-month').name = `periods[${index}][month]`;
             row.querySelector('.period-rate').name = `periods[${index}][interest_rate]`;
+            row.querySelector('.period-fee').name = `periods[${index}][bank_fee_rate]`;
             row.querySelector('.period-min').name = `periods[${index}][min_amount]`;
             row.querySelector('.period-active').name = `periods[${index}][active]`;
         });
@@ -98,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
         row.querySelector('.period-id').value = '';
         row.querySelector('.period-month').value = '';
         row.querySelector('.period-rate').value = '';
+        row.querySelector('.period-fee').value = '';
         row.querySelector('.period-min').value = '';
         row.querySelector('.period-active').checked = true;
         area.appendChild(row);
@@ -111,6 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
             row.querySelector('.period-id').value = '';
             row.querySelector('.period-month').value = '';
             row.querySelector('.period-rate').value = '';
+            row.querySelector('.period-fee').value = '';
             row.querySelector('.period-min').value = '';
             row.querySelector('.period-active').checked = true;
         } else {
