@@ -92,7 +92,6 @@ Route::prefix('admin')
                     Route::post('/order/{order}/parts/{allocation}/problem', 'problem')->name('problem');
                     Route::post('/order/{order}/start', 'start')->name('start');
                     Route::post('/order/{order}/meeting-place', 'meetingPlace')->name('meeting-place');
-                    Route::post('/order/{order}/arrive', 'arrive')->name('arrive');
                     Route::post('/order/{order}/deliver', 'deliver')->name('deliver');
                     Route::post('/order/{order}/delivery-problem', 'deliveryProblem')->name('delivery-problem');
                     Route::post('/order/{order}/items/{item}/refuse', 'refuse')->name('refuse');

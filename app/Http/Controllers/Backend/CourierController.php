@@ -110,14 +110,6 @@ class CourierController extends Controller
         return back()->with('success', 'Yola çıxdınız. Uğurlu yol!');
     }
 
-    public function arrive(Order $order, OrderStatusService $statuses): RedirectResponse
-    {
-        $this->authorizeCourier($order);
-        $statuses->arrive($order, $this->me());
-
-        return back()->with('success', '"Ünvandayam" qeyd olundu.');
-    }
-
     public function deliver(Request $request, Order $order, OrderStatusService $statuses): RedirectResponse
     {
         $this->authorizeCourier($order);

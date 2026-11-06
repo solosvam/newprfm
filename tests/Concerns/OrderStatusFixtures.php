@@ -21,7 +21,7 @@ trait OrderStatusFixtures
             });
         }
         $codes = ['preparing' => 1, 'new' => 11, 'warehouse_requested' => 12, 'warehouses_assigned' => 13,
-            'courier_assigned' => 14, 'sent' => 15, 'at_address' => 16, 'delivered' => 17, 'cancelled' => 18];
+            'courier_assigned' => 14, 'sent' => 15, 'delivered' => 17, 'cancelled' => 18];
         foreach ($codes as $code => $id) {
             if (!DB::table('order_statuses')->where('code', $code)->exists() && !DB::table('order_statuses')->where('id', $id)->exists()) {
                 DB::table('order_statuses')->insert(['id' => $id, 'code' => $code]);

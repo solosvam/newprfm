@@ -8,7 +8,7 @@
     $title = trim($courier->full_name);
     $breadcrumbs = [route('admin.dashboard') => 'Tapşırıqlarım', route('admin.courier.team') => 'Kuryerlər', '' => $title];
     $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN';
-    $stepLabels = ['courier_assigned' => 'Toplanır', 'sent' => 'Yoldadır', 'at_address' => 'Ünvandadır'];
+    $stepLabels = ['courier_assigned' => 'Toplanır', 'sent' => 'Yoldadır'];
     $partClass = [Part::PICKED => 'text-success', Part::PROBLEM => 'text-danger', Part::RETURNING => 'text-warning'];
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])

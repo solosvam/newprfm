@@ -46,11 +46,10 @@ class AdminDashboard
         'warehouses_assigned' => 'boxes',
         'courier_assigned' => 'user',
         'sent' => 'delivery-truck',
-        'at_address' => 'pin',
     ];
 
     /** Kuryer mərhələləri ("kuryerdə ləngiyən" üçün) */
-    public const COURIER_STATUSES = ['courier_assigned', 'sent', 'at_address'];
+    public const COURIER_STATUSES = ['courier_assigned', 'sent'];
 
     private const TTL = 300;
 
@@ -532,10 +531,10 @@ class AdminDashboard
                 'code' => $code,
                 'name' => ['new' => 'Sifariş verildi', 'preparing' => 'Hazırlanır', 'warehouse_requested' => 'Anbarlara sorğu göndərildi',
                     'warehouses_assigned' => 'Anbarlar təyin olundu', 'courier_assigned' => 'Kuryer təyin olundu',
-                    'sent' => 'Yola çıxdı', 'at_address' => 'Kuryer ünvandadır'][$code],
+                    'sent' => 'Yola çıxdı'][$code],
                 'icon' => $icon,
                 'count' => $count,
-            ], array_keys(self::ACTIVE_STATUSES), self::ACTIVE_STATUSES, [3, 2, 4, 1, 2, 2, 0]),
+            ], array_keys(self::ACTIVE_STATUSES), self::ACTIVE_STATUSES, [3, 2, 4, 1, 2, 2]),
             'top' => array_map(fn ($p, $i) => [
                 'id' => 0, 'name' => $p[1], 'brand' => $p[0], 'image' => null,
                 'quantity' => (int) round($p[2] * $scale / 5), 'sum' => round($p[2] * $p[3] * $scale / 5, 2),

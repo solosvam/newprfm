@@ -171,7 +171,6 @@ class OrderProcessSummary
         $headline = match ($status) {
             'courier_assigned' => 'Kuryer təyin olunub'.($courier ? ': '.$courier : '').' — malları anbarlardan götürür',
             'sent' => 'Kuryer yoldadır'.($courier ? ': '.$courier : ''),
-            'at_address' => 'Kuryer ünvandadır'.($courier ? ': '.$courier : ''),
             default => $order->status?->name_az ?? '—',
         };
 

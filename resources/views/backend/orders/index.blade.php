@@ -3,7 +3,7 @@
     $title = 'Sifarişlər';
     $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'Satışlar', '#' => $title];
     $sources = ['customer' => 'Sayt — səbət', 'one_click' => 'Bir kliklə', 'operator' => 'Operator (CRM)'];
-    $statusColor = ['new' => 'primary', 'delivered' => 'success', 'cancelled' => 'danger', 'sent' => 'info', 'at_address' => 'info'];
+    $statusColor = ['new' => 'primary', 'delivered' => 'success', 'cancelled' => 'danger', 'sent' => 'info'];
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 

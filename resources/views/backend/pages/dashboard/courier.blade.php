@@ -4,7 +4,7 @@
 --}}
 @php
     $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN';
-    $stepLabels = ['courier_assigned' => 'Toplanır', 'sent' => 'Yoldadır', 'at_address' => 'Ünvandasınız'];
+    $stepLabels = ['courier_assigned' => 'Toplanır', 'sent' => 'Yoldadır'];
 @endphp
 <div class="courier-summary mb-4">
     <div class="card"><div class="card-body">

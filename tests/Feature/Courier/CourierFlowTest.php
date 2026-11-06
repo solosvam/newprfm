@@ -90,9 +90,7 @@ class CourierFlowTest extends TestCase
         $this->assertNull($s->deliveryBlock($order->fresh()));
 
         $s->startDelivery($order, $courier->id);
-        $s->arrive($order, $courier->id);
-        $s->arrive($order, $courier->id); // təkrar — yeni qeyd yox
-        $this->assertSame(1, DB::table('order_status_logs')->where('order_id', $order->id)->where('status_id', 16)->count());
+        $this->assertSame('sent', $this->statusCode($order)); // "Yoldayam"dan birbaşa "Təhvil verdim"
 
         try {
             $s->deliver($order, $courier->id, 100); // səhv məbləğ

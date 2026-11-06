@@ -1,6 +1,6 @@
 {{--
   Kuryer → sifariş (telefon üçün). Anbarlardan götürmə ("X AZN ödədim, götürdüm" / "Ödənişsiz götürdüm" / Problem) — yalnız yola çıxmazdan əvvəl,
-  başqa kuryerə ötürmə, hədiyyəlik qablaşdırma, müştəri, çatdırılma (Çatdırılmaya başladım → Ünvandayam → Təhvil verdim),
+  başqa kuryerə ötürmə, hədiyyəlik qablaşdırma, müştəri, çatdırılma (Çatdırılmaya başladım → Təhvil verdim),
   qapıda imtina və imtina edilən məhsulun anbara qaytarılması ("Qaytardım").
 --}}
 @use('App\Models\Procurement\OrderItemAllocation', 'Part')
@@ -10,7 +10,7 @@
     $breadcrumbs = [route('admin.dashboard') => 'Tapşırıqlarım', '' => $order->order_no];
     $code = $order->status?->code;
     $money = fn ($cents) => number_format($cents / 100, 2).' AZN';
-    $steps = ['courier_assigned' => 'Toplama', 'sent' => 'Yoldayam', 'at_address' => 'Ünvandayam', 'delivered' => 'Təhvil verildi'];
+    $steps = ['courier_assigned' => 'Toplama', 'sent' => 'Yoldayam', 'delivered' => 'Təhvil verildi'];
     $reached = array_search($code, array_keys($steps), true);
     $a = $order->address;
     $addressLine = collect([$a?->city, $a?->address])->filter()->implode(', ');
@@ -283,10 +283,7 @@
             <form method="POST" action="{{ route('admin.courier.start', $order) }}" data-once>@csrf
                 <button class="btn btn-primary btn-lg w-100" @disabled($deliveryBlock)>Çatdırılmaya başladım</button>
             </form>
-        @elseif(in_array($code, ['sent', 'at_address'], true))
-            @if($code === 'sent')
-                <form method="POST" action="{{ route('admin.courier.arrive', $order) }}" data-once>@csrf<button class="btn btn-outline-primary btn-lg w-100 mb-2">Ünvandayam</button></form>
-            @endif
+        @elseif($code === 'sent')
             <form method="POST" action="{{ route('admin.courier.deliver', $order) }}" data-once class="courier-deliver">
                 @csrf
                 {{-- Məbləğ yazılmır: göstərilən məbləğ göndərilir, server cari məbləğlə tutuşdurur (arada dəyişibsə — xəta) --}}

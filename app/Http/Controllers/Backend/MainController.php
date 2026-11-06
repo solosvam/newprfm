@@ -19,7 +19,7 @@ class MainController extends Controller
             $account = $finance->courierAccount($user);
             $orders = \App\Models\Order\Order::with(['status', 'address', 'customer', 'items.allocations', 'items.product'])
                 ->where('courier_id', $user->id)
-                ->where(fn ($q) => $q->whereHas('status', fn ($s) => $s->whereIn('code', ['courier_assigned', 'sent', 'at_address']))
+                ->where(fn ($q) => $q->whereHas('status', fn ($s) => $s->whereIn('code', ['courier_assigned', 'sent']))
                     // təhvil verilib, amma qapıda imtina edilən məhsul hələ anbara qaytarılmayıb
                     ->orWhereHas('items.allocations', fn ($a) => $a->where('status', \App\Models\Procurement\OrderItemAllocation::RETURNING)))
                 ->orderBy('id')->get();

@@ -15,7 +15,7 @@
                     $statusClass = fn ($code) => match ($code) {
                         'delivered' => 'delivered',
                         'cancelled' => 'cancelled',
-                        'sent', 'courier', 'at_address' => 'shipped',
+                        'sent', 'courier' => 'shipped',
                         'preparing' => 'processing',
                         default => 'received',
                     };
@@ -27,7 +27,7 @@
                     ];
                     $trackStep = fn ($code) => match ($code) {
                         'delivered' => 4,
-                        'sent', 'courier', 'at_address' => 3,
+                        'sent', 'courier' => 3,
                         'preparing' => 2,
                         default => 1,
                     };

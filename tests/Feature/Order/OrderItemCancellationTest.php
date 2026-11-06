@@ -142,7 +142,7 @@ class OrderItemCancellationTest extends TestCase
             $parts[] = $part = $procurement->allocate($order, $offer->id, $i === 0 ? 2 : 1, 7);
             $procurement->transition($order, $part->id, 'picked', [], 7);
         }
-        app(\App\Services\OrderStatusService::class)->set($order->fresh(), 'at_address', 7);
+        app(\App\Services\OrderStatusService::class)->set($order->fresh(), 'sent', 7);
 
         return [$order->fresh('items'), $parts];
     }

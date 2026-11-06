@@ -48,7 +48,7 @@
     ];
     $attentionTotal = collect($attentionItems)->sum(fn ($i) => $dashboard['attention'][$i['key']] ?? 0);
 
-    $statusColor = ['new' => 'primary', 'delivered' => 'success', 'cancelled' => 'danger', 'sent' => 'info', 'at_address' => 'info'];
+    $statusColor = ['new' => 'primary', 'delivered' => 'success', 'cancelled' => 'danger', 'sent' => 'info'];
 @endphp
 
 {{-- Başlıq: salam + tarix, sağda Statistika --}}

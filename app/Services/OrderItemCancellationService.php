@@ -45,7 +45,7 @@ class OrderItemCancellationService
     public const CUSTOMER_NOTE = 'Müştəri saytdan özü imtina etdi';
 
     /** Qapıda imtina — kuryer yoldadır / ünvandadır */
-    public const DOOR_STATUSES = ['sent', 'at_address'];
+    public const DOOR_STATUSES = ['sent'];
 
     public function __construct(
         private PaymentItemsBuilder $shares,

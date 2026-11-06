@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
  * Sifariş statusunun axını:
  *   new → (İcraya götür) preparing → (ilk sorğu) warehouse_requested
  *   → (bütün miqdar anbara seçildi) warehouses_assigned → (Kuryer təyin et) courier_assigned
- *   → sent → at_address → delivered   (kuryer — 6-cı addım)
+ *   → sent → delivered   (kuryer — 6-cı addım)
  * Seçim ləğv olunub çatışmazlıq yaranarsa warehouses_assigned → warehouse_requested.
  */
 class OrderStatusService
@@ -223,15 +223,6 @@ class OrderStatusService
         });
     }
 
-    public function arrive(Order $order, int $actor): void
-    {
-        DB::transaction(function () use ($order, $actor) {
-            $locked = $this->courierOrder($order, $actor);
-            if ($locked->status?->code === 'at_address') return; // təkrar klik bildirişi təkrarlamır
-            $this->ensure($locked->status?->code === 'sent', 'Əvvəlcə "Çatdırılmaya başladım" seçin.');
-            $this->set($locked, 'at_address', $actor);
-        });
-    }
 
     /**
      * "Təhvil verdim": qapıda ödənişdə kuryer aldığı məbləği təsdiqləyir → Müştəri → Kuryer (qalığı artır),
@@ -242,7 +233,7 @@ class OrderStatusService
         DB::transaction(function () use ($order, $actor, $collected) {
             $locked = $this->courierOrder($order, $actor);
             if ($locked->status?->code === 'delivered') return;
-            $this->ensure(in_array($locked->status?->code, ['sent', 'at_address'], true), 'Əvvəlcə "Çatdırılmaya başladım" seçin.');
+            $this->ensure($locked->status?->code === 'sent', 'Əvvəlcə "Çatdırılmaya başladım" seçin.');
 
             $amount = $this->collectAmount($locked);
             if ($amount > 0) {
