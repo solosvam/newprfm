@@ -255,6 +255,7 @@ class ProcurementService
                 'order_item_allocation_id' => $allocation->id, 'from_status' => $from, 'to_status' => $allocation->status,
                 'user_id' => $actor, 'note' => $note, 'created_at' => now(),
             ]);
+            app(\App\Services\Admin\AdminNotifier::class)->allocationChanged($allocation, $actor); // admin paneldə zəng
 
             return $allocation;
         });

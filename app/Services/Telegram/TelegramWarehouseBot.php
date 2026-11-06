@@ -218,9 +218,10 @@ class TelegramWarehouseBot
     private function saveAnswer(TelegramMessage $message, WarehouseRequestItem $requestItem, int $quantity, ?string $price, string $who): void
     {
         $order = $requestItem->request->order()->firstOrFail();
-        app(ProcurementService::class)->recordOffer($order, $requestItem->id, [
+        $offer = app(ProcurementService::class)->recordOffer($order, $requestItem->id, [
             'available_quantity' => $quantity, 'unit_cost' => $price, 'source' => 'telegram', 'note' => 'Telegram: '.$who,
         ], 0);
+        app(\App\Services\Admin\AdminNotifier::class)->warehouseAnswered($offer); // admin paneldə zəng
         // Cavab yalnız düymədə yazılır (mətndə təkrar olmasın); basanda cavab dəyişdirilir — düymələr yenidən açılır.
         // Kimin cavab verdiyi CRM-də görünür (WarehouseOffer::authorName)
         $answer = $quantity

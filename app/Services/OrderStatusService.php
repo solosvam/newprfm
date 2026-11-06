@@ -220,6 +220,7 @@ class OrderStatusService
             $this->ensure(($block = $this->deliveryBlock($locked)) === null, (string) $block);
 
             $this->set($locked, 'sent', $actor);
+            app(\App\Services\Admin\AdminNotifier::class)->courier('courier_sent', $locked, $actor); // admin paneldə zəng
         });
     }
 
@@ -246,6 +247,7 @@ class OrderStatusService
                 $locked->forceFill(['payment_status' => 'paid'])->save();
             }
             $this->set($locked, 'delivered', $actor);
+            app(\App\Services\Admin\AdminNotifier::class)->courier('courier_delivered', $locked, $actor);
         });
     }
 

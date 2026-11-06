@@ -179,6 +179,42 @@ class CourierFlowTest extends TestCase
         $f->record($f->warehouseAccount($wh), $f->courierAccount($courier), 1, 'warehouse_refund', ['order_item_allocation_id' => $part->id], $courier->id);
     }
 
+    public function test_admin_bell_gets_warehouse_and_courier_events(): void
+    {
+        (require database_path('migrations/2026_10_29_130000_create_admin_notifications.php'))->up();
+        (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
+        \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
+        $courier = User::forceCreate(['name' => 'Fərid']);
+        $courier->assignRole(FinanceService::COURIER_ROLE);
+        [$order, $part] = $this->assigned($courier);
+        $p = app(ProcurementService::class);
+        $notifier = app(\App\Services\Admin\AdminNotifier::class);
+
+        // Depo cavabı (link / Telegram bu metodu çağırır)
+        $notifier->warehouseAnswered($part->offer);
+        // Operator "rezerv" qeyd edir — bildiriş yox; depo özü (actor 0) — bildiriş
+        $p->transition($order, $part->id, 'reserved', [], 0);
+        $p->transition($order, $part->id, 'picked', [], $courier->id);
+        $p->transition($order, $part->id, 'picked', [], $courier->id); // təkrar klik — ikinci bildiriş yox
+        $s = app(OrderStatusService::class);
+        $s->startDelivery($order, $courier->id);
+        $s->deliver($order, $courier->id, 120);
+
+        $rows = DB::table('admin_notifications')->orderBy('id')->get();
+        $this->assertSame(['wh_answer', 'wh_reserved', 'courier_picked', 'courier_sent', 'courier_delivered'], $rows->pluck('type')->all());
+        $this->assertSame('PS1 · A · var: 1 ədəd × 80.00 ₼', $rows[0]->body);
+        $this->assertSame('PS1 · Fərid', $rows[4]->body);
+        $this->assertSame(route('admin.crm.order', [1, $order->id], false), $rows[4]->url);
+    }
+
+    public function test_operator_reserve_does_not_notify(): void
+    {
+        (require database_path('migrations/2026_10_29_130000_create_admin_notifications.php'))->up();
+        [$order, $part] = $this->assigned(User::forceCreate(['name' => 'Fərid']));
+        app(ProcurementService::class)->transition($order, $part->id, 'reserved', [], 7);
+        $this->assertSame(0, DB::table('admin_notifications')->count());
+    }
+
     public function test_courier_can_transfer_order_before_picking(): void
     {
         (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();

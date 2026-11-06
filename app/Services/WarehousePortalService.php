@@ -171,11 +171,12 @@ class WarehousePortalService
             if ($quantity > 0 && (!isset($data['unit_cost']) || !is_numeric($data['unit_cost']) || $data['unit_cost'] <= 0)) {
                 throw ValidationException::withMessages(['unit_cost' => 'Bir ədədin qiymətini daxil edin.']);
             }
-            $item->offers()->create([
+            $offer = $item->offers()->create([
                 'available_quantity' => $quantity, 'unit_cost' => $quantity ? $data['unit_cost'] : null,
                 'source' => 'link', 'note' => $data['note'] ?? null,
                 'recorded_by' => null, 'warehouse_access_link_id' => $access->id,
             ]);
+            app(\App\Services\Admin\AdminNotifier::class)->warehouseAnswered($offer); // admin paneldə zəng
         });
     }
 }

@@ -53,7 +53,7 @@
             </a>
         </li>
         @can('crm')
-            {{-- Bildirişlər (Acorn notification-dropdown): asan sifariş, hissə-hissə müraciəti, sayt sifarişi — admin-notifications.js --}}
+            {{-- Bildirişlər (Acorn notification-dropdown): sifarişlər, depo cavabı / rezerv təsdiqi, kuryer addımları — admin-notifications.js --}}
             <li class="list-inline-item" id="adminNotifications"
                 data-feed-url="{{ route('admin.notifications.feed') }}" data-read-url="{{ route('admin.notifications.read') }}">
                 <a href="#" data-bs-toggle="dropdown" data-bs-target="#notifications" aria-haspopup="true" aria-expanded="false"

@@ -20,6 +20,11 @@
         one_click: [880, 1175],          // iki qısa yüksək
         credit: [523, 659, 784],         // üç pilləli yuxarı
         site_order: [660],               // bir ton
+        wh_answer: [740, 587],           // depo: iki ton aşağı
+        wh_reserved: [740, 587],
+        courier_picked: [494, 494],      // kuryer: iki alçaq ton
+        courier_sent: [494, 494],
+        courier_delivered: [494, 659, 988], // təhvil: yuxarı pillə
     };
     let audio = null;
     function play(type) {
