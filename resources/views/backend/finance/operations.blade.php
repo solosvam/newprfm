@@ -37,6 +37,15 @@
     </div>
     @include('backend.procurement.feedback')
 
+    {{-- Hazır aralıqlar: digər filtrlər saxlanılır --}}
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        @foreach($presets as $label => [$pFrom, $pTo])
+            @php $on = $from?->isSameDay($pFrom) && $to?->isSameDay($pTo); @endphp
+            <a href="{{ route('admin.finance.operations', array_merge(request()->except(['from', 'to', 'page']), ['from' => $pFrom->format('Y-m-d'), 'to' => $pTo->format('Y-m-d')])) }}"
+               class="btn btn-sm {{ $on ? 'btn-primary' : 'btn-outline-primary' }}" @if($on) aria-current="true" @endif>{{ $label }}</a>
+        @endforeach
+    </div>
+
     <form method="GET" class="d-flex flex-wrap align-items-center gap-2 mb-3" data-ops-filter>
         <input type="date" name="from" class="form-control form-control-sm w-auto" value="{{ $from?->format('Y-m-d') }}" aria-label="Başlanğıc tarix" data-auto-submit>
         <span class="text-muted">—</span>

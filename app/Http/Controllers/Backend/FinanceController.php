@@ -51,10 +51,16 @@ class FinanceController extends Controller
             'counterparty' => array_filter(array_map('intval', [$request->query('warehouse'), $request->query('courier')])),
             'reversed' => $request->boolean('reversed'),
         ];
-        // Tarix: ilk açılışda son 30 gün; boş göndərilibsə — məhdudiyyətsiz
+        // Tarix: ilk açılışda bu gün; boş göndərilibsə — məhdudiyyətsiz. Hazır aralıqlar: Bu gün / Dünən / Bu həftə / Bu ay
         $date = fn ($v) => rescue(fn () => $v ? \Illuminate\Support\Carbon::parse($v) : null, null, false);
-        $from = $request->has('from') ? $date($request->query('from')) : now()->subDays(29)->startOfDay();
-        $to = $request->has('to') ? $date($request->query('to')) : now();
+        $from = $request->has('from') ? $date($request->query('from')) : today();
+        $to = $request->has('to') ? $date($request->query('to')) : today();
+        $presets = [
+            'Bu gün' => [today(), today()],
+            'Dünən' => [today()->subDay(), today()->subDay()],
+            'Bu həftə' => [today()->startOfWeek(), today()],
+            'Bu ay' => [today()->startOfMonth(), today()],
+        ];
 
         $groups = ['in' => MoneyMovement::IN_KINDS, 'out' => MoneyMovement::OUT_KINDS, 'transfer' => MoneyMovement::TRANSFER_KINDS];
         $opposite = ['in' => 'out', 'out' => 'in', 'transfer' => 'transfer'];
@@ -94,7 +100,7 @@ class FinanceController extends Controller
         $users = \App\Models\User::whereIn('id', MoneyMovement::whereNotNull('created_by')->distinct()->pluck('created_by'))->get()->sortBy('full_name');
         $active = count($f['types']) + count($f['accounts']) + count($f['categories']) + ($f['q'] !== '') + ($f['order'] !== '') + ($f['user'] !== '') + count($f['counterparty']) + $f['reversed'];
 
-        return view('backend.finance.operations', $this->movementFormData($finance) + compact('movements', 'total', 'f', 'from', 'to', 'all', 'users', 'active'));
+        return view('backend.finance.operations', $this->movementFormData($finance) + compact('movements', 'total', 'f', 'from', 'to', 'presets', 'all', 'users', 'active'));
     }
 
     /** "Yeni əməliyyat" pəncərəsi üçün: aktiv hesablar, qalıqlar, kateqoriyalar */
