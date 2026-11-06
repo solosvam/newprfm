@@ -129,8 +129,8 @@
                     <div class="birbank-taksit__months">
                         @foreach([2, 3, 6] as $months)
                             <span class="birbank-taksit__item" data-birbank-months="{{ $months }}">
-                                <b data-birbank-monthly>{{ number_format($initialPrice / $months, 2) }} ₼</b>
-                                <span>× {{ $months }} {{ __('product_month') }}</span>
+                                <span>{{ $months }} {{ __('product_month') }}</span>
+                                <span data-birbank-monthly>{{ number_format($initialPrice / $months, 2) }} ₼</span>
                             </span>
                         @endforeach
                     </div>
