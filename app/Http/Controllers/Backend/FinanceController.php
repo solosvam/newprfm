@@ -35,7 +35,7 @@ class FinanceController extends Controller
     }
 
     /**
-     * Əməliyyatlar: bütün pul hərəkətləri, filtrlərlə (növ, balans, kateqoriya, tarix; əlavə — açıqlama, sifariş, icraçı, anbar, kuryer).
+     * Əməliyyatlar: bütün pul hərəkətləri, filtrlərlə (növ, balans, kateqoriya, tarix; əlavə — açıqlama, sifariş, icraçı, depo, kuryer).
      * Əks olunan qeydlər və əks əməliyyatlar standart olaraq gizlidir. Başlıqdakı cəm: gələn − çıxan (köçürmələr daxil deyil).
      */
     public function operations(Request $request, FinanceService $finance): View
@@ -108,7 +108,7 @@ class FinanceController extends Controller
     }
 
     /**
-     * Hesabın səhifəsi. Anbar: açıq hissələr + "Ödə"; kuryer: haqq-hesab + "Pulu təhvil al".
+     * Hesabın səhifəsi. Depo: açıq hissələr + "Ödə"; kuryer: haqq-hesab + "Pulu təhvil al".
      */
     public function account(FinanceAccount $account, FinanceService $finance): View
     {
@@ -141,7 +141,7 @@ class FinanceController extends Controller
 
     /**
      * Yeni əməliyyat. Mədaxil / Məxaric: bir hesab + kateqoriya (qarşı tərəf "Kənar"); Köçürmə: haradan → haraya
-     * (kuryerə köçürmə — avans, kuryerdən kassaya — təhvil). Anbara ödəniş və anbarın qaytarması hesabın səhifəsindən.
+     * (kuryerə köçürmə — avans, kuryerdən kassaya — təhvil). Depoya ödəniş və deponun qaytarması hesabın səhifəsindən.
      */
     public function store(Request $request, FinanceService $finance): RedirectResponse
     {
@@ -178,14 +178,14 @@ class FinanceController extends Controller
             [$from, $to] = $kind === 'income' ? [$external, $account] : [$account, $external];
         } else {
             $from = FinanceAccount::findOrFail($data['from_account_id']);
-            // Anbar pulu qaytardı: göndərən həmin anbardır, from_account_id isə pulu alan hesabdır (kuryer / kassa / bank)
+            // Depo pulu qaytardı: göndərən həmin depodur, from_account_id isə pulu alan hesabdır (kuryer / kassa / bank)
             if ($kind === 'warehouse_refund') {
                 abort_if(empty($data['order_item_allocation_id']), 422, 'Təminat hissəsi seçilməyib.');
                 $allocation = \App\Models\Procurement\OrderItemAllocation::with('warehouse')->findOrFail($data['order_item_allocation_id']);
                 $to = $from;
                 $from = $finance->warehouseAccount($allocation->warehouse);
             } elseif (!empty($data['order_item_allocation_id'])) {
-                // Təminat hissəsinə ödəniş: alan hesab həmin anbardır (formadan gəlmir)
+                // Təminat hissəsinə ödəniş: alan hesab həmin depodur (formadan gəlmir)
                 $allocation = \App\Models\Procurement\OrderItemAllocation::with('warehouse')->findOrFail($data['order_item_allocation_id']);
                 $to = $finance->warehouseAccount($allocation->warehouse);
             } else {

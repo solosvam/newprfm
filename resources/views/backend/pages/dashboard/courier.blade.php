@@ -5,7 +5,7 @@
 @php
     $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN';
     $stepLabels = ['courier_assigned' => 'Toplanır', 'sent' => 'Yoldadır'];
-    // aktiv — hələ təhvil verilməyib (təhvildən sonra yalnız anbara qaytarılası qalanlar sayılmır)
+    // aktiv — hələ təhvil verilməyib (təhvildən sonra yalnız depoya qaytarılası qalanlar sayılmır)
     $activeCount = $courier['orders']->filter(fn ($o) => in_array($o->status?->code, ['courier_assigned', 'sent'], true))->count();
 @endphp
 <div class="courier-summary mb-4">
@@ -51,7 +51,7 @@
             <div class="courier-order__top">
                 <strong>{{ $order->order_no }}</strong>
                 <span class="badge {{ $code === 'courier_assigned' ? 'bg-outline-primary' : 'bg-primary' }}">{{ $stepLabels[$code] ?? $order->status?->name_az }}</span>
-                @if($toReturn)<span class="badge bg-warning">Anbara qaytar: {{ $toReturn }} ədəd</span>@endif
+                @if($toReturn)<span class="badge bg-warning">Depoya qaytar: {{ $toReturn }} ədəd</span>@endif
             </div>
             <div class="courier-order__who">{{ trim($order->customer?->name.' '.$order->customer?->surname) }}</div>
             <div class="courier-order__where">{{ $order->address?->shortLine() }}@if($order->meeting_place) · <b>{{ $order->meeting_place }}</b>@endif</div>

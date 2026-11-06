@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Pul axını (Clopos kimi): aylar sütunda, kateqoriyalar sətirdə.
- *  - Gəlir / xərc növləri (Mədaxil, Məxaric, Satış, Anbara ödəniş...) kateqoriyasına yazılır. Bütün balanslarda — kimin
+ *  - Gəlir / xərc növləri (Mədaxil, Məxaric, Satış, Depoya ödəniş...) kateqoriyasına yazılır. Bütün balanslarda — kimin
  *    ödəməsindən asılı olmayaraq (şəxs öz cibindən ödəyibsə də xərcdir); bir balans seçiləndə — yalnız o balansın hərəkətləri.
  *  - Köçürmə: hər iki tərəf baxılan balanslardadırsa — "Köçürmə" (məxaricdə də, mədaxildə də; gizlədilə bilər).
  *    Bir tərəf şəxsdirsə — "Şəxslərlə hesablaşma" (nəticəyə qarışmır).

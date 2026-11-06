@@ -54,9 +54,9 @@ class ProcurementTest extends TestCase
     {
         $order = $this->order();
         $second = $order->items()->create(['quantity' => 1]);
-        $a = Warehouse::create(['name_az' => 'Anbar 1']);
-        $b = Warehouse::create(['name_az' => 'Anbar 2']);
-        $c = Warehouse::create(['name_az' => 'Anbar 3']);
+        $a = Warehouse::create(['name_az' => 'Depo 1']);
+        $b = Warehouse::create(['name_az' => 'Depo 2']);
+        $c = Warehouse::create(['name_az' => 'Depo 3']);
         $service = app(ProcurementService::class);
         $service->allocate($order, $this->offer($order, $c, 1, '50')->id, 1, 7);
         $service->allocate($order, $this->offer($order, $b, 2, '54')->id, 1, 7);
@@ -64,7 +64,7 @@ class ProcurementTest extends TestCase
         $this->assertSame(3, OrderItemAllocation::count());
         $this->assertEquals(184, OrderItemAllocation::get()->sum(fn ($a) => $a->quantity * $a->unit_cost));
         $this->assertSame(3, DB::table('allocation_status_logs')->count());
-        // Bütün miqdar seçildi → "Anbarlar təyin olundu"
+        // Bütün miqdar seçildi → "Depolar təyin olundu"
         $this->assertSame('warehouses_assigned', $this->statusCode($order));
     }
 
@@ -101,7 +101,7 @@ class ProcurementTest extends TestCase
         $offer = $this->offer($order, Warehouse::create(['name_az' => 'A']), 1, '50');
         $service = app(ProcurementService::class);
         $allocation = $service->allocate($order, $offer->id, 1, 7);
-        $service->cancelAllocation($order, $allocation->id, 'Başqa anbar seçiləcək', 7);
+        $service->cancelAllocation($order, $allocation->id, 'Başqa depo seçiləcək', 7);
         $service->cancelAllocation($order, $allocation->id, 'Təkrar klik', 7);
         $this->assertSame(2, $allocation->logs()->count());
         $service->allocate($order, $offer->id, 1, 7);
@@ -178,11 +178,11 @@ class ProcurementTest extends TestCase
         Gate::before(fn () => true);
         $this->actingAs($user, 'admin');
         $order = $this->order();
-        $offer = $this->offer($order, Warehouse::create(['name_az' => 'Anbar A']), 2, '50');
+        $offer = $this->offer($order, Warehouse::create(['name_az' => 'Depo A']), 2, '50');
         app(ProcurementService::class)->allocate($order, $offer->id, 1, 7);
-        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Anbar A')->assertSee('50.00');
-        $this->get(route('admin.procurement.warehouses'))->assertOk()->assertSee('Anbar A');
-        $this->get(route('admin.procurement.warehouses.edit', Warehouse::first()))->assertOk()->assertSee('Anbar A');
+        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Depo A')->assertSee('50.00');
+        $this->get(route('admin.procurement.warehouses'))->assertOk()->assertSee('Depo A');
+        $this->get(route('admin.procurement.warehouses.edit', Warehouse::first()))->assertOk()->assertSee('Depo A');
     }
 
     public function test_warehouse_telegram_id_is_optional_numeric_and_shown_in_the_list(): void
@@ -192,20 +192,20 @@ class ProcurementTest extends TestCase
         Gate::before(fn () => true);
         $this->actingAs($user, 'admin');
 
-        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar T', 'telegram_id' => '-1001234567890', 'active' => 1])->assertSessionHasNoErrors();
-        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar Boş', 'active' => 1])->assertSessionHasNoErrors();
-        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar X', 'telegram_id' => '@anbar', 'active' => 1])->assertSessionHasErrors('telegram_id');
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo T', 'telegram_id' => '-1001234567890', 'active' => 1])->assertSessionHasNoErrors();
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo Boş', 'active' => 1])->assertSessionHasNoErrors();
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo X', 'telegram_id' => '@depo', 'active' => 1])->assertSessionHasErrors('telegram_id');
         // Sorğu tipi: standart SMS; Telegram seçiləndə Telegram ID məcburidir
-        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar Y', 'request_channel' => 'telegram', 'active' => 1])->assertSessionHasErrors('telegram_id');
-        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar Z', 'request_channel' => 'faks', 'active' => 1])->assertSessionHasErrors('request_channel');
-        $this->assertSame('sms', Warehouse::where('name_az', 'Anbar Boş')->value('request_channel'));
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo Y', 'request_channel' => 'telegram', 'active' => 1])->assertSessionHasErrors('telegram_id');
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo Z', 'request_channel' => 'faks', 'active' => 1])->assertSessionHasErrors('request_channel');
+        $this->assertSame('sms', Warehouse::where('name_az', 'Depo Boş')->value('request_channel'));
 
-        $warehouse = Warehouse::where('name_az', 'Anbar T')->sole();
+        $warehouse = Warehouse::where('name_az', 'Depo T')->sole();
         $this->assertSame('-1001234567890', $warehouse->telegram_id);
-        $this->assertNull(Warehouse::where('name_az', 'Anbar Boş')->value('telegram_id'));
+        $this->assertNull(Warehouse::where('name_az', 'Depo Boş')->value('telegram_id'));
         $this->get(route('admin.procurement.warehouses'))->assertOk()->assertSee('Telegram ID')->assertSee('-1001234567890');
 
-        $this->put(route('admin.procurement.warehouses.update', $warehouse), ['name_az' => 'Anbar T', 'telegram_id' => '987654321', 'request_channel' => 'telegram', 'active' => 1])->assertSessionHasNoErrors();
+        $this->put(route('admin.procurement.warehouses.update', $warehouse), ['name_az' => 'Depo T', 'telegram_id' => '987654321', 'request_channel' => 'telegram', 'active' => 1])->assertSessionHasNoErrors();
         $this->assertSame('telegram', $warehouse->fresh()->request_channel);
         $this->get(route('admin.procurement.warehouses'))->assertSee('Sorğu tipi')->assertSee('Telegram');
         $this->assertSame('987654321', $warehouse->fresh()->telegram_id);
@@ -218,13 +218,13 @@ class ProcurementTest extends TestCase
         $user->id = 7;
         Gate::before(fn () => true);
         $this->actingAs($user, 'admin');
-        // Maliyyə: yalnız anbar hesabı və pul hərəkəti lazımdır
+        // Maliyyə: yalnız depo hesabı və pul hərəkəti lazımdır
         \Illuminate\Support\Facades\Schema::create('finance_accounts', fn ($t) => [$t->id(), $t->string('type'), $t->string('code')->nullable(), $t->string('name'),
             $t->unsignedBigInteger('user_id')->nullable(), $t->unsignedBigInteger('warehouse_id')->nullable(), $t->boolean('active')->default(true), $t->timestamps()]);
         \Illuminate\Support\Facades\Schema::create('money_movements', fn ($t) => [$t->id(), $t->unsignedBigInteger('from_account_id'), $t->unsignedBigInteger('to_account_id'), $t->decimal('amount', 12, 2), $t->timestamps()]);
         $order = $this->order();
 
-        // Yalnız sorğu, cavab və link — alış-veriş sayılmır: anbar hər şeyi ilə birlikdə silinir
+        // Yalnız sorğu, cavab və link — alış-veriş sayılmır: depo hər şeyi ilə birlikdə silinir
         $asked = Warehouse::create(['name_az' => 'Soruşulan']);
         $this->offer($order, $asked, 2, '50');
         \App\Models\Procurement\WarehouseAccessLink::create(['warehouse_id' => $asked->id, 'token_hash' => str_repeat('a', 64), 'created_by' => 7, 'expires_at' => now()->addDay()]);
@@ -242,7 +242,7 @@ class ProcurementTest extends TestCase
         $this->delete(route('admin.procurement.warehouses.destroy', $chosen))->assertSessionHas('success', 'Seçilən silindi.');
         $this->assertSame(0, \App\Models\Procurement\OrderItemAllocation::count());
 
-        // Anbarla pul haqq-hesabı var — silinmir, deaktiv edilir
+        // Depoyla pul haqq-hesabı var — silinmir, deaktiv edilir
         $paid = Warehouse::create(['name_az' => 'Ödənilən']);
         $finance = app(\App\Services\FinanceService::class);
         \Illuminate\Support\Facades\DB::table('money_movements')->insert(['from_account_id' => 999, 'to_account_id' => $finance->warehouseAccount($paid)->id, 'amount' => 30]);
@@ -250,14 +250,14 @@ class ProcurementTest extends TestCase
             ->assertSessionHas('warning', 'Ödənilən ilə pul haqq-hesabı olduğu üçün silinə bilməz — deaktiv edildi.');
         $this->assertFalse(Warehouse::find($paid->id)->active);
 
-        // Hesabı olan, amma pul hərəkəti olmayan anbar silinir (hesabı da)
+        // Hesabı olan, amma pul hərəkəti olmayan depo silinir (hesabı da)
         $empty = Warehouse::create(['name_az' => 'Boş']);
         $finance->warehouseAccount($empty);
         $this->delete(route('admin.procurement.warehouses.destroy', $empty))->assertSessionHas('success');
         $this->assertSame(0, \App\Models\Finance\FinanceAccount::where('warehouse_id', $empty->id)->count());
     }
 
-    /** "Anbar seç": sorğusuz — anbarın "var" cavabı qiyməti ilə yazılır və anbar dərhal seçilir; sorğu SMS-i getmir, seçim SMS-i gedir */
+    /** "Depo seç": sorğusuz — deponun "var" cavabı qiyməti ilə yazılır və depo dərhal seçilir; sorğu SMS-i getmir, seçim SMS-i gedir */
     public function test_direct_selection_records_the_answer_and_selects_the_warehouse_without_a_request(): void
     {
         $user = new User(['name' => 'Operator']);
@@ -283,7 +283,7 @@ class ProcurementTest extends TestCase
         \Illuminate\Support\Facades\Http::assertSentCount(1);
         $this->assertSame(['warehouse_selected'], \App\Models\SmsLog::pluck('context')->all());
 
-        // Miqdar artıq seçilib — ikinci "Anbar seç" alınmır
+        // Miqdar artıq seçilib — ikinci "Depo seç" alınmır
         $this->post(route('admin.procurement.offers.direct', $order), ['item_id' => $item->id, 'warehouse_id' => $aksin->id, 'unit_cost' => '90'])->assertSessionHasErrors();
         $this->post(route('admin.procurement.offers.direct', $order), ['item_id' => $item->id, 'unit_cost' => '90'])->assertSessionHasErrors('warehouse_id');
 
@@ -297,7 +297,7 @@ class ProcurementTest extends TestCase
         Gate::before(fn () => false);
         $this->actingAs($user, 'admin');
         $this->get(route('admin.procurement.warehouses'))->assertForbidden();
-        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Anbar', 'active' => 1])->assertForbidden();
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo', 'active' => 1])->assertForbidden();
         $this->assertSame(0, Warehouse::count());
     }
 
@@ -313,7 +313,7 @@ class ProcurementTest extends TestCase
         \Illuminate\Support\Facades\Gate::before(fn () => true);
         $this->actingAs($user, 'admin');
         $order = $this->order();
-        $offer = $this->offer($order, Warehouse::create(['name_az' => 'Anbar A']), 2, '50');
+        $offer = $this->offer($order, Warehouse::create(['name_az' => 'Depo A']), 2, '50');
         app(ProcurementService::class)->allocate($order, $offer->id, 1, 7);
         $order->load(['items.product', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs', 'status']);
         $order->setRelation('address', null);
@@ -334,21 +334,21 @@ class ProcurementTest extends TestCase
         $this->assertStringContainsString('<!DOCTYPE html>', $html);
         $this->assertStringContainsString('Ödəniş cəhdləri', $html);
         $this->assertStringContainsString('100.00 AZN', $html);
-        $this->assertStringContainsString('Anbar A', $html);
+        $this->assertStringContainsString('Depo A', $html);
         $this->assertStringContainsString('crm-order-detail.js', $html);
     }
 
     public function test_old_link_shows_new_requests_only_for_its_warehouse(): void
     {
-        $a = Warehouse::create(['name_az' => 'Anbar A', 'active' => true]);
-        $b = Warehouse::create(['name_az' => 'Anbar B', 'active' => true]);
+        $a = Warehouse::create(['name_az' => 'Depo A', 'active' => true]);
+        $b = Warehouse::create(['name_az' => 'Depo B', 'active' => true]);
         $portal = app(\App\Services\WarehousePortalService::class);
         $url = $portal->issue($a, 7);
         foreach ([$a, $a, $b] as $warehouse) {
             $order = $this->order();
             app(ProcurementService::class)->createRequests($order, [$warehouse->id], [$order->items()->first()->id], 7);
         }
-        $response = $this->get($url)->assertOk()->assertSee('Anbar A')->assertDontSee('Anbar B');
+        $response = $this->get($url)->assertOk()->assertSee('Depo A')->assertDontSee('Depo B');
         $response->assertSee('<span class="wp-count">2</span>', false)->assertSee('Sorğu #1')->assertSee('Sorğu #2')->assertDontSee('Sorğu #3');
         $response->assertHeader('Referrer-Policy', 'no-referrer');
         $response->assertHeader('X-Robots-Tag', 'noindex, nofollow');
@@ -359,7 +359,7 @@ class ProcurementTest extends TestCase
 
     public function test_portal_shows_gender_and_type(): void
     {
-        $a = Warehouse::create(['name_az' => 'Anbar A', 'active' => true]);
+        $a = Warehouse::create(['name_az' => 'Depo A', 'active' => true]);
         DB::table('brands')->insert(['id' => 1, 'name' => 'Chanel']);
         DB::table('types')->insert(['id' => 1, 'name_az' => 'Eau de Parfum']);
         DB::table('genders')->insert([['id' => 1, 'name_az' => 'Qadın'], ['id' => 2, 'name_az' => 'Kişi']]);
@@ -486,7 +486,7 @@ class ProcurementTest extends TestCase
         $this->assertSame(2, \App\Models\Procurement\WarehouseOffer::count());
     }
 
-    /** 2 ədəd tələb, anbar A-dan 2 ədəd təklif (50 AZN) */
+    /** 2 ədəd tələb, depo A-dan 2 ədəd təklif (50 AZN) */
     private function allocated(int $take = 1): array
     {
         $order = $this->order(2);
@@ -553,7 +553,7 @@ class ProcurementTest extends TestCase
         $service = app(ProcurementService::class);
         $second = $service->allocate($order, $offer->id, 1, 7);
         $service->transition($order, $second->id, 'reserved', [], 7);
-        $service->cancelAllocation($order, $second->id, 'Anbar fikrini dəyişdi', 7);
+        $service->cancelAllocation($order, $second->id, 'Depo fikrini dəyişdi', 7);
         $this->assertSame('cancelled', $second->fresh()->status);
 
         $service->transition($order, $allocation->id, 'picked', [], 7);
@@ -573,7 +573,7 @@ class ProcurementTest extends TestCase
             ->with(['warehouse', 'items.offers', 'items.orderItem.product', 'items.orderItem.variant.size'])->get();
         $html = view('backend.procurement.order-content', ['order' => $order, 'requests' => $requests, 'warehouses' => Warehouse::all()])->render();
         $this->assertStringContainsString('Götürülüb', $html);
-        $this->assertStringContainsString('Anbarda tapılmadı', $html);
+        $this->assertStringContainsString('Depoda tapılmadı', $html);
         $this->assertStringContainsString('Həll edildi, davam et', $html);
         $this->assertSame('problem', $order->items->first()->supplyStatus());
     }
@@ -601,7 +601,7 @@ class ProcurementTest extends TestCase
         $service->allocate($order, $offer->id, 1, 7);
         $this->assertSame('warehouses_assigned', $this->statusCode($order));
 
-        $service->cancelAllocation($order, $first->id, 'Anbar imtina etdi', 7);
+        $service->cancelAllocation($order, $first->id, 'Depo imtina etdi', 7);
         $this->assertSame('warehouse_requested', $this->statusCode($order)); // çatışmazlıq → geri
 
         $this->assertNotNull(app(\App\Services\OrderStatusService::class)->courierBlock($order->fresh()));

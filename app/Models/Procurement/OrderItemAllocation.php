@@ -13,7 +13,7 @@ class OrderItemAllocation extends Model
      |   selected → notified → reserved → picked
      |   problem — istənilən aktiv mərhələdən; həll: əvvəlki mərhələyə qayıdır və ya ləğv
      |   cancelled — picked-dən sonra mümkün deyil
-     |   picked → returning (qapıda imtina: kuryer məhsulu anbara aparır) → returned (kuryer "Qaytardım")
+     |   picked → returning (qapıda imtina: kuryer məhsulu depoya aparır) → returned (kuryer "Qaytardım")
      */
     public const SELECTED = 'selected';
     public const NOTIFIED = 'notified';
@@ -25,20 +25,20 @@ class OrderItemAllocation extends Model
     public const RETURNED = 'returned';
 
     public const LABELS = [
-        self::SELECTED => 'Anbar seçilib',
-        self::NOTIFIED => 'Anbara bildirilib',
-        self::RESERVED => 'Anbar ayırıb',
+        self::SELECTED => 'Depo seçilib',
+        self::NOTIFIED => 'Depoya bildirilib',
+        self::RESERVED => 'Depo ayırıb',
         self::PICKED => 'Götürülüb',
         self::PROBLEM => 'Problem',
         self::CANCELLED => 'Ləğv edilib',
-        self::RETURNING => 'Anbara qaytarılır',
-        self::RETURNED => 'Anbara qaytarıldı',
+        self::RETURNING => 'Depoya qaytarılır',
+        self::RETURNED => 'Depoya qaytarıldı',
     ];
 
     /** Təminatda sayılmır (məhsulun aktiv miqdarını ödəmir) */
     public const SUPPLY_INACTIVE = [self::CANCELLED, self::RETURNING, self::RETURNED];
 
-    /** Anbara borc yaradır: götürülüb və ya hələ qaytarılmayıb (məhsul kuryerdədir) */
+    /** Depoya borc yaradır: götürülüb və ya hələ qaytarılmayıb (məhsul kuryerdədir) */
     public const DEBT_STATUSES = [self::PICKED, self::RETURNING];
 
     /** Normal axın: hər mərhələdən irəli getmək olar (məs. telefonla dərhal "ayırdı") */
@@ -48,7 +48,7 @@ class OrderItemAllocation extends Model
     public const CANCELLABLE = [self::SELECTED, self::NOTIFIED, self::RESERVED, self::PROBLEM];
 
     public const PROBLEM_TYPES = [
-        'not_found' => 'Anbarda tapılmadı',
+        'not_found' => 'Depoda tapılmadı',
         'price_changed' => 'Qiymət dəyişdi',
         'wrong_item' => 'Yanlış məhsul verildi',
         'other' => 'Digər',

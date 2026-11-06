@@ -22,14 +22,14 @@ class WarehousePortalService
 
     public function issue(Warehouse $warehouse, int $actor): string
     {
-        abort_unless($warehouse->active, 422, 'Anbar deaktivdir.');
+        abort_unless($warehouse->active, 422, 'Depo deaktivdir.');
         $token = \Illuminate\Support\Str::random(12);
         WarehouseAccessLink::create([
             'warehouse_id' => $warehouse->id, 'token_hash' => hash('sha256', $token),
             'created_by' => $actor, 'expires_at' => now()->addDays(7),
         ]);
 
-        // Anbara SMS ilə gedən link qısa domenlədir (paf.az) — App\Support\ShortUrl
+        // Depoya SMS ilə gedən link qısa domenlədir (paf.az) — App\Support\ShortUrl
         return \App\Support\ShortUrl::route('warehouse.portal', ['token' => $token]);
     }
 
@@ -50,8 +50,8 @@ class WarehousePortalService
     }
 
     /**
-     * Anbar cavabını düzəldə bilərmi: son cavab anbarın özünündür (link) və
-     * bu sorğu sətrinin cavablarından aktiv (ləğv olunmamış) anbar seçimi yoxdur.
+     * Depo cavabını düzəldə bilərmi: son cavab deponun özünündür (link) və
+     * bu sorğu sətrinin cavablarından aktiv (ləğv olunmamış) depo seçimi yoxdur.
      */
     public function canEdit(WarehouseRequestItem $item): bool
     {
@@ -65,17 +65,17 @@ class WarehousePortalService
             ->where('status', '!=', 'cancelled')->exists();
     }
 
-    /** Anbarın portalda seçə bildiyi problemlər (OrderItemAllocation::PROBLEM_TYPES-in alt çoxluğu) */
+    /** Deponun portalda seçə bildiyi problemlər (OrderItemAllocation::PROBLEM_TYPES-in alt çoxluğu) */
     public const PORTAL_PROBLEMS = [
         'not_found' => 'Məhsul artıq yoxdur',
         'price_changed' => 'Qiymət dəyişib',
         'other' => 'Digər',
     ];
 
-    /** Anbarın təsdiqləyə biləcəyi mərhələlər: Seçilib / Anbara bildirildi */
+    /** Deponun təsdiqləyə biləcəyi mərhələlər: Seçilib / Depoya bildirildi */
     public const CONFIRMABLE = [OrderItemAllocation::SELECTED, OrderItemAllocation::NOTIFIED];
 
-    /** Bu anbardan seçilən (ləğv olunmamış, götürülməmiş) hissələr — açıq sifarişlərdə */
+    /** Bu depodan seçilən (ləğv olunmamış, götürülməmiş) hissələr — açıq sifarişlərdə */
     public function selections(int $warehouseId)
     {
         return OrderItemAllocation::where('warehouse_id', $warehouseId)
@@ -84,8 +84,8 @@ class WarehousePortalService
     }
 
     /**
-     * Anbar portalda seçimi təsdiqləyir: "Rezerv etdim" → reserved, "Problem var" → problem.
-     * Log user_id = 0 (anbarın özü). Eyni düyməni təkrar basmaq heç nə dəyişmir.
+     * Depo portalda seçimi təsdiqləyir: "Rezerv etdim" → reserved, "Problem var" → problem.
+     * Log user_id = 0 (deponun özü). Eyni düyməni təkrar basmaq heç nə dəyişmir.
      */
     public function confirm(string $token, int $allocationId, string $action, array $data): OrderItemAllocation
     {
@@ -100,7 +100,7 @@ class WarehousePortalService
             }
             $this->ensureConfirmable($allocation);
 
-            return $procurement->transition($order, $allocation->id, OrderItemAllocation::RESERVED, ['note' => 'Anbar linkdə təsdiqlədi'], 0);
+            return $procurement->transition($order, $allocation->id, OrderItemAllocation::RESERVED, ['note' => 'Depo linkdə təsdiqlədi'], 0);
         }
 
         if ($allocation->status === OrderItemAllocation::PROBLEM) {
@@ -122,7 +122,7 @@ class WarehousePortalService
         }
 
         return $procurement->transition($order, $allocation->id, OrderItemAllocation::PROBLEM, [
-            'problem_type' => $type, 'note' => 'Anbar (link)'.($note !== '' ? ': '.$note : ''),
+            'problem_type' => $type, 'note' => 'Depo (link)'.($note !== '' ? ': '.$note : ''),
         ], 0);
     }
 
@@ -144,7 +144,7 @@ class WarehousePortalService
             $access = $this->resolve($token);
             $item = $this->openItems($access->warehouse_id)->with('orderItem')->findOrFail($item->id);
             // İlk cavab: yalnız hələ cavab yoxdursa. Düzəliş ("replaces" = düzəldilən cavabın id-si):
-            // yalnız anbarın öz son cavabı və operator ondan seçim etməyibsə. Təkrar göndərmə heç nə dəyişmir.
+            // yalnız deponun öz son cavabı və operator ondan seçim etməyibsə. Təkrar göndərmə heç nə dəyişmir.
             $latest = $item->offers()->latest('id')->first();
             $replaces = isset($data['replaces']) ? (int) $data['replaces'] : null;
             if ($replaces === null) {

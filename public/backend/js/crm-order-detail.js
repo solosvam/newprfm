@@ -78,7 +78,7 @@ $(document).ready(function () {
         form.addEventListener('submit', () => form.querySelector('button.btn-danger').disabled = true);
     }
 
-    // Qapıda imtina (Məhsullar tabı): kuryer yolda/ünvanda — say seçilir, məhsul anbara qaytarılır
+    // Qapıda imtina (Məhsullar tabı): kuryer yolda/ünvanda — say seçilir, məhsul depoya qaytarılır
     const doorModal = document.getElementById('doorRefuseModal');
     if (doorModal) {
         const form = doorModal.querySelector('form');

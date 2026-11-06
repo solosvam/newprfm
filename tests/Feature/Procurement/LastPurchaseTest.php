@@ -24,7 +24,7 @@ class LastPurchaseTest extends TestCase
 
     public function test_latest_picked_allocation_per_variant(): void
     {
-        DB::table('warehouses')->insert([['id' => 1, 'name_az' => 'Anbar A'], ['id' => 2, 'name_az' => 'Anbar B']]);
+        DB::table('warehouses')->insert([['id' => 1, 'name_az' => 'Depo A'], ['id' => 2, 'name_az' => 'Depo B']]);
         DB::table('order_items')->insert([['id' => 1, 'product_variant_id' => 10], ['id' => 2, 'product_variant_id' => 10], ['id' => 3, 'product_variant_id' => 10], ['id' => 4, 'product_variant_id' => 20]]);
         $allocation = fn ($id, $item, $wh, $cost, $status, $at) => DB::table('order_item_allocations')->insert(
             ['id' => $id, 'order_item_id' => $item, 'warehouse_id' => $wh, 'unit_cost' => $cost, 'status' => $status, 'created_at' => $at, 'updated_at' => $at]);
@@ -37,7 +37,7 @@ class LastPurchaseTest extends TestCase
         ]);
 
         $result = LastPurchase::forVariants([10, 20]);
-        $this->assertSame(['cost' => 180.0, 'warehouse' => 'Anbar A', 'date' => '12.10.2026'], $result[10]);
+        $this->assertSame(['cost' => 180.0, 'warehouse' => 'Depo A', 'date' => '12.10.2026'], $result[10]);
         $this->assertArrayNotHasKey(20, $result);
         $this->assertSame([], LastPurchase::forVariants([]));
     }

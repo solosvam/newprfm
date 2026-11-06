@@ -1,5 +1,5 @@
 // Kassa: "Yeni əməliyyat" (Məxaric / Mədaxil / Köçürmə), yeni hesab, kateqoriyalar; "Əks et" modalını doldurur.
-// Sifarişin "Hesablaşmalar" tabında da istifadə olunur (anbara ödəniş modalı).
+// Sifarişin "Hesablaşmalar" tabında da istifadə olunur (depoya ödəniş modalı).
 (() => {
     'use strict';
 
@@ -125,7 +125,7 @@
         if (!confirm(f.dataset.confirm)) event.preventDefault();
     }));
 
-    // Anbara ödəniş və anbardan geri alma (sifariş → Hesablaşmalar): hissə və məbləğ düymədən
+    // Depoya ödəniş və depodan geri alma (sifariş → Hesablaşmalar): hissə və məbləğ düymədən
     ['warehousePayModal', 'warehouseRefundModal'].forEach(id => {
         const modal = document.getElementById(id);
         if (!modal) return;

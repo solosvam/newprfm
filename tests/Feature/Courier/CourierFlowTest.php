@@ -60,7 +60,7 @@ class CourierFlowTest extends TestCase
         $this->orderStatusFixtures();
     }
 
-    /** 1 ədəd, qapıda nağd 120 AZN; anbar seçilib, kuryer təyin olunub */
+    /** 1 ədəd, qapıda nağd 120 AZN; depo seçilib, kuryer təyin olunub */
     private function assigned(User $courier): array
     {
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'total' => 120, 'payment_status' => 'cod']);
@@ -85,7 +85,7 @@ class CourierFlowTest extends TestCase
 
         $this->assertNotNull($s->deliveryBlock($order)); // hələ götürülməyib
         app(ProcurementService::class)->transition($order, $part->id, 'picked', [], $courier->id);
-        // Kuryer anbara öz pulundan ödəyir
+        // Kuryer depoya öz pulundan ödəyir
         $f->record($f->courierAccount($courier), $f->warehouseAccount($wh), 80, 'warehouse_payment', ['order_item_allocation_id' => $part->id], $courier->id);
         $this->assertNull($s->deliveryBlock($order->fresh()));
 
@@ -101,7 +101,7 @@ class CourierFlowTest extends TestCase
 
         $this->assertSame('delivered', $this->statusCode($order));
         $this->assertSame('paid', $order->fresh()->payment_status);
-        // Kuryer: +120 müştəridən, −80 anbara → 40 təhvil verməlidir
+        // Kuryer: +120 müştəridən, −80 depoya → 40 təhvil verməlidir
         $this->assertSame(4000, $f->balances()[$f->courierAccount($courier)->id]);
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
     }
@@ -145,7 +145,7 @@ class CourierFlowTest extends TestCase
 
         $part->fresh()->update(['status' => 'returning']);   // qapıda imtina — məhsul hələ kuryerdədir
         $this->assertSame(8000, $f->warehouseDebts()[$wh->id]);
-        $part->fresh()->update(['status' => 'returned']);    // anbara qaytarıldı
+        $part->fresh()->update(['status' => 'returned']);    // depoya qaytarıldı
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
     }
 
@@ -158,7 +158,7 @@ class CourierFlowTest extends TestCase
         $f->record($f->courierAccount($courier), $f->warehouseAccount($wh), 80, 'warehouse_payment', ['order_item_allocation_id' => $part->id], $courier->id);
         $this->assertSame(-8000, $f->balances()[$f->courierAccount($courier)->id]); // şirkət kuryerə borcludur
 
-        // Mal qaytarılmayıbsa anbardan pul geri alınmır
+        // Mal qaytarılmayıbsa depodan pul geri alınmır
         try {
             $f->record($f->warehouseAccount($wh), $f->courierAccount($courier), 80, 'warehouse_refund', ['order_item_allocation_id' => $part->id], $courier->id);
             $this->fail('Qaytarılmamış mala görə geri ödəniş olmamalı idi');
@@ -166,7 +166,7 @@ class CourierFlowTest extends TestCase
         }
 
         $part->fresh()->update(['status' => 'returned']);
-        // Qaytarıldı, pul hələ alınmayıb: anbar şirkətə 80 borcludur
+        // Qaytarıldı, pul hələ alınmayıb: depo şirkətə 80 borcludur
         $this->assertSame(-8000, $f->warehouseDebts()[$wh->id]);
 
         $f->record($f->warehouseAccount($wh), $f->courierAccount($courier), 80, 'warehouse_refund', ['order_item_allocation_id' => $part->id], $courier->id);
@@ -297,7 +297,7 @@ class CourierFlowTest extends TestCase
         $this->post(route('admin.courier.team.transfer', [$anar, $order]), ['courier_id' => $head->id])->assertNotFound();
     }
 
-    /** Operator anbar üçün "pul vermə" seçdi: kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" — anbara borc qalır */
+    /** Operator depo üçün "pul vermə" seçdi: kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" — depoya borc qalır */
     public function test_courier_does_not_pay_the_warehouse_when_the_operator_says_so(): void
     {
         (require base_path('vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub'))->up();
@@ -317,7 +317,7 @@ class CourierFlowTest extends TestCase
         $courier = User::forceCreate(['name' => 'Fərid']);
         $courier->assignRole(FinanceService::COURIER_ROLE);
 
-        // Kuryer hələ təyin olunmayıb: anbar seçilib → operator kuryeri "pul vermə" ilə təyin edir
+        // Kuryer hələ təyin olunmayıb: depo seçilib → operator kuryeri "pul vermə" ilə təyin edir
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'total' => 120, 'payment_status' => 'cod']);
         $order->items()->create(['quantity' => 1]);
         $wh = Warehouse::create(['name_az' => 'A']);
@@ -332,7 +332,7 @@ class CourierFlowTest extends TestCase
 
         $this->actingAs($courier, 'admin');
         $html = $this->get(route('admin.courier.order', $order))->assertOk()->getContent();
-        $this->assertStringNotContainsString('Anbara ödəniş', $html);
+        $this->assertStringNotContainsString('Depoya ödəniş', $html);
         $this->assertStringNotContainsString('ödədim', $html);
         $this->assertStringContainsString('Götürdüm', $html);
         $this->assertStringNotContainsString('Operatorun qeydi', $html);
@@ -347,7 +347,7 @@ class CourierFlowTest extends TestCase
         $f = app(FinanceService::class);
         $f->syncAccounts();
         $this->assertSame('picked', $part->fresh()->status);
-        $this->assertSame(8000, $f->warehouseDebts()[$wh->id]);                         // anbara borc qalır
+        $this->assertSame(8000, $f->warehouseDebts()[$wh->id]);                         // depoya borc qalır
         $this->assertSame(0, (int) ($f->balances()[$f->courierAccount($courier)->id] ?? 0)); // kuryerin pulu ilə əlaqəsi yoxdur
     }
 
@@ -363,13 +363,13 @@ class CourierFlowTest extends TestCase
         $f = app(FinanceService::class);
         $this->actingAs($courier, 'admin');
 
-        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', '80.00 AZN anbara ödəndi, götürüldü.');
+        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', '80.00 AZN depoya ödəndi, götürüldü.');
         $this->assertSame('picked', $part->fresh()->status);
         $this->assertSame(8000, $f->allocationPaid([$part->id])[$part->id]);
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);
 
         // Təkrar basılsa ikinci dəfə ödənmir
-        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', 'Anbara artıq ödənilib, götürüldü.');
+        $this->post(route('admin.courier.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', 'Depoya artıq ödənilib, götürüldü.');
         $this->assertSame(8000, $f->allocationPaid([$part->id])[$part->id]);
     }
 

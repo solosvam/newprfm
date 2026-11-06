@@ -12,10 +12,10 @@ use Illuminate\Support\Collection;
  * CRM sifariş səhifəsinin "Proses" tabı üçün: hər məhsul hansı mərhələdədir və operator indi nə etməlidir.
  *
  * Məhsul qrupları (səhifədə bu sıra ilə göstərilir):
- *  - choose   — anbar cavabı gəlib, seçim gözləyir (işin özü — ən yuxarıda);
- *  - unrequested — anbarlara hələ sorğu göndərilməyib (yeni sifarişdə hamısı buradadır — icraya götürülməyib);
+ *  - choose   — depo cavabı gəlib, seçim gözləyir (işin özü — ən yuxarıda);
+ *  - unrequested — depolara hələ sorğu göndərilməyib (yeni sifarişdə hamısı buradadır — icraya götürülməyib);
  *  - waiting  — sorğu gedib, istifadə edilə bilən cavab hələ yoxdur;
- *  - selected — lazım olan miqdar anbarlara seçilib (kart yığılır; problemli olanlar qrupun əvvəlində).
+ *  - selected — lazım olan miqdar depolara seçilib (kart yığılır; problemli olanlar qrupun əvvəlində).
  */
 class OrderProcessSummary
 {
@@ -23,7 +23,7 @@ class OrderProcessSummary
         'choose' => 'Cavab gəlib, seçim gözləyir',
         'unrequested' => 'Sorğu göndərilməyib',
         'waiting' => 'Cavab gözləyir',
-        'selected' => 'Anbar seçilib',
+        'selected' => 'Depo seçilib',
     ];
 
     public function __construct(private WarehouseNotifier $notifier, private PaymentItemsBuilder $shares)
@@ -66,7 +66,7 @@ class OrderProcessSummary
             })->filter(fn ($cost) => $cost !== null);
             $usable = $costs->isNotEmpty();
 
-            // Qazanc: anbar seçilibsə seçilən hissələrin cəmi, seçilməyibsə ən ucuz təklifin 1 ədədi üzrə.
+            // Qazanc: depo seçilibsə seçilən hissələrin cəmi, seçilməyibsə ən ucuz təklifin 1 ədədi üzrə.
             // Çatdırılma xərci və bank komissiyası hesaba girmir.
             $share = $shares->get($item->id);
             $saleUnit = $share && $share['goods'] > 0 ? ($share['goods'] - $share['promo']) / $share['quantity'] / 100 : null;
@@ -128,7 +128,7 @@ class OrderProcessSummary
         $smsFailed = count(array_filter($items, fn ($i) => $i['sms_failed']));
         $side = collect([
             $problems ? $problems.' seçimdə problem var' : null,
-            $smsFailed ? $smsFailed.' seçimdə anbara SMS getməyib' : null,
+            $smsFailed ? $smsFailed.' seçimdə depoya SMS getməyib' : null,
         ])->filter()->implode(' · ') ?: null;
 
         if ($order->isCancelled()) {
@@ -140,36 +140,36 @@ class OrderProcessSummary
         if ($status === 'new') {
             return $startBlock
                 ? ['tone' => 'warning', 'headline' => 'Sifariş hələ icraya götürülə bilməz', 'detail' => $startBlock]
-                : ['tone' => 'warning', 'headline' => 'Sifarişi icraya götürün', 'detail' => 'Anbarlara sorğu yalnız icraya götürüləndən sonra göndərilir — yuxarıdakı "İcraya götür" düyməsi.'];
+                : ['tone' => 'warning', 'headline' => 'Sifarişi icraya götürün', 'detail' => 'Depolara sorğu yalnız icraya götürüləndən sonra göndərilir — yuxarıdakı "İcraya götür" düyməsi.'];
         }
         if (in_array($status, OrderStatusService::PROCUREMENT, true)) {
             if ($problems) {
-                return ['tone' => 'danger', 'headline' => $problems.' seçimdə anbar problemi var — həll edin', 'detail' => $this->pending($counts, $smsFailed)];
+                return ['tone' => 'danger', 'headline' => $problems.' seçimdə depo problemi var — həll edin', 'detail' => $this->pending($counts, $smsFailed)];
             }
             if ($counts['choose']) {
-                return ['tone' => 'warning', 'headline' => $counts['choose'].' məhsul üçün anbar seçilməlidir: '.$names('choose'),
-                    'detail' => collect(['Cavablar gəlib.', $counts['waiting'] ? $counts['waiting'].' məhsul hələ cavab gözləyir.' : null, $smsFailed ? $smsFailed.' seçimdə anbara SMS getməyib.' : null])->filter()->implode(' ')];
+                return ['tone' => 'warning', 'headline' => $counts['choose'].' məhsul üçün depo seçilməlidir: '.$names('choose'),
+                    'detail' => collect(['Cavablar gəlib.', $counts['waiting'] ? $counts['waiting'].' məhsul hələ cavab gözləyir.' : null, $smsFailed ? $smsFailed.' seçimdə depoya SMS getməyib.' : null])->filter()->implode(' ')];
             }
             if ($counts['unrequested']) {
-                return ['tone' => 'warning', 'headline' => $counts['unrequested'].' məhsul üçün anbarlara sorğu göndərilməyib: '.$names('unrequested'),
-                    'detail' => collect(['"Yeni sorğu" ilə anbarlardan qiymət soruşun.', $counts['waiting'] ? $counts['waiting'].' məhsul cavab gözləyir.' : null])->filter()->implode(' ')];
+                return ['tone' => 'warning', 'headline' => $counts['unrequested'].' məhsul üçün depolara sorğu göndərilməyib: '.$names('unrequested'),
+                    'detail' => collect(['"Yeni sorğu" ilə depolardan qiymət soruşun.', $counts['waiting'] ? $counts['waiting'].' məhsul cavab gözləyir.' : null])->filter()->implode(' ')];
             }
             if ($counts['waiting']) {
-                return ['tone' => 'info', 'headline' => $counts['waiting'].' məhsul üçün anbar cavabı gözlənilir: '.$names('waiting'), 'detail' => 'Cavab telefonla gəlibsə, "Cavab daxil et" ilə özünüz yazın.'.($side ? ' '.$side.'.' : '')];
+                return ['tone' => 'info', 'headline' => $counts['waiting'].' məhsul üçün depo cavabı gözlənilir: '.$names('waiting'), 'detail' => 'Cavab telefonla gəlibsə, "Cavab daxil et" ilə özünüz yazın.'.($side ? ' '.$side.'.' : '')];
             }
             if ($smsFailed) {
-                return ['tone' => 'danger', 'headline' => $smsFailed.' seçimdə anbara SMS getməyib', 'detail' => 'Anbar seçimdən xəbərsizdir — nömrəni düzəldib SMS-i yenidən göndərin və ya telefonla bildirin.'];
+                return ['tone' => 'danger', 'headline' => $smsFailed.' seçimdə depoya SMS getməyib', 'detail' => 'Depo seçimdən xəbərsizdir — nömrəni düzəldib SMS-i yenidən göndərin və ya telefonla bildirin.'];
             }
 
             return $courierBlock
-                ? ['tone' => 'info', 'headline' => 'Bütün məhsullar üçün anbar seçilib', 'detail' => $courierBlock]
-                : ['tone' => 'success', 'headline' => 'Bütün məhsullar üçün anbar seçilib — kuryer təyin edə bilərsiniz', 'detail' => null];
+                ? ['tone' => 'info', 'headline' => 'Bütün məhsullar üçün depo seçilib', 'detail' => $courierBlock]
+                : ['tone' => 'success', 'headline' => 'Bütün məhsullar üçün depo seçilib — kuryer təyin edə bilərsiniz', 'detail' => null];
         }
 
         // Kuryer mərhələləri
         $courier = $order->courier?->full_name;
         $headline = match ($status) {
-            'courier_assigned' => 'Kuryer təyin olunub'.($courier ? ': '.$courier : '').' — malları anbarlardan götürür',
+            'courier_assigned' => 'Kuryer təyin olunub'.($courier ? ': '.$courier : '').' — malları depolardan götürür',
             'sent' => 'Kuryer yoldadır'.($courier ? ': '.$courier : ''),
             default => $order->status?->name_az ?? '—',
         };
@@ -183,14 +183,14 @@ class OrderProcessSummary
             $counts['choose'] ? $counts['choose'].' məhsul seçim gözləyir.' : null,
             $counts['unrequested'] ? $counts['unrequested'].' məhsul üçün sorğu göndərilməyib.' : null,
             $counts['waiting'] ? $counts['waiting'].' məhsul cavab gözləyir.' : null,
-            $smsFailed ? $smsFailed.' seçimdə anbara SMS getməyib.' : null,
+            $smsFailed ? $smsFailed.' seçimdə depoya SMS getməyib.' : null,
         ])->filter()->implode(' ') ?: null;
     }
 
     /** İşin ortasında girən operator üçün: son əməliyyatı kim, nə vaxt, nə edib */
     private function lastAction(Order $order, Collection $requests, Collection $staff): ?array
     {
-        $who = fn ($id) => $id === 0 || $id === '0' ? 'Anbar (link)' : ($id ? ($staff[$id] ?? null) : null);
+        $who = fn ($id) => $id === 0 || $id === '0' ? 'Depo (link)' : ($id ? ($staff[$id] ?? null) : null);
         $events = collect();
 
         foreach ($order->statusLogs as $log) {

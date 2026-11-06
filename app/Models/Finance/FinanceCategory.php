@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/** Pul hərəkətinin kateqoriyası (Satış, Anbara ödəniş, Əməkhaqqı...). İki səviyyəli ağac. */
+/** Pul hərəkətinin kateqoriyası (Satış, Depoya ödəniş, Əməkhaqqı...). İki səviyyəli ağac. */
 class FinanceCategory extends Model
 {
     public const TYPES = ['income' => 'Mədaxil', 'expense' => 'Məxaric', 'both' => 'Hər ikisi'];

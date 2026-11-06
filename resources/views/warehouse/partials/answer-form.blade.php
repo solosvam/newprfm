@@ -1,5 +1,5 @@
 {{--
-  Anbar cavabı forması: ilk cavab ($offer = null) və ya düzəliş ($offer = düzəldilən cavab, "replaces").
+  Depo cavabı forması: ilk cavab ($offer = null) və ya düzəliş ($offer = düzəldilən cavab, "replaces").
   Parametrlər: $item, $token, $quantity (tələb), $offer
 --}}
 @php

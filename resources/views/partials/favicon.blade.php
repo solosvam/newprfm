@@ -1,4 +1,4 @@
-{{-- Favicon — sayt, admin panel və anbar portalı üçün eyni (public/favicon, realfavicongenerator). Kökdəki /favicon.ico da eynidir.
+{{-- Favicon — sayt, admin panel və depo portalı üçün eyni (public/favicon, realfavicongenerator). Kökdəki /favicon.ico da eynidir.
      Ana ekran ikonu (iPhone) və manifest ikonları — public/pwa (paf-centered-icon). --}}
 <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('favicon/favicon-96x96.png') }}">
 <link rel="icon" type="image/svg+xml" href="{{ asset('favicon/favicon.svg') }}">

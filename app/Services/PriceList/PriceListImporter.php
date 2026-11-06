@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * Excel faylını anbarın yeni price listi kimi yazır.
+ * Excel faylını deponun yeni price listi kimi yazır.
  * Xəritə ($mapping): sheet, first_row (1-dən), name_col, price_col, brand_mode (group | column | none), brand_col.
  *  - group: qiyməti olmayan sətir brend başlığıdır, altındakı sətirlər o brendə aiddir (1C çıxarışı);
  *  - column: brend ayrıca sütundadır; none: brend yoxdur (ad yalnız axtarışla tapılır, avtomatik bağlanmır).

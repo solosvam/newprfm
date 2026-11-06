@@ -1,5 +1,5 @@
 {{--
-  Baş kuryer → kuryer: balans və "Pulu özümə köçür" (courier.collect), aktiv sifarişlər anbarlar üzrə vəziyyətlə,
+  Baş kuryer → kuryer: balans və "Pulu özümə köçür" (courier.collect), aktiv sifarişlər depolar üzrə vəziyyətlə,
   sifariş arxivi və haqq-hesab tarixçəsi.
 --}}
 @use('App\Models\Procurement\OrderItemAllocation', 'Part')
@@ -69,7 +69,7 @@
                 </div>
                 @foreach($parts->groupBy(fn ($row) => $row['a']->warehouse_id) as $rows)
                     <div class="courier-part">
-                        <div class="courier-part__name">{{ $rows->first()['a']->warehouse?->name_az ?? 'Anbar' }}</div>
+                        <div class="courier-part__name">{{ $rows->first()['a']->warehouse?->name_az ?? 'Depo' }}</div>
                         @foreach($rows as $row)
                             <div class="courier-part__info">
                                 <span>{{ $row['item']->product?->name ?? 'Məhsul' }} × {{ $row['a']->quantity }}</span>

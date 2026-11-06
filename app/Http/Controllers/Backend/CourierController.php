@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
- * Kuryerin iş ekranı: ona təyin olunmuş sifariş — anbarlardan götürmə, anbara ödəniş, çatdırılma.
+ * Kuryerin iş ekranı: ona təyin olunmuş sifariş — depolardan götürmə, depoya ödəniş, çatdırılma.
  * Yalnız "Kuryer" rolu və yalnız öz sifarişləri (orders.courier_id).
  */
 class CourierController extends Controller
@@ -31,7 +31,7 @@ class CourierController extends Controller
         $rows = fn (array $statuses, bool $not = false) => $order->items->flatMap(fn ($item) => $item->allocations
             ->filter(fn ($a) => in_array($a->status, $statuses, true) !== $not)->map(fn ($a) => ['item' => $item, 'a' => $a]));
         $parts = $rows(OrderItemAllocation::SUPPLY_INACTIVE, true);            // toplama
-        $returning = $rows([OrderItemAllocation::RETURNING]);                  // qapıda imtina → anbara aparılacaq
+        $returning = $rows([OrderItemAllocation::RETURNING]);                  // qapıda imtina → depoya aparılacaq
 
         return view('backend.courier.order', [
             'order' => $order,
@@ -67,14 +67,14 @@ class CourierController extends Controller
     }
 
     /**
-     * "Ödədim": kuryer anbara öz qalığından ödəyir (Kuryer → Anbar). Məbləğ yazılmır — seçimin ödənilməmiş qalığı
+     * "Ödədim": kuryer depoya öz qalığından ödəyir (Kuryer → Depo). Məbləğ yazılmır — seçimin ödənilməmiş qalığı
      * (say × alış qiyməti − artıq ödənilən) ödənilir. $pick — "… ödədim, götürdüm": ödəniş və götürmə birlikdə.
      */
     public function pay(Request $request, Order $order, int $allocation, FinanceService $finance, ProcurementService $procurement): RedirectResponse
     {
         $this->authorizeCourier($order);
         $part = OrderItemAllocation::with('warehouse')->whereIn('order_item_id', $order->items()->select('id'))->findOrFail($allocation);
-        abort_unless($part->courier_pays, 403, 'Bu anbara pulu şirkət ödəyir — yalnız "Götürdüm" seçin.');
+        abort_unless($part->courier_pays, 403, 'Bu depoya pulu şirkət ödəyir — yalnız "Götürdüm" seçin.');
         $left = (int) round($part->quantity * (float) $part->unit_cost * 100) - ($finance->allocationPaid([$part->id])[$part->id] ?? 0);
         $pick = $request->boolean('pick');
 
@@ -87,7 +87,7 @@ class CourierController extends Controller
                 $procurement->transition($order, $part->id, OrderItemAllocation::PICKED, [], $this->me());
             }
         });
-        $paid = $left > 0 ? number_format($left / 100, 2).' AZN anbara ödəndi' : 'Anbara artıq ödənilib';
+        $paid = $left > 0 ? number_format($left / 100, 2).' AZN depoya ödəndi' : 'Depoya artıq ödənilib';
 
         return back()->with('success', $paid.($pick ? ', götürüldü.' : '.'));
     }
@@ -128,7 +128,7 @@ class CourierController extends Controller
         return back()->with('success', 'Problem operatora bildirildi.');
     }
 
-    /** Qapıda imtina: müştəri məhsullardan birini götürmədi — məbləğ azalır, məhsul anbara qaytarılır */
+    /** Qapıda imtina: müştəri məhsullardan birini götürmədi — məbləğ azalır, məhsul depoya qaytarılır */
     public function refuse(Request $request, Order $order, OrderItem $item, OrderItemCancellationService $service): RedirectResponse
     {
         $this->authorizeCourier($order);
@@ -140,31 +140,31 @@ class CourierController extends Controller
         $cancellation = $service->refuseAtDoor($order, $item, (int) $data['quantity'], $data['note'] ?? null, $this->me());
 
         return back()->with('success', 'Qapıda imtina qeyd olundu: '.$cancellation->quantity.' ədəd, −'
-            .number_format((float) $cancellation->amount, 2).' AZN. Məhsulu anbara qaytarın.');
+            .number_format((float) $cancellation->amount, 2).' AZN. Məhsulu depoya qaytarın.');
     }
 
-    /** "Qaytardım": qapıda imtina edilən məhsul anbara təhvil verildi */
+    /** "Qaytardım": qapıda imtina edilən məhsul depoya təhvil verildi */
     public function returned(Request $request, Order $order, int $allocation, ProcurementService $procurement, FinanceService $finance): RedirectResponse
     {
         $this->authorizeCourier($order);
         $refunded = $request->boolean('refunded');
 
-        // Mal anbara qaytarıldı; anbara pul ödənilmişdisə və anbar pulu kuryerə qaytardısa — kuryerin hesabına geri yazılır
+        // Mal depoya qaytarıldı; depoya pul ödənilmişdisə və depo pulu kuryerə qaytardısa — kuryerin hesabına geri yazılır
         [$part, $amount] = DB::transaction(function () use ($order, $allocation, $procurement, $finance, $refunded) {
             $part = $procurement->markReturned($order, $allocation, $this->me());
             $paid = $finance->allocationPaid([$part->id])[$part->id] ?? 0;
-            if (!$refunded || $paid <= 0 || !$part->courier_pays) { // pulu şirkət ödəyibsə anbar şirkətə qaytarır
+            if (!$refunded || $paid <= 0 || !$part->courier_pays) { // pulu şirkət ödəyibsə depo şirkətə qaytarır
                 return [$part, 0];
             }
             $finance->record($finance->warehouseAccount($part->warehouse), $finance->courierAccount(auth('admin')->user()), $paid / 100, 'warehouse_refund', [
-                'order_item_allocation_id' => $part->id, 'note' => 'Mal anbara qaytarıldı, anbar pulu kuryerə verdi',
+                'order_item_allocation_id' => $part->id, 'note' => 'Mal depoya qaytarıldı, depo pulu kuryerə verdi',
             ], $this->me());
 
             return [$part, $paid];
         });
 
-        return back()->with('success', 'Anbara qaytarıldı: '.($part->warehouse?->name_az ?? 'anbar').'.'
-            .($amount > 0 ? ' Anbardan geri aldığınız '.number_format($amount / 100, 2).' AZN hesabınıza yazıldı.' : ''));
+        return back()->with('success', 'Depoya qaytarıldı: '.($part->warehouse?->name_az ?? 'depo').'.'
+            .($amount > 0 ? ' Depodan geri aldığınız '.number_format($amount / 100, 2).' AZN hesabınıza yazıldı.' : ''));
     }
 
     /** Sifarişi başqa kuryerə ötür (toplamadan əvvəl) */

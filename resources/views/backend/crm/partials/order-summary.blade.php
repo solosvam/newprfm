@@ -4,7 +4,7 @@
     <div class="col-md-6"><div class="text-muted small">Status</div><div>{{ $order->status?->name_az ?? '—' }}</div></div>
     <div class="col-md-6"><div class="text-muted small">Ödəniş üsulu</div><div>{{ $order->paymentMethod?->name_az ?? '—' }}</div></div>
     @can('crm')
-        <div class="col-12"><a class="btn btn-outline-primary" href="#procurement">Anbar sorğuları və təminat</a></div>
+        <div class="col-12"><a class="btn btn-outline-primary" href="#procurement">Depo sorğuları və təminat</a></div>
     @endcan
     @if($payLinkUrl)
         {{-- SMS ödəniş linki: müştəri login olmadan ödəyir (OrderPayLinkService) --}}

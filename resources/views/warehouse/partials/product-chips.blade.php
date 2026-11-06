@@ -1,5 +1,5 @@
 {{--
-  Anbar portalı: məhsulun cinsi (Qadın üçün / Kişi üçün) və növü (Eau de Parfum / Eau de Toilette …).
+  Depo portalı: məhsulun cinsi (Qadın üçün / Kişi üçün) və növü (Eau de Parfum / Eau de Toilette …).
   Parametr: $product (genders, type yüklənmiş)
 --}}
 @php

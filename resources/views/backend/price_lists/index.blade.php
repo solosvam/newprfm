@@ -31,7 +31,7 @@
                 <div class="card-body">
                     <div class="table-responsive"><table class="table align-middle mb-0">
                         <thead><tr>
-                            <th class="text-muted text-small text-uppercase">Anbar</th>
+                            <th class="text-muted text-small text-uppercase">Depo</th>
                             <th class="text-muted text-small text-uppercase">ƏLAQƏLİ ŞƏXS</th>
                             <th class="text-muted text-small text-uppercase">CARİ SİYAHI</th>
                             <th class="text-muted text-small text-uppercase">Fayl</th>
@@ -73,7 +73,7 @@
             <div class="modal-header"><h5 class="modal-title" id="priceListUploadTitle">Price list yüklə</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label" for="plWarehouse">Anbar</label>
+                    <label class="form-label" for="plWarehouse">Depo</label>
                     <select id="plWarehouse" name="warehouse_id" class="form-select" required>
                         <option value="">Seçin</option>
                         @foreach($warehouses as $warehouse)<option value="{{ $warehouse->id }}" @selected(old('warehouse_id') == $warehouse->id)>{{ $warehouse->name_az }}</option>@endforeach
@@ -84,7 +84,7 @@
                     <input id="plFile" type="file" name="file" class="form-control" accept=".xls,.xlsx,.csv" required>
                     <div class="form-text">Excel (.xls, .xlsx) və ya CSV, 20 MB-a qədər.</div>
                 </div>
-                <p class="text-muted text-small mb-0">Növbəti addımda faylın sütunlarını göstərəcəksiniz (ad, qiymət). Yeni siyahı anbarın əvvəlkini əvəz edir; əvvəl təsdiqlənmiş uyğunluqlar yadda qalır.</p>
+                <p class="text-muted text-small mb-0">Növbəti addımda faylın sütunlarını göstərəcəksiniz (ad, qiymət). Yeni siyahı deponun əvvəlkini əvəz edir; əvvəl təsdiqlənmiş uyğunluqlar yadda qalır.</p>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Davam et</button></div>
         </form></div>

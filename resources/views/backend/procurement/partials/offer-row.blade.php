@@ -1,4 +1,4 @@
-{{-- Bir anbarın bir məhsula cavabı (cədvəl sətri). order-content.blade.php-dən çağırılır: $row, $item, $rows, $cheapest, $cheapestUnique, $missing. --}}
+{{-- Bir deponun bir məhsula cavabı (cədvəl sətri). order-content.blade.php-dən çağırılır: $row, $item, $rows, $cheapest, $cheapestUnique, $missing. --}}
 @php
     $offer = $row['offer'];
     $canTake = $offer ? min($offer->available_quantity - $row['taken'], $missing) : 0;
@@ -41,7 +41,7 @@
         <div class="proc-actions">
             @if($editable && $canTake > 0)
                 <form method="POST" action="{{ route('admin.procurement.allocations.store', $order) }}" class="proc-pick"
-                      @if($rowMargin !== null && $rowMargin < 0) data-confirm="Bu anbarın qiyməti satışdan bahadır: 1 ədəddə {{ number_format(abs($rowMargin), 2) }} AZN zərər. Yenə də seçilsin?" @endif>
+                      @if($rowMargin !== null && $rowMargin < 0) data-confirm="Bu deponun qiyməti satışdan bahadır: 1 ədəddə {{ number_format(abs($rowMargin), 2) }} AZN zərər. Yenə də seçilsin?" @endif>
                     @csrf
                     <input type="hidden" name="offer_id" value="{{ $offer->id }}">
                     <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
@@ -64,7 +64,7 @@
     </td>
 </tr>
 @if($history->isNotEmpty())
-    {{-- Anbarın bu məhsula verdiyi bütün cavablar (yenidən köhnəyə) — "N cavab" keçidi açır --}}
+    {{-- Deponun bu məhsula verdiyi bütün cavablar (yenidən köhnəyə) — "N cavab" keçidi açır --}}
     <tr id="procAnswers{{ $row['ri']->id }}" class="collapse">
         <td colspan="5" class="bg-light">
             <div class="text-muted text-small text-uppercase mb-1">{{ $row['req']->warehouse->name_az }} — cavabların tarixçəsi</div>

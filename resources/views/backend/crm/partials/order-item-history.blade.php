@@ -1,8 +1,8 @@
-{{-- Məhsulların tarixçəsi: sorğu, anbar cavabı, anbar seçimi/ləğvi — yeni yuxarıda --}}
+{{-- Məhsulların tarixçəsi: sorğu, depo cavabı, depo seçimi/ləğvi — yeni yuxarıda --}}
 @php
     $staff = $staff ?? collect();
     $who = fn ($id) => $id ? ($staff[$id] ?? 'Əməkdaş #'.$id) : null;
-    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Anbar - Telegram', 'manual' => 'Operator - Digər', 'direct' => 'Operator - Birbaşa (sorğusuz)', 'link' => 'Anbar - link'];
+    $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Depo - Telegram', 'manual' => 'Operator - Digər', 'direct' => 'Operator - Birbaşa (sorğusuz)', 'link' => 'Depo - link'];
     $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul').($item?->variant?->size?->name_az ? ' · '.$item->variant->size->name_az : '');
     $events = collect();
     foreach ($requests as $req) {
@@ -24,9 +24,9 @@
             foreach ($allocation->logs as $log) {
                 $bad = in_array($log->to_status, ['cancelled', 'problem'], true);
                 $stepLabel = [
-                    'selected' => 'seçildi', 'notified' => '— anbara bildirildi', 'reserved' => '— anbar ayırdı',
+                    'selected' => 'seçildi', 'notified' => '— depoya bildirildi', 'reserved' => '— depo ayırdı',
                     'picked' => '— götürüldü', 'problem' => '— problem', 'cancelled' => 'seçimi ləğv edildi',
-                    'returning' => '— qapıda imtina, anbara qaytarılır', 'returned' => '— anbara qaytarıldı',
+                    'returning' => '— qapıda imtina, depoya qaytarılır', 'returned' => '— depoya qaytarıldı',
                 ][$log->to_status] ?? $log->to_status;
                 if ($log->from_status === 'problem' && $log->to_status !== 'cancelled') $stepLabel = '— problem həll edildi';
                 $events->push(['at' => $log->created_at, 'item' => $item->id, 'tone' => $bad ? 'danger' : '', 'icon' => $bad ? 'close' : 'check',
@@ -47,7 +47,7 @@
 @endphp
 
 @if($events->isEmpty())
-    <p class="text-muted mb-0">Hələ təminat əməliyyatı yoxdur. Anbar sorğusu yaradılanda burada görünəcək.</p>
+    <p class="text-muted mb-0">Hələ təminat əməliyyatı yoxdur. Depo sorğusu yaradılanda burada görünəcək.</p>
 @else
     <div class="d-flex flex-wrap gap-2 mb-3" data-history-filter>
         <button type="button" class="btn btn-sm btn-primary" data-item="">Hamısı</button>

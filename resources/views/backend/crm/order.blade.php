@@ -9,8 +9,8 @@
     $sourceLabels = ['website' => 'Sayt', 'operator' => 'Operator', 'customer' => 'Asan sifariş', 'manual' => 'Əl ilə', 'one_click' => 'Bir kliklə al'];
     $staff = $staff ?? collect();
 
-    // Təminat: hər məhsul üzrə aktiv (ləğv olunmamış) anbar seçimləri
-    $inactive = \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE; // ləğv / anbara qaytarılır / qaytarıldı
+    // Təminat: hər məhsul üzrə aktiv (ləğv olunmamış) depo seçimləri
+    $inactive = \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE; // ləğv / depoya qaytarılır / qaytarıldı
     $supply = $order->items->mapWithKeys(fn ($item) => [$item->id => min($item->activeQuantity(), (int) $item->allocations->whereNotIn('status', $inactive)->sum('quantity'))]);
     $needTotal = (int) $order->items->sum(fn ($item) => $item->activeQuantity());
     $cancelPreviews = $cancelPreviews ?? [];
@@ -28,9 +28,9 @@
     $returningParts = $order->items->flatMap(fn ($item) => $item->allocations->where('status', 'returning')->map(fn ($a) => ['item' => $item, 'a' => $a]));
     $doorBlock = $doorBlock ?? 'x';
 
-    // Kuryer bildirişləri: problem, qapıda imtina, anbara qaytarma, kuryerin ötürməsi (yenisi yuxarıda)
+    // Kuryer bildirişləri: problem, qapıda imtina, depoya qaytarma, kuryerin ötürməsi (yenisi yuxarıda)
     $noticeLabels = ['delivery_problem' => ['Çatdırılma problemi', 'danger'], 'door_refusal' => ['Qapıda imtina', 'warning'],
-        'warehouse_return' => ['Anbara qaytarıldı', 'success'], 'courier_change' => ['Kuryer dəyişdi', 'info']];
+        'warehouse_return' => ['Depoya qaytarıldı', 'success'], 'courier_change' => ['Kuryer dəyişdi', 'info']];
     $notices = $order->statusLogs->whereIn('kind', array_keys($noticeLabels))->sortByDesc('id')->values();
     $openProblems = $activeParts->where('status', 'problem');
     $pickedTotal = (int) $activeParts->where('status', 'picked')->sum('quantity');
@@ -80,7 +80,7 @@
                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">Sifarişi ləğv et</button>
                     @endif
                 @endif
-                {{-- Növbəti addım: İcraya götür → (anbarlar) → Kuryer təyin et --}}
+                {{-- Növbəti addım: İcraya götür → (depolar) → Kuryer təyin et --}}
                 @if($order->status?->code === 'new')
                     @if($startBlock ?? null)
                         <span class="d-inline-block" tabindex="0" title="{{ $startBlock }}" data-bs-toggle="tooltip">
@@ -116,7 +116,7 @@
             @endforeach
             @foreach($returningParts as ['item' => $item, 'a' => $part])
                 <div class="od-notice is-warning">
-                    <span class="badge bg-warning">Anbara qaytarılır</span>
+                    <span class="badge bg-warning">Depoya qaytarılır</span>
                     <span>{{ $item->product?->name }} ×{{ $part->quantity }} → {{ $part->warehouse?->name_az }} (kuryer "Qaytardım" seçəndə bağlanır)</span>
                 </div>
             @endforeach
@@ -415,10 +415,10 @@
                         <p class="text-muted">Aktiv kuryer yoxdur. Əməkdaşa "Kuryer" rolunu verin.</p>
                     @endforelse
                     @if(($courierWarehouses ?? collect())->isNotEmpty())
-                        <div class="mt-4 mb-2 fw-bold">Anbarlara pulu kuryer versin?</div>
+                        <div class="mt-4 mb-2 fw-bold">Depolara pulu kuryer versin?</div>
                         @foreach($courierWarehouses as $row)
                             <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
-                                <span>{{ $row['warehouse']?->name_az ?? 'Anbar' }} <span class="text-muted small">· {{ number_format($row['cost'], 2) }} AZN</span></span>
+                                <span>{{ $row['warehouse']?->name_az ?? 'Depo' }} <span class="text-muted small">· {{ number_format($row['cost'], 2) }} AZN</span></span>
                                 <input type="hidden" name="pays[{{ $row['warehouse']?->id }}]" value="0">
                                 <div class="form-check form-switch mb-0">
                                     <input class="form-check-input" type="checkbox" role="switch" name="pays[{{ $row['warehouse']?->id }}]" value="1" @checked($row['pays'])
@@ -426,7 +426,7 @@
                                 </div>
                             </div>
                         @endforeach
-                        <div class="form-text">Söndürülən anbarda kuryer pul vermir və pulla bağlı heç nə görmür — yalnız "Götürdüm" basır, anbara borc qalır.</div>
+                        <div class="form-text">Söndürülən depoda kuryer pul vermir və pulla bağlı heç nə görmür — yalnız "Götürdüm" basır, depoya borc qalır.</div>
                     @endif
                     {{-- Kuryerə qeyd: varsa — vurğulanır (operator dəyişə də bilər), yoxdursa — istəyə görə yazılır --}}
                     <div class="mt-4 {{ $order->courier_note ? 'alert alert-warning mb-0' : '' }}">
@@ -480,10 +480,10 @@
                         @if($op['fees'] > 0)<div><span>Çatdırılma / qablaşdırma</span><b>{{ number_format($op['fees'], 2) }} AZN</b></div>@endif
                         @if($refundLabel)<div><span>{{ $refundLabel }}</span><b>{{ number_format($op['total'], 2) }} AZN</b></div>@endif
                         @if($op['bonus'] > 0)<div><span>Qazanılmış bonus geri alınır</span><b>{{ number_format($op['bonus'], 2) }} AZN</b></div>@endif
-                        @if($op['returning'] > 0)<div><span>Kuryerdən anbara qaytarılır</span><b>{{ $op['returning'] }} ədəd</b></div>@endif
-                        @if($op['notify'] > 0)<div><span>Anbarlara "rezerv lazım deyil" SMS-i</span><b>{{ $op['notify'] }}</b></div>@endif
+                        @if($op['returning'] > 0)<div><span>Kuryerdən depoya qaytarılır</span><b>{{ $op['returning'] }} ədəd</b></div>@endif
+                        @if($op['notify'] > 0)<div><span>Depolara "rezerv lazım deyil" SMS-i</span><b>{{ $op['notify'] }}</b></div>@endif
                     </div>
-                    <div class="form-text mt-2">Məhsullar sifarişdən silinmir — tarixçədə qalır. Anbar seçimləri bağlanır, status "Ləğv edildi" olur. Bu əməliyyat geri qaytarılmır.</div>
+                    <div class="form-text mt-2">Məhsullar sifarişdən silinmir — tarixçədə qalır. Depo seçimləri bağlanır, status "Ləğv edildi" olur. Bu əməliyyat geri qaytarılmır.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-danger">Sifarişi ləğv et</button></div>
             </form></div>
@@ -527,14 +527,14 @@
                         <div data-r-row="refund"><span data-r="refund-label"></span><b data-r="refund"></b></div>
                         <div data-r-row="bonus"><span>Qazanılmış bonusdan geri alınır</span><b data-r="bonus"></b></div>
                     </div>
-                    <div class="form-text mt-2">Məhsul sifarişdən silinmir — tarixçədə qalır. Artıq qalan anbar seçimləri bağlanır.</div>
+                    <div class="form-text mt-2">Məhsul sifarişdən silinmir — tarixçədə qalır. Artıq qalan depo seçimləri bağlanır.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-danger">Ləğv et</button></div>
             </form></div>
         </div>
     @endif
 
-    {{-- Qapıda imtina (kuryer zəng edib bildirir): məbləğ azalır, məhsul anbara qaytarılır --}}
+    {{-- Qapıda imtina (kuryer zəng edib bildirir): məbləğ azalır, məhsul depoya qaytarılır --}}
     @if(!$doorBlock)
         <div class="modal modal-right fade" id="doorRefuseModal" tabindex="-1" aria-labelledby="doorRefuseTitle" aria-hidden="true">
             <div class="modal-dialog"><form class="modal-content" method="POST" action="">
@@ -544,7 +544,7 @@
                     <div class="fw-bold mb-1" data-door-item></div>
                     <div class="mb-3"><label class="form-label" for="doorQty">Müştəri götürmədi</label><select id="doorQty" name="quantity" class="form-select"></select></div>
                     <div class="mb-3"><label class="form-label" for="doorNote">Qeyd</label><textarea id="doorNote" name="note" rows="2" maxlength="2000" class="form-control" placeholder="Məs.: ətri bəyənmədi"></textarea></div>
-                    <div class="form-text">Sifarişin yekunu azalır, kuryer yeni məbləği alır. Məhsul kuryerdə "Anbara qaytarılır" olur — kuryer anbara verəndə "Qaytardım" seçir.</div>
+                    <div class="form-text">Sifarişin yekunu azalır, kuryer yeni məbləği alır. Məhsul kuryerdə "Depoya qaytarılır" olur — kuryer depoya verəndə "Qaytardım" seçir.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-warning">Qeyd et</button></div>
             </form></div>

@@ -38,14 +38,14 @@ class OrderProcessSummaryTest extends TestCase
         $waiting = $order->items()->create(['quantity' => 1]);
         $choose = $order->items()->create(['quantity' => 1]);
         $service = app(ProcurementService::class);
-        $service->createRequests($order, [Warehouse::create(['name_az' => 'Anbar A', 'active' => true])->id], [$selected->id, $waiting->id, $choose->id], 7);
+        $service->createRequests($order, [Warehouse::create(['name_az' => 'Depo A', 'active' => true])->id], [$selected->id, $waiting->id, $choose->id], 7);
         $requestItems = WarehouseRequestItem::all()->keyBy('order_item_id');
 
         // Hələ heç bir cavab yoxdur
         $summary = $this->summary($order);
         $this->assertEquals(['choose' => 0, 'unrequested' => 0, 'waiting' => 3, 'selected' => 0], $summary['counts']);
         $this->assertSame('info', $summary['tone']);
-        $this->assertStringContainsString('3 məhsul üçün anbar cavabı gözlənilir', $summary['headline']);
+        $this->assertStringContainsString('3 məhsul üçün depo cavabı gözlənilir', $summary['headline']);
 
         $offer = $service->recordOffer($order, $requestItems[$selected->id]->id, ['available_quantity' => 1, 'unit_cost' => '50', 'source' => 'phone'], 7);
         $service->allocate($order, $offer->id, 1, 7);
@@ -59,7 +59,7 @@ class OrderProcessSummaryTest extends TestCase
         // Sıra: cavab gələn → cavab gözləyən → seçilən (sifarişdəki sıradan asılı olmayaraq)
         $this->assertSame([$choose->id, $waiting->id, $selected->id], $summary['order']);
         $this->assertSame('warning', $summary['tone']);
-        $this->assertStringContainsString('1 məhsul üçün anbar seçilməlidir', $summary['headline']);
+        $this->assertStringContainsString('1 məhsul üçün depo seçilməlidir', $summary['headline']);
         $this->assertStringContainsString('1 məhsul hələ cavab gözləyir', $summary['detail']);
         $this->assertSame('Rufat', $summary['last']['by']);
     }
@@ -82,10 +82,10 @@ class OrderProcessSummaryTest extends TestCase
         $item = $order->items()->create(['quantity' => 1]);
 
         $summary = $this->summary($order);
-        $this->assertStringContainsString('1 məhsul üçün anbarlara sorğu göndərilməyib', $summary['headline']);
+        $this->assertStringContainsString('1 məhsul üçün depolara sorğu göndərilməyib', $summary['headline']);
 
         $service = app(ProcurementService::class);
-        $service->createRequests($order, [Warehouse::create(['name_az' => 'Anbar A', 'active' => true])->id], [$item->id], 7);
+        $service->createRequests($order, [Warehouse::create(['name_az' => 'Depo A', 'active' => true])->id], [$item->id], 7);
         $offer = $service->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 1, 'unit_cost' => '50', 'source' => 'phone'], 7);
         $service->allocate($order, $offer->id, 1, 7);
 
@@ -111,7 +111,7 @@ class OrderProcessSummaryTest extends TestCase
         $loss = $order->items()->create(['quantity' => 1, 'unit_price' => 99]);
         $profit = $order->items()->create(['quantity' => 1, 'unit_price' => 51]);
         $service = app(ProcurementService::class);
-        $service->createRequests($order, [Warehouse::create(['name_az' => 'Anbar A', 'active' => true])->id], [$loss->id, $profit->id], 7);
+        $service->createRequests($order, [Warehouse::create(['name_az' => 'Depo A', 'active' => true])->id], [$loss->id, $profit->id], 7);
         $requestItems = WarehouseRequestItem::all()->keyBy('order_item_id');
 
         $service->recordOffer($order, $requestItems[$loss->id]->id, ['available_quantity' => 1, 'unit_cost' => '99', 'source' => 'phone'], 7);
@@ -135,7 +135,7 @@ class OrderProcessSummaryTest extends TestCase
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
         $item = $order->items()->create(['quantity' => 1]);
         $service = app(ProcurementService::class);
-        $service->createRequests($order, [Warehouse::create(['name_az' => 'Anbar A', 'active' => true])->id], [$item->id], 7);
+        $service->createRequests($order, [Warehouse::create(['name_az' => 'Depo A', 'active' => true])->id], [$item->id], 7);
         $service->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 1, 'unit_cost' => '50', 'source' => 'phone'], 7);
 
         $summary = $this->summary($order);

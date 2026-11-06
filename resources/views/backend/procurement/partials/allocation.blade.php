@@ -1,4 +1,4 @@
-{{-- Bir anbar seçimi (təminat hissəsi): mərhələ xətti, SMS vəziyyəti, növbəti addım. order-content.blade.php-dən çağırılır. --}}
+{{-- Bir depo seçimi (təminat hissəsi): mərhələ xətti, SMS vəziyyəti, növbəti addım. order-content.blade.php-dən çağırılır. --}}
 @php
     $status = $allocation->status;
     $isCancelled = $status === \App\Models\Procurement\OrderItemAllocation::CANCELLED;
@@ -8,8 +8,8 @@
     $statusUrl = route('admin.procurement.allocations.status', [$order, $allocation]);
     $allocTitle = $itemName($item).' — '.$allocation->warehouse->name_az.', '.$allocation->quantity.' ədəd';
     // Növbəti addım: bir düymə (əsas), qalanları menyuda
-    $next = ['selected' => ['notified', 'Anbara bildirildi'], 'notified' => ['reserved', 'Anbar ayırdı'], 'reserved' => ['picked', 'Götürüldü']][$status] ?? null;
-    // Anbara "bildirmək" = sorğu tipinə görə SMS və ya Telegram (status özü "Anbara bildirildi" olur)
+    $next = ['selected' => ['notified', 'Depoya bildirildi'], 'notified' => ['reserved', 'Depo ayırdı'], 'reserved' => ['picked', 'Götürüldü']][$status] ?? null;
+    // Depoya "bildirmək" = sorğu tipinə görə SMS və ya Telegram (status özü "Depoya bildirildi" olur)
     $via = $allocation->warehouse->request_channel === 'telegram' ? 'Telegram' : 'SMS';
     $hasPhone = (bool) ($via === 'Telegram' ? $allocation->warehouse->telegram_id : $allocation->warehouse->phone);
     $smsUrl = route('admin.procurement.allocations.sms', [$order, $allocation]);
@@ -41,7 +41,7 @@
                     {{-- SMS nömrəyə görə getməyib: təkrar göndərməyin mənası yoxdur — əvvəl nömrə düzəldilir (təkrar göndər "Digər"dədir) --}}
                     <a class="btn btn-sm btn-primary" href="{{ route('admin.procurement.warehouses.edit', $allocation->warehouse) }}">Nömrəni düzəlt</a>
                 @elseif($status === 'selected' && $hasPhone)
-                    <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="btn btn-sm btn-primary">{{ $allocSms ? 'Təkrar göndər ('.$via.')' : 'Anbara göndər ('.$via.')' }}</button></form>
+                    <form method="POST" action="{{ $smsUrl }}" data-once>@csrf<button class="btn btn-sm btn-primary">{{ $allocSms ? 'Təkrar göndər ('.$via.')' : 'Depoya göndər ('.$via.')' }}</button></form>
                 @elseif($next)
                     <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="{{ $next[0] }}"><button class="btn btn-sm btn-primary">{{ $next[1] }}</button></form>
                 @endif
@@ -68,7 +68,7 @@
                         @if($status === 'selected' && $hasPhone)
                             <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="notified"><button class="dropdown-item">Bildirildi ({{ $via }}-sız, telefonla)</button></form>
                         @endif
-                        @foreach(['reserved' => 'Anbar ayırdı (telefonla)', 'picked' => 'Götürüldü'] as $to => $label)
+                        @foreach(['reserved' => 'Depo ayırdı (telefonla)', 'picked' => 'Götürüldü'] as $to => $label)
                             @if($status !== 'problem' && array_search($to, $flow, true) > array_search($status, $flow, true) && ($next[0] ?? null) !== $to)
                                 <form method="POST" action="{{ $statusUrl }}">@csrf<input type="hidden" name="action" value="{{ $to }}"><button class="dropdown-item">{{ $label }}</button></form>
                             @endif
@@ -90,7 +90,7 @@
     @if($status === 'problem')
         <div class="proc-alloc__problem">⚠ {{ $lastLog?->note ?? 'Problem' }}</div>
     @endif
-    {{-- SMS yalnız alınmayanda göstərilir (uğurlu SMS "Anbara bildirilib" mərhələsinin özüdür) --}}
+    {{-- SMS yalnız alınmayanda göstərilir (uğurlu SMS "Depoya bildirilib" mərhələsinin özüdür) --}}
     @if($allocSms && !$allocSms->isSent() && !$isCancelled)
         <div class="proc-alloc__sms is-bad">✕ SMS getmədi: {{ $allocSms->error }}</div>
     @endif

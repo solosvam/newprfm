@@ -15,7 +15,7 @@ class ProcurementController extends Controller
 {
     public function warehouses()
     {
-        // Anbara borc (götürülən mal − ödənilən; mənfi — avans): warehouse_id => qəpik
+        // Depoya borc (götürülən mal − ödənilən; mənfi — avans): warehouse_id => qəpik
         $debts = rescue(fn () => app(\App\Services\FinanceService::class)->warehouseDebts(), collect(), false);
 
         return view('backend.procurement.warehouses', ['warehouses' => Warehouse::orderBy('name_az')->get(), 'debts' => $debts]);
@@ -26,7 +26,7 @@ class ProcurementController extends Controller
         $url = $portal->issue($warehouse, (int) auth('admin')->id());
 
         return back()->with('warehouse_link', ['name' => $warehouse->name_az, 'url' => $url])
-            ->with('success', 'Link hazırdır. Etibarlılıq müddəti 7 gündür. Köhnə etibarlı linklər də bu anbarın bütün açıq sorğularını göstərir.');
+            ->with('success', 'Link hazırdır. Etibarlılıq müddəti 7 gündür. Köhnə etibarlı linklər də bu deponun bütün açıq sorğularını göstərir.');
     }
 
     public function revokeLinks(Warehouse $warehouse)
@@ -37,7 +37,7 @@ class ProcurementController extends Controller
                 ->whereNull('revoked_at')->update(['revoked_at' => now()]);
         });
 
-        return back()->with('success', 'Anbarın bütün əvvəlki giriş linkləri ləğv edildi.');
+        return back()->with('success', 'Deponun bütün əvvəlki giriş linkləri ləğv edildi.');
     }
 
     public function editWarehouse(Warehouse $warehouse)
@@ -71,13 +71,13 @@ class ProcurementController extends Controller
     {
         Warehouse::create($this->warehouseData($request));
 
-        return back()->with('success', 'Anbar əlavə edildi.');
+        return back()->with('success', 'Depo əlavə edildi.');
     }
 
     /**
-     * Anbarı silmək. Anbarla pul haqq-hesabı olubsa (Kassada ödəniş / geri qaytarma) silinmir — deaktiv edilir, hesablaşmaların tarixçəsi ona bağlıdır.
-     * Sorğu, cavab, link, price list və ləğv edilmiş seçimlər alış-veriş sayılmır — anbarla birlikdə silinir.
-     * Hələ qüvvədə olan seçim varsa (sifarişin təminatı bu anbardandır) silinmir — əvvəl seçim ləğv edilməlidir.
+     * Deponu silmək. Depoyla pul haqq-hesabı olubsa (Kassada ödəniş / geri qaytarma) silinmir — deaktiv edilir, hesablaşmaların tarixçəsi ona bağlıdır.
+     * Sorğu, cavab, link, price list və ləğv edilmiş seçimlər alış-veriş sayılmır — depoyla birlikdə silinir.
+     * Hələ qüvvədə olan seçim varsa (sifarişin təminatı bu depodandır) silinmir — əvvəl seçim ləğv edilməlidir.
      */
     public function destroyWarehouse(Warehouse $warehouse)
     {
@@ -92,7 +92,7 @@ class ProcurementController extends Controller
         }
         $live = OrderItemAllocation::where('warehouse_id', $warehouse->id)->where('status', '!=', OrderItemAllocation::CANCELLED)->count();
         if ($live) {
-            return back()->withErrors(['warehouse' => $warehouse->name_az.' '.$live.' qüvvədə olan seçimdə var (sifarişin məhsulu bu anbardan gəlir). Əvvəl həmin seçimləri ləğv edin, sonra silin.']);
+            return back()->withErrors(['warehouse' => $warehouse->name_az.' '.$live.' qüvvədə olan seçimdə var (sifarişin məhsulu bu depodan gəlir). Əvvəl həmin seçimləri ləğv edin, sonra silin.']);
         }
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($warehouse, $account) {
@@ -116,7 +116,7 @@ class ProcurementController extends Controller
     {
         $warehouse->update($this->warehouseData($request));
 
-        return redirect()->route('admin.procurement.warehouses')->with('success', 'Anbar yeniləndi.');
+        return redirect()->route('admin.procurement.warehouses')->with('success', 'Depo yeniləndi.');
     }
 
     public function show(Order $order)
@@ -147,7 +147,7 @@ class ProcurementController extends Controller
         return back()->with('success', trim('Sorğular qeydə alındı. '.WarehouseNotifier::summary($results)));
     }
 
-    /** "Anbar seç": sorğu göndərmədən anbarın cavabı yazılır və anbar dərhal seçilir (ProcurementService::recordDirect); anbara seçim SMS-i gedir */
+    /** "Depo seç": sorğu göndərmədən deponun cavabı yazılır və depo dərhal seçilir (ProcurementService::recordDirect); depoya seçim SMS-i gedir */
     public function recordDirect(Request $request, Order $order, ProcurementService $service, WarehouseNotifier $notifier)
     {
         $data = $request->validate([
@@ -155,7 +155,7 @@ class ProcurementController extends Controller
             'warehouse_id' => ['required', 'integer'],
             'unit_cost' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999.99'],
         ], [
-            'warehouse_id.required' => 'Anbarı seçin.',
+            'warehouse_id.required' => 'Deponu seçin.',
             'unit_cost.required' => 'Alış qiymətini yazın.',
             'unit_cost.min' => 'Qiymət 0-dan böyük olmalıdır.',
         ]);
@@ -171,15 +171,15 @@ class ProcurementController extends Controller
         $data = $request->validate([
             'available_quantity' => ['required', 'integer', 'min:0', 'max:9999'],
             'unit_cost' => ['nullable', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999999999.99'],
-            // WhatsApp və Telegram ləğv olunub: operator cavabı telefonla alır, anbar özü isə linkdən yazır
+            // WhatsApp və Telegram ləğv olunub: operator cavabı telefonla alır, depo özü isə linkdən yazır
             'source' => ['required', 'in:phone,manual'],
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
         $service->recordOffer($order, $requestItem, $data, (int) auth('admin')->id());
-        // Anbarın Telegram qrupundakı sorğu mesajı da "cavablandı" olsun (Telegram anbarı deyilsə — heç nə etmir)
+        // Deponun Telegram qrupundakı sorğu mesajı da "cavablandı" olsun (Telegram deposu deyilsə — heç nə etmir)
         rescue(fn () => app(\App\Services\Telegram\TelegramWarehouseBot::class)->syncAnswer($requestItem));
 
-        return back()->with('success', 'Anbarın cavabı qeydə alındı.');
+        return back()->with('success', 'Deponun cavabı qeydə alındı.');
     }
 
     public function allocate(Request $request, Order $order, ProcurementService $service, WarehouseNotifier $notifier)
@@ -197,7 +197,7 @@ class ProcurementController extends Controller
             $sms = WarehouseNotifier::summary([$allocation->warehouse->name_az => $log]);
         }
 
-        return back()->with('success', trim('Anbar seçimi qeydə alındı. '.($sms ?? '')));
+        return back()->with('success', trim('Depo seçimi qeydə alındı. '.($sms ?? '')));
     }
 
     /** Təminat hissəsinin mərhələsi: bildirildi / ayrıldı / götürüldü / problem / davam et */
@@ -219,13 +219,13 @@ class ProcurementController extends Controller
         $data = $request->validate(['note' => ['required', 'string', 'max:2000']]);
         $actor = (int) auth('admin')->id();
         $from = $service->cancelAllocation($order, $allocation, $data['note'], $actor);
-        // Anbar xəbərdar idisə (bildirildi/rezerv/problem) — ləğv barədə SMS
+        // Depo xəbərdar idisə (bildirildi/rezerv/problem) — ləğv barədə SMS
         if (in_array($from, [OrderItemAllocation::NOTIFIED, OrderItemAllocation::RESERVED, OrderItemAllocation::PROBLEM], true)) {
             $model = OrderItemAllocation::with('warehouse')->find($allocation);
             $sms = WarehouseNotifier::summary([$model->warehouse->name_az => $notifier->notifyCancelled($model, $actor)]);
         }
 
-        return back()->with('success', trim('Anbar seçimi ləğv edildi. Məhsul sifarişdə qalır. '.($sms ?? '')));
+        return back()->with('success', trim('Depo seçimi ləğv edildi. Məhsul sifarişdə qalır. '.($sms ?? '')));
     }
 
     /** "SMS göndər / təkrar göndər" — sorğu üzrə */
@@ -238,7 +238,7 @@ class ProcurementController extends Controller
         return $this->smsResponse($req->warehouse->name_az, $log);
     }
 
-    /** "SMS göndər / təkrar göndər" — seçim üzrə (Seçilib → Anbara bildirildi) */
+    /** "SMS göndər / təkrar göndər" — seçim üzrə (Seçilib → Depoya bildirildi) */
     public function allocationSms(Order $order, int $allocation, WarehouseNotifier $notifier)
     {
         $this->ensureOpen($order, \App\Services\OrderStatusService::SUPPLY_FLOW);
@@ -252,7 +252,7 @@ class ProcurementController extends Controller
     private function ensureOpen(Order $order, array $statuses): void
     {
         $order->loadMissing('status');
-        abort_unless($order->customer_id && in_array($order->status?->code, $statuses, true), 422, 'Bu mərhələdə anbara SMS göndərilmir.');
+        abort_unless($order->customer_id && in_array($order->status?->code, $statuses, true), 422, 'Bu mərhələdə depoya SMS göndərilmir.');
     }
 
     private function smsResponse(string $warehouse, ?\App\Models\SmsLog $log)
@@ -261,6 +261,6 @@ class ProcurementController extends Controller
             return back()->with('success', $warehouse.': '.($log->channel === 'telegram' ? 'Telegram' : 'SMS').' göndərildi.');
         }
 
-        return back()->with('error', $warehouse.': '.($log ? $log->error : 'anbarın telefonu / Telegram ID-si yazılmayıb.'));
+        return back()->with('error', $warehouse.': '.($log ? $log->error : 'deponun telefonu / Telegram ID-si yazılmayıb.'));
     }
 }

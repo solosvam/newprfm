@@ -42,7 +42,7 @@ class WarehouseSmsTest extends TestCase
     {
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
         $item = $order->items()->create(['quantity' => 1]);
-        $warehouse = Warehouse::create(['name_az' => 'Anbar A', 'phone' => $phone, 'active' => true]);
+        $warehouse = Warehouse::create(['name_az' => 'Depo A', 'phone' => $phone, 'active' => true]);
         $service = app(ProcurementService::class);
         $service->createRequests($order, [$warehouse->id], [$item->id], 7);
         $offer = $service->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 1, 'unit_cost' => '50', 'source' => 'phone'], 7);
@@ -87,7 +87,7 @@ class WarehouseSmsTest extends TestCase
         $this->assertSame('555', $log->provider_id);
         $this->assertMatchesRegularExpression('#1 mehsul ucun sorgu var.*/w/[A-Za-z0-9]{12}$#', $log->message);
         $this->assertSame(1, DB::table('warehouse_access_links')->where('warehouse_id', $a->id)->count());
-        $this->assertStringContainsString('SMS 1 anbara göndərildi', WarehouseNotifier::summary($results));
+        $this->assertStringContainsString('SMS 1 depoya göndərildi', WarehouseNotifier::summary($results));
         $this->assertStringContainsString('B — telefon yoxdur', WarehouseNotifier::summary($results));
         Http::assertSentCount(1);
     }
@@ -162,10 +162,10 @@ class WarehouseSmsTest extends TestCase
         $this->actingAs($user, 'admin');
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
         $item = $order->items()->create(['quantity' => 1]);
-        $warehouse = Warehouse::create(['name_az' => 'Anbar A', 'phone' => '0501234567', 'active' => true]);
+        $warehouse = Warehouse::create(['name_az' => 'Depo A', 'phone' => '0501234567', 'active' => true]);
 
         $this->post(route('admin.procurement.requests.store', $order), ['warehouse_ids' => [$warehouse->id], 'item_ids' => [$item->id]])
-            ->assertSessionHas('success', fn ($m) => str_contains($m, 'SMS 1 anbara göndərildi'));
+            ->assertSessionHas('success', fn ($m) => str_contains($m, 'SMS 1 depoya göndərildi'));
         $offer = app(ProcurementService::class)->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 1, 'unit_cost' => '50', 'source' => 'phone'], 7);
         $key = (string) \Illuminate\Support\Str::uuid();
         $this->post(route('admin.procurement.allocations.store', $order), ['offer_id' => $offer->id, 'quantity' => 1, 'idempotency_key' => $key])->assertSessionHas('success');
@@ -174,8 +174,8 @@ class WarehouseSmsTest extends TestCase
         $allocation = OrderItemAllocation::sole();
         $this->assertSame(OrderItemAllocation::NOTIFIED, $allocation->status);
 
-        $this->post(route('admin.procurement.allocations.sms', [$order, $allocation]))->assertSessionHas('success', 'Anbar A: SMS göndərildi.');
-        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Sorğular və anbar SMS-ləri')->assertSee('✓ SMS');
+        $this->post(route('admin.procurement.allocations.sms', [$order, $allocation]))->assertSessionHas('success', 'Depo A: SMS göndərildi.');
+        $this->get(route('admin.procurement.show', $order))->assertOk()->assertSee('Sorğular və depo SMS-ləri')->assertSee('✓ SMS');
         $this->post(route('admin.procurement.allocations.cancel', [$order, $allocation]), ['note' => 'müştəri imtina etdi'])->assertSessionHasNoErrors()->assertSessionHas('success', fn ($m) => str_contains($m, 'SMS 1'));
         $this->assertSame('warehouse_cancelled', SmsLog::latest('id')->value('context'));
     }

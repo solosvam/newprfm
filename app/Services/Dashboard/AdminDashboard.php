@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Admin əsas səhifəsinin göstəriciləri.
  *  - Dövriyyə: ləğv edilməmiş sifarişlərin yekun məbləği (sifariş tarixinə görə).
- *  - Mənfəət: təhvil verilmiş sifarişlərdə mal satışı (yekun − çatdırılma − bükmə) − anbardan alış dəyəri.
+ *  - Mənfəət: təhvil verilmiş sifarişlərdə mal satışı (yekun − çatdırılma − bükmə) − depodan alış dəyəri.
  *  - Yeni müştərilər: köhnə sistemdən köçürülənlər (old_customer_id) xaric.
  * Dövr cari təqvim dövrüdür (bu gün / bu həftə / bu ay) və əvvəlki dövrün EYNİ anına qədəri ilə müqayisə olunur
  * (məs. çərşənbə 15:00 → keçən çərşənbə 15:00-a qədər), yoxsa dövrün əvvəlində həmişə "−90%" görünərdi.
@@ -233,7 +233,7 @@ class AdminDashboard
             $courier = OrderStatus::whereIn('code', self::COURIER_STATUSES)->pluck('id');
 
             return [
-                // anbara sorğu göndərilib, 2 saatdır heç bir cavab yoxdur
+                // depoya sorğu göndərilib, 2 saatdır heç bir cavab yoxdur
                 'warehouse' => DB::table('warehouse_request_items')
                     ->join('warehouse_requests', 'warehouse_requests.id', '=', 'warehouse_request_items.warehouse_request_id')
                     ->join('orders', 'orders.id', '=', 'warehouse_requests.order_id')
@@ -404,7 +404,7 @@ class AdminDashboard
     }
 
     /**
-     * Maliyyə vəziyyəti (indiki an): kassa, bank, kuryerlər, anbarlar, bonus öhdəliyi. Məbləğlər manatla.
+     * Maliyyə vəziyyəti (indiki an): kassa, bank, kuryerlər, depolar, bonus öhdəliyi. Məbləğlər manatla.
      *
      * @return array{cash: float, bank: float, couriers_owe: float, owe_couriers: float, couriers: array, warehouses_debt: float, warehouses: int, bonus: float}
      */
@@ -529,8 +529,8 @@ class AdminDashboard
             'sales' => $sales,
             'active' => array_map(fn ($code, $icon, $count) => [
                 'code' => $code,
-                'name' => ['new' => 'Sifariş verildi', 'preparing' => 'Hazırlanır', 'warehouse_requested' => 'Anbarlara sorğu göndərildi',
-                    'warehouses_assigned' => 'Anbarlar təyin olundu', 'courier_assigned' => 'Kuryer təyin olundu',
+                'name' => ['new' => 'Sifariş verildi', 'preparing' => 'Hazırlanır', 'warehouse_requested' => 'Depolara sorğu göndərildi',
+                    'warehouses_assigned' => 'Depolar təyin olundu', 'courier_assigned' => 'Kuryer təyin olundu',
                     'sent' => 'Yola çıxdı'][$code],
                 'icon' => $icon,
                 'count' => $count,
@@ -595,7 +595,7 @@ class AdminDashboard
     /**
      * Təhvil verilmiş sifarişlər üzrə mənfəət.
      * Mal satışı = yekun − çatdırılma − hədiyyə bükməsi (endirim və ləğv olunan məhsullar yekunda artıq çıxılıb);
-     * alış = anbardan götürülən hissələrin (ləğv/qaytarılma xaric) miqdar × alış qiyməti.
+     * alış = depodan götürülən hissələrin (ləğv/qaytarılma xaric) miqdar × alış qiyməti.
      *
      * @return array{sales: float, cost: float, profit: float, orders: int}
      */

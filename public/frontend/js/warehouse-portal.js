@@ -1,4 +1,4 @@
-// Anbar portalı (/w/{token}): seçilən mövcudluğa görə sahələr
+// Depo portalı (/w/{token}): seçilən mövcudluğa görə sahələr
 //  Var → qiymət · Qismən → say + qiymət · Yoxdur → yalnız qeyd
 (() => {
     'use strict';

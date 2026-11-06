@@ -18,7 +18,7 @@ class OrderItem extends Model
     public const SUPPLY_LABELS = [
         'pending' => 'Gözləyir',
         'partly_allocated' => 'Qismən seçilib',
-        'allocated' => 'Anbar seçilib',
+        'allocated' => 'Depo seçilib',
         'reserved' => 'Ayrılıb',
         'partly_picked' => 'Qismən götürülüb',
         'picked' => 'Götürülüb',

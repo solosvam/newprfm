@@ -62,7 +62,7 @@ return [
         'rest_api_key' => env('ONESIGNAL_REST_API_KEY'),
     ],
 
-    // Anbarlara sorğu / seçim bildirişləri (sorğu tipi Telegram olan anbarlar) — köhnə sistemin botu
+    // Depolara sorğu / seçim bildirişləri (sorğu tipi Telegram olan depolar) — köhnə sistemin botu
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
     ],

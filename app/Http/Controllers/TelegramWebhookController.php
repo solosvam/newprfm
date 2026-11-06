@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Telegram webhook: anbarın düymə basması və qiymət / say cavabı (TelegramWarehouseBot); şəxsi çatda @idver (TelegramIdBot).
+ * Telegram webhook: deponun düymə basması və qiymət / say cavabı (TelegramWarehouseBot); şəxsi çatda @idver (TelegramIdBot).
  * Sorğunun Telegram-dan gəldiyi gizli başlıqla yoxlanır (telegram:webhook əmri qeyd edir).
  * Həmişə 200 qaytarılır — xəta olsa da Telegram eyni yeniləməni təkrar-təkrar göndərməsin.
  */

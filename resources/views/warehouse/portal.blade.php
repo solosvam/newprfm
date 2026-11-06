@@ -1,4 +1,4 @@
-{{-- Anbar portalı (/w/{token}): anbar açıq sorğularına cavab verir. Login yoxdur — link = giriş. --}}
+{{-- Depo portalı (/w/{token}): depo açıq sorğularına cavab verir. Login yoxdur — link = giriş. --}}
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -15,7 +15,7 @@
 <header class="wp-top">
     <div class="wp-wrap">
         <span class="wp-logo" role="img" aria-label="Parfumshop"></span>
-        <div class="wp-top__meta">Anbar sorğuları</div>
+        <div class="wp-top__meta">Depo sorğuları</div>
     </div>
 </header>
 

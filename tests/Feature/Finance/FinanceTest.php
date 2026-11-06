@@ -63,12 +63,12 @@ class FinanceTest extends TestCase
 
     private function f(): FinanceService { return app(FinanceService::class); }
 
-    /** 1 ədəd, anbar A, 50 AZN — seçilib */
+    /** 1 ədəd, depo A, 50 AZN — seçilib */
     private function allocation(): array
     {
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
         $order->items()->create(['quantity' => 1]);
-        $warehouse = Warehouse::create(['name_az' => 'Anbar A']);
+        $warehouse = Warehouse::create(['name_az' => 'Depo A']);
         $procurement = app(ProcurementService::class);
         $procurement->createRequests($order, [$warehouse->id], [$order->items()->first()->id], 7);
         $offer = $procurement->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 1, 'unit_cost' => '50', 'source' => 'phone'], 7);
@@ -318,7 +318,7 @@ class FinanceTest extends TestCase
             'movements' => MoneyMovement::with(['from', 'to', 'user', 'reversedBy'])->where('order_id', $order->id)->get(),
         ]])->render();
         $this->assertStringContainsString('30.00 AZN', $html); // qalıq borc
-        $this->assertStringContainsString('Anbara ödəniş', $html);
+        $this->assertStringContainsString('Depoya ödəniş', $html);
         $this->assertStringContainsString('Fərid', $html);
     }
 }

@@ -9,13 +9,13 @@ class WarehouseOffer extends Model
     protected $guarded = [];
 
     /**
-     * Cavabı kim yazıb: Telegram-da — düyməni basan adam (qeyddə "Telegram: Kamal"), anbar linkində — "Anbar (link)",
+     * Cavabı kim yazıb: Telegram-da — düyməni basan adam (qeyddə "Telegram: Kamal"), depo linkində — "Depo (link)",
      * operator — $staff siyahısından ad.
      */
     public function authorName(callable $staffName): ?string
     {
         if ($this->source === 'telegram' && (int) $this->recorded_by === 0) {
-            return str_starts_with((string) $this->note, 'Telegram: ') ? substr((string) $this->note, strlen('Telegram: ')) : 'Anbar';
+            return str_starts_with((string) $this->note, 'Telegram: ') ? substr((string) $this->note, strlen('Telegram: ')) : 'Depo';
         }
 
         return $staffName($this->recorded_by);

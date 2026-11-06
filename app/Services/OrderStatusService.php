@@ -13,13 +13,13 @@ use Illuminate\Validation\ValidationException;
 /**
  * Sifariş statusunun axını:
  *   new → (İcraya götür) preparing → (ilk sorğu) warehouse_requested
- *   → (bütün miqdar anbara seçildi) warehouses_assigned → (Kuryer təyin et) courier_assigned
+ *   → (bütün miqdar depoya seçildi) warehouses_assigned → (Kuryer təyin et) courier_assigned
  *   → sent → delivered   (kuryer — 6-cı addım)
  * Seçim ləğv olunub çatışmazlıq yaranarsa warehouses_assigned → warehouse_requested.
  */
 class OrderStatusService
 {
-    /** Anbar sorğusu, cavab, seçim və seçimin ləğvi bu mərhələlərdə mümkündür */
+    /** Depo sorğusu, cavab, seçim və seçimin ləğvi bu mərhələlərdə mümkündür */
     public const PROCUREMENT = ['preparing', 'warehouse_requested', 'warehouses_assigned'];
 
     /** Təminat hissəsinin mərhələləri (bildirildi/ayrıldı/götürüldü) — kuryer təyin olunandan sonra da */
@@ -87,7 +87,7 @@ class OrderStatusService
     }
 
     /**
-     * Anbar dəyişikliklərindən sonra (sorğu, seçim, seçimin ləğvi, məhsul ləğvi) statusu uyğunlaşdırır.
+     * Depo dəyişikliklərindən sonra (sorğu, seçim, seçimin ləğvi, məhsul ləğvi) statusu uyğunlaşdırır.
      * Sifariş kilidli tranzaksiya daxilində çağırılır.
      */
     public function syncSupply(Order $order, ?int $actor): void
@@ -105,7 +105,7 @@ class OrderStatusService
         if ($allAllocated) {
             $this->set($order, 'warehouses_assigned', $actor);
         } elseif ($code === 'warehouses_assigned' || ($code === 'preparing' && $hasRequests)) {
-            $this->set($order, 'warehouse_requested', $actor, $code === 'warehouses_assigned' ? 'Anbar seçimi çatışmır' : null);
+            $this->set($order, 'warehouse_requested', $actor, $code === 'warehouses_assigned' ? 'Depo seçimi çatışmır' : null);
         }
     }
 
@@ -127,18 +127,18 @@ class OrderStatusService
         if (!in_array($order->status?->code, self::PROCUREMENT, true)) {
             return 'Bu mərhələdə kuryer dəyişdirilmir.';
         }
-        // Hansı məhsulda nə qədər anbara seçilməyib
+        // Hansı məhsulda nə qədər depoya seçilməyib
         $order->loadMissing('items.product');
         $missing = $order->items->map(function ($item) {
             $left = $item->activeQuantity() - (int) $item->allocations->where('status', '!=', OrderItemAllocation::CANCELLED)->sum('quantity');
             return $left > 0 ? ($item->product?->name ?? 'Məhsul').': '.$left.' ədəd' : null;
         })->filter();
 
-        return 'Kuryer bütün məhsullar anbarlara seçiləndən sonra təyin olunur'
+        return 'Kuryer bütün məhsullar depolara seçiləndən sonra təyin olunur'
             .($missing->isNotEmpty() ? ' — seçilməyib: '.$missing->implode(', ') : '').'.';
     }
 
-    /** @param  array<int, bool>|null  $courierPays  anbar id => kuryer anbara pul verirmi (null — dəyişmir) */
+    /** @param  array<int, bool>|null  $courierPays  depo id => kuryer depoya pul verirmi (null — dəyişmir) */
     public function assignCourier(Order $order, User $courier, int $actor, ?array $courierPays = null): void
     {
         abort_unless(FinanceService::isCourier($courier) && $courier->active, 422, 'Seçilən əməkdaş aktiv kuryer deyil.');
@@ -281,7 +281,7 @@ class OrderStatusService
     }
 
     /**
-     * Sifarişi başqa kuryerə ötürmək — toplamadan əvvəl (məs. anbarlar ona uzaqdır).
+     * Sifarişi başqa kuryerə ötürmək — toplamadan əvvəl (məs. depolar ona uzaqdır).
      * Kuryer öz sifarişini ötürür; $byHead — baş kuryer (courier.team) istənilən kuryerin sifarişini ötürür, köhnə kuryerə də bildiriş gedir.
      */
     public function transferCourier(Order $order, User $to, int $actor, bool $byHead = false): void

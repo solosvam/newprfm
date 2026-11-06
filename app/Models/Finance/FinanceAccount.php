@@ -17,7 +17,7 @@ class FinanceAccount extends Model
         'online' => 'Onlayn ödənişlər',
         'person' => 'Şəxs',
         'courier' => 'Kuryer',
-        'warehouse' => 'Anbar',
+        'warehouse' => 'Depo',
         'external' => 'Kənar',
         'customer' => 'Müştərilər',
     ];

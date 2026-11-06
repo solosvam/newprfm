@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
-    $title = 'Anbarlar';
-    $breadcrumbs = ['/' => 'ParfumShop', '' => 'Satışlar', '#' => 'Anbarlar'];
+    $title = 'Depolar';
+    $breadcrumbs = ['/' => 'ParfumShop', '' => 'Satışlar', '#' => 'Depolar'];
 @endphp
 
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
@@ -29,7 +29,7 @@
                     <button type="button"
                             class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto"
                             data-bs-toggle="modal" data-bs-target="#newWarehouse">
-                        <span>Yeni anbar</span>
+                        <span>Yeni depo</span>
                         <i data-acorn-icon="plus"></i>
                     </button>
                 </div>
@@ -87,7 +87,7 @@
                            id="datatableHover" data-page-length="20">
                         <thead>
                         <tr>
-                            @foreach(['#', 'Anbar', 'Əlaqəli şəxs', 'Telefon', 'Telegram ID', 'Sorğu tipi', 'Borcumuz', 'Ünvan', 'Aktiv', 'Əməliyyat'] as $heading)
+                            @foreach(['#', 'Depo', 'Əlaqəli şəxs', 'Telefon', 'Telegram ID', 'Sorğu tipi', 'Borcumuz', 'Ünvan', 'Aktiv', 'Əməliyyat'] as $heading)
                                 <th class="text-muted text-small text-uppercase">{{ $heading }}</th>
                             @endforeach
                         </tr>
@@ -102,7 +102,7 @@
                                 <td class="text-alternate">{{ $warehouse->telegram_id ?: '—' }}</td>
                                 <td class="text-alternate">{{ \App\Models\Procurement\Warehouse::CHANNELS[$warehouse->request_channel] ?? 'SMS' }}</td>
                                 @php $debt = $debts[$warehouse->id] ?? 0; @endphp
-                                {{-- Borc varsa göstərilir (Kassada anbarın səhifəsinə keçid), avans — yaşıl, yoxdursa boş --}}
+                                {{-- Borc varsa göstərilir (Kassada deponun səhifəsinə keçid), avans — yaşıl, yoxdursa boş --}}
                                 <td class="text-nowrap" data-order="{{ $debt }}">
                                     @if($debt !== 0)
                                         <a href="{{ route('admin.finance.account', app(\App\Services\FinanceService::class)->warehouseAccount($warehouse)) }}" class="{{ $debt > 0 ? 'text-danger fw-bold' : 'text-success' }}">
@@ -117,7 +117,7 @@
                                        class="btn btn-primary btn-sm">Redaktə et</a>
                                     {{-- Pul haqq-hesabı olubsa server silmir, deaktiv edir (ProcurementController::destroyWarehouse) --}}
                                     <form method="POST" action="{{ route('admin.procurement.warehouses.destroy', $warehouse) }}" class="d-inline"
-                                          onsubmit="return confirm('{{ e(addslashes($warehouse->name_az)) }} silinsin? Bu anbarla pul haqq-hesabı olubsa, silinməyəcək — deaktiv ediləcək.')">
+                                          onsubmit="return confirm('{{ e(addslashes($warehouse->name_az)) }} silinsin? Bu depoyla pul haqq-hesabı olubsa, silinməyəcək — deaktiv ediləcək.')">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-outline-danger btn-sm">Sil</button>
                                     </form>
@@ -135,7 +135,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="newWarehouseTitle">Yeni anbar</h5>
+                        <h5 class="modal-title" id="newWarehouseTitle">Yeni depo</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button>
                     </div>
                     <div class="modal-body">

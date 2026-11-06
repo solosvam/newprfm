@@ -77,7 +77,7 @@
             <label class="form-label" for="mvNote">Açıqlama</label>
             <textarea id="mvNote" name="note" rows="2" maxlength="2000" class="form-control">{{ old('note') }}</textarea>
             <div class="form-text mt-2" data-for="transfer">Şəxsdən borc aldıq: Şəxs → Kassa. Borcu qaytardıq: Kassa → Şəxs. Kuryerə avans: Kassa → Kuryer; kuryerdən təhvil: Kuryer → Nağd kassa.</div>
-            <div class="form-text mt-2" data-for="outgo income">Anbara ödəniş — anbarın kartından. Kuryerdən pulu təhvil almaq — kuryerin kartından və ya "Köçürmə".</div>
+            <div class="form-text mt-2" data-for="outgo income">Depoya ödəniş — deponun kartından. Kuryerdən pulu təhvil almaq — kuryerin kartından və ya "Köçürmə".</div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Qeydə al</button></div>
     </form></div>

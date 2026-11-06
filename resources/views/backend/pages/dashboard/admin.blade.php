@@ -33,7 +33,7 @@
     $attentionItems = [
         ['key' => 'easy_orders', 'title' => 'Təsdiqlənməmiş asan sifariş', 'hint' => 'Müştəri bağlanmayıb', 'icon' => 'cart', 'tone' => 'danger',
             'url' => $canCrm ? route('admin.easy-orders.index') : null],
-        ['key' => 'warehouse', 'title' => 'Anbar cavabı gözləyir', 'hint' => '2 saatdan çox', 'icon' => 'hourglass', 'tone' => 'warning', 'url' => null],
+        ['key' => 'warehouse', 'title' => 'Depo cavabı gözləyir', 'hint' => '2 saatdan çox', 'icon' => 'hourglass', 'tone' => 'warning', 'url' => null],
         ['key' => 'courier', 'title' => 'Kuryerdə ləngiyən', 'hint' => '1 gündən çox', 'icon' => 'delivery-truck', 'tone' => 'warning',
             'url' => $canCrm ? route('admin.orders.index', ['status' => 'courier_late']) : null],
         ['key' => 'refunds', 'title' => 'Gözləyən refund', 'hint' => 'Karta qaytarılmalıdır', 'icon' => 'credit-card', 'tone' => 'danger', 'url' => null],

@@ -19,7 +19,7 @@
                 </div>
                 <div class="col-12 col-sm-4 text-sm-end text-muted text-small">
                     {{ $list->file_name }}<br>{{ $list->created_at->format('d.m.Y H:i') }}
-                    @unless($isCurrent)<br><span class="badge bg-outline-warning">köhnə siyahı — anbarın daha yenisi var</span>@endunless
+                    @unless($isCurrent)<br><span class="badge bg-outline-warning">köhnə siyahı — deponun daha yenisi var</span>@endunless
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@
         @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
         @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
 
-        {{-- Bizim brendə bağlanmayan brendlər: sətirləri avtomatik uyğunlaşa bilmir. Bir dəfə bağlanır, bütün anbarlar üçün yadda qalır. --}}
+        {{-- Bizim brendə bağlanmayan brendlər: sətirləri avtomatik uyğunlaşa bilmir. Bir dəfə bağlanır, bütün depolar üçün yadda qalır. --}}
         @if($unknownBrands->isNotEmpty())
             <div class="card d-flex mb-3">
                 <div class="d-flex flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#plBrands" aria-expanded="false" aria-controls="plBrands">
@@ -99,7 +99,7 @@
         <div class="card mb-3"><div class="card-body">
             <div class="table-responsive"><table class="table align-middle mb-0">
                 <thead><tr>
-                    <th class="text-muted text-small text-uppercase">Anbardakı ad</th>
+                    <th class="text-muted text-small text-uppercase">Depodakı ad</th>
                     <th class="text-muted text-small text-uppercase text-end">Alış</th>
                     <th class="text-muted text-small text-uppercase">Bizim məhsul</th>
                     <th></th>
@@ -156,7 +156,7 @@
                 <div class="mb-3"><div class="fw-bold" data-match-title></div><div class="text-muted text-small">Alış: <span data-match-price></span> AZN</div></div>
                 <input type="search" class="form-control mb-3" placeholder="Bizim məhsullarda axtar (ad, brend, ölçü)" data-match-search aria-label="Bizim məhsullarda axtar">
                 <div data-match-results><p class="text-muted">Yüklənir…</p></div>
-                <div class="form-text mt-3">Seçim yadda qalır: bu anbarın növbəti price listində eyni ad avtomatik bağlanacaq.</div>
+                <div class="form-text mt-3">Seçim yadda qalır: bu deponun növbəti price listində eyni ad avtomatik bağlanacaq.</div>
             </div>
         </div></div>
     </div>

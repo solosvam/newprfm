@@ -28,7 +28,7 @@ class SmsLog extends Model
     public const DELIVERED = 101;
     /** Hələ yekun deyil — yenidən yoxlanılır */
     public const DELIVERY_PENDING = [100, 107, 108];
-    /** Müştəriyə / anbara çatmadı */
+    /** Müştəriyə / depoya çatmadı */
     public const DELIVERY_FAILED = [102, 103, 104, 105, 106, 109];
 
     /** Şablonsuz göndərilən SMS-lərin konteksti */

@@ -127,7 +127,7 @@ class AjaxController extends Controller
             ->limit(10)
             ->get();
 
-        // Son alış (qiymət, anbar, tarix) — yalnız icazəsi olan əməkdaşa
+        // Son alış (qiymət, depo, tarix) — yalnız icazəsi olan əməkdaşa
         $purchases = auth()->user()?->can('crm.purchase_info')
             ? LastPurchase::forVariants($products->flatMap->variants->pluck('id')->all()) : null;
 

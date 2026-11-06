@@ -9,15 +9,15 @@ use App\Services\Telegram\TelegramWarehouseBot;
 use Illuminate\Console\Command;
 
 /**
- * Telegram-da cavabsız qalan anbar sorğularına xatırlatma (hər 5 dəqiqədən bir işləyir).
+ * Telegram-da cavabsız qalan depo sorğularına xatırlatma (hər 5 dəqiqədən bir işləyir).
  * Sorğudan --after dəqiqə sonra birinci, ondan --every dəqiqə sonra ikinci — ən çox --max dəfə.
- * Yalnız iş saatlarında (Bakı vaxtı) və sifariş hələ anbar seçimi mərhələsindədirsə.
+ * Yalnız iş saatlarında (Bakı vaxtı) və sifariş hələ depo seçimi mərhələsindədirsə.
  */
 class TelegramRemind extends Command
 {
     protected $signature = 'telegram:remind {--after=15} {--every=30} {--max=2} {--from=9} {--to=21}';
 
-    protected $description = 'Telegram-da cavabsız qalan anbar sorğularına xatırlatma göndərir';
+    protected $description = 'Telegram-da cavabsız qalan depo sorğularına xatırlatma göndərir';
 
     public function handle(TelegramWarehouseBot $bot): int
     {

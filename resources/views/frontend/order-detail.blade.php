@@ -7,7 +7,7 @@
 
 @section('content')
     @php
-        // Daxili mərhələlər (anbar, kuryer təyini) müştəriyə "Hazırlanır" kimi görünür
+        // Daxili mərhələlər (depo, kuryer təyini) müştəriyə "Hazırlanır" kimi görünür
         $customerStatus = $order->status?->forCustomer();
         $statusKey = $customerStatus?->code ?? 'received';
 

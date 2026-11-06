@@ -1,4 +1,4 @@
-// Anbar təminatı (backend/procurement/order-content.blade.php): yan modalları doldurur.
+// Depo təminatı (backend/procurement/order-content.blade.php): yan modalları doldurur.
 // Bootstrap 5.0.1 — native "show.bs.modal" hadisəsi, relatedTarget = kliklənən düymə.
 (() => {
     'use strict';
@@ -10,7 +10,7 @@
         form.addEventListener('submit', () => form.querySelectorAll('button:not([type="button"])').forEach(b => { b.disabled = true; }));
     });
 
-    // Zərərli anbar seçimi (data-confirm): operator təsdiqləməsə göndərilmir
+    // Zərərli depo seçimi (data-confirm): operator təsdiqləməsə göndərilmir
     document.querySelectorAll('form[data-confirm]').forEach(form => {
         form.addEventListener('submit', event => { if (!window.confirm(form.dataset.confirm)) event.preventDefault(); });
     });

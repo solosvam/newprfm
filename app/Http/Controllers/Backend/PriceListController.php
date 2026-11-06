@@ -20,7 +20,7 @@ use Illuminate\View\View;
 use RuntimeException;
 
 /**
- * Anbarların price listləri: Excel yükləmə → sütunların seçimi → import → uyğunlaşdırma.
+ * Depoların price listləri: Excel yükləmə → sütunların seçimi → import → uyğunlaşdırma.
  * Sifarişdə axtarış (search) CRM sifariş səhifəsinin "Proses" tabından çağırılır.
  */
 class PriceListController extends Controller
@@ -65,7 +65,7 @@ class PriceListController extends Controller
         return redirect()->route('admin.price-lists.map', $token);
     }
 
-    /** 2-ci addım: faylın ilk sətirləri və sütunların seçimi (anbarın əvvəlki seçimi hazır gəlir) */
+    /** 2-ci addım: faylın ilk sətirləri və sütunların seçimi (deponun əvvəlki seçimi hazır gəlir) */
     public function map(Request $request, string $token, PriceListReader $reader, PriceListImporter $importer): View|RedirectResponse
     {
         if (!$upload = session('price_list_upload.'.$token)) {
@@ -161,7 +161,7 @@ class PriceListController extends Controller
         ]);
     }
 
-    /** Fayldakı brend adı bizim brendə bağlanır (bütün anbarlar üçün yadda qalır), sətirlər yenidən yoxlanır */
+    /** Fayldakı brend adı bizim brendə bağlanır (bütün depolar üçün yadda qalır), sətirlər yenidən yoxlanır */
     public function matchBrand(Request $request, WarehousePriceList $priceList, PriceListMatcher $matcher): RedirectResponse
     {
         $data = $request->validate(['brand_raw' => ['required', 'string', 'max:255'], 'brand_id' => ['required', 'exists:brands,id']]);
@@ -282,7 +282,7 @@ class PriceListController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    /** Bütün anbarların cari siyahılarında mətnlə axtarış (sifarişdə Ctrl+F-in əvəzi) */
+    /** Bütün depoların cari siyahılarında mətnlə axtarış (sifarişdə Ctrl+F-in əvəzi) */
     public function search(Request $request): JsonResponse
     {
         $q = trim((string) $request->query('q', ''));

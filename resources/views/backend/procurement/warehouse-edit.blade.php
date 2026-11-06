@@ -1,7 +1,7 @@
 @php
     $html_tag_data = [];
-    $title = 'Anbarı redaktə et';
-    $breadcrumbs = ['/' => 'ParfumShop', route('admin.procurement.warehouses') => 'Anbarlar', '' => $title];
+    $title = 'Deponu redaktə et';
+    $breadcrumbs = ['/' => 'ParfumShop', route('admin.procurement.warehouses') => 'Depolar', '' => $title];
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
@@ -14,23 +14,23 @@
                     @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
                 </div>
                 <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
-                    <a href="{{ route('admin.procurement.warehouses') }}" class="btn btn-outline-primary w-100 w-sm-auto">Anbarlar</a>
+                    <a href="{{ route('admin.procurement.warehouses') }}" class="btn btn-outline-primary w-100 w-sm-auto">Depolar</a>
                 </div>
             </div>
         </div>
         @include('backend.procurement.feedback')
         @include('backend.procurement.access-link')
         <div class="card mb-4"><div class="card-body">
-            <h2 class="small-title">Anbarın sorğu paneli</h2>
+            <h2 class="small-title">Deponun sorğu paneli</h2>
             <div class="d-flex flex-wrap gap-2">
                 <form method="POST" action="{{ route('admin.procurement.warehouses.link', $warehouse) }}">@csrf<button class="btn btn-outline-primary" @disabled(!$warehouse->active)>Yeni giriş linki yarat</button></form>
-                <form method="POST" action="{{ route('admin.procurement.warehouses.revoke-links', $warehouse) }}" onsubmit="return confirm('Bu anbarın bütün əvvəlki linkləri ləğv edilsin?')">@csrf<button class="btn btn-outline-danger">Əvvəlki linkləri ləğv et</button></form>
+                <form method="POST" action="{{ route('admin.procurement.warehouses.revoke-links', $warehouse) }}" onsubmit="return confirm('Bu deponun bütün əvvəlki linkləri ləğv edilsin?')">@csrf<button class="btn btn-outline-danger">Əvvəlki linkləri ləğv et</button></form>
             </div>
         </div></div>
         <div class="row">
             <div class="col">
                 <section class="scroll-section" id="warehouseFields">
-                    <h2 class="small-title">Anbar məlumatları</h2>
+                    <h2 class="small-title">Depo məlumatları</h2>
                     <div class="card h-100-card">
                         <div class="card-body">
                             <form action="{{ route('admin.procurement.warehouses.update', $warehouse) }}" method="POST">

@@ -14,7 +14,7 @@ class TelegramWebhook extends Command
 {
     protected $signature = 'telegram:webhook {--info : Hazırkı webhook-u göstər, dəyişmə} {--delete : Webhook-u sil}';
 
-    protected $description = 'Telegram botunun webhook-unu bu sayta qoşur (anbar cavabları üçün)';
+    protected $description = 'Telegram botunun webhook-unu bu sayta qoşur (depo cavabları üçün)';
 
     public function handle(TelegramApi $api): int
     {

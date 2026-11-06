@@ -379,8 +379,8 @@
                 ['title' => 'Bank', 'icon' => 'credit-card', 'value' => $finance['bank'], 'tone' => 'primary', 'hint' => null],
                 ['title' => 'Kuryerlərdən alınacaq', 'icon' => 'delivery-truck', 'value' => $finance['couriers_owe'], 'tone' => 'warning',
                     'hint' => $finance['owe_couriers'] > 0 ? 'Kuryerlərə borc: '.$money($finance['owe_couriers'], 2).' ₼' : null],
-                ['title' => 'Anbarlara borc', 'icon' => 'boxes', 'value' => $finance['warehouses_debt'], 'tone' => 'danger',
-                    'hint' => $finance['warehouses'] ? $finance['warehouses'].' anbar' : null],
+                ['title' => 'Depolara borc', 'icon' => 'boxes', 'value' => $finance['warehouses_debt'], 'tone' => 'danger',
+                    'hint' => $finance['warehouses'] ? $finance['warehouses'].' depo' : null],
                 ['title' => 'Bonus öhdəliyi', 'icon' => 'gift', 'value' => $finance['bonus'], 'tone' => 'primary', 'hint' => 'İstifadə olunmamış bonus'],
             ];
         @endphp

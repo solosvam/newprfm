@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Sifariş statusları və tarixçə cədvəli (yaddaşdakı sqlite üçün).
- * id 1 = "preparing" (icraya götürülüb) — testlərdəki sifarişlər anbar əməliyyatına hazırdır.
+ * id 1 = "preparing" (icraya götürülüb) — testlərdəki sifarişlər depo əməliyyatına hazırdır.
  */
 trait OrderStatusFixtures
 {

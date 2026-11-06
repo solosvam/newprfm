@@ -361,7 +361,7 @@ class CrmController extends Controller
             'startBlock' => app(OrderStatusService::class)->startBlock($order),
             'courierBlock' => app(OrderStatusService::class)->courierBlock($order),
             'couriers' => $this->couriers(),
-            // Kuryer pəncərəsi: götürülməmiş hissəsi olan anbarlar və "kuryer pul versin" seçimi
+            // Kuryer pəncərəsi: götürülməmiş hissəsi olan depolar və "kuryer pul versin" seçimi
             'courierWarehouses' => \App\Models\Procurement\OrderItemAllocation::with('warehouse')
                 ->whereIn('order_item_id', $order->items()->select('id'))
                 ->whereNotIn('status', [\App\Models\Procurement\OrderItemAllocation::PICKED, ...\App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE])
@@ -662,7 +662,7 @@ class CrmController extends Controller
         $actor = (int) auth('admin')->id();
         $result = $service->cancelOrder($order, $data['reason'], $data['note'] ?? null, $actor);
 
-        // Xəbərdar edilmiş / mal ayırmış anbarlara: "rezerv lazım deyil"
+        // Xəbərdar edilmiş / mal ayırmış depolara: "rezerv lazım deyil"
         $sms = OrderItemAllocation::with('warehouse')->whereIn('id', $result['notify'])->get()
             ->mapWithKeys(fn ($allocation) => [$allocation->warehouse->name_az => rescue(fn () => $notifier->notifyCancelled($allocation, $actor), null)]);
 
@@ -682,7 +682,7 @@ class CrmController extends Controller
         return back()->with('success', trim($message));
     }
 
-    /** "İcraya götür": Sifariş verildi → Hazırlanır. Bundan sonra anbar sorğusu göndərmək olar. */
+    /** "İcraya götür": Sifariş verildi → Hazırlanır. Bundan sonra depo sorğusu göndərmək olar. */
     public function startOrder(Customer $customer, Order $order, OrderStatusService $statuses): RedirectResponse
     {
         abort_unless($order->customer_id === $customer->id, 404);
@@ -691,7 +691,7 @@ class CrmController extends Controller
         return back()->with('success', 'Sifariş icraya götürüldü: "Hazırlanır".');
     }
 
-    /** "Kuryer təyin et": bütün məhsullar anbarlara təyin olunandan sonra */
+    /** "Kuryer təyin et": bütün məhsullar depolara təyin olunandan sonra */
     /** Qapıda imtina — operator (kuryer zəng edib bildirir) */
     public function refuseItem(Request $request, Customer $customer, Order $order, OrderItem $item, OrderItemCancellationService $service): RedirectResponse
     {
@@ -703,7 +703,7 @@ class CrmController extends Controller
         $cancellation = $service->refuseAtDoor($order, $item, (int) $data['quantity'], $data['note'] ?? null, (int) auth('admin')->id());
 
         return back()->with('success', 'Qapıda imtina qeyd olundu: '.$cancellation->quantity.' ədəd, −'
-            .number_format((float) $cancellation->amount, 2).' AZN. Kuryer yeni məbləği alacaq və məhsulu anbara qaytaracaq.');
+            .number_format((float) $cancellation->amount, 2).' AZN. Kuryer yeni məbləği alacaq və məhsulu depoya qaytaracaq.');
     }
 
     public function assignCourier(Request $request, Customer $customer, Order $order, OrderStatusService $statuses): RedirectResponse

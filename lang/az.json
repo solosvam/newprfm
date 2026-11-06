@@ -150,7 +150,7 @@
         "status": "Status",
         "source": "Mənbə",
         "problem_type": "Problemin növü",
-        "warehouse_ids": "Anbarlar",
+        "warehouse_ids": "Depolar",
         "item_ids": "Məhsullar",
         "courier_id": "Kuryer",
         "offer_id": "Təklif",

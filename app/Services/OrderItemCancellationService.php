@@ -21,13 +21,13 @@ use Illuminate\Validation\ValidationException;
  *  - Onlayn ödənilibsə: qaytarılacaq məbləğ "pending" qalır (pulun qaytarılması — ayrıca addım).
  *    Bonusla ödənilibsə: məbləğ dərhal bonus balansına qayıdır. Nağd: kuryerin alacağı məbləğ azalır.
  *  - Qazanılmış bonus artıq yazılıbsa, fərqi geri alınır ("Sifariş ləğvi" qeydi ilə).
- *  - Artıq qalan anbar seçimləri (ən yenisindən) bağlanır.
+ *  - Artıq qalan depo seçimləri (ən yenisindən) bağlanır.
  *  - Hissə-hissə (kredit): yekun qalan məhsullara görə kreditin faizi ilə yenidən hesablanır, kredit müraciətinin
  *    ümumi və aylıq məbləği yenilənir (əl ilə razılaşdırılmış məbləğ standarta qayıdır). Ferrum-da müraciət
  *    təsdiqlənibsə ləğv edilməməlidir — operator bunu təsdiq pəncərəsində təsdiqləyir (CrmController::cancelItem).
  *
  * Qapıda imtina (refuseAtDoor): kuryer ünvandadır, müştəri məhsullardan birini götürmür.
- *  Eyni hesablama; götürülmüş anbar hissəsi ləğv edilmir — "Anbara qaytarılır" olur (kuryer sonra "Qaytardım").
+ *  Eyni hesablama; götürülmüş depo hissəsi ləğv edilmir — "Depoya qaytarılır" olur (kuryer sonra "Qaytardım").
  *  Kuryerin alacağı nağd məbləğ yeni yekundur.
  */
 class OrderItemCancellationService
@@ -36,8 +36,8 @@ class OrderItemCancellationService
     public const EDITABLE_STATUSES = ['new', 'confirmed', 'preparing', 'warehouse_requested', 'warehouses_assigned'];
 
     /**
-     * Müştərinin saytdan özü imtina edə bildiyi mərhələlər: hələ heç bir anbar mal ayırmayıb.
-     * "Anbarlar təyin olundu"dan sonra — yalnız operator (müştəriyə "əlaqə saxlayın" göstərilir).
+     * Müştərinin saytdan özü imtina edə bildiyi mərhələlər: hələ heç bir depo mal ayırmayıb.
+     * "Depolar təyin olundu"dan sonra — yalnız operator (müştəriyə "əlaqə saxlayın" göstərilir).
      */
     public const CUSTOMER_STATUSES = ['new', 'confirmed', 'preparing', 'warehouse_requested'];
 
@@ -163,7 +163,7 @@ class OrderItemCancellationService
         if ($order->paymentMethod?->code === 'installment' || !in_array($order->status?->code, self::CUSTOMER_STATUSES, true)) {
             return 'contact';
         }
-        // Operator artıq anbar seçibsə (mal ayrılır) — yalnız operator ləğv edir
+        // Operator artıq depo seçibsə (mal ayrılır) — yalnız operator ləğv edir
         $reserved = $order->items->flatMap->allocations
             ->contains(fn (OrderItemAllocation $allocation) => !in_array($allocation->status, OrderItemAllocation::SUPPLY_INACTIVE, true));
 
@@ -209,7 +209,7 @@ class OrderItemCancellationService
      * Sifarişin tam ləğvi (bir sifarişin detal səhifəsindən):
      *  - qalan bütün məhsullar ləğv olunur (məhsul ləğvi ilə eyni hesab: bonus fərqi, bonusa/karta qaytarma);
      *  - ödənilibsə çatdırılma və qablaşdırma haqqı da ayrıca qaytarılır;
-     *  - anbar seçimləri bağlanır (xəbərdar edilmiş/ayrılmış anbarlara SMS), kuryerin götürdüyü mal "Anbara qaytarılır" olur;
+     *  - depo seçimləri bağlanır (xəbərdar edilmiş/ayrılmış depolara SMS), kuryerin götürdüyü mal "Depoya qaytarılır" olur;
      *  - status "Ləğv edildi", səbəb tarixçəyə yazılır (müştəri də görür).
      *
      * @return array{cancellations: list<OrderItemCancellation>, notify: list<int>}
@@ -222,7 +222,7 @@ class OrderItemCancellationService
             $this->ensure(($block = $this->orderBlockReason($order)) === null, (string) $block);
             $this->ensure(isset(OrderItemCancellation::REASONS[$reason]) && $reason !== 'door_refused', 'Səbəbi seçin.');
 
-            // Status əvvəlcə: anbar seçimləri bağlananda təminat statusu (Anbarlara sorğu…) yenidən hesablanmasın
+            // Status əvvəlcə: depo seçimləri bağlananda təminat statusu (Depolara sorğu…) yenidən hesablanmasın
             app(OrderStatusService::class)->set($order, 'cancelled', $actor,
                 OrderItemCancellation::REASONS[$reason].($note ? ': '.$note : ''));
 
@@ -290,10 +290,10 @@ class OrderItemCancellationService
 
     /**
      * Ləğvin özü (sifariş artıq kilidlənib, yoxlamalar edilib).
-     * $mode: item — operator ləğvi (artıq qalan anbar seçimləri bağlanır); door — qapıda imtina
-     * (götürülmüş hissə anbara qaytarılır); order — sifarişin tam ləğvi (götürülən qaytarılır, qalanı bağlanır).
+     * $mode: item — operator ləğvi (artıq qalan depo seçimləri bağlanır); door — qapıda imtina
+     * (götürülmüş hissə depoya qaytarılır); order — sifarişin tam ləğvi (götürülən qaytarılır, qalanı bağlanır).
      *
-     * @param  list<int>  $notify  anbara "rezerv lazım deyil" SMS-i göndəriləcək seçimlər (order rejimi)
+     * @param  list<int>  $notify  depoya "rezerv lazım deyil" SMS-i göndəriləcək seçimlər (order rejimi)
      */
     private function applyLocked(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, ?int $actor, string $mode, array &$notify = []): OrderItemCancellation
     {
@@ -304,7 +304,7 @@ class OrderItemCancellationService
         } elseif ($mode === 'order') {
             $this->releaseAllAllocations($item, $actor, $notify);
         } else {
-            // Artıq qalan anbar seçimləri: ən yenisindən bağlanır
+            // Artıq qalan depo seçimləri: ən yenisindən bağlanır
             $keep = $item->activeQuantity() - $quantity;
             $allocations = OrderItemAllocation::where('order_item_id', $item->id)->where('status', '!=', 'cancelled')->orderByDesc('id')->get();
             $selected = (int) $allocations->sum('quantity');
@@ -374,7 +374,7 @@ class OrderItemCancellationService
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         } elseif ($mode === 'item') {
-            // Qalan miqdarın hamısı seçilibsə "Anbarlar təyin olundu"
+            // Qalan miqdarın hamısı seçilibsə "Depolar təyin olundu"
             app(OrderStatusService::class)->syncSupply($order, $actor);
         }
 
@@ -382,7 +382,7 @@ class OrderItemCancellationService
     }
 
     /**
-     * Qapıda imtina: götürülmüş hissələrdən (ən yenisindən) imtina edilən say "Anbara qaytarılır" olur.
+     * Qapıda imtina: götürülmüş hissələrdən (ən yenisindən) imtina edilən say "Depoya qaytarılır" olur.
      * Hissənin bir qismi qaytarılırsa, hissə bölünür (qalan — götürülüb, ayrılan — qaytarılır).
      */
     private function returnPicked(OrderItem $item, int $quantity, ?string $note, int $actor): void
@@ -414,8 +414,8 @@ class OrderItemCancellationService
     }
 
     /**
-     * Tam ləğvdə məhsulun bütün anbar hissələri: kuryerin götürdüyü — "Anbara qaytarılır" (kuryer sonra "Qaytardım"),
-     * hələ götürülməyən — bağlanır; xəbərdar edilmiş/ayrılmış anbarlar SMS üçün siyahıya düşür.
+     * Tam ləğvdə məhsulun bütün depo hissələri: kuryerin götürdüyü — "Depoya qaytarılır" (kuryer sonra "Qaytardım"),
+     * hələ götürülməyən — bağlanır; xəbərdar edilmiş/ayrılmış depolar SMS üçün siyahıya düşür.
      *
      * @param  list<int>  $notify
      */
@@ -430,7 +430,7 @@ class OrderItemCancellationService
                 AllocationStatusLog::create([
                     'order_item_allocation_id' => $part->id, 'from_status' => OrderItemAllocation::PICKED,
                     'to_status' => OrderItemAllocation::RETURNING, 'user_id' => $actor,
-                    'note' => 'Sifariş ləğv edildi: '.$part->quantity.' ədəd anbara qaytarılır', 'created_at' => now(),
+                    'note' => 'Sifariş ləğv edildi: '.$part->quantity.' ədəd depoya qaytarılır', 'created_at' => now(),
                 ]);
 
                 continue;

@@ -1,6 +1,6 @@
 {{--
-  Anbar portalı → "Seçilənlər": operator bu anbarın təklifini seçib.
-  Seçilib / Anbara bildirildi → "Rezerv etdim" və ya "Problem var"; Rezervdə / Problem — yalnız vəziyyət.
+  Depo portalı → "Seçilənlər": operator bu deponun təklifini seçib.
+  Seçilib / Depoya bildirildi → "Rezerv etdim" və ya "Problem var"; Rezervdə / Problem — yalnız vəziyyət.
   Parametrlər: $allocation (orderItem.product.brand/genders/type, orderItem.variant.size, logs), $token
 --}}
 @php

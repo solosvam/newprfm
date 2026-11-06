@@ -14,13 +14,13 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Anbar bildirişləri. Anbarın sorğu tipinə görə: SMS (lsim; hər SMS-də portal linki /w/{token}, 7 gün)
- * və ya Telegram (anbarın qrupuna düyməli mesaj — TelegramWarehouseBot). Jurnal hər ikisində sms_logs-dadır.
+ * Depo bildirişləri. Deponun sorğu tipinə görə: SMS (lsim; hər SMS-də portal linki /w/{token}, 7 gün)
+ * və ya Telegram (deponun qrupuna düyməli mesaj — TelegramWarehouseBot). Jurnal hər ikisində sms_logs-dadır.
  *  - sorğu yaradılanda   → "N məhsul üçün sorğu var";
- *  - təklif seçiləndə    → "məhsul sizdən seçildi, rezerv edin" + status "Anbara bildirildi";
- *  - seçim ləğv olunanda → "seçim ləğv edildi" (yalnız anbar artıq xəbərdar idisə).
+ *  - təklif seçiləndə    → "məhsul sizdən seçildi, rezerv edin" + status "Depoya bildirildi";
+ *  - seçim ləğv olunanda → "seçim ləğv edildi" (yalnız depo artıq xəbərdar idisə).
  * SMS DB tranzaksiyasından SONRA göndərilir; alınmasa əməliyyat qalır, jurnalda "failed" olur
- * və operator "SMS-i təkrar göndər" edə bilir. Telefonu olmayan anbar — null (SMS yoxdur).
+ * və operator "SMS-i təkrar göndər" edə bilir. Telefonu olmayan depo — null (SMS yoxdur).
  */
 class WarehouseNotifier
 {
@@ -45,7 +45,7 @@ class WarehouseNotifier
         return $this->deliver($warehouse, $message, 'warehouse_request', self::SUBJECT_REQUEST, $request->id, $actor);
     }
 
-    /** Seçim barədə SMS; uğurludursa "Seçilib" → "Anbara bildirildi". */
+    /** Seçim barədə SMS; uğurludursa "Seçilib" → "Depoya bildirildi". */
     public function notifySelected(Order $order, OrderItemAllocation $allocation, int $actor): ?SmsLog
     {
         $allocation->loadMissing(['warehouse', 'orderItem.product', 'orderItem.variant.size']);
@@ -71,7 +71,7 @@ class WarehouseNotifier
         return $log;
     }
 
-    /** Bildiriş getdisə: "Seçilib" → "Anbara bildirildi" */
+    /** Bildiriş getdisə: "Seçilib" → "Depoya bildirildi" */
     private function markNotified(Order $order, OrderItemAllocation $allocation, SmsLog $log, int $actor, string $note): void
     {
         if ($log->isSent() && $allocation->status === OrderItemAllocation::SELECTED) {
@@ -111,7 +111,7 @@ class WarehouseNotifier
         return ['request' => $load(self::SUBJECT_REQUEST, $requestIds), 'allocation' => $load(self::SUBJECT_ALLOCATION, $allocationIds)];
     }
 
-    /** Flash mesajı üçün qısa nəticə: "SMS: 2 anbara göndərildi; alınmadı: X (balans bitib)". */
+    /** Flash mesajı üçün qısa nəticə: "SMS: 2 depoya göndərildi; alınmadı: X (balans bitib)". */
     public static function summary(iterable $results): string
     {
         $sent = 0;
@@ -127,9 +127,9 @@ class WarehouseNotifier
                 $parts[] = $name.' — '.$log->error;
             }
         }
-        // Bütün anbarlar Telegram-dadırsa "Telegram", qarışıqdırsa "Bildiriş", əks halda "SMS"
+        // Bütün depolar Telegram-dadırsa "Telegram", qarışıqdırsa "Bildiriş", əks halda "SMS"
         $word = isset($channels['telegram']) ? (count($channels) > 1 ? 'Bildiriş' : 'Telegram') : 'SMS';
-        $text = $sent ? $word.' '.$sent.' anbara göndərildi.' : '';
+        $text = $sent ? $word.' '.$sent.' depoya göndərildi.' : '';
 
         return trim($text.($parts ? ' '.$word.' getmədi: '.implode('; ', $parts).'.' : ''));
     }
@@ -140,7 +140,7 @@ class WarehouseNotifier
             && trim((string) ($this->viaTelegram($warehouse) ? $warehouse->telegram_id : $warehouse->phone)) !== '';
     }
 
-    /** Sorğu tipi Telegram-dırsa (ID olmadan seçilə bilmir — yoxlama anbar formasındadır) */
+    /** Sorğu tipi Telegram-dırsa (ID olmadan seçilə bilmir — yoxlama depo formasındadır) */
     private function viaTelegram(Warehouse $warehouse): bool
     {
         return $warehouse->request_channel === 'telegram';

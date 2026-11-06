@@ -1,6 +1,6 @@
 {{--
   Hesabın səhifəsi (Kassa → karta klik).
-  Anbar: borc, ödənilməmiş hissələr + "Ödə", ümumi ödəniş. Kuryer: haqq-hesab + "Pulu təhvil al" (yalnız nağd kassaya).
+  Depo: borc, ödənilməmiş hissələr + "Ödə", ümumi ödəniş. Kuryer: haqq-hesab + "Pulu təhvil al" (yalnız nağd kassaya).
 --}}
 @php
     $html_tag_data = [];
@@ -62,11 +62,11 @@
                 @endif
             </div></div></div>
             <div class="col-12 col-md-6 col-xl-8"><div class="card h-100"><div class="card-body small text-muted">
-                Qalıq artır: müştəridən nağd aldıqda, avans veriləndə. Azalır: anbara ödəyəndə, pulu kassaya təhvil verəndə.
+                Qalıq artır: müştəridən nağd aldıqda, avans veriləndə. Azalır: depoya ödəyəndə, pulu kassaya təhvil verəndə.
             </div></div></div>
         @elseif($account->type === 'warehouse')
             <div class="col-12 col-md-6 col-xl-4"><div class="card"><div class="card-body">
-                <div class="finance-account__label">{{ $debt > 0 ? 'Anbara borc (götürülən mal)' : ($debt < 0 ? 'Avans (artıq ödənilib)' : 'Borc yoxdur') }}</div>
+                <div class="finance-account__label">{{ $debt > 0 ? 'Depoya borc (götürülən mal)' : ($debt < 0 ? 'Avans (artıq ödənilib)' : 'Borc yoxdur') }}</div>
                 <div class="finance-account__value {{ $debt > 0 ? 'text-danger' : '' }}">{{ $money($debt) }}</div>
             </div></div></div>
         @else
@@ -100,7 +100,7 @@
                 @endforeach
                 @if($byDay['unlinked'] !== 0)
                     <tr>
-                        <td colspan="3" class="text-muted">{{ $byDay['unlinked'] > 0 ? 'Ümumi ödəniş (sifarişə bağlı olmadan) — borcdan çıxılır' : 'Anbarın qaytardığı pul (sifarişə bağlı olmadan)' }}</td>
+                        <td colspan="3" class="text-muted">{{ $byDay['unlinked'] > 0 ? 'Ümumi ödəniş (sifarişə bağlı olmadan) — borcdan çıxılır' : 'Deponun qaytardığı pul (sifarişə bağlı olmadan)' }}</td>
                         <td class="text-nowrap fw-bold {{ $byDay['unlinked'] > 0 ? 'text-success' : 'text-danger' }}">{{ $byDay['unlinked'] > 0 ? '−' : '+' }}{{ $money($byDay['unlinked']) }}</td>
                     </tr>
                 @endif
@@ -124,7 +124,7 @@
                             <td>@if($order)<a href="{{ route('admin.crm.order', [$order->customer_id, $order->id]) }}#settlements">{{ $order->order_no }}</a>@else — @endif</td>
                             <td>{{ $a->orderItem?->product?->name }}<span class="d-block small text-muted">{{ $a->orderItem?->variant?->size?->name_az }}</span></td>
                             <td class="text-nowrap">{{ $a->quantity }} × {{ number_format((float) $a->unit_cost, 2) }}</td>
-                            <td>{{ $a->label() }}@if($a->status === 'returned')<span class="d-block small text-muted">anbara qaytarılıb — borc yoxdur</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true))<span class="d-block small text-muted">borc götürüləndə yaranır</span>@endif</td>
+                            <td>{{ $a->label() }}@if($a->status === 'returned')<span class="d-block small text-muted">depoya qaytarılıb — borc yoxdur</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true))<span class="d-block small text-muted">borc götürüləndə yaranır</span>@endif</td>
                             <td class="text-nowrap">{{ $money($cost) }}</td>
                             <td class="text-nowrap text-success">{{ $paid ? $money($paid) : '—' }}</td>
                             <td class="text-nowrap fw-bold {{ in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) ? 'text-danger' : '' }}">{{ $money($left) }}</td>
@@ -179,14 +179,14 @@
 @endif
 
 @if($account->type === 'warehouse')
-    {{-- Anbara ödəniş: hissəyə bağlı (data-allocation) və ya ümumi --}}
+    {{-- Depoya ödəniş: hissəyə bağlı (data-allocation) və ya ümumi --}}
     <div class="modal modal-right fade" id="warehousePayModal" tabindex="-1" aria-labelledby="warehousePayTitle" aria-hidden="true">
         <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.finance.store') }}" data-movement-form>
             @csrf
             <input type="hidden" name="kind" value="warehouse_payment">
             <input type="hidden" name="order_item_allocation_id" value="">
             <input type="hidden" name="to_account_id" value="{{ $account->id }}">
-            <div class="modal-header"><h5 class="modal-title" id="warehousePayTitle">Anbara ödəniş</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+            <div class="modal-header"><h5 class="modal-title" id="warehousePayTitle">Depoya ödəniş</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
             <div class="modal-body">
                 <div class="fw-bold mb-3" data-pay-title></div>
                 <div class="mb-3"><label class="form-label" for="payFrom">Kim ödədi</label>

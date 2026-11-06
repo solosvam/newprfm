@@ -12,17 +12,17 @@ use Illuminate\Support\Facades\Schema;
  *
  * Bölmələr:
  *  - finance: kassa və bütün pul hərəkətləri (borc / alacaq / kuryer qalıqları hərəkətlərdən hesablanır — sıfırlanır);
- *    hesabların özü (kassa, bank, kuryer, anbar) qalır;
- *  - orders: sifarişlər və asan sifarişlər, onlara bağlı hər şey (məhsullar, statuslar, ödənişlər, anbar sorğuları və seçimləri,
+ *    hesabların özü (kassa, bank, kuryer, depo) qalır;
+ *  - orders: sifarişlər və asan sifarişlər, onlara bağlı hər şey (məhsullar, statuslar, ödənişlər, depo sorğuları və seçimləri,
  *    ləğvlər, kredit müraciətləri, bu sifarişlərə görə pul hərəkətləri); sifarişin müştəriyə verdiyi / xərclətdiyi bonus geri alınır,
  *    promokodların istifadə sayı azaldılır;
- *  - price_lists: anbarların price listləri, uyğunlaşdırmalar, brend bağlantıları və müvəqqəti yüklənmiş fayllar.
+ *  - price_lists: depoların price listləri, uyğunlaşdırmalar, brend bağlantıları və müvəqqəti yüklənmiş fayllar.
  */
 class ProductionReset
 {
     public const SECTIONS = [
         'finance' => 'Kassa və maliyyə axını: bütün pul hərəkətləri, borclar və alacaqlar, kuryer qalıqları',
-        'orders' => 'Sifarişlər və asan sifarişlər (statuslar, ödənişlər, anbar sorğuları və seçimləri, kuryer mərhələləri ilə birlikdə)',
+        'orders' => 'Sifarişlər və asan sifarişlər (statuslar, ödənişlər, depo sorğuları və seçimləri, kuryer mərhələləri ilə birlikdə)',
         'price_lists' => 'Price listlər, uyğunlaşdırmalar və yüklənmiş fayllar',
     ];
 
@@ -38,8 +38,8 @@ class ProductionReset
                 'Onlardan asan sifariş' => $count('orders', fn ($q) => $q->where('one_click', true)),
                 'Sifariş məhsulları' => $count('order_items'),
                 'Ödənişlər' => $count('payments'),
-                'Anbar sorğuları' => $count('warehouse_requests'),
-                'Anbar seçimləri' => $count('order_item_allocations'),
+                'Depo sorğuları' => $count('warehouse_requests'),
+                'Depo seçimləri' => $count('order_item_allocations'),
                 'Sifarişə bağlı bonus əməliyyatları' => $count('customer_bonus_transactions', fn ($q) => $q->whereIn('order_id', DB::table('orders')->select('id'))),
             ],
             'price_lists' => [
@@ -98,7 +98,7 @@ class ProductionReset
         }
         DB::table('customer_referrals')->whereIn('order_id', $orderIds)->update(['order_id' => null]);
 
-        // Bu sifarişlərə görə pul hərəkətləri (kuryerin müştəridən aldığı, anbara ödəniş, onlayn ödəniş)
+        // Bu sifarişlərə görə pul hərəkətləri (kuryerin müştəridən aldığı, depoya ödəniş, onlayn ödəniş)
         $this->deleteMovements(DB::table('money_movements')->where(fn ($q) => $q->whereIn('order_id', $orderIds)->orWhereIn('order_item_allocation_id', $allocationIds)->orWhereIn('payment_id', $paymentIds)));
 
         // Uşaqdan valideynə doğru (xarici açarlar restrict-dir)

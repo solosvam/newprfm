@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Müştəriyə və anbara göndərilən qısa linklər (SMS ödəniş linki, referal, anbar portalı).
+ * Müştəriyə və depoya göndərilən qısa linklər (SMS ödəniş linki, referal, depo portalı).
  *
  * SHORT_URL (.env, məs. https://paf.az) təyin olunubsa link həmin domenlə yaranır; domen yalnız yönləndiricidir —
  * App\Http\Middleware\RedirectShortDomain eyni yolu əsas sayta (APP_URL) ötürür. Təyin olunmayıbsa adi link qaytarılır.

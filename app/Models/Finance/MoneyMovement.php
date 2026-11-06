@@ -20,9 +20,9 @@ class MoneyMovement extends Model
         'outgo' => ['Məxaric', ['cash', 'card', 'bank', 'online', 'courier', 'person'], ['external']],
         // Öz hesablar və şəxslər arasında: gəlir və ya xərc deyil
         'transfer' => ['Köçürmə', ['cash', 'card', 'bank', 'online', 'person'], ['cash', 'card', 'bank', 'person']],
-        'warehouse_payment' => ['Anbara ödəniş', ['courier', 'cash', 'card', 'bank', 'person'], ['warehouse']],
-        // Mal anbara qaytarılıb (qapıda imtina / sifariş ləğvi) — anbar ödənilən pulu geri verdi
-        'warehouse_refund' => ['Anbar pulu qaytardı', ['warehouse'], ['courier', 'cash', 'card', 'bank', 'person']],
+        'warehouse_payment' => ['Depoya ödəniş', ['courier', 'cash', 'card', 'bank', 'person'], ['warehouse']],
+        // Mal depoya qaytarılıb (qapıda imtina / sifariş ləğvi) — depo ödənilən pulu geri verdi
+        'warehouse_refund' => ['Depo pulu qaytardı', ['warehouse'], ['courier', 'cash', 'card', 'bank', 'person']],
         'courier_handover' => ['Kuryer pulu təhvil verdi', ['courier'], ['cash']], // kuryer yalnız nağd verir
         'courier_advance' => ['Kuryerə avans / qaytarma', ['cash', 'card', 'bank'], ['courier']],
         // Baş kuryer kuryerin balansındakı pulu özünə köçürür (courier.collect) — şirkətin pulu kuryerdən kuryerə keçir
@@ -50,7 +50,7 @@ class MoneyMovement extends Model
     /** "Yeni əməliyyat" pəncərəsi: Məxaric / Mədaxil / Köçürmə (kuryerə köçürmə — avans, kuryerdən — təhvil) */
     public const MANUAL = ['outgo', 'income', 'transfer', 'courier_advance', 'courier_handover'];
 
-    /** Hesab səhifəsindən edilənlər: anbara ödəniş (anbar), pulu təhvil al (kuryer) */
+    /** Hesab səhifəsindən edilənlər: depoya ödəniş (depo), pulu təhvil al (kuryer) */
     public const FROM_ACCOUNT_PAGE = ['warehouse_payment', 'courier_handover', 'warehouse_refund'];
 
     /** Real tarix (occurred_at) qeydə alınma anından (created_at) 1 saatdan çox əvvəldirsə — sonradan yazılıb */

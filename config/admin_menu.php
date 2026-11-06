@@ -14,7 +14,7 @@ return [
             ['title' => 'Sifarişlər', 'route' => 'admin.orders.index', 'permission' => 'crm'],
             ['title' => 'Asan sifarişlər', 'route' => 'admin.easy-orders.index', 'permission' => 'crm'],
             ['title' => 'Kredit müraciətləri', 'route' => 'admin.credit.applications', 'permission' => 'credit.menu'],
-            ['title' => 'Anbarlar', 'route' => 'admin.procurement.warehouses', 'permission' => 'crm'],
+            ['title' => 'Depolar', 'route' => 'admin.procurement.warehouses', 'permission' => 'crm'],
             ['title' => 'Kuryerlər', 'route' => 'admin.courier.team', 'permission' => 'courier.team'],
             ['title' => 'Price listlər', 'route' => 'admin.price-lists.index', 'permission' => 'crm'],
             ['separator' => true],

@@ -9,8 +9,8 @@
         $other = $row['other']?->name;
         return match ($m->kind) {
             'customer_payment' => $self ? 'Müştəridən nağd aldınız' : 'Müştəridən nağd aldı',
-            'warehouse_payment' => ($self ? 'Anbara ödədiniz — ' : 'Anbara ödədi — ').$other,
-            'warehouse_refund' => ($self ? 'Anbar pulu qaytardı — ' : 'Anbar pulu qaytardı — ').$other,
+            'warehouse_payment' => ($self ? 'Depoya ödədiniz — ' : 'Depoya ödədi — ').$other,
+            'warehouse_refund' => ($self ? 'Depo pulu qaytardı — ' : 'Depo pulu qaytardı — ').$other,
             'courier_handover' => $self ? 'Kassaya təhvil verdiniz' : 'Kassaya təhvil verdi',
             'courier_advance' => $row['delta'] > 0 ? ($self ? 'Avans / qaytarma aldınız' : 'Avans / qaytarma aldı') : 'Avans qaytarıldı',
             'courier_collect' => $row['delta'] < 0 ? 'Baş kuryerə təhvil — '.$other : 'Kuryerdən götürüldü — '.$other,
@@ -44,7 +44,7 @@
         @endforeach
         <div class="courier-history__hint">
             @if($self)
-                <b>+</b> — sizdə olan şirkət pulu artır (müştəridən nağd, avans). <b>−</b> — azalır (anbara ödəniş, kassaya təhvil).
+                <b>+</b> — sizdə olan şirkət pulu artır (müştəridən nağd, avans). <b>−</b> — azalır (depoya ödəniş, kassaya təhvil).
                 Qalıq müsbətdirsə şirkətə təhvil verməlisiniz, mənfidirsə şirkət sizə borcludur.
             @else
                 <b>+</b> — kuryerdə olan şirkət pulu artır, <b>−</b> — azalır. Qalıq müsbətdirsə kuryer şirkətə təhvil verməlidir, mənfidirsə şirkət ona borcludur.

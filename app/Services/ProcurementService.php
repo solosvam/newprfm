@@ -30,7 +30,7 @@ class ProcurementService
         // Sorğu/seçim yalnız "İcraya götür"dən sonra; götürmə mərhələləri kuryer təyinindən sonra da
         $this->ensure($locked->status?->code !== 'new', 'Əvvəlcə sifarişi icraya götürün ("İcraya götür").');
         $this->ensure(in_array($locked->status?->code, $allowed, true),
-            'Bu sifarişin cari mərhələsində anbar seçimi dəyişdirilə bilməz.');
+            'Bu sifarişin cari mərhələsində depo seçimi dəyişdirilə bilməz.');
         $this->ensure((bool) $locked->customer_id, 'Əvvəlcə sifarişi müştəriyə bağlayın.');
 
         return $locked;
@@ -45,7 +45,7 @@ class ProcurementService
             $itemIds = array_unique($itemIds);
             $warehouses = Warehouse::whereIn('id', $warehouseIds)->where('active', true)->get();
             $items = $order->items()->whereIn('id', $itemIds)->get();
-            $this->ensure(count($warehouseIds) > 0 && $warehouses->count() === count($warehouseIds), 'Aktiv anbar seçin.');
+            $this->ensure(count($warehouseIds) > 0 && $warehouses->count() === count($warehouseIds), 'Aktiv depo seçin.');
             $this->ensure(count($itemIds) > 0 && $items->count() === count($itemIds), 'Məhsullar bu sifarişə aid olmalıdır.');
             $this->ensure($items->every(fn ($item) => $item->activeQuantity() > 0), 'Ləğv olunmuş məhsula sorğu göndərilə bilməz.');
             $created = collect();
@@ -65,8 +65,8 @@ class ProcurementService
     }
 
     /**
-     * "Anbar seç": operator ətirin hansı anbarda neçəyə olduğunu artıq bilir. Sorğu və cavab birdən yazılır
-     * (sorğu "direct" — SMS getmir, cavab gözlənilmir), sonra anbar tələb olunan miqdarın hamısına seçilir — adi seçim kimi.
+     * "Depo seç": operator ətirin hansı depoda neçəyə olduğunu artıq bilir. Sorğu və cavab birdən yazılır
+     * (sorğu "direct" — SMS getmir, cavab gözlənilmir), sonra depo tələb olunan miqdarın hamısına seçilir — adi seçim kimi.
      */
     public function recordDirect(Order $order, int $itemId, int $warehouseId, string $unitCost, int $actor): OrderItemAllocation
     {
@@ -76,7 +76,7 @@ class ProcurementService
             $offer = $this->recordOffer($order, $requestItem->id, [
                 'available_quantity' => $requestItem->requested_quantity, 'unit_cost' => $unitCost, 'source' => 'direct',
             ], $actor);
-            // Artıq başqa anbardan seçilmiş hissə varsa — yalnız çatışmayan miqdar seçilir
+            // Artıq başqa depodan seçilmiş hissə varsa — yalnız çatışmayan miqdar seçilir
             $item = $order->items()->findOrFail($itemId);
             $missing = $item->activeQuantity() - (int) $item->allocations()->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)->sum('quantity');
             $this->ensure($missing > 0, 'Bu məhsul üçün lazım olan miqdar artıq seçilib.');
@@ -120,7 +120,7 @@ class ProcurementService
             $offer = WarehouseOffer::with('requestItem.request.warehouse')->findOrFail($offerId);
             $requestItem = $offer->requestItem;
             $this->ensure((int) $requestItem->request->order_id === (int) $order->id, 'Təklif bu sifarişə aid deyil.');
-            $this->ensure($requestItem->request->warehouse->active, 'Anbar deaktivdir.');
+            $this->ensure($requestItem->request->warehouse->active, 'Depo deaktivdir.');
             $item = OrderItem::where('order_id', $order->id)->findOrFail($requestItem->order_item_id);
             // A new round/answer for the same warehouse and product supersedes old offers.
             $latest = WarehouseOffer::whereHas('requestItem', function ($q) use ($item, $requestItem) {
@@ -132,8 +132,8 @@ class ProcurementService
             $warehouseSelected = (int) (clone $active)->where('warehouse_id', $requestItem->request->warehouse_id)->sum('quantity');
             $this->ensure($quantity > 0 && $quantity <= $item->activeQuantity() - $selected, 'Seçilən say sifarişin qalan miqdarından çoxdur.');
             $this->ensure($offer->unit_cost !== null && $quantity <= $offer->available_quantity - $warehouseSelected,
-                'Seçilən say anbarın təklif etdiyi qalan miqdardan çoxdur.');
-            // Kuryer təyinindən sonra əlavə seçim: həmin anbarın "pul ver / pul vermə" seçimi saxlanır
+                'Seçilən say deponun təklif etdiyi qalan miqdardan çoxdur.');
+            // Kuryer təyinindən sonra əlavə seçim: həmin deponun "pul ver / pul vermə" seçimi saxlanır
             $courierPays = OrderItemAllocation::whereIn('order_item_id', $order->items()->select('id'))
                 ->where('warehouse_id', $requestItem->request->warehouse_id)->where('status', '!=', 'cancelled')->latest('id')->value('courier_pays');
             $allocation = $item->allocations()->create([
@@ -150,27 +150,27 @@ class ProcurementService
     }
 
     /**
-     * Qapıda imtina edilən məhsul anbara qaytarıldı (kuryer "Qaytardım"): returning → returned.
-     * Anbara borc bu hissə üzrə silinir (FinanceService::warehouseDebts yalnız götürülmüş/qaytarılmamışı sayır).
+     * Qapıda imtina edilən məhsul depoya qaytarıldı (kuryer "Qaytardım"): returning → returned.
+     * Depoya borc bu hissə üzrə silinir (FinanceService::warehouseDebts yalnız götürülmüş/qaytarılmamışı sayır).
      */
     public function markReturned(Order $order, int $allocationId, int $actor): OrderItemAllocation
     {
         return DB::transaction(function () use ($order, $allocationId, $actor) {
-            $this->lockOrder($order, ['courier_assigned', 'sent', 'delivered', 'cancelled']); // qapıda imtina və ya sifarişin ləğvi: götürülmüş mal anbara qaytarılır
+            $this->lockOrder($order, ['courier_assigned', 'sent', 'delivered', 'cancelled']); // qapıda imtina və ya sifarişin ləğvi: götürülmüş mal depoya qaytarılır
             $allocation = OrderItemAllocation::with(['warehouse', 'orderItem.product'])
                 ->whereIn('order_item_id', $order->items()->select('id'))->lockForUpdate()->findOrFail($allocationId);
             if ($allocation->status === OrderItemAllocation::RETURNED) {
                 return $allocation; // təkrar klik
             }
-            $this->ensure($allocation->status === OrderItemAllocation::RETURNING, 'Bu hissə anbara qaytarılmalı deyil.');
+            $this->ensure($allocation->status === OrderItemAllocation::RETURNING, 'Bu hissə depoya qaytarılmalı deyil.');
             $allocation->update(['status' => OrderItemAllocation::RETURNED]);
             AllocationStatusLog::create([
                 'order_item_allocation_id' => $allocation->id, 'from_status' => OrderItemAllocation::RETURNING,
-                'to_status' => OrderItemAllocation::RETURNED, 'user_id' => $actor, 'note' => 'Anbara qaytarıldı', 'created_at' => now(),
+                'to_status' => OrderItemAllocation::RETURNED, 'user_id' => $actor, 'note' => 'Depoya qaytarıldı', 'created_at' => now(),
             ]);
             DB::table('order_status_logs')->insert([
                 'order_id' => $order->id, 'status_id' => $order->fresh()->order_status_id, 'user_id' => $actor, 'kind' => 'warehouse_return',
-                'note' => 'Anbara qaytarıldı: '.($allocation->warehouse?->name_az ?? 'anbar').' — '
+                'note' => 'Depoya qaytarıldı: '.($allocation->warehouse?->name_az ?? 'depo').' — '
                     .($allocation->orderItem?->product?->name ?? 'Məhsul').' ×'.$allocation->quantity,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
@@ -188,7 +188,7 @@ class ProcurementService
             if ($allocation->status === 'cancelled') {
                 return null;
             }
-            $this->ensure(in_array($allocation->status, OrderItemAllocation::CANCELLABLE, true), 'Götürülmüş məhsulun anbar seçimi ləğv edilə bilməz.');
+            $this->ensure(in_array($allocation->status, OrderItemAllocation::CANCELLABLE, true), 'Götürülmüş məhsulun depo seçimi ləğv edilə bilməz.');
             $from = $allocation->status;
             $allocation->update(['status' => 'cancelled', 'problem_type' => null]);
             AllocationStatusLog::create([

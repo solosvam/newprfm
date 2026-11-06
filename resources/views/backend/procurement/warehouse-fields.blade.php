@@ -1,6 +1,6 @@
 @php($horizontal = $horizontal ?? false)
 @foreach([
-    'name_az' => ['Anbarın adı', 150],
+    'name_az' => ['Deponun adı', 150],
     'contact_name' => ['Əlaqəli şəxs', 150],
     'phone' => ['Telefon', 30],
     'telegram_id' => ['Telegram ID', 21],
@@ -25,7 +25,7 @@
                 <option value="{{ $value }}" @selected(old('request_channel', $warehouse?->request_channel ?? 'sms') === $value)>{{ $label }}</option>
             @endforeach
         </select>
-        <div class="form-text">Anbara sorğu bu yolla göndərilir. Telegram üçün anbarın qrupunun ID-si yazılır ("-" işarəsi göndərəndə özü əlavə olunur). Qrupun ID-sini öyrənmək üçün qrupda /id yazın.</div>
+        <div class="form-text">Depoya sorğu bu yolla göndərilir. Telegram üçün deponun qrupunun ID-si yazılır ("-" işarəsi göndərəndə özü əlavə olunur). Qrupun ID-sini öyrənmək üçün qrupda /id yazın.</div>
         @error('request_channel')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </div>

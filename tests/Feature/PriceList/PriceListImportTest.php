@@ -216,7 +216,7 @@ class PriceListImportTest extends TestCase
             ->assertSessionHasNoErrors()->assertSessionHas('success', 'Price list yükləndi: 7 sətir.');
         $this->assertSame(2, \App\Models\PriceList\WarehousePriceList::sole()->mapping['first_row']);
 
-        // Növbəti yükləmədə anbarın seçimi hazır gəlir; ad və qiymət eyni sütun ola bilməz
+        // Növbəti yükləmədə deponun seçimi hazır gəlir; ad və qiymət eyni sütun ola bilməz
         $next = $this->post(route('admin.price-lists.upload'), ['warehouse_id' => $this->warehouse->id, 'file' => $upload()])->headers->get('Location');
         $this->get($next)->assertOk()->assertSee('əvvəlki seçim hazır gəlib');
         $this->post($next, ['sheet' => 0, 'first_row' => 1, 'name_col' => 1, 'price_col' => 1, 'brand_mode' => 'none'])->assertSessionHasErrors('name_col');

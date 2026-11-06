@@ -19,7 +19,7 @@
 
         <div class="alert alert-danger">
             <strong class="d-block">Silinən məlumat geri qaytarılmır.</strong>
-            Başlamazdan əvvəl bazanın ehtiyat nüsxəsini götürün. Məhsullar, müştərilər, brendlər, anbarlar, ayarlar və SMS jurnalı silinmir.
+            Başlamazdan əvvəl bazanın ehtiyat nüsxəsini götürün. Məhsullar, müştərilər, brendlər, depolar, ayarlar və SMS jurnalı silinmir.
         </div>
 
         <form method="POST" action="{{ route('admin.reset.run') }}">

@@ -6,7 +6,7 @@ use App\Models\Procurement\OrderItemAllocation;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Ölçünün son anbar alışı: son "Götürülüb" təminat hissəsi — qiymət, anbar, götürülmə tarixi.
+ * Ölçünün son depo alışı: son "Götürülüb" təminat hissəsi — qiymət, depo, götürülmə tarixi.
  * Yalnız CRM-də, "crm.purchase_info" icazəsi ilə göstərilir (saytda yox).
  */
 final class LastPurchase

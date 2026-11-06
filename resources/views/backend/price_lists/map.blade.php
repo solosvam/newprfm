@@ -18,7 +18,7 @@
         @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
         <div class="alert alert-info">
             <strong>{{ $warehouse->name_az }}</strong> · {{ $upload['name'] }}.
-            @if($remembered) Bu anbar üçün əvvəlki seçim hazır gəlib — düzdürsə, sadəcə "İmport et" basın.
+            @if($remembered) Bu depo üçün əvvəlki seçim hazır gəlib — düzdürsə, sadəcə "İmport et" basın.
             @else Sütunlar təxmin edilib — aşağıdakı önizləməyə baxıb düzəldin. @endif
         </div>
 

@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-/** Anbar Telegram qrupuna göndərilmiş düyməli mesaj və onun vəziyyəti (TelegramWarehouseBot) */
+/** Depo Telegram qrupuna göndərilmiş düyməli mesaj və onun vəziyyəti (TelegramWarehouseBot) */
 class TelegramMessage extends Model
 {
     public const REQUEST_ITEM = 'request_item';
     public const ALLOCATION = 'allocation';
     public const PROMPT = 'prompt';
-    /** Anbarın bot sualına yazdığı cavab mesajı (qiymət qeyd olunandan sonra sual ilə birlikdə silinir) */
+    /** Deponun bot sualına yazdığı cavab mesajı (qiymət qeyd olunandan sonra sual ilə birlikdə silinir) */
     public const REPLY = 'reply';
     /** Cavabsız sorğuya xatırlatma (cavab gələndə silinir) */
     public const REMINDER = 'reminder';

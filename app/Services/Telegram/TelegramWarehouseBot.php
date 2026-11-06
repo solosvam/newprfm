@@ -16,17 +16,17 @@ use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
- * Sorğu tipi Telegram olan anbarlar: bildiriş anbarın Telegram qrupuna (anbar + bot + Parfumshop) gedir.
+ * Sorğu tipi Telegram olan depolar: bildiriş deponun Telegram qrupuna (depo + bot + Parfumshop) gedir.
  *  - sorğu: hər məhsul üçün ayrıca mesaj (ad, ölçü, növ, cins — şəkilsiz, 15.10 qərarı) və düymələr — "Var" / "Yoxdur"
  *    (çox ədəd istənilibsə "Hamısı var", "Qismən", "Yoxdur"). "Var" → bot qiyməti soruşur (cavab mesajı ilə),
- *    "Qismən" → əvvəl sayı. Cavab sorğuya anbarın cavabı kimi yazılır (mənbə "telegram", user_id 0 — anbarın özü);
- *  - seçim: "sizdən seçildi, rezerv edin" + "Rezerv etdim" düyməsi (→ "Anbar ayırdı");
+ *    "Qismən" → əvvəl sayı. Cavab sorğuya deponun cavabı kimi yazılır (mənbə "telegram", user_id 0 — deponun özü);
+ *  - seçim: "sizdən seçildi, rezerv edin" + "Rezerv etdim" düyməsi (→ "Depo ayırdı");
  *  - ləğv: məlumat mesajı.
  * Hər düyməli mesajın əvvəlində status sətri (🟡 gözləyir / 🟢 cavablandı / 🔵 rezerv), sonunda heşteq (#gozleyir → #cavablandi,
  * #rezerv_gozleyir → #rezerv) və cavabdan sonra reaksiya (👌 / 🤝). Heşteqə basanda qrupda yalnız həmin vəziyyətdəki mesajlar çıxır —
- * anbar #gozleyir ilə cavab verməli olduğu bütün sorğuları görür. Heşteqlər Telegram-da etibarlı olsun deyə latın hərfləri ilədir.
+ * depo #gozleyir ilə cavab verməli olduğu bütün sorğuları görür. Heşteqlər Telegram-da etibarlı olsun deyə latın hərfləri ilədir.
  * Göndərilən hər mesaj jurnala yazılır (sms_logs, channel = telegram) — SMS ilə eyni yerdə görünür.
- * Cavablar yalnız anbarın öz qrupundan (Warehouse::telegramChatId) qəbul olunur.
+ * Cavablar yalnız deponun öz qrupundan (Warehouse::telegramChatId) qəbul olunur.
  */
 class TelegramWarehouseBot
 {
@@ -124,7 +124,7 @@ class TelegramWarehouseBot
         } elseif (isset($update['message']['reply_to_message'])) {
             $this->onReply($update['message']);
         } elseif (preg_match('~^/(id|start)(@\w+)?(\s.*)?$~', trim((string) ($update['message']['text'] ?? '')))) {
-            // Çatın id-sini öyrənmək üçün: qrupda /id (anbarın "Telegram ID" xanası) və ya şəxsi çatda /start
+            // Çatın id-sini öyrənmək üçün: qrupda /id (deponun "Telegram ID" xanası) və ya şəxsi çatda /start
             // (əməkdaşın "Telegram ID" xanası — kuryer bildirişləri)
             $chat = $update['message']['chat'] ?? [];
             $this->api->call('sendMessage', ['chat_id' => $chat['id'] ?? null, 'parse_mode' => 'HTML',
@@ -185,7 +185,7 @@ class TelegramWarehouseBot
         if (!$requestItem) {
             return;
         }
-        // Anbarın cavab mesajı da yadda saxlanır — qiymət qeyd olunandan sonra söhbət təmizlənir
+        // Deponun cavab mesajı da yadda saxlanır — qiymət qeyd olunandan sonra söhbət təmizlənir
         TelegramMessage::create(['chat_id' => $chat, 'message_id' => (int) ($incoming['message_id'] ?? 0), 'kind' => TelegramMessage::REPLY,
             'parent_id' => $message->id, 'text' => Str::limit((string) ($incoming['text'] ?? ''), 200)]);
         $requested = (int) $requestItem->requested_quantity;
@@ -214,7 +214,7 @@ class TelegramWarehouseBot
         }
     }
 
-    /** Anbarın cavabı sorğuya yazılır (CRM-də dərhal görünür), mesaj nəticə ilə yenilənir */
+    /** Deponun cavabı sorğuya yazılır (CRM-də dərhal görünür), mesaj nəticə ilə yenilənir */
     private function saveAnswer(TelegramMessage $message, WarehouseRequestItem $requestItem, int $quantity, ?string $price, string $who): void
     {
         $order = $requestItem->request->order()->firstOrFail();
@@ -240,7 +240,7 @@ class TelegramWarehouseBot
     }
 
     /**
-     * Cavab Telegram-dan yox, başqa yolla gəlibsə (operator yazıb, anbar linkdən cavab verib) — qrupdakı sorğu mesajı da
+     * Cavab Telegram-dan yox, başqa yolla gəlibsə (operator yazıb, depo linkdən cavab verib) — qrupdakı sorğu mesajı da
      * "cavablandı" olsun, #gozleyir siyahısında qalmasın.
      */
     public function syncAnswer(int $requestItemId): void
@@ -272,7 +272,7 @@ class TelegramWarehouseBot
             if (!in_array($allocation->status, [OrderItemAllocation::SELECTED, OrderItemAllocation::NOTIFIED], true)) {
                 throw ValidationException::withMessages(['allocation' => 'Bu seçim artıq dəyişib.']);
             }
-            app(ProcurementService::class)->transition($allocation->orderItem->order, $allocation->id, OrderItemAllocation::RESERVED, ['note' => 'Anbar Telegram-da təsdiqlədi ('.$who.')'], 0);
+            app(ProcurementService::class)->transition($allocation->orderItem->order, $allocation->id, OrderItemAllocation::RESERVED, ['note' => 'Depo Telegram-da təsdiqlədi ('.$who.')'], 0);
         }
         $this->edit($message, $this->render($message->text, '🔵 <b>REZERV OLUNDU</b> ('.e($who).')', '#rezerv'), [], []);
         $this->react($message, '🤝');
@@ -298,8 +298,8 @@ class TelegramWarehouseBot
     }
 
     /**
-     * Botun sualları (qiymət, say), xatırlatmalar və anbarın cavab mesajları silinir — qrupda yalnız nəticəli mesaj qalır.
-     * Botun öz mesajını həmişə silə bilir; anbarın mesajını yalnız bot qrupda admindirsə ("Mesajları silmək" icazəsi) — olmasa qalır.
+     * Botun sualları (qiymət, say), xatırlatmalar və deponun cavab mesajları silinir — qrupda yalnız nəticəli mesaj qalır.
+     * Botun öz mesajını həmişə silə bilir; deponun mesajını yalnız bot qrupda admindirsə ("Mesajları silmək" icazəsi) — olmasa qalır.
      */
     private function cleanup(TelegramMessage $message): void
     {
@@ -393,7 +393,7 @@ class TelegramWarehouseBot
 
     private function who(array $from): string
     {
-        return trim(($from['first_name'] ?? '').' '.($from['last_name'] ?? '')) ?: ($from['username'] ?? 'Anbar');
+        return trim(($from['first_name'] ?? '').' '.($from['last_name'] ?? '')) ?: ($from['username'] ?? 'Depo');
     }
 
     private function toast(array $callback, ?string $text = null): void

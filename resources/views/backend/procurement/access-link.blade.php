@@ -5,6 +5,6 @@
             <input id="warehouseAccessUrl" class="form-control" value="{{ session('warehouse_link.url') }}" readonly>
             <button type="button" class="btn btn-outline-primary" data-copy="#warehouseAccessUrl">Kopyala</button>
         </div>
-        <small class="text-muted">Linki anbara WhatsApp və ya SMS ilə göndərin. Anbarın bütün açıq sorğularını göstərir, 7 gün etibarlıdır.</small>
+        <small class="text-muted">Linki depoya WhatsApp və ya SMS ilə göndərin. Deponun bütün açıq sorğularını göstərir, 7 gün etibarlıdır.</small>
     </div></div>
 @endif

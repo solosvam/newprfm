@@ -11,7 +11,7 @@
             'courier' => $b > 0 ? ['Təhvil verməlidir', $money($b), 'text-warning'] : ($b < 0 ? ['Kuryerə borcumuz', $money($b), 'text-danger'] : ['Hesablaşılıb', '0.00 AZN', 'text-muted']),
             // Şəxs → Kassa köçürməsi qalığı mənfi edir: şəxsə borcluyuq; Kassa → Şəxs — əksinə
             'person' => $b < 0 ? ['Borcumuz', $money($b), 'text-danger'] : ($b > 0 ? ['Bizə borcludur', $money($b), 'text-warning'] : ['Hesablaşılıb', '0.00 AZN', 'text-muted']),
-            'warehouse' => ($d = $debts[$account->warehouse_id] ?? 0) > 0 ? ['Anbara borc', $money($d), 'text-danger'] : ($d < 0 ? ['Avans', $money($d), 'text-success'] : ['Borc yoxdur', '0.00 AZN', 'text-muted']),
+            'warehouse' => ($d = $debts[$account->warehouse_id] ?? 0) > 0 ? ['Depoya borc', $money($d), 'text-danger'] : ($d < 0 ? ['Avans', $money($d), 'text-success'] : ['Borc yoxdur', '0.00 AZN', 'text-muted']),
             default => [$account->typeLabel().' · qalıq', ($b < 0 ? '−' : '').$money($b), $b < 0 ? 'text-danger' : ''],
         };
     };
@@ -19,7 +19,7 @@
         'Hesablar' => \App\Models\Finance\FinanceAccount::OWN,
         'Şəxslər' => ['person'],
         'Kuryerlər' => ['courier'],
-        'Anbarlar' => ['warehouse'],
+        'Depolar' => ['warehouse'],
     ];
     $ownTotal = $accounts->whereIn('type', \App\Models\Finance\FinanceAccount::OWN)->sum(fn ($a) => $balances[$a->id] ?? 0);
 @endphp
@@ -50,10 +50,10 @@
     </div>
     @include('backend.procurement.feedback')
 
-    {{-- Hesablar: kliklə → hesabın səhifəsi (hərəkətləri, anbar borcu, kuryerin haqq-hesabı) --}}
+    {{-- Hesablar: kliklə → hesabın səhifəsi (hərəkətləri, depo borcu, kuryerin haqq-hesabı) --}}
     @foreach($groups as $groupTitle => $types)
         @php
-            // Anbarlar: yalnız haqq-hesabı açıq olanlar (borc və ya avans) — sıfır qalıqlı anbar kartı göstərilmir
+            // Depolar: yalnız haqq-hesabı açıq olanlar (borc və ya avans) — sıfır qalıqlı depo kartı göstərilmir
             $groupAccounts = $accounts->whereIn('type', $types)->reject(fn ($a) => $a->type === 'warehouse' && ($debts[$a->warehouse_id] ?? 0) === 0)
                 ->sortBy(fn ($a) => array_search($a->type, $types, true));
         @endphp

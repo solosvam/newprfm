@@ -105,7 +105,7 @@
                         <option value="system" @selected($f['user'] === 'system')>Sistem (avtomatik)</option>
                         @foreach($users as $u)<option value="{{ $u->id }}" @selected($f['user'] === (string) $u->id)>{{ $u->full_name }}</option>@endforeach
                     </select></div>
-                @foreach(['warehouse' => ['Anbar', 'warehouse'], 'courier' => ['Kuryer', 'courier']] as $name => [$label, $type])
+                @foreach(['warehouse' => ['Depo', 'warehouse'], 'courier' => ['Kuryer', 'courier']] as $name => [$label, $type])
                     @php $selected = (int) request()->query($name); @endphp
                     <div class="mb-3"><label class="form-label" for="op-{{ $name }}">{{ $label }}</label>
                         <select id="op-{{ $name }}" name="{{ $name }}" class="form-select">

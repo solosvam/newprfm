@@ -1,4 +1,4 @@
-/* Anbar təminatı (backend/procurement/order-content.blade.php) — məhsul kartları */
+/* Depo təminatı (backend/procurement/order-content.blade.php) — məhsul kartları */
 .proc-item { border: 1px solid var(--separator); border-radius: var(--border-radius-md); margin-bottom: 16px; }
 .proc-item__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 14px 18px; border-bottom: 1px solid var(--separator); }
 .proc-item__title { flex: 1 1 260px; min-width: 0; font-weight: 600; }
@@ -40,7 +40,7 @@
 .proc-steps li.is-done { color: var(--body); font-weight: 600; }
 .proc-steps li.is-done::before, .proc-steps li.is-done::after { background: var(--primary); }
 
-/* Anbar SMS bildirişləri */
+/* Depo SMS bildirişləri */
 .proc-sms { margin-bottom: 16px; padding: 10px 14px; border: 1px solid var(--separator); border-radius: var(--border-radius-md, 8px); background: var(--foreground); }
 .proc-sms > summary { cursor: pointer; font-weight: 600; }
 .proc-sms__row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 8px 0; border-top: 1px solid var(--separator); font-size: 13px; }

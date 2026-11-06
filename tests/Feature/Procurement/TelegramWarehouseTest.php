@@ -19,7 +19,7 @@ use Tests\Concerns\OrderStatusFixtures;
 use Tests\Concerns\ProcurementSchema;
 use Tests\TestCase;
 
-/** Sorğu tipi Telegram olan anbar: düyməli mesaj, "Var" → qiymət, "Qismən" → say → qiymət, "Yoxdur", "Rezerv etdim" */
+/** Sorğu tipi Telegram olan depo: düyməli mesaj, "Var" → qiymət, "Qismən" → say → qiymət, "Yoxdur", "Rezerv etdim" */
 class TelegramWarehouseTest extends TestCase
 {
     use OrderStatusFixtures;
@@ -105,7 +105,7 @@ class TelegramWarehouseTest extends TestCase
         $this->assertSame(['✅ Var', '❌ Yoxdur'], array_column($sent['reply_markup']['inline_keyboard'][0], 'text'));
         Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'lsim')); // SMS getmir
 
-        // "Var" → bot qiyməti soruşur; "95,5" → anbarın cavabı yazılır
+        // "Var" → bot qiyməti soruşur; "95,5" → deponun cavabı yazılır
         $message = TelegramMessage::where('kind', TelegramMessage::REQUEST_ITEM)->sole();
         $this->press($message, 'all')->assertOk();
         $this->assertTrue($this->sentTo('sendMessage')[1]['reply_markup']['force_reply']);
@@ -119,12 +119,12 @@ class TelegramWarehouseTest extends TestCase
         $this->assertStringEndsWith('#cavablandi', $edited);
         $this->assertSame(1, substr_count($edited, 'Sizdə'), 'əsas mətn bir dəfə');
         $this->assertSame('👌', $this->sentTo('setMessageReaction')[0]['reaction'][0]['emoji']);
-        // Düymədə cavabın özü; sual və anbarın cavab mesajı silinir
+        // Düymədə cavabın özü; sual və deponun cavab mesajı silinir
         $this->assertSame('✅ Var — 95.50 AZN (Dəyişdir)', $this->sentTo('editMessageText')[0]['reply_markup']['inline_keyboard'][0][0]['text']);
         $this->assertEqualsCanonicalizing([999, 501], array_column($this->sentTo('deleteMessage'), 'message_id'));
         $this->assertSame(0, TelegramMessage::whereIn('kind', [TelegramMessage::PROMPT, TelegramMessage::REPLY])->count());
-        // CRM-də cavabı kimin verdiyi — düyməni basan adam ("Anbar (link)" yox)
-        $this->assertSame('Kamal', $offer->authorName(fn () => 'Anbar (link)'));
+        // CRM-də cavabı kimin verdiyi — düyməni basan adam ("Depo (link)" yox)
+        $this->assertSame('Kamal', $offer->authorName(fn () => 'Depo (link)'));
     }
 
     public function test_partial_quantity_wrong_input_none_and_foreign_chat(): void

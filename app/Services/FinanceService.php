@@ -20,8 +20,8 @@ use Illuminate\Validation\ValidationException;
  *  - Kuryer: + → kuryer şirkətə təhvil verməlidir, − → şirkət kuryerə borcludur.
  *  - Şəxs: − → şirkət şəxsə borcludur, + → şəxs şirkətə borcludur. Şəxsin pulu "Hesablar"ın cəminə daxil deyil.
  *  - Mədaxil / Məxaric: qarşı tərəf "Kənar" hesabıdır, mənası kateqoriyadadır (hesabat kateqoriya üzrə qurulur).
- *  - Anbar: borc = götürülmüş (picked) hissələrin alış dəyəri − anbara ödənilən (+ anbarın geri qaytardığı).
- *    Mal anbara qaytarılıb pul alınmayıbsa borc mənfi olur — anbar şirkətə borcludur.
+ *  - Depo: borc = götürülmüş (picked) hissələrin alış dəyəri − depoya ödənilən (+ deponun geri qaytardığı).
+ *    Mal depoya qaytarılıb pul alınmayıbsa borc mənfi olur — depo şirkətə borcludur.
  * Qeydlər silinmir: səhv əks əməliyyatla düzəldilir (reverse).
  */
 class FinanceService
@@ -85,7 +85,7 @@ class FinanceService
             ->reverse()->values();
     }
 
-    /** Kuryerlər və anbarlar üçün hesablar yoxdursa yaradılır */
+    /** Kuryerlər və depolar üçün hesablar yoxdursa yaradılır */
     public function syncAccounts(): void
     {
         self::courierUsers()->get()->each(fn ($u) => $this->courierAccount($u));
@@ -101,7 +101,7 @@ class FinanceService
         return FinanceAccount::pluck('id')->mapWithKeys(fn ($id) => [$id => (int) round(((float) ($in[$id] ?? 0) - (float) ($out[$id] ?? 0)) * 100)]);
     }
 
-    /** Anbarlara borc: götürülmüş hissələrin dəyəri − anbar hesabına ödənilən (warehouse_id => cents) */
+    /** Depolara borc: götürülmüş hissələrin dəyəri − depo hesabına ödənilən (warehouse_id => cents) */
     public function warehouseDebts(): Collection
     {
         $owed = OrderItemAllocation::whereIn('status', OrderItemAllocation::DEBT_STATUSES)
@@ -114,9 +114,9 @@ class FinanceService
     }
 
     /**
-     * Anbara borcun günlərə bölgüsü: hər gün götürülən malın dəyəri, onun ödənilən hissəsi və ödənilməmiş qalığı
+     * Depoya borcun günlərə bölgüsü: hər gün götürülən malın dəyəri, onun ödənilən hissəsi və ödənilməmiş qalığı
      * ("2350-nin 350-si bu günə aiddir"). Gün — hissənin "Götürüldü" olduğu tarix. Sifarişə bağlanmayan ümumi ödənişlər
-     * (və anbarın qaytardığı pul) ayrıca qaytarılır: qalıqların cəmi − ümumi ödəniş = cari borc.
+     * (və deponun qaytardığı pul) ayrıca qaytarılır: qalıqların cəmi − ümumi ödəniş = cari borc.
      *
      * @return array{days: list<array{date: \Illuminate\Support\Carbon, cost: int, paid: int, left: int, parts: int}>, unlinked: int}
      */
@@ -136,7 +136,7 @@ class FinanceService
                 return ['date' => \Illuminate\Support\Carbon::parse($date), 'cost' => $cost, 'paid' => $done, 'left' => $cost - $done, 'parts' => $group->count()];
             })->sortByDesc('date')->values()->all();
 
-        // Hissəyə bağlanmayan: anbara ümumi ödəniş (+) və anbarın qaytardığı (−)
+        // Hissəyə bağlanmayan: depoya ümumi ödəniş (+) və deponun qaytardığı (−)
         $account = $this->warehouseAccount($warehouse);
         $unlinked = MoneyMovement::whereNull('order_item_allocation_id')
             ->where(fn ($q) => $q->where('to_account_id', $account->id)->orWhere('from_account_id', $account->id))->get()
@@ -182,18 +182,18 @@ class FinanceService
         }
 
         return DB::transaction(function () use ($from, $to, $cents, $kind, $attrs, $actor) {
-            // Anbara ödəniş təminat hissəsinə bağlıdırsa: həmin anbar və dəyərdən çox ödənilə bilməz
+            // Depoya ödəniş təminat hissəsinə bağlıdırsa: həmin depo və dəyərdən çox ödənilə bilməz
             if (!empty($attrs['order_item_allocation_id'])) {
                 $allocation = OrderItemAllocation::with('orderItem')->lockForUpdate()->findOrFail($attrs['order_item_allocation_id']);
                 $paid = $this->allocationPaid([$allocation->id])[$allocation->id] ?? 0;
                 if ($kind === 'warehouse_refund') {
-                    // Anbar yalnız bu hissəyə ödənilən qədər qaytara bilər (mal qaytarılıb və ya seçim ləğv olunub)
-                    $this->ensure((int) $allocation->warehouse_id === (int) $from->warehouse_id, 'Qaytarma bu anbarın təminatına aid deyil.');
+                    // Depo yalnız bu hissəyə ödənilən qədər qaytara bilər (mal qaytarılıb və ya seçim ləğv olunub)
+                    $this->ensure((int) $allocation->warehouse_id === (int) $from->warehouse_id, 'Qaytarma bu deponun təminatına aid deyil.');
                     $this->ensure(in_array($allocation->status, [OrderItemAllocation::RETURNED, OrderItemAllocation::RETURNING, OrderItemAllocation::CANCELLED], true),
-                        'Mal anbara qaytarılmayıb — pul geri alınmır.');
-                    $this->ensure($cents <= $paid, 'Bu hissə üzrə anbardan geri alınacaq '.number_format(max(0, $paid) / 100, 2).' AZN-dir.');
+                        'Mal depoya qaytarılmayıb — pul geri alınmır.');
+                    $this->ensure($cents <= $paid, 'Bu hissə üzrə depodan geri alınacaq '.number_format(max(0, $paid) / 100, 2).' AZN-dir.');
                 } else {
-                    $this->ensure($kind === 'warehouse_payment' && (int) $allocation->warehouse_id === (int) $to->warehouse_id, 'Ödəniş bu anbarın təminatına aid deyil.');
+                    $this->ensure($kind === 'warehouse_payment' && (int) $allocation->warehouse_id === (int) $to->warehouse_id, 'Ödəniş bu deponun təminatına aid deyil.');
                     $this->ensure($allocation->status !== OrderItemAllocation::CANCELLED, 'Ləğv edilmiş seçimə ödəniş edilmir.');
                     $left = (int) round($allocation->quantity * (float) $allocation->unit_cost * 100) - $paid;
                     $this->ensure($cents <= $left, 'Bu hissə üzrə qalan borc '.number_format($left / 100, 2).' AZN-dir.');

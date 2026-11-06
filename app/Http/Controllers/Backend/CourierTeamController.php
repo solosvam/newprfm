@@ -22,7 +22,7 @@ use Illuminate\View\View;
  */
 class CourierTeamController extends Controller
 {
-    /** Kuryerin işdə olan sifarişləri: toplanır / yoldadır / ünvandadır və ya anbara qaytarılacaq malı var */
+    /** Kuryerin işdə olan sifarişləri: toplanır / yoldadır / ünvandadır və ya depoya qaytarılacaq malı var */
     public const ACTIVE = ['courier_assigned', 'sent'];
 
     public function index(FinanceService $finance): View

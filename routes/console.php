@@ -14,5 +14,5 @@ Schedule::command('payments:check-birbank')->everyMinute()->withoutOverlapping()
 // Göndərilmiş SMS-lərin çatdırılma statusu (lsim hesabatı) — SMS səhifəsindəki "çatmayanlar" üçün
 Schedule::command('sms:check-delivery')->everyFiveMinutes()->withoutOverlapping();
 
-// Telegram-da cavabsız qalan anbar sorğularına xatırlatma (15 dəq sonra, sonra 30 dəq sonra; iş saatlarında)
+// Telegram-da cavabsız qalan depo sorğularına xatırlatma (15 dəq sonra, sonra 30 dəq sonra; iş saatlarında)
 Schedule::command('telegram:remind')->everyFiveMinutes()->withoutOverlapping();

@@ -24,7 +24,7 @@ class WarehousePriceList extends Model
         return $this->hasMany(WarehousePriceItem::class, 'price_list_id');
     }
 
-    /** Hər anbarın cari (sonuncu) siyahısının id-ləri */
+    /** Hər deponun cari (sonuncu) siyahısının id-ləri */
     public static function currentIds(): array
     {
         return static::query()->selectRaw('max(id) as id')->groupBy('warehouse_id')->pluck('id')->all();

@@ -134,7 +134,7 @@ class OrderItemCancellationTest extends TestCase
     {
         $order = $this->order(['payment_method_id' => 2, 'payment_status' => 'cod', 'bonus_earned' => 0]);
         $procurement = app(ProcurementService::class);
-        $wh = Warehouse::create(['name_az' => 'Anbar A']);
+        $wh = Warehouse::create(['name_az' => 'Depo A']);
         $procurement->createRequests($order, [$wh->id], [$order->items[0]->id, $order->items[1]->id], 7);
         $parts = [];
         foreach (WarehouseRequestItem::orderBy('id')->get() as $i => $ri) {
@@ -160,7 +160,7 @@ class OrderItemCancellationTest extends TestCase
         $this->assertEquals(248.75, $order->fresh()->total);          // kuryer bu məbləği alır
         $this->assertSame(1, $order->items[0]->fresh()->activeQuantity());
 
-        // Hissə bölündü: 1 götürülüb (müştəridə), 1 anbara qaytarılır
+        // Hissə bölündü: 1 götürülüb (müştəridə), 1 depoya qaytarılır
         $this->assertSame(['picked', 1], [$part->fresh()->status, (int) $part->fresh()->quantity]);
         $returning = OrderItemAllocation::where('status', 'returning')->sole();
         $this->assertSame(1, (int) $returning->quantity);
@@ -172,7 +172,7 @@ class OrderItemCancellationTest extends TestCase
         $this->assertStringContainsString('Qapıda imtina: Rose Oud ×1', $log->note);
         $this->assertStringContainsString('bəyənmədi', $log->note);
 
-        // Kuryer anbara qaytardı (təkrar klik — eyni nəticə)
+        // Kuryer depoya qaytardı (təkrar klik — eyni nəticə)
         app(ProcurementService::class)->markReturned($order, $returning->id, 9);
         app(ProcurementService::class)->markReturned($order, $returning->id, 9);
         $this->assertSame('returned', $returning->fresh()->status);
@@ -302,18 +302,18 @@ class OrderItemCancellationTest extends TestCase
     public function test_whole_order_cancel_returns_picked_goods_and_releases_reservations(): void
     {
         [$order, $parts] = $this->atDoor();
-        // İkinci məhsulun hissəsi hələ götürülməyib — anbar ayırıb
+        // İkinci məhsulun hissəsi hələ götürülməyib — depo ayırıb
         $parts[1]->update(['status' => OrderItemAllocation::RESERVED]);
 
         $result = app(OrderItemCancellationService::class)->cancelOrder($order, 'other', 'ünvanda yox idi', 9);
 
-        $this->assertSame('returning', $parts[0]->fresh()->status);   // kuryer anbara qaytarmalıdır
+        $this->assertSame('returning', $parts[0]->fresh()->status);   // kuryer depoya qaytarmalıdır
         $this->assertSame('cancelled', $parts[1]->fresh()->status);
-        $this->assertSame([$parts[1]->id], $result['notify']);         // anbara "rezerv lazım deyil"
+        $this->assertSame([$parts[1]->id], $result['notify']);         // depoya "rezerv lazım deyil"
         $this->assertTrue(collect($result['cancellations'])->every(fn ($c) => $c->refund_status === null)); // nağd — qaytarma yox
         $this->assertSame('cancelled', $this->statusCode($order));
 
-        // Kuryer ləğv edilmiş sifarişdə də malı anbara qaytara bilir
+        // Kuryer ləğv edilmiş sifarişdə də malı depoya qaytara bilir
         app(ProcurementService::class)->markReturned($order->fresh(), $parts[0]->id, 9);
         $this->assertSame('returned', $parts[0]->fresh()->status);
     }
@@ -389,7 +389,7 @@ class OrderItemCancellationTest extends TestCase
         $procurement->createRequests($order, [Warehouse::create(['name_az' => 'A'])->id], [$order->items[0]->id], 7);
         $offer = $procurement->recordOffer($order, WarehouseRequestItem::first()->id, ['available_quantity' => 2, 'unit_cost' => '50', 'source' => 'phone'], 7);
         $procurement->allocate($order, $offer->id, 1, 7);
-        // Status hələ erkən mərhələdə olsa belə (qismən seçim), anbar seçilibsə müştəri özü ləğv edə bilmir
+        // Status hələ erkən mərhələdə olsa belə (qismən seçim), depo seçilibsə müştəri özü ləğv edə bilmir
         DB::table('orders')->where('id', $order->id)->update(['order_status_id' => 12]);
         $service = app(OrderItemCancellationService::class);
 

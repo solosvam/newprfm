@@ -1,7 +1,7 @@
 {{--
-  Kuryer → sifariş (telefon üçün). Anbarlardan götürmə ("X AZN ödədim, götürdüm" / "Ödənişsiz götürdüm" / Problem) — yalnız yola çıxmazdan əvvəl,
+  Kuryer → sifariş (telefon üçün). Depolardan götürmə ("X AZN ödədim, götürdüm" / "Ödənişsiz götürdüm" / Problem) — yalnız yola çıxmazdan əvvəl,
   başqa kuryerə ötürmə, hədiyyəlik qablaşdırma, müştəri, çatdırılma (Çatdırılmaya başladım → Təhvil verdim),
-  qapıda imtina və imtina edilən məhsulun anbara qaytarılması ("Qaytardım").
+  qapıda imtina və imtina edilən məhsulun depoya qaytarılması ("Qaytardım").
 --}}
 @use('App\Models\Procurement\OrderItemAllocation', 'Part')
 @php
@@ -45,10 +45,10 @@
     @endif
 
     @if($cancelled)
-        {{-- Ləğv edilmiş sifariş: kuryerə yalnız anbara qaytarılacaq mallar lazımdır --}}
+        {{-- Ləğv edilmiş sifariş: kuryerə yalnız depoya qaytarılacaq mallar lazımdır --}}
         <div class="courier-cancelled mb-4">
             <b>Sifariş ləğv edilib.</b>
-            {{ $returning->isNotEmpty() ? 'Götürdüyünüz məhsulları aşağıdakı anbara qaytarın və "Qaytardım" basın.' : 'Sizdən heç nə tələb olunmur.' }}
+            {{ $returning->isNotEmpty() ? 'Götürdüyünüz məhsulları aşağıdakı depoya qaytarın və "Qaytardım" basın.' : 'Sizdən heç nə tələb olunmur.' }}
         </div>
     @else
         <ol class="courier-steps mb-4" aria-label="Mərhələlər">
@@ -58,11 +58,11 @@
         </ol>
     @endif
 
-    {{-- 1. Anbarlardan götürmə — yola çıxandan sonra gizlənir --}}
+    {{-- 1. Depolardan götürmə — yola çıxandan sonra gizlənir --}}
     @if($code === 'courier_assigned')
-    <h2 class="small-title">Anbarlardan götürmə</h2>
+    <h2 class="small-title">Depolardan götürmə</h2>
     @php
-        // Anbardan hər şey götürülüb və ödənilibsə (və ya pulu şirkət ödəyir) anbar məlumatı göstərilmir — yalnız "götürüldü" sətri
+        // Depodan hər şey götürülüb və ödənilibsə (və ya pulu şirkət ödəyir) depo məlumatı göstərilmir — yalnız "götürüldü" sətri
         $doneGroups = $byWarehouse->filter(fn ($rows) => $rows->every(fn ($r) => $r['a']->status === Part::PICKED
             && (!$r['a']->courier_pays || (int) round($r['a']->quantity * (float) $r['a']->unit_cost * 100) <= ($paid[$r['a']->id] ?? 0))));
         $pickedCount = $doneGroups->flatten(1)->sum(fn ($r) => $r['a']->quantity);
@@ -92,7 +92,7 @@
                     $cost = (int) round($part->quantity * (float) $part->unit_cost * 100);
                     $left = $cost - ($paid[$part->id] ?? 0);
                     $canAct = true;  // bu bölmə yalnız toplama mərhələsində görünür
-                    $canPay = $part->courier_pays; // "pul vermə" — kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" (anbara borc qalır)
+                    $canPay = $part->courier_pays; // "pul vermə" — kuryer pulla bağlı heç nə görmür, yalnız "Götürdüm" (depoya borc qalır)
                 @endphp
                 <div class="courier-part courier-part--{{ $part->status }}">
                     <div class="courier-part__top">
@@ -106,9 +106,9 @@
                         <span class="badge {{ ['picked' => 'bg-success', 'problem' => 'bg-danger'][$part->status] ?? 'bg-outline-primary' }}">{{ $part->label() }}</span>
                         @if(!$canPay)
                         @elseif($left > 0)
-                            <span>Anbara ödəniş: <b>{{ $money($left) }}</b></span>
+                            <span>Depoya ödəniş: <b>{{ $money($left) }}</b></span>
                         @else
-                            <span class="text-success">Anbara ödənilib</span>
+                            <span class="text-success">Depoya ödənilib</span>
                         @endif
                     </div>
                     @if($part->status === Part::PROBLEM)
@@ -117,7 +117,7 @@
 
                     @if(($canAct || $canPay) && $part->status !== Part::PROBLEM)
                         <div class="courier-part__actions">
-                            {{-- Götürmə: ödəniş qalıbsa iki yol — tam ödəyib götürmək (məbləğ yazılmır) və ya ödənişsiz (anbara borc qalır) --}}
+                            {{-- Götürmə: ödəniş qalıbsa iki yol — tam ödəyib götürmək (məbləğ yazılmır) və ya ödənişsiz (depoya borc qalır) --}}
                             @if($canAct && $part->status !== Part::PICKED)
                                 @if($canPay && $left > 0)
                                     <form method="POST" action="{{ route('admin.courier.pay', [$order, $part->id]) }}" data-once>@csrf<input type="hidden" name="pick" value="1">
@@ -150,7 +150,7 @@
         </div></div>
     @endforeach
 
-    {{-- Başqa kuryerə ötür (anbarlar uzaqdırsa) — heç nə götürülməyibsə --}}
+    {{-- Başqa kuryerə ötür (depolar uzaqdırsa) — heç nə götürülməyibsə --}}
     @if(!$transferBlock && $couriers->isNotEmpty())
         <details class="courier-more mb-3">
             <summary class="btn btn-outline-secondary w-100">Başqa kuryerə ötür</summary>
@@ -170,9 +170,9 @@
     @endif
     @endif
 
-    {{-- Qapıda imtina edilən məhsullar — anbara qaytarılacaq (anbar adı/ünvanı, telefon yox) --}}
+    {{-- Qapıda imtina edilən məhsullar — depoya qaytarılacaq (depo adı/ünvanı, telefon yox) --}}
     @if($returning->isNotEmpty())
-        <h2 class="small-title mt-2">Anbara qaytarılacaq</h2>
+        <h2 class="small-title mt-2">Depoya qaytarılacaq</h2>
         @foreach($returning as $rows)
             @php $w = $rows->first()['a']->warehouse; @endphp
             <div class="card mb-3 courier-wh courier-wh--return"><div class="card-body">
@@ -191,18 +191,18 @@
                             </div>
                             <div class="courier-part__qty">× {{ $part->quantity }}</div>
                         </div>
-                        @php $paidBack = $part->courier_pays ? ($paid[$part->id] ?? 0) : 0; // pulu şirkət ödəyibsə — anbar şirkətə qaytarır @endphp
+                        @php $paidBack = $part->courier_pays ? ($paid[$part->id] ?? 0) : 0; // pulu şirkət ödəyibsə — depo şirkətə qaytarır @endphp
                         <form method="POST" action="{{ route('admin.courier.returned', [$order, $part->id]) }}" data-once class="mt-2">
                             @csrf
                             @if($paidBack > 0)
-                                {{-- Bu mala anbara pul ödənilib: anbar pulu qaytardısa kuryerin hesabına geri yazılır --}}
+                                {{-- Bu mala depoya pul ödənilib: depo pulu qaytardısa kuryerin hesabına geri yazılır --}}
                                 <label class="form-check courier-refund mb-2">
                                     <input class="form-check-input" type="checkbox" name="refunded" value="1" checked>
-                                    <span class="form-check-label">Anbar <b>{{ $money($paidBack) }}</b> pulu mənə qaytardı</span>
+                                    <span class="form-check-label">Depo <b>{{ $money($paidBack) }}</b> pulu mənə qaytardı</span>
                                 </label>
                             @endif
                             <button class="btn btn-warning w-100">Qaytardım</button>
-                            @if($paidBack > 0)<div class="text-muted small mt-1">Pulu qaytarmayıbsa işarəni götürün — operator anbarla sonra hesablaşacaq.</div>@endif
+                            @if($paidBack > 0)<div class="text-muted small mt-1">Pulu qaytarmayıbsa işarəni götürün — operator depoyla sonra hesablaşacaq.</div>@endif
                         </form>
                     </div>
                 @endforeach
@@ -315,7 +315,7 @@
                                 <input type="text" name="note" maxlength="2000" class="form-control mt-1" placeholder="Qeyd (istəyə görə)">
                             </form>
                         @endforeach
-                        <div class="text-muted small">Məbləğ avtomatik azalacaq, məhsulu anbara qaytaracaqsınız.</div>
+                        <div class="text-muted small">Məbləğ avtomatik azalacaq, məhsulu depoya qaytaracaqsınız.</div>
                     </div>
                 </details>
             @endif
