@@ -616,7 +616,7 @@ class CrmController extends Controller
             'note' => ['nullable', 'required_if:reason,other', 'string', 'max:2000'],
             'customer_agreed' => ['accepted'],
             // Kredit: Ferrum-da müraciət təsdiqlənibsə ləğv edilmir — operator yoxladığını təsdiqləyir
-            'ferrum_not_approved' => [Rule::requiredIf($order->paymentMethod?->code === 'installment'), 'accepted'],
+            'ferrum_not_approved' => $order->paymentMethod?->code === 'installment' ? ['required', 'accepted'] : ['exclude'], // 'accepted' boş sahədə də işləyir — kredit deyilsə yoxlanmır
         ], [
             'reason.required' => 'Səbəbi seçin.',
             'note.required_if' => '"Digər" səbəbdə qeyd yazın.',
@@ -650,7 +650,7 @@ class CrmController extends Controller
             'note' => ['nullable', 'required_if:reason,other', 'string', 'max:2000'],
             'customer_agreed' => ['accepted'],
             // Kredit: Ferrum-dakı müraciət də ləğv olunmalıdır — operator təsdiqləyir
-            'ferrum_cancelled' => [Rule::requiredIf($order->paymentMethod?->code === 'installment'), 'accepted'],
+            'ferrum_cancelled' => $order->paymentMethod?->code === 'installment' ? ['required', 'accepted'] : ['exclude'], // 'accepted' boş sahədə də işləyir — kredit deyilsə yoxlanmır
         ], [
             'reason.required' => 'Səbəbi seçin.',
             'note.required_if' => '"Digər" səbəbdə qeyd yazın.',
