@@ -17,6 +17,8 @@ class OrderAcceptedSmsTest extends TestCase
 {
     private array $sent = [];
 
+    public static float $bonus = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,7 +33,8 @@ class OrderAcceptedSmsTest extends TestCase
             public function __construct(private array &$log) {}
             public function send(string $number, string $message): ?string { $this->log[] = [$number, $message]; return 'ok'; }
         });
-        $this->mock(BonusService::class, fn ($m) => $m->shouldReceive('pendingFor')->andReturn(7.5));
+        $this->mock(BonusService::class, fn ($m) => $m->shouldReceive('pendingFor')->andReturnUsing(fn () => OrderAcceptedSmsTest::$bonus));
+        self::$bonus = 7.5;
     }
 
     private function order(?string $mobile = '994501234567'): Order
@@ -45,6 +48,14 @@ class OrderAcceptedSmsTest extends TestCase
     {
         $this->assertTrue(app(OrderAcceptedSms::class)->send($this->order()));
         $this->assertSame([['994501234567', 'Hormetli Aysel Məmmədova, sifarishiniz PS261106000001 qebul olundu. Bonus 7.50 AZN.']], $this->sent);
+    }
+
+    public function test_bonus_sentence_dropped_when_no_bonus(): void
+    {
+        DB::table('sms_templates')->update(['template' => 'Hormetli {name}, sizin sifarishiniz qebul olundu. Qazanacaginiz bonus {bonus} AZN. Bizi secdiyiniz ucun teshekkur edirik!']);
+        self::$bonus = 0;
+        app(OrderAcceptedSms::class)->send($this->order());
+        $this->assertSame('Hormetli Aysel, sizin sifarishiniz qebul olundu. Bizi secdiyiniz ucun teshekkur edirik!', $this->sent[0][1]);
     }
 
     public function test_nothing_when_template_off_or_no_mobile(): void
