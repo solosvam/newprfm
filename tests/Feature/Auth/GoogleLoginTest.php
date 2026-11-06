@@ -124,6 +124,27 @@ class GoogleLoginTest extends TestCase
         $this->assertSame([$customer->id], self::$bonuses, 'yarımçıq qeydiyyat təsdiqləndi — bonus');
     }
 
+    public function test_missing_email_is_filled_from_google_but_existing_is_kept(): void
+    {
+        $customer = Customer::forceCreate(['name' => 'Köhnə', 'email' => null, 'mobile' => '994557654321']);
+        $this->get('/auth/google/callback?code=x');
+        $this->post('/auth/google/complete', ['mobile' => '994557654321', 'gender' => '1', 'name' => 'Yeni', 'surname' => 'Ad']);
+        $this->post('/auth/google/verify', ['otp' => $this->code()])->assertRedirect(route('home'));
+        $this->assertSame('aysel@gmail.com', $customer->fresh()->email);
+
+        // Profildən bağlama: email varsa dəyişmir, yoxdursa yazılır (başqa hesabda varsa — yox)
+        Auth::logout();
+        $me = Customer::forceCreate(['name' => 'Rəşad', 'email' => 'resad@mail.ru', 'mobile' => '994501111111']);
+        self::$profile = ['id' => 'g-222', 'email' => 'resad@gmail.com', 'email_verified' => true, 'name' => 'R', 'surname' => ''];
+        $this->actingAs($me)->get('/auth/google/callback?code=x');
+        $this->assertSame(['g-222', 'resad@mail.ru'], [$me->fresh()->google_id, $me->fresh()->email]);
+
+        $empty = Customer::forceCreate(['name' => 'Boş', 'email' => '', 'mobile' => '994502222222']);
+        self::$profile = ['id' => 'g-333', 'email' => 'aysel@gmail.com', 'email_verified' => true, 'name' => 'B', 'surname' => ''];
+        $this->actingAs($empty)->get('/auth/google/callback?code=x');
+        $this->assertSame(['g-333', ''], [$empty->fresh()->google_id, $empty->fresh()->email], 'email başqa hesabdadır — yazılmır');
+    }
+
     public function test_account_linked_to_another_google_is_not_taken_over(): void
     {
         Customer::forceCreate(['name' => 'Aysel', 'email' => 'aysel@gmail.com', 'mobile' => '994501234567', 'google_id' => 'g-999']);

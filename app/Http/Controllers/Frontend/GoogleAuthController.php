@@ -70,7 +70,7 @@ class GoogleAuthController extends Controller
             if ($owner && $owner->id !== $me->id) {
                 return redirect()->route('profile.personal')->with('error', __('auth_google_linked_to_other'));
             }
-            $me->forceFill(['google_id' => $profile['id']])->save();
+            $me->forceFill(['google_id' => $profile['id']] + $this->emailIfMissing($me, $profile))->save();
 
             return redirect()->route('profile.personal')->with('success', __('auth_google_connected'));
         }
@@ -162,7 +162,7 @@ class GoogleAuthController extends Controller
             $customer->forceFill([
                 'google_id' => $profile['id'], 'active' => true,
                 'registration_otp_hash' => null, 'registration_otp_expires_at' => null,
-            ])->save();
+            ] + $this->emailIfMissing($customer, $profile))->save();
             if ($wasInactive) { // qeydiyyatı yarımçıq qalmış hesab — indi təsdiqləndi
                 $bonus->grantRegistration($customer);
             }
@@ -246,6 +246,17 @@ class GoogleAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(route('home'));
+    }
+
+    /** Hesabda email yoxdursa (və ya düzgün deyilsə) — Google email-i yazılır (başqa hesabda yoxdursa). Olan email dəyişmir. */
+    private function emailIfMissing(Customer $customer, array $profile): array
+    {
+        if (filter_var($customer->email, FILTER_VALIDATE_EMAIL) || !$profile['email'] || !$profile['email_verified']
+            || Customer::whereRaw('lower(email) = ?', [$profile['email']])->where('id', '!=', $customer->id)->exists()) {
+            return [];
+        }
+
+        return ['email' => $profile['email']];
     }
 
     private function mask(string $mobile): string
