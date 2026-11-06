@@ -1,6 +1,3 @@
-// Tab qrupları: ayarlarda yaradılan qaydalar (ad, rəng, ünvan) — ünvanı həmin başlanğıcla olan tab o qrupa düşür.
-// Bir neçə qayda uyğundursa ən uzun ünvanlı seçilir (məs. /admin → "Admin", saytın qalanı → "Sayt").
-// Tab başqa (qaydalarda olmayan) qrupdadırsa və ya sabitlənibsə toxunulmur. Ayarlarda hamısını söndürmək olar (psAdminGroup = false).
 const TAB_GROUP_COLORS = ['grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange'];
 const DEFAULT_TAB_GROUPS = [
     { title: 'Admin', color: 'red', url: PS_SITE + '/admin' },
