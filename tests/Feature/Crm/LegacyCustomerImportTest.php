@@ -28,7 +28,7 @@ class LegacyCustomerImportTest extends TestCase
         Mail::fake();
         Schema::create('customers', function (Blueprint $t) {
             $t->id(); $t->string('name', 30); $t->string('surname', 30); $t->string('email', 50)->nullable()->unique();
-            $t->string('mobile')->unique(); $t->integer('gender'); $t->string('password')->nullable();
+            $t->string('mobile')->unique(); $t->integer('gender')->nullable(); $t->string('password')->nullable();
             $t->boolean('active')->default(false); $t->decimal('bonus_balance', 12, 2)->default(0);
             $t->rememberToken(); $t->timestamps();
         });
@@ -131,11 +131,77 @@ class LegacyCustomerImportTest extends TestCase
         foreach (['+994103227575', '0103227575', '9941032275750', "994103227575\n", '994 10 3227575'] as $phone) {
             $this->assertSame('invalid', $importer->import($this->row(1, ['telephone' => $phone]), true)['status']);
         }
-        foreach ([['sex' => 0], ['sex' => null], ['email' => 'bad-email'], ['firstname' => str_repeat('a', 31)], ['lastname' => '']] as $changes) {
+        foreach ([['sex' => 7], ['email' => 'bad-email'], ['firstname' => str_repeat('a', 31)], ['firstname' => ''], ['lastname' => str_repeat('a', 31)]] as $changes) {
             $this->assertSame('invalid', $importer->import($this->row(1, $changes), true)['status']);
         }
         $this->assertSame('created', $importer->import($this->row(1, ['email' => ' ']), true)['status']);
         $this->assertNull(Customer::first()->email);
+    }
+
+    public function test_empty_surname_and_unknown_sex_are_imported(): void
+    {
+        $importer = new LegacyCustomerImporter();
+        $this->assertSame('created', $importer->import($this->row(1, ['lastname' => '', 'sex' => 0]), true)['status']);
+        $this->assertSame('created', $importer->import($this->row(2, ['lastname' => null, 'sex' => null]), true)['status']);
+        foreach ([1, 2] as $id) {
+            $customer = Customer::where('old_customer_id', $id)->first();
+            $this->assertSame('', $customer->surname);
+            $this->assertNull($customer->gender);
+        }
+    }
+
+    public function test_fresh_reimports_legacy_customers_with_new_data(): void
+    {
+        (new LegacyCustomerImporter())->import($this->row(1, ['bonus' => '5']), true);
+        (new LegacyCustomerImporter())->import($this->row(2), true);
+        $own = Customer::create(['name' => 'Yeni', 'surname' => 'Sayt', 'mobile' => '994559999999', 'gender' => 1]);
+
+        // Köhnə bazada 1-in nömrəsi və bonusu dəyişib, 2 isə birləşdirilib (yoxdur).
+        $changed = $this->row(1, ['telephone' => '994701234567', 'bonus' => '42.00']);
+        Http::fake(['*' => Http::response($this->page([$changed]))]);
+
+        // Sınaq: heç nə silinmir, amma nəticə fresh kimi hesablanır.
+        $this->artisan('parfumshop:import-customers --fresh')->assertExitCode(0);
+        $this->assertSame(3, Customer::count());
+        $this->assertStringContainsString('"would_create":1', file_get_contents(glob(storage_path('app/private/imports/*.jsonl'))[0]));
+
+        $this->artisan('parfumshop:import-customers --fresh --apply')->assertExitCode(0);
+        $this->assertSame(2, Customer::count());
+        $customer = Customer::where('old_customer_id', 1)->first();
+        $this->assertSame('994701234567', $customer->mobile);
+        $this->assertEquals(42, $customer->bonus_balance);
+        $this->assertNull(Customer::where('old_customer_id', 2)->first());
+        $this->assertNotNull($own->fresh());
+        $this->assertSame(1, DB::table('customer_bonus_transactions')->count());
+    }
+
+    public function test_fresh_refuses_when_legacy_customers_have_activity(): void
+    {
+        (new LegacyCustomerImporter())->import($this->row(), true);
+        Customer::first()->bonusTransactions()->create(['type' => 'earn', 'amount' => 3, 'note' => 'Sifariş']);
+        Http::fake(['*' => Http::response($this->page([$this->row()]))]);
+
+        $this->artisan('parfumshop:import-customers --fresh --apply')
+            ->expectsOutputToContain('Heç nə silinmədi')
+            ->assertExitCode(1);
+        $this->assertSame(1, Customer::count());
+        Http::assertNothingSent();
+
+        DB::table('customer_bonus_transactions')->where('type', 'earn')->delete();
+        Customer::first()->update(['password' => 'secret']);
+        $this->artisan('parfumshop:import-customers --fresh --apply')->assertExitCode(1);
+        $this->assertSame(1, Customer::count());
+    }
+
+    public function test_fresh_keeps_customers_when_api_fails_and_rejects_resume(): void
+    {
+        (new LegacyCustomerImporter())->import($this->row(), true);
+        Http::fake(['*' => Http::response(['error' => 'down'], 500)]);
+        $this->artisan('parfumshop:import-customers --fresh --apply')->assertExitCode(1);
+        $this->assertSame(1, Customer::count());
+
+        $this->artisan('parfumshop:import-customers --fresh --apply --after-id=5 --snapshot-max-id=10')->assertExitCode(1);
+        $this->assertSame(1, Customer::count());
     }
 
     public function test_bonus_history_failure_rolls_back_customer(): void

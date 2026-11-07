@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Services\LegacyCustomerImporter;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 use Throwable;
@@ -16,7 +17,8 @@ class ImportLegacyCustomers extends Command
         {--apply : Müştəriləri və ilkin bonus tarixçəsini bazaya yaz}
         {--batch=200 : Bir API sorğusunda 1-1000 müştəri}
         {--after-id=0 : Bu köhnə customer_id-dən sonra davam et}
-        {--snapshot-max-id= : Davametmə zamanı əvvəlki snapshot həddi}';
+        {--snapshot-max-id= : Davametmə zamanı əvvəlki snapshot həddi}
+        {--fresh : Əvvəl köçürülmüş köhnə müştəriləri (source=legacy) silib hamısını yenidən köçür}';
 
     protected $description = 'Köhnə ParfumShop API-sindən müştəriləri təkrarsız import edir';
 
@@ -39,11 +41,32 @@ class ImportLegacyCustomers extends Command
             return self::FAILURE;
         }
         $apply = (bool) $this->option('apply');
+        $fresh = (bool) $this->option('fresh');
+        if ($fresh && $after > 0) {
+            // Yarımçıq fresh importu --after-id ilə davam etdirəndə --fresh verilmir — yoxsa yeni köçürülənlər də silinər.
+            $this->error('--fresh yalnız əvvəldən işləyir. Yarımçıq importu --fresh olmadan --after-id ilə davam etdirin.');
+            return self::FAILURE;
+        }
         $lock = Cache::lock('legacy-customer-import', 86400);
         if (!$lock->get()) {
             $this->error('Başqa müştəri importu işləyir.');
             return self::FAILURE;
         }
+
+        if ($fresh) {
+            $legacyCount = DB::table('customers')->where('source', 'legacy')->count();
+            $blockers = $importer->freshBlockers();
+            $this->info('Silinəcək köhnə müştəri: '.$legacyCount);
+            $this->table(['Yeni saytdakı iz', 'Say'], collect($blockers)->map(fn ($n, $name) => [$name, $n])->values()->all());
+            if (array_sum($blockers) > 0) {
+                $lock->release();
+                $this->error('Köhnə müştərilərin yeni saytda izləri var — silinsə bu məlumatlar itər. Heç nə silinmədi.');
+                return self::FAILURE;
+            }
+            // Sınaqda silinmir; yoxlamalar köhnə müştərilər artıq yoxmuş kimi aparılır.
+            $importer->ignoreLegacy();
+        }
+        $deleted = false;
 
         $stream = null;
         $path = null;
@@ -70,11 +93,19 @@ class ImportLegacyCustomers extends Command
                 $line = json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n";
                 if (fwrite($stream, $line) !== strlen($line)) throw new RuntimeException('Hesabat faylına yazmaq alınmadı.');
             };
-            $write(['event' => 'start', 'mode' => $apply ? 'apply' : 'dry-run', 'after_id' => $after, 'snapshot_max_id' => $snapshot]);
+            $write(['event' => 'start', 'mode' => $apply ? 'apply' : 'dry-run', 'fresh' => $fresh, 'after_id' => $after, 'snapshot_max_id' => $snapshot]);
             $this->info($apply ? 'Real import başlayır.' : 'Sınaq rejimi: müştəri və bonus məlumatları bazaya yazılmır.');
             do {
                 if ($stopped) break;
                 $page = $importer->page($after, $batch, $snapshot);
+                // Köhnə müştərilər yalnız API-dən ilk səhifə düzgün gələndən sonra silinir —
+                // API işləmirsə, mövcud müştərilər yerində qalır.
+                if ($fresh && $apply && !$deleted) {
+                    $removed = $importer->deleteLegacy();
+                    $deleted = true;
+                    $write(['event' => 'legacy_deleted', 'count' => $removed]);
+                    $this->warn('Əvvəl köçürülmüş '.$removed.' köhnə müştəri silindi.');
+                }
                 $snapshot = $page['pagination']['snapshot_max_id'];
                 foreach ($page['customers'] as $row) {
                     if ($stopped) break 2;

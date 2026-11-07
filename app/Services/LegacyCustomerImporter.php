@@ -5,16 +5,36 @@ namespace App\Services;
 use App\Models\Customer\Customer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;
 use RuntimeException;
 
 class LegacyCustomerImporter
 {
+    public const OPENING_NOTE = 'Köhnə sistemdən köçürülən bonus';
+
     // Also track dry-run records so duplicates across API pages behave like a real import.
     private array $seenIds = [];
     private array $seenPhones = [];
     private array $seenEmails = [];
+
+    /**
+     * --fresh sınaq rejimi: köhnə müştərilər hələ silinməyib, amma silinmiş kimi yoxlanılır —
+     * belə ki, sınaq real fresh importun nəticəsini göstərsin.
+     */
+    private bool $ignoreLegacy = false;
+
+    public function ignoreLegacy(bool $ignore = true): static
+    {
+        $this->ignoreLegacy = $ignore;
+        return $this;
+    }
+
+    private function customers()
+    {
+        return Customer::query()->when($this->ignoreLegacy, fn ($q) => $q->where(fn ($w) => $w->where('source', '<>', 'legacy')->orWhereNull('source')));
+    }
 
     public function page(int $after, int $limit, ?int $snapshot): array
     {
@@ -80,7 +100,7 @@ class LegacyCustomerImporter
         if (is_int($id) && $id > 0 && isset($this->seenIds[$id])) {
             return ['status' => 'already_imported', 'old_customer_id' => $id];
         }
-        if (is_int($id) && $id > 0 && ($existing = Customer::where('old_customer_id', $id)->first())) {
+        if (is_int($id) && $id > 0 && ($existing = $this->customers()->where('old_customer_id', $id)->first())) {
             if ($existing->created_at?->format('Y-m-d H:i:s') !== $date) {
                 if ($apply) {
                     // Query builder updates only this column; Eloquent would also touch updated_at.
@@ -94,19 +114,21 @@ class LegacyCustomerImporter
         $data = [
             'old_customer_id' => $id,
             'name' => is_string($row['firstname'] ?? null) ? trim($row['firstname']) : null,
-            'surname' => is_string($row['lastname'] ?? null) ? trim($row['lastname']) : null,
+            // Soyadı boş olan köhnə müştərilər də köçürülür; customers.surname NOT NULL olduğu üçün boş sətir yazılır.
+            'surname' => is_string($row['lastname'] ?? null) ? trim($row['lastname']) : ($row['lastname'] ?? null),
             'email' => is_string($row['email'] ?? null) ? (trim($row['email']) ?: null) : ($row['email'] ?? null),
             'mobile' => $row['telephone'] ?? null,
+            // Köhnə bazada cins 0 (və ya boş) ola bilər — belə müştəri köçürülür, gender NULL qalır.
             'sex' => $row['sex'] ?? null,
             'bonus' => $row['bonus'] ?? null,
         ];
         $validator = Validator::make($data, [
             'old_customer_id' => ['required', 'integer', 'min:1'],
             'name' => ['required', 'string', 'max:30'],
-            'surname' => ['required', 'string', 'max:30'],
+            'surname' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'string', 'email', 'max:50'],
             'mobile' => ['required', 'string', 'regex:/^994[0-9]{9}$/D'],
-            'sex' => ['required', 'integer', 'in:1,2'],
+            'sex' => ['nullable', 'integer', 'in:0,1,2'],
             'bonus' => ['required', 'string', 'regex:/^-?[0-9]{1,10}(?:\.[0-9]{1,6})?$/D'],
         ]);
         if ($validator->fails()) {
@@ -120,19 +142,19 @@ class LegacyCustomerImporter
         $emailKey = $data['email'] === null ? null : mb_strtolower($data['email']);
 
         $result = DB::transaction(function () use ($data, $apply, $id, $cents, $emailKey, $date) {
-            if (Customer::where('old_customer_id', $id)->exists()) {
+            if ($this->customers()->where('old_customer_id', $id)->exists()) {
                 return ['status' => 'already_imported', 'old_customer_id' => $id];
             }
-            if (isset($this->seenPhones[$data['mobile']]) || Customer::where('mobile', $data['mobile'])->exists()) {
+            if (isset($this->seenPhones[$data['mobile']]) || $this->customers()->where('mobile', $data['mobile'])->exists()) {
                 return ['status' => 'conflict', 'old_customer_id' => $id, 'reason' => 'Mobil nömrə artıq mövcuddur.'];
             }
-            if ($emailKey !== null && (isset($this->seenEmails[$emailKey]) || Customer::whereRaw('LOWER(email) = ?', [$emailKey])->exists())) {
+            if ($emailKey !== null && (isset($this->seenEmails[$emailKey]) || $this->customers()->whereRaw('LOWER(email) = ?', [$emailKey])->exists())) {
                 return ['status' => 'conflict', 'old_customer_id' => $id, 'reason' => 'E-poçt artıq mövcuddur.'];
             }
             if ($apply) {
                 $customer = new Customer([
-                    'old_customer_id' => $id, 'name' => $data['name'], 'surname' => $data['surname'],
-                    'email' => $data['email'], 'mobile' => $data['mobile'], 'gender' => (int) $data['sex'] === 1 ? 1 : 0,
+                    'old_customer_id' => $id, 'name' => $data['name'], 'surname' => $data['surname'] ?? '',
+                    'email' => $data['email'], 'mobile' => $data['mobile'], 'gender' => self::gender($data['sex']),
                     'password' => null, 'active' => true, 'bonus_balance' => self::decimal($cents), 'source' => 'legacy',
                 ]);
                 $customer->created_at = $date;
@@ -140,7 +162,7 @@ class LegacyCustomerImporter
                 if ($cents > 0) {
                     $customer->bonusTransactions()->create([
                         'type' => 'adjustment', 'amount' => self::decimal($cents),
-                        'note' => 'Köhnə sistemdən köçürülən bonus',
+                        'note' => self::OPENING_NOTE,
                     ]);
                 }
             }
@@ -153,6 +175,60 @@ class LegacyCustomerImporter
         }
 
         return $result;
+    }
+
+    /** Köhnə sex: 1 — kişi (gender 1), 2 — qadın (gender 0), 0/boş — məlum deyil (NULL). */
+    private static function gender(mixed $sex): ?int
+    {
+        return match ((int) $sex) { 1 => 1, 2 => 0, default => null };
+    }
+
+    /**
+     * --fresh üçün: əvvəl köçürülmüş köhnə müştərilərin (source = legacy) yeni saytdakı izləri.
+     * Silmə yalnız hamısı 0 olduqda mümkündür — əks halda sifariş, ödəniş və ya müştərinin
+     * yeni saytda etdiyi dəyişiklik itər.
+     *
+     * @return array<string, int>
+     */
+    public function freshBlockers(): array
+    {
+        $legacy = fn () => DB::table('customers')->where('source', 'legacy')->select('id');
+        $count = function (string $table, string $column = 'customer_id', ?callable $extra = null) use ($legacy): ?int {
+            if (!Schema::hasTable($table)) return null;
+            $query = DB::table($table)->whereIn($column, $legacy());
+            if ($extra) $extra($query);
+            return $query->count();
+        };
+        $blockers = [
+            'Sifariş' => $count('orders'),
+            'Ödəniş' => $count('payments'),
+            'Kredit müraciəti' => $count('credit_applications'),
+            'Kredit profili' => $count('customer_credit_profiles'),
+            'Ünvan' => $count('customer_addresses'),
+            'Səbət' => $count('customer_cart_items'),
+            'Səbət importu' => $count('customer_cart_imports'),
+            'Seçilmiş məhsul' => $count('product_favorites'),
+            'Qiymət bildirişi' => $count('price_alerts'),
+            'Saxlanmış kart' => $count('payment_saved_cards'),
+            'Rəy' => $count('product_reviews'),
+            'Dəvət (dəvət edən)' => $count('customer_referrals', 'referrer_id'),
+            'Dəvət (dəvət olunan)' => $count('customer_referrals', 'invitee_id'),
+            // Köçürmənin öz açılış qeydi sayılmır; yeni saytda qazanılan/xərclənən bonus sayılır.
+            'Yeni bonus hərəkəti' => $count('customer_bonus_transactions', 'customer_id', fn ($q) => $q
+                ->where(fn ($w) => $w->where('type', '<>', 'adjustment')->orWhere('note', '<>', self::OPENING_NOTE)->orWhereNull('note'))),
+            'Parol təyin edib' => DB::table('customers')->where('source', 'legacy')->whereNotNull('password')->count(),
+        ];
+
+        return array_filter($blockers, fn ($value) => $value !== null);
+    }
+
+    /** Əvvəl köçürülmüş bütün köhnə müştəriləri (və cascade ilə açılış bonus qeydlərini) silir. */
+    public function deleteLegacy(): int
+    {
+        return DB::transaction(function () {
+            DB::table('customer_bonus_transactions')->whereIn('customer_id', DB::table('customers')->where('source', 'legacy')->select('id'))->delete();
+            return DB::table('customers')->where('source', 'legacy')->delete();
+        });
     }
 
     private function bonusCents(string $value): int
