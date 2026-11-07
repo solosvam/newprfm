@@ -19,8 +19,9 @@
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('title') · Kuryer</title>
     <link rel="manifest" href="{{ asset('courier-app/manifest.webmanifest') }}">
-    <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('favicon/favicon-96x96.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('pwa/apple-touch-icon.png') }}">
+    {{-- Kuryerin öz ikonu: loqolu hədiyyə çantası (public/courier-app/icons, mənbə — icon.svg / icon-maskable.svg) --}}
+    <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('courier-app/icons/favicon-96.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('courier-app/icons/apple-touch-icon.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,7 +32,7 @@
 <body data-sw="{{ route('kuryer.sw') }}" @if(!empty($refresh)) data-refresh @endif>
     {{-- Quraşdırma ekranı: telefonda brauzerdə açılanda yalnız bu görünür --}}
     <section class="gate" aria-labelledby="gateTitle">
-        <img class="gate__logo" src="{{ asset('pwa/icon-192.png') }}" alt="" width="88" height="88">
+        <img class="gate__logo" src="{{ asset('courier-app/icons/icon-192.png') }}" alt="" width="88" height="88">
         <h1 class="gate__title" id="gateTitle">Kuryer tətbiqini quraşdırın</h1>
         <p class="gate__text">Sifarişlərlə işləmək üçün tətbiqi telefonun ana ekranına əlavə edin və ikondan açın.</p>
 

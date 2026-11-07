@@ -1,9 +1,9 @@
 // Kuryer tətbiqinin service worker-i (/kuryer/sw.js, əhatəsi /kuryer — CourierAppController::serviceWorker).
 // Səhifələr həmişə şəbəkədən (məlumat təzə olmalıdır, keşə yazılmır); internet yoxdursa — "oflayn" səhifəsi.
 // Tətbiqin CSS / JS / ikonları — keşdən dərhal, arxa planda yenilənir.
-const VERSION = 'kuryer-v1';
+const VERSION = 'kuryer-v2';
 const OFFLINE = '/courier-app/offline.html';
-const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/pwa/icon-192.png'];
+const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
 
 self.addEventListener('install', event => {
     event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
@@ -25,7 +25,7 @@ self.addEventListener('fetch', event => {
         event.respondWith(fetch(request).catch(() => caches.match(OFFLINE)));
         return;
     }
-    if (url.pathname.startsWith('/courier-app/') || url.pathname.startsWith('/pwa/')) {
+    if (url.pathname.startsWith('/courier-app/')) {
         event.respondWith(caches.open(VERSION).then(cache => cache.match(request).then(cached => {
             const fresh = fetch(request).then(response => {
                 if (response.ok) cache.put(request, response.clone());
