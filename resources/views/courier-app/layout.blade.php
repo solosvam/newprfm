@@ -6,6 +6,7 @@
   .gate ekranı göstərilir (app.css — display-mode, app.js — quraşdırma düyməsi). Kompüterdə məhdudiyyət yoxdur.
   Quraşdırılmış tətbiqdə (telefonda) məkan icazəsi verilməyənə qədər .geo-gate göstərilir; icazədən sonra yer
   hər açılışda serverə göndərilir (app.js, body.geo-check → geo-need / geo-ok).
+  Splash: tətbiq açılanda bir dəfə (ps_k_splash sessiya cookie-si yoxdursa) — app.js qısa müddətdən sonra gizlədir.
 --}}
 @php
     $viewer = auth('admin')->user();
@@ -35,6 +36,13 @@
 </head>
 <body class="geo-check" data-sw="{{ route('kuryer.sw') }}" data-geo-url="{{ route('kuryer.location') }}" @if(!empty($refresh)) data-refresh @endif
       @if($pushAppId) data-push-app="{{ $pushAppId }}" data-push-user="user-{{ $viewer->id }}" @endif>
+    @unless(request()->cookie('ps_k_splash'))
+        <div class="splash" data-splash aria-hidden="true">
+            <img class="splash__icon" src="{{ asset('courier-app/icons/icon-192.png') }}" alt="" width="96" height="96">
+            <div class="splash__name">PS Kuryer</div>
+        </div>
+    @endunless
+
     {{-- Quraşdırma ekranı: telefonda brauzerdə açılanda yalnız bu görünür --}}
     <section class="gate" aria-labelledby="gateTitle">
         <img class="gate__logo" src="{{ asset('courier-app/icons/icon-192.png') }}" alt="" width="88" height="88">

@@ -338,6 +338,19 @@ button.thumb { cursor: zoom-in; }
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
 .pager__info { color: var(--muted); font-size: 14px; }
 
+/* ---------- Splash (tətbiq açılanda bir dəfə, app.js gizlədir) ---------- */
+.splash {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    background: var(--brand); color: #fff;
+    transition: opacity .35s ease, visibility .35s ease;
+}
+.splash__icon { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); animation: splash-in .5s ease-out both; }
+.splash__name { font-size: 22px; font-weight: 750; letter-spacing: .02em; animation: splash-in .5s .08s ease-out both; }
+.splash.is-hidden { opacity: 0; visibility: hidden; }
+@keyframes splash-in { from { opacity: 0; transform: translateY(8px) scale(.94); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .splash__icon, .splash__name { animation: none; } }
+
 /* ---------- Quraşdırma ekranı ----------
  * Telefonda / planşetdə (toxunma ekranı) brauzerdə açılanda — yalnız bu ekran; quraşdırılmış tətbiqdə (standalone)
  * və kompüterdə (siçan) görünmür. CSS ilə: səhifə bir anlıq da açıq görünmür. */

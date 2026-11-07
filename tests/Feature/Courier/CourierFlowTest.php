@@ -466,6 +466,8 @@ class CourierFlowTest extends TestCase
         $this->assertStringNotContainsString('backend/', $home);
         $this->assertStringContainsString(route('kuryer.order', $order), $home);
         $this->assertStringContainsString('class="gate"', $home); // telefonda brauzerdə — quraşdırma ekranı (app.css)
+        $this->assertStringContainsString('data-splash', $home); // ilk açılış — splash
+        $this->assertStringNotContainsString('data-splash', $this->withUnencryptedCookie('ps_k_splash', '1')->get(route('kuryer.home'))->getContent());
         $this->assertMatchesRegularExpression('/Aktiv<\/div>\s*<div class="stat__value accent">1</', $home);
 
         $page = $this->get(route('kuryer.order', $order))->assertOk()->getContent();

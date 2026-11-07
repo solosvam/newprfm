@@ -3,6 +3,20 @@
 (function () {
     'use strict';
 
+    // Splash: bu sessiyada artıq göstərildi (cookie — server növbəti səhifələrdə çəkmir); ən azı 0.7 s, səhifə yüklənəndə yox olur
+    const splash = document.querySelector('[data-splash]');
+    if (splash) {
+        document.cookie = 'ps_k_splash=1; path=/kuryer; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+        const hide = () => {
+            if (splash.classList.contains('is-hidden')) return;
+            splash.classList.add('is-hidden');
+            setTimeout(() => splash.remove(), 400);
+        };
+        const later = () => setTimeout(hide, Math.max(0, 700 - performance.now()));
+        if (document.readyState === 'complete') later(); else window.addEventListener('load', later);
+        setTimeout(hide, 2500); // yüklənmə uzansa belə
+    }
+
     // iPhone-da :active (basılma hissi) yalnız səhifədə toxunuş dinləyicisi olanda işləyir
     document.addEventListener('touchstart', () => {}, { passive: true });
 
