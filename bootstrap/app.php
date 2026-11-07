@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Kuryer tətbiqinin splash ekranı göstərildi (JS qoyur, server oxuyur — şifrələnmir)
         $middleware->encryptCookies(except: ['ps_k_splash']);
         // Telegram webhook-u xaricdən gəlir — CSRF tokeni yoxdur (yoxlama gizli başlıqladır)
-        $middleware->validateCsrfTokens(except: ['telegram/webhook']);
+        $middleware->validateCsrfTokens(except: ['telegram/webhook', 'kuryer/sw-debug']); // sw-debug — MÜVƏQQƏTİ diaqnostika
         // Locale needs the session started by the web middleware group.
         $middleware->web(append: [setLangMiddleware::class, \App\Http\Middleware\LegacyOpencartUrls::class]);
         // Redirect authenticated users away from the login page for their own guard.

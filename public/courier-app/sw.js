@@ -3,7 +3,7 @@
 // Tətbiqin CSS / JS / ikonları — keşdən dərhal, arxa planda yenilənir.
 // Push bildirişləri (OneSignal) də bu service worker-dədir — tətbiqdə bir service worker (app.js, serviceWorkerPath).
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-const VERSION = 'kuryer-v11';
+const VERSION = 'kuryer-v12';
 const OFFLINE = '/courier-app/offline.html';
 const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
 
@@ -32,12 +32,22 @@ function applyBadge(count) {
     if (!self.navigator || !('setAppBadge' in self.navigator)) return Promise.resolve();
     return (count ? self.navigator.setAppBadge(count) : self.navigator.clearAppBadge()).catch(() => {});
 }
+// MÜVƏQQƏTİ diaqnostika (routes/courier.php — sw-debug)
+function debug(info) {
+    return fetch('/kuryer/sw-debug', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(info) }).catch(() => {});
+}
 self.addEventListener('push', event => {
     const count = pushBadge(event);
+    let raw = null;
+    try { raw = event.data ? event.data.text() : null; } catch (e) { raw = 'unreadable: ' + e; }
+    const hasApi = !!(self.navigator && 'setAppBadge' in self.navigator);
     if (count !== null && !Number.isNaN(count)) {
-        event.waitUntil(applyBadge(count));
+        event.waitUntil(debug({ step: 'push', hasApi, count, raw: raw && raw.slice(0, 900) })
+            .then(() => (hasApi ? self.navigator.setAppBadge(count).then(() => 'ok', e => 'error: ' + e) : 'no-api'))
+            .then(result => debug({ step: 'badge', result })));
         return;
     }
+    event.waitUntil(debug({ step: 'push-no-count', hasApi, raw: raw && raw.slice(0, 900) }));
     event.waitUntil(fetch('/kuryer/badge', { credentials: 'include', headers: { 'Accept': 'application/json' } })
         .then(response => (response.ok ? response.json() : null))
         .then(data => (data ? applyBadge(data.unread) : undefined))
