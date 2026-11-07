@@ -124,7 +124,7 @@
         window.addEventListener('appinstalled', () => {
             installButton.hidden = true;
             otherSteps.hidden = true;
-            gate.querySelector('.gate__text').textContent = 'Tətbiq quraşdırıldı. İndi ana ekrandakı Kuryer ikonundan açın.';
+            gate.querySelector('.gate__text').textContent = 'Tətbiq quraşdırıldı. İndi ana ekrandakı PS Kuryer ikonundan açın.';
         });
     }
 

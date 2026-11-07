@@ -17,7 +17,7 @@
     <meta name="theme-color" content="#5b2a86">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex, nofollow">
-    <title>@yield('title') · Kuryer</title>
+    <title>@yield('title') · PS Kuryer</title>
     <link rel="manifest" href="{{ asset('courier-app/manifest.webmanifest') }}">
     {{-- Kuryerin öz ikonu: loqolu hədiyyə çantası (public/courier-app/icons, mənbə — icon.svg / icon-maskable.svg) --}}
     <link rel="icon" type="image/png" sizes="96x96" href="{{ asset('courier-app/icons/favicon-96.png') }}">
@@ -25,7 +25,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Kuryer">
+    <meta name="apple-mobile-web-app-title" content="PS Kuryer">
     <link rel="stylesheet" href="{{ asset_v('courier-app/app.css') }}">
     <script src="{{ asset_v('courier-app/app.js') }}" defer></script>
 </head>
@@ -33,7 +33,7 @@
     {{-- Quraşdırma ekranı: telefonda brauzerdə açılanda yalnız bu görünür --}}
     <section class="gate" aria-labelledby="gateTitle">
         <img class="gate__logo" src="{{ asset('courier-app/icons/icon-192.png') }}" alt="" width="88" height="88">
-        <h1 class="gate__title" id="gateTitle">Kuryer tətbiqini quraşdırın</h1>
+        <h1 class="gate__title" id="gateTitle">PS Kuryer tətbiqini quraşdırın</h1>
         <p class="gate__text">Sifarişlərlə işləmək üçün tətbiqi telefonun ana ekranına əlavə edin və ikondan açın.</p>
 
         {{-- Android (Chrome): brauzer quraşdırmağa icazə verəndə düymə görünür --}}
@@ -43,17 +43,17 @@
         <ol class="gate__steps" data-gate-ios hidden>
             <li><span class="gate__num">1</span><span>Safari-nin aşağısında <b>Paylaş</b> düyməsinə basın @include('courier-app._icon', ['name' => 'share'])</span></li>
             <li><span class="gate__num">2</span><span>Siyahıda <b>“Ana ekrana əlavə et”</b> seçin @include('courier-app._icon', ['name' => 'plus'])</span></li>
-            <li><span class="gate__num">3</span><span><b>Əlavə et</b> basın, sonra ana ekranda <b>Kuryer</b> ikonundan açın</span></li>
+            <li><span class="gate__num">3</span><span><b>Əlavə et</b> basın, sonra ana ekranda <b>PS Kuryer</b> ikonundan açın</span></li>
         </ol>
 
         {{-- Digər hallar (düymə gəlməyibsə) --}}
         <ol class="gate__steps" data-gate-other>
             <li><span class="gate__num">1</span><span>Brauzerin menyusunu (<b>⋮</b>) açın</span></li>
             <li><span class="gate__num">2</span><span><b>“Tətbiqi quraşdır”</b> və ya <b>“Ana ekrana əlavə et”</b> seçin</span></li>
-            <li><span class="gate__num">3</span><span>Ana ekranda <b>Kuryer</b> ikonundan açın</span></li>
+            <li><span class="gate__num">3</span><span>Ana ekranda <b>PS Kuryer</b> ikonundan açın</span></li>
         </ol>
 
-        <p class="gate__hint">Artıq quraşdırmısınızsa — ana ekrandakı <b>Kuryer</b> ikonundan açın. Telegram-dan açılıbsa, linki Chrome-da açın.</p>
+        <p class="gate__hint">Artıq quraşdırmısınızsa — ana ekrandakı <b>PS Kuryer</b> ikonundan açın. Telegram-dan açılıbsa, linki Chrome-da açın.</p>
     </section>
 
     <header class="bar">

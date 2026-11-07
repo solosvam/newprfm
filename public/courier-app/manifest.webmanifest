@@ -1,7 +1,7 @@
 {
     "id": "/kuryer",
-    "name": "ParfumShop Kuryer",
-    "short_name": "Kuryer",
+    "name": "PS Kuryer",
+    "short_name": "PS Kuryer",
     "description": "Kuryerin sifarişləri, depolardan götürmə və çatdırılma",
     "lang": "az",
     "start_url": "/kuryer",
