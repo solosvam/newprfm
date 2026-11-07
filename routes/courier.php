@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('kuryer')->name('kuryer.')->group(function () {
     // Service worker /kuryer/ altında verilir ki, əhatəsi (scope) bütün tətbiq olsun
     Route::get('/sw.js', [CourierAppController::class, 'serviceWorker'])->name('sw');
+
     Route::middleware(['auth:admin', \App\Http\Middleware\CourierOnly::class, 'throttle:60,1'])->group(function () {
         Route::get('/', [CourierAppController::class, 'home'])->name('home');
         Route::get('/hesab', [CourierAppController::class, 'account'])->name('account');

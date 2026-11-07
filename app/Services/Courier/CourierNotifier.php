@@ -59,9 +59,7 @@ class CourierNotifier
             'url' => $url, 'created_at' => now(),
         ]);
         // Push-a basanda bildiriş oxunmuş olsun — bildirişin öz linki ilə
-        // badge — oxunmamışların sayı: service worker tətbiqin ikonuna push-dan yazır (serverə sorğusuz)
-        $this->push->toUsers([$courier->id], $notification->title, $notification->body ?? 'Açın', route('kuryer.notifications.open', $notification),
-            ['badge' => CourierNotification::unreadCount($courier->id)]);
+        $this->push->toUsers([$courier->id], $notification->title, $notification->body ?? 'Açın', route('kuryer.notifications.open', $notification));
 
         return $notification;
     }

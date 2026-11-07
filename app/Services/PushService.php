@@ -29,17 +29,13 @@ class PushService
         return $this->send('customer-', $customerIds, $title, $message, $url);
     }
 
-    /**
-     * Əməkdaşlara (users.id) — kuryer tətbiqində icazə veriblərsə.
-     * $data — push-a əlavə məlumat (OneSignal "data"; kuryer tətbiqinin service worker-i oxuyur, məs. badge sayı).
-     * @param int[] $userIds
-     */
-    public function toUsers(array $userIds, string $title, string $message, ?string $url = null, array $data = []): bool
+    /** Əməkdaşlara (users.id) — kuryer tətbiqində icazə veriblərsə. @param int[] $userIds */
+    public function toUsers(array $userIds, string $title, string $message, ?string $url = null): bool
     {
-        return $this->send('user-', $userIds, $title, $message, $url, $data);
+        return $this->send('user-', $userIds, $title, $message, $url);
     }
 
-    private function send(string $prefix, array $ids, string $title, string $message, ?string $url, array $data = []): bool
+    private function send(string $prefix, array $ids, string $title, string $message, ?string $url): bool
     {
         $ids = array_values(array_unique(array_map('intval', $ids)));
         if (!$ids) {
@@ -61,7 +57,6 @@ class PushService
                     'headings' => ['en' => $title, 'az' => $title],
                     'contents' => ['en' => $message, 'az' => $message],
                     'url' => $url,
-                    'data' => $data ?: null,
                 ]));
             if (!$response->successful()) {
                 Log::error('OneSignal push failed', ['status' => $response->status(), 'body' => mb_substr($response->body(), 0, 500)]);
