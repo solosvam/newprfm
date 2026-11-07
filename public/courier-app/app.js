@@ -65,6 +65,40 @@
         });
     }
 
+    // Quraşdırma ekranı (.gate, yalnız telefonda brauzerdə görünür — app.css):
+    // Android (Chrome) — "Quraşdır" düyməsi brauzerin quraşdırma pəncərəsini açır; iPhone — Safari addımları
+    const gate = document.querySelector('.gate');
+    if (gate) {
+        const installButton = gate.querySelector('[data-install]');
+        const iosSteps = gate.querySelector('[data-gate-ios]');
+        const otherSteps = gate.querySelector('[data-gate-other]');
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isIos) {
+            iosSteps.hidden = false;
+            otherSteps.hidden = true;
+        }
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', event => {
+            event.preventDefault();
+            deferredPrompt = event;
+            installButton.hidden = false;
+            otherSteps.hidden = true;
+        });
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice.catch(() => null);
+            deferredPrompt = null;
+            installButton.hidden = true;
+        });
+        // Quraşdırıldı: tətbiqi ikondan açmaq qalır
+        window.addEventListener('appinstalled', () => {
+            installButton.hidden = true;
+            otherSteps.hidden = true;
+            gate.querySelector('.gate__text').textContent = 'Tətbiq quraşdırıldı. İndi ana ekrandakı Kuryer ikonundan açın.';
+        });
+    }
+
     // Service worker: /kuryer/sw.js, əhatəsi /kuryer (server Service-Worker-Allowed başlığı ilə icazə verir)
     const sw = document.body.dataset.sw;
     if (sw && 'serviceWorker' in navigator) {

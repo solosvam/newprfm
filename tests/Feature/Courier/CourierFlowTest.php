@@ -405,6 +405,7 @@ class CourierFlowTest extends TestCase
         $this->assertStringContainsString('courier-app/manifest.webmanifest', $home);
         $this->assertStringNotContainsString('backend/', $home);
         $this->assertStringContainsString(route('kuryer.order', $order), $home);
+        $this->assertStringContainsString('class="gate"', $home); // telefonda brauzerdə — quraşdırma ekranı (app.css)
         $this->assertMatchesRegularExpression('/Aktiv<\/div>\s*<div class="stat__value accent">1</', $home);
 
         $page = $this->get(route('kuryer.order', $order))->assertOk()->getContent();

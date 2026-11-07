@@ -290,6 +290,31 @@ button.thumb { cursor: zoom-in; }
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
 .pager__info { color: var(--muted); font-size: 14px; }
 
+/* ---------- Quraşdırma ekranı ----------
+ * Telefonda / planşetdə (toxunma ekranı) brauzerdə açılanda — yalnız bu ekran; quraşdırılmış tətbiqdə (standalone)
+ * və kompüterdə (siçan) görünmür. CSS ilə: səhifə bir anlıq da açıq görünmür. */
+.gate { display: none; }
+@media (display-mode: browser) and (pointer: coarse) {
+    .bar, .page, .tabs { display: none !important; }
+    .gate {
+        display: flex; flex-direction: column; align-items: center; gap: 14px;
+        min-height: 100vh; min-height: 100dvh;
+        padding: calc(40px + var(--safe-top)) 22px calc(28px + var(--safe-bottom));
+        background: linear-gradient(180deg, var(--brand-soft), var(--bg) 45%);
+        text-align: center;
+    }
+}
+.gate__logo { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 6px 20px rgba(91, 42, 134, .25); }
+.gate__title { font-size: 23px; font-weight: 750; }
+.gate__text { color: var(--muted); max-width: 340px; }
+.gate .btn { max-width: 360px; }
+.gate__steps { display: grid; gap: 10px; width: 100%; max-width: 360px; margin: 4px 0 0; padding: 0; list-style: none; text-align: left; }
+.gate__steps[hidden], .gate [hidden] { display: none; }
+.gate__steps li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--card); box-shadow: 0 1px 2px rgba(29, 23, 36, .06); }
+.gate__steps .icon { vertical-align: -5px; color: var(--brand-2); }
+.gate__num { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--brand-2); color: #fff; font-weight: 700; font-size: 14px; }
+.gate__hint { max-width: 340px; margin-top: auto; color: var(--muted); font-size: 13px; }
+
 /* Böyük ekranda (planşet) — mərkəzdə dar sütun; menyu də */
 @media (min-width: 680px) {
     .tabs { left: 50%; right: auto; width: 640px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; border-radius: 16px 16px 0 0; }
