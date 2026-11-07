@@ -3,6 +3,33 @@
 (function () {
     'use strict';
 
+    // iPhone-da :active (basılma hissi) yalnız səhifədə toxunuş dinləyicisi olanda işləyir
+    document.addEventListener('touchstart', () => {}, { passive: true });
+
+    // Aşağı menyu: toxunan anda düymə seçilmiş görünür və növbəti səhifə əvvəlcədən yüklənməyə başlayır
+    const prefetched = new Set();
+    document.addEventListener('pointerdown', event => {
+        const tab = event.target.closest('.tabs__item');
+        if (!tab) return;
+        tab.classList.add('is-pressed');
+        if (tab.href && !prefetched.has(tab.href) && !tab.classList.contains('is-active')) {
+            prefetched.add(tab.href);
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = tab.href;
+            document.head.append(link);
+        }
+    });
+    document.addEventListener('click', event => {
+        const tab = event.target.closest('.tabs__item');
+        if (!tab) return;
+        document.querySelectorAll('.tabs__item.is-active').forEach(item => item.classList.remove('is-active'));
+        tab.classList.add('is-active');
+    });
+    ['pointerup', 'pointercancel'].forEach(type => document.addEventListener(type, () => {
+        setTimeout(() => document.querySelectorAll('.tabs__item.is-pressed').forEach(item => item.classList.remove('is-pressed')), 180);
+    }));
+
     // Forma: data-confirm — təsdiq sualı ({amount} → formadakı məbləğ); data-once — iki dəfə göndərilməsin (zəif internet)
     document.addEventListener('submit', event => {
         const form = event.target;
@@ -19,9 +46,13 @@
         }
     });
 
-    // Geri düyməsi ilə (bfcache) qayıdanda bloklanmış düymələr açılsın
+    // Geri düyməsi ilə (bfcache) qayıdanda bloklanmış düymələr açılsın, menyuda bu səhifənin düyməsi seçilsin
     window.addEventListener('pageshow', event => {
         if (!event.persisted) return;
+        document.querySelectorAll('.tabs__item').forEach(item => {
+            item.classList.toggle('is-active', item.getAttribute('aria-current') === 'page');
+            item.classList.remove('is-pressed');
+        });
         document.querySelectorAll('form[data-sent]').forEach(form => {
             delete form.dataset.sent;
             form.querySelectorAll('button').forEach(button => { button.disabled = false; button.classList.remove('is-busy'); });

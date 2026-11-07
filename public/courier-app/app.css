@@ -31,6 +31,16 @@
     color-scheme: light;
 }
 
+/* ---------- Səhifələr arası keçid ----------
+ * Yeni səhifə yüklənəndə ağ yanıb-sönmə olmasın: köhnə səhifə yenisinə yumşaq keçir (View Transitions — iOS 18.2+, Chrome);
+ * yuxarı zolaq və aşağı menyu yerində qalır. Dəstəkləməyən brauzerdə adi keçid. */
+@view-transition { navigation: auto; }
+.bar { view-transition-name: bar; }
+.tabs { view-transition-name: tabs; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
+::view-transition-group(bar), ::view-transition-group(tabs) { animation-duration: 0s; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+
 /* ---------- Baza ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 /* Səhifənin kənarları (iPhone-da status zolağının altı, yuxarı "dartma") — zolağın rəngi; aşağısı — .tabs::after */
@@ -108,7 +118,11 @@ img { max-width: 100%; }
     color: var(--muted); font-size: 12px; font-weight: 600;
 }
 .tabs__item.is-active { color: var(--brand); }
-.tabs__item:active { background: var(--brand-soft); }
+/* Basılma hissi: barmaq toxunan anda (app.js — iPhone-da :active üçün toxunuş dinləyicisi, .is-pressed) */
+.tabs__item { transition: background-color .12s ease, color .12s ease; }
+.tabs__item .icon { transition: transform .12s ease; }
+.tabs__item:active, .tabs__item.is-pressed { background: var(--brand-soft); color: var(--brand); }
+.tabs__item:active .icon, .tabs__item.is-pressed .icon { transform: scale(.88); }
 
 /* ---------- Bildiriş (flash) və qeyd ---------- */
 .flash { margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 15px; }
