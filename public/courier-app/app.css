@@ -26,12 +26,15 @@
     --tabs-h: 62px;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    /* Aşağı menyunun altı: iPhone-un ev xətti üçün tam safe-area çox yer tutur — bir hissəsi kifayətdir */
+    --tabs-pad: max(6px, calc(env(safe-area-inset-bottom, 0px) - 16px));
     color-scheme: light;
 }
 
 /* ---------- Baza ---------- */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* Səhifənin kənarları (iPhone-da status zolağının altı, yuxarı "dartma") — zolağın rəngi; aşağısı — .tabs::after */
+html { background: var(--brand); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
     margin: 0;
     background: var(--bg);
@@ -40,6 +43,10 @@ body {
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
+    /* iPhone (quraşdırılmış tətbiq): səhifə sürüşmürsə iOS ekranı ev xəttinin üstündə bitmiş sayır və fixed menyu
+       aşağıya oturmur — səhifə həmişə ekrandan 1px uzun olur (uzun səhifələrdə bu problem yoxdur) */
+    min-height: 100vh;
+    min-height: calc(100lvh + 1px);
 }
 a { color: var(--brand-2); text-decoration: none; }
 b, strong { font-weight: 650; }
@@ -62,8 +69,12 @@ img { max-width: 100%; }
     display: flex; align-items: center; gap: 8px;
     min-height: calc(var(--bar-h) + var(--safe-top));
     padding: var(--safe-top) 12px 0 16px;
-    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    background: var(--brand); /* tək rəng — status zolağının altı ilə birləşir */
     color: #fff;
+}
+/* Zolaq ekranın yuxarısından kənara da davam edir — iPhone-da status zolağının altında boşluq / solğunluq qalmasın */
+.bar::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 200px; background: var(--brand);
 }
 .bar__back {
     display: inline-flex; align-items: center; justify-content: center;
@@ -76,7 +87,7 @@ img { max-width: 100%; }
 /* ---------- Səhifə ---------- */
 .page {
     max-width: 640px; margin: 0 auto;
-    padding: 14px 14px calc(var(--tabs-h) + var(--safe-bottom) + 24px);
+    padding: 14px 14px calc(var(--tabs-h) + var(--tabs-pad) + 24px);
 }
 .section { margin: 22px 2px 10px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .empty { padding: 36px 16px; border-radius: var(--radius); background: var(--card); color: var(--muted); text-align: center; }
@@ -85,11 +96,13 @@ img { max-width: 100%; }
 .tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
     display: flex;
-    height: calc(var(--tabs-h) + var(--safe-bottom));
-    padding-bottom: var(--safe-bottom);
+    height: calc(var(--tabs-h) + var(--tabs-pad));
+    padding-bottom: var(--tabs-pad);
     background: var(--card);
     border-top: 1px solid var(--line);
 }
+/* Menyu ekranın aşağısından kənara davam edir — altında başqa rəngli zolaq görünməsin */
+.tabs::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 200px; background: var(--card); }
 .tabs__item {
     flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
     color: var(--muted); font-size: 12px; font-weight: 600;
