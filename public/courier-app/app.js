@@ -128,8 +128,10 @@
         });
     }
 
-    // Məkan: quraşdırılmış tətbiqdə (telefon) icazə verilməyənə qədər tətbiq açılmır (.geo-gate);
-    // icazə varsa yer hər açılışda və tətbiqə qayıdanda serverə göndərilir (ən çox dəqiqədə bir). Kompüterdə məcbur deyil.
+    // Məkan: quraşdırılmış tətbiqdə (telefon) icazə verilməyənə qədər tətbiq açılmır (.geo-gate).
+    // İcazə bir dəfə verilibsə yadda qalır (localStorage) — səhifə keçidlərində ekran göstərilmir (iPhone tətbiqdə
+    // icazənin vəziyyətini hər səhifədə "prompt" kimi qaytarır). Yer ən çox 2 dəqiqədə bir oxunur və serverə göndərilir:
+    // açılanda, tətbiqə qayıdanda. Rədd edilsə — yaddaş silinir, ekran yenidən göstərilir. Kompüterdə məcbur deyil.
     (function geo() {
         const body = document.body;
         const url = body.dataset.geoUrl;
@@ -137,20 +139,27 @@
         const deniedBox = document.querySelector('[data-geo-denied]');
         const mustAsk = window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(display-mode: browser)').matches;
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-        let lastSent = 0;
+        const OK_KEY = 'ps-geo-ok';      // icazə verilib (1)
+        const LAST_KEY = 'ps-geo-last';  // son göndəriş vaxtı (ms)
+        const EVERY = 2 * 60 * 1000;
+        const store = {
+            get: key => { try { return localStorage.getItem(key); } catch (e) { return null; } },
+            set: (key, value) => { try { value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch (e) { /* */ } },
+        };
         const state = name => {
             body.classList.remove('geo-check', 'geo-need', 'geo-ok');
             body.classList.add('geo-' + name);
         };
         const denied = () => {
+            store.set(OK_KEY, null);
             if (!mustAsk) { state('ok'); return; }
             state('need');
             if (deniedBox) deniedBox.hidden = false;
             if (allow) allow.textContent = 'Yenidən yoxla';
         };
         const send = position => {
-            if (!url || Date.now() - lastSent < 60000) return;
-            lastSent = Date.now();
+            store.set(LAST_KEY, String(Date.now()));
+            if (!url) return;
             fetch(url, {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -158,27 +167,34 @@
                 body: JSON.stringify({ lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy }),
             }).catch(() => {});
         };
-        const locate = () => navigator.geolocation.getCurrentPosition(
-            position => { state('ok'); send(position); },
-            error => { if (error.code === error.PERMISSION_DENIED) denied(); else state('ok'); }, // yer tapılmadı — icazə var, tətbiq açılır
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
-        );
+        const recent = () => Date.now() - Number(store.get(LAST_KEY) || 0) < EVERY;
+        const locate = (force = false) => {
+            if (!force && recent()) return;
+            navigator.geolocation.getCurrentPosition(
+                position => { store.set(OK_KEY, '1'); state('ok'); send(position); },
+                error => { if (error.code === error.PERMISSION_DENIED) denied(); else state('ok'); }, // yer tapılmadı — icazə var
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+            );
+        };
 
         if (!('geolocation' in navigator)) { state('ok'); return; }
-        if (allow) allow.addEventListener('click', locate); // icazə pəncərəsi düymə ilə (iPhone başqa cür göstərmir)
+        if (allow) allow.addEventListener('click', () => locate(true)); // ilk icazə — düymə ilə
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && body.classList.contains('geo-ok')) locate();
         });
         const start = permission => {
-            if (permission === 'granted') { state('ok'); locate(); }
-            else if (permission === 'denied') denied();
-            else if (mustAsk) state('need');
-            else state('ok'); // kompüter: soruşmuruq
+            if (permission === 'denied') { denied(); return; }
+            if (permission === 'granted' || store.get(OK_KEY) || !mustAsk) {
+                state('ok');     // tətbiq dərhal açılır
+                if (permission === 'granted' || store.get(OK_KEY)) locate(); // yer arxa planda (2 dəqiqədə bir)
+                return;
+            }
+            state('need');       // ilk dəfə: izah və düymə
         };
         if (navigator.permissions && navigator.permissions.query) {
             navigator.permissions.query({ name: 'geolocation' }).then(status => {
                 start(status.state);
-                status.onchange = () => start(status.state);
+                status.onchange = () => { if (status.state === 'denied') denied(); };
             }).catch(() => start('prompt'));
         } else {
             start('prompt');
