@@ -2,21 +2,6 @@
 // Səhifələr həmişə şəbəkədən (məlumat təzə olmalıdır, keşə yazılmır); internet yoxdursa — "oflayn" səhifəsi.
 // Tətbiqin CSS / JS / ikonları — keşdən dərhal, arxa planda yenilənir.
 // Push bildirişləri (OneSignal) də bu service worker-dədir — tətbiqdə bir service worker (app.js, serviceWorkerPath).
-importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-const VERSION = 'kuryer-v12';
-const OFFLINE = '/courier-app/offline.html';
-const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
-
-self.addEventListener('install', event => {
-    event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
-});
-
-self.addEventListener('activate', event => {
-    event.waitUntil(caches.keys()
-        .then(keys => Promise.all(keys.filter(key => key.startsWith('kuryer-') && key !== VERSION).map(key => caches.delete(key))))
-        .then(() => self.clients.claim()));
-});
-
 // Push gələndə tətbiqin ikonundakı rəqəm — oxunmamış bildirişlərin sayı (tətbiq bağlı olsa da).
 // Say push-un özündədir (OneSignal əlavə məlumatı: custom.a.badge — CourierNotifier); yoxdursa — serverdən soruşulur.
 function pushBadge(event) {
@@ -52,6 +37,22 @@ self.addEventListener('push', event => {
         .then(response => (response.ok ? response.json() : null))
         .then(data => (data ? applyBadge(data.unread) : undefined))
         .catch(() => {}));
+});
+
+// OneSignal push işləyicisi bizimkindən SONRA qeyd olunur (yuxarıdakı rəqəm kodu push-u birinci alsın)
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+const VERSION = 'kuryer-v13';
+const OFFLINE = '/courier-app/offline.html';
+const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
+
+self.addEventListener('install', event => {
+    event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(caches.keys()
+        .then(keys => Promise.all(keys.filter(key => key.startsWith('kuryer-') && key !== VERSION).map(key => caches.delete(key))))
+        .then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', event => {
