@@ -37,7 +37,11 @@
 @view-transition { navigation: auto; }
 .bar { view-transition-name: bar; }
 .tabs { view-transition-name: tabs; }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
+/* Mobil tətbiq kimi: köhnə məzmun solur, yenisi aşağıdan yumşaq sürüşüb gəlir */
+@keyframes page-out { to { opacity: 0; } }
+@keyframes page-in { from { opacity: 0; transform: translateY(14px); } }
+::view-transition-old(root) { animation: .14s ease-out both page-out; }
+::view-transition-new(root) { animation: .26s cubic-bezier(.2, .8, .2, 1) both page-in; }
 ::view-transition-group(bar), ::view-transition-group(tabs) { animation-duration: 0s; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
@@ -93,6 +97,23 @@ img { max-width: 100%; }
 .bar__back:active { background: rgba(255, 255, 255, .18); }
 .bar__title { flex: 1; min-width: 0; font-size: 19px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bar__user { max-width: 38vw; font-size: 13px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Yüklənmə göstəricisi (keçid / forma göndərilir — app.js, body.is-loading) ---------- */
+.loader {
+    position: fixed; left: 0; right: 0; z-index: 30;
+    top: calc(var(--bar-h) + var(--safe-top)); height: 3px;
+    overflow: hidden; opacity: 0; pointer-events: none; transition: opacity .15s ease;
+    background: rgba(123, 70, 176, .22); /* zolaq — üzərində parlaq parça axır */
+}
+.loader::before {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 45%;
+    background: linear-gradient(90deg, transparent, var(--brand-2), #b98ae6, var(--brand-2), transparent);
+    animation: loader 1s ease-in-out infinite;
+}
+@keyframes loader { from { transform: translateX(-100%); } to { transform: translateX(240%); } }
+body.is-loading .loader { opacity: 1; }
+.page { transition: opacity .2s ease, transform .2s ease; }
+body.is-loading .page { opacity: .55; transform: scale(.992); }
 
 /* ---------- Səhifə ---------- */
 .page {

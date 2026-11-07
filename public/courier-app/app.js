@@ -17,6 +17,28 @@
         setTimeout(hide, 2500); // yüklənmə uzansa belə
     }
 
+    // Yüklənmə göstəricisi: tətbiqin içində keçid və ya forma göndəriləndə (80 ms-dən tez açılsa — görünmür)
+    let loadingTimer = 0;
+    const startLoading = () => {
+        clearTimeout(loadingTimer);
+        loadingTimer = setTimeout(() => document.body.classList.add('is-loading'), 80);
+    };
+    const stopLoading = () => {
+        clearTimeout(loadingTimer);
+        document.body.classList.remove('is-loading');
+    };
+    document.addEventListener('click', event => {
+        const link = event.target.closest('a[href]');
+        if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target === '_blank' || link.hasAttribute('download')) return;
+        const url = new URL(link.href, location.href);
+        if (url.origin !== location.origin || !/^https?:$/.test(url.protocol)) return;  // xəritə, zəng və s.
+        if (url.pathname === location.pathname && url.search === location.search && url.hash) return; // eyni səhifədə lövbər
+        startLoading();
+    });
+    document.addEventListener('submit', event => { setTimeout(() => { if (!event.defaultPrevented) startLoading(); }, 0); });
+    window.addEventListener('pageshow', stopLoading);
+
     // iPhone-da :active (basılma hissi) yalnız səhifədə toxunuş dinləyicisi olanda işləyir
     document.addEventListener('touchstart', () => {}, { passive: true });
 

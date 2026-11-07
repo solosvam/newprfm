@@ -92,6 +92,8 @@
         <span class="bar__user">{{ trim($viewer->full_name) }}</span>
     </header>
 
+    <div class="loader" aria-hidden="true"></div>
+
     <main class="page">
         @if($pushAppId)
             {{-- Push icazəsi: iPhone yalnız düyməyə basanda icazə istəməyə imkan verir — app.js göstərir / gizlədir --}}
