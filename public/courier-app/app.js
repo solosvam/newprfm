@@ -168,7 +168,9 @@
                 body: JSON.stringify({ lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy }),
             }).catch(() => {});
         };
-        const recent = () => Date.now() - Number(store.get(LAST_KEY) || 0) < EVERY;
+        // Son göndərişdən 25 saniyə keçməyibsə — oxunmur (səhifə keçidlərində təkrar olmasın). Taymer 30 saniyədir:
+        // GPS 1–3 saniyə çəkdiyi üçün hədd taymerdən bir az qısadır, yoxsa hər ikinci taymer ötürülərdi (60 saniyə olardı)
+        const recent = () => Date.now() - Number(store.get(LAST_KEY) || 0) < EVERY - 5000;
         const locate = (force = false) => {
             if (!force && recent()) return;
             navigator.geolocation.getCurrentPosition(
