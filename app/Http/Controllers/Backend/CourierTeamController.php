@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceAccount;
+use App\Models\Finance\MoneyMovement;
 use App\Models\Order\Order;
 use App\Models\Procurement\OrderItemAllocation;
 use App\Models\User;
+use App\Services\Courier\CourierExpenses;
+use App\Services\Courier\PickPhotoStorage;
 use App\Services\FinanceService;
 use App\Services\OrderStatusService;
 use App\Services\Telegram\CourierTelegram;
@@ -15,10 +18,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Baş kuryer (courier.team): bütün kuryerlərin balansı, haqq-hesabı və sifarişləri (aktivlər və arxiv).
  * courier.collect — kuryerin balansındakı pulu öz hesabına köçürmək ("Baş kuryerə təhvil"); kuryerə Telegram bildirişi gedir.
+ * Xərclər — kuryerin yazdığı xərclər (qəbz şəkli, ləğv — CourierExpenses).
  */
 class CourierTeamController extends Controller
 {
@@ -130,6 +135,9 @@ class CourierTeamController extends Controller
             'statuses' => $statuses,
             'couriers' => $statuses->couriers()->reject(fn ($u) => $u->id === $courier->id)->values(),
             'canCollect' => $me->can('courier.collect') && FinanceService::isCourier($me) && $me->id !== $courier->id && $balance > 0,
+            // Xərclər: baş kuryerə son COURIER_DAYS_BACK gün, adminə son 100
+            'expenses' => $expenses = app(CourierExpenses::class)->of($courier, $minDate),
+            'cancellable' => $expenses->filter(fn ($e) => app(CourierExpenses::class)->canCancel($e, $me))->pluck('id')->all(),
         ]);
     }
 
@@ -164,6 +172,31 @@ class CourierTeamController extends Controller
         rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->moneyCollected($movement, $courier, $me, $after), null, !app()->runningUnitTests());
 
         return back()->with('success', number_format((float) $movement->amount, 2).' AZN '.trim($courier->full_name).' adlı kuryerdən hesabınıza köçürüldü.');
+    }
+
+    /** Kuryerin xərcini ləğv etmək — əks əməliyyat, pul kuryerin balansına qayıdır (kim edə bilər — CourierExpenses::canCancel) */
+    public function cancelExpense(User $courier, MoneyMovement $expense, CourierExpenses $expenses): RedirectResponse
+    {
+        $this->ensureExpenseOf($courier, $expense);
+        $expenses->cancel($expense, auth('admin')->user());
+
+        return back()->with('success', number_format((float) $expense->amount, 2).' AZN xərc ləğv edildi — məbləğ '.trim($courier->full_name).' adlı kuryerin balansına qayıtdı.');
+    }
+
+    /** Xərcin qəbz şəkli (baş kuryer, admin) */
+    public function expensePhoto(User $courier, MoneyMovement $expense): BinaryFileResponse
+    {
+        $this->ensureExpenseOf($courier, $expense);
+        $path = PickPhotoStorage::path($expense->photo, PickPhotoStorage::EXPENSES);
+        abort_unless($path, 404);
+
+        return response()->file($path, ['Cache-Control' => 'private, max-age=86400']);
+    }
+
+    private function ensureExpenseOf(User $courier, MoneyMovement $expense): void
+    {
+        abort_unless(FinanceService::isCourier($courier) && $expense->kind === 'courier_expense'
+            && (int) $expense->from_account_id === (int) app(FinanceService::class)->courierAccount($courier)->id, 404);
     }
 
     /** Baş kuryer kuryerin sifarişini başqa kuryerə ötürür (toplamadan əvvəl — OrderStatusService::transferBlock) */

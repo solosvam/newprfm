@@ -49,6 +49,23 @@ class CourierNotifier
             null, route('kuryer.account', [], false));
     }
 
+    /** Komandadakı kuryer xərc yazdı — baş kuryerə (basanda kuryerin səhifəsindəki "Xərclər") */
+    public function expenseAdded(MoneyMovement $expense, User $courier, User $head): CourierNotification
+    {
+        return $this->notify($head, 'expense_added',
+            trim($courier->full_name).': '.number_format((float) $expense->amount, 2).' AZN xərc',
+            (string) $expense->note, null, route('kuryer.team.show', $courier, false).'#expenses');
+    }
+
+    /** Xərc ləğv edildi — kuryerə (pul balansına qayıtdı) */
+    public function expenseCancelled(MoneyMovement $expense, User $courier, User $by): CourierNotification
+    {
+        return $this->notify($courier, 'expense_cancelled',
+            'Xərciniz ləğv edildi: '.number_format((float) $expense->amount, 2).' AZN',
+            collect([$expense->note, trim($by->full_name).' ləğv etdi'])->filter()->implode(' · '),
+            null, route('kuryer.account', [], false).'#expenses');
+    }
+
     private function notify(User $courier, string $type, string $title, string $body, ?Order $order, ?string $url = null): CourierNotification
     {
         // Bazada nisbi link (domen / APP_URL-dən asılı deyil)

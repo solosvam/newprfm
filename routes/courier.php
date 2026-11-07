@@ -19,6 +19,9 @@ Route::prefix('kuryer')->name('kuryer.')->group(function () {
     Route::middleware(['auth:admin', \App\Http\Middleware\CourierOnly::class, 'throttle:60,1'])->group(function () {
         Route::get('/', [CourierAppController::class, 'home'])->name('home');
         Route::get('/hesab', [CourierAppController::class, 'account'])->name('account');
+        // Xərclər: yazmaq (balansdan çıxır) və öz qəbz şəkli
+        Route::post('/hesab/xerc', [CourierAppController::class, 'storeExpense'])->name('expenses.store');
+        Route::get('/hesab/xerc/{expense}/sekil', [CourierAppController::class, 'expensePhoto'])->whereNumber('expense')->name('expenses.photo');
         // Bildirişlər: siyahı, açmaq (oxunmuş olur → sifariş), hamısını oxunmuş et; badge — oxunmamış sayı (service worker)
         Route::get('/bildirisler', [CourierAppController::class, 'notifications'])->name('notifications');
         Route::get('/bildirisler/{notification}', [CourierAppController::class, 'openNotification'])->whereNumber('notification')->name('notifications.open');
@@ -41,12 +44,14 @@ Route::prefix('kuryer')->name('kuryer.')->group(function () {
             Route::post('/transfer', 'transfer')->name('transfer');
         });
 
-        // Baş kuryer: kuryerlər — balans, sifarişlər, pulu özünə köçürmə, sifarişi ötürmə
+        // Baş kuryer: kuryerlər — balans, sifarişlər, xərclər (ləğv), pulu özünə köçürmə, sifarişi ötürmə
         Route::controller(CourierTeamController::class)->prefix('kuryerler')->name('team')->middleware('can:courier.team')->group(function () {
             Route::get('/', 'index');
             Route::get('/{courier}', 'show')->whereNumber('courier')->name('.show');
             Route::post('/{courier}/collect', 'collect')->whereNumber('courier')->middleware('can:courier.collect')->name('.collect');
             Route::post('/{courier}/orders/{order}/transfer', 'transfer')->whereNumber(['courier', 'order'])->name('.transfer');
+            Route::post('/{courier}/xerc/{expense}/legv', 'cancelExpense')->whereNumber(['courier', 'expense'])->name('.expense-cancel');
+            Route::get('/{courier}/xerc/{expense}/sekil', 'expensePhoto')->whereNumber(['courier', 'expense'])->name('.expense-photo');
         });
     });
 });

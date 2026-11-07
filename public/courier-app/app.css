@@ -274,6 +274,7 @@ summary .badge { margin-left: 6px; }
 .btn--warn-outline { background: transparent; color: var(--warn); box-shadow: inset 0 0 0 1.5px #e69500; }
 .btn--ghost { background: var(--card); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
 .btn.is-busy { opacity: .7; }
+.btn--sm { min-height: 36px; padding: 6px 12px; font-size: 14px; }
 .row-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .row-btns > .btn { flex: 1 1 auto; }
 .actions { display: grid; gap: 8px; margin-top: 10px; }
@@ -350,6 +351,15 @@ textarea.field { min-height: 80px; resize: vertical; }
     border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--muted);
 }
 button.thumb { cursor: zoom-in; }
+.thumb img[src*="/xerc/"] { object-fit: cover; }
+
+/* Xərclər: ləğv edilən — üstündən xətlə; qəbz şəkli formaya qoşulub */
+.expense .list__sum form { margin-top: 6px; }
+.expense.is-cancelled .list__what, .expense.is-cancelled .list__sum > div { text-decoration: line-through; color: var(--muted); }
+.photo-done { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.photo-done[hidden], [data-photo-attach][hidden] { display: none; }
+.photo-done img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
+.photo-done span { flex: 1; color: var(--ok); font-weight: 600; font-size: 14px; }
 .thumb img { width: 100%; height: 100%; object-fit: contain; }
 .zoom {
     position: fixed; inset: 0; z-index: 100;

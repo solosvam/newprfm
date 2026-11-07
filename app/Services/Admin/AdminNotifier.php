@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Operatorlara bildiriş: admin paneldə zəng işarəsi (AdminNotificationsController).
- * Sifarişlər (sayt, asan, kredit), depo (cavab, rezerv təsdiqi), kuryer (götürdü, yola çıxdı, təhvil verdi).
+ * Sifarişlər (sayt, asan, kredit), depo (cavab, rezerv təsdiqi), kuryer (götürdü, yola çıxdı, təhvil verdi, xərc yazdı).
  * Eyni hadisə ikinci dəfə yazılmır. Bildiriş alınmasa əsas əməliyyat pozulmur.
  */
 final class AdminNotifier
@@ -25,6 +25,7 @@ final class AdminNotifier
         'courier_picked' => 'Kuryer götürdü',
         'courier_sent' => 'Kuryer yola çıxdı',
         'courier_delivered' => 'Kuryer təhvil verdi',
+        'courier_expense' => 'Kuryer xərci',
     ];
 
     /** Saytdan gələn sifariş: növü ödəniş üsulundan və "bir kliklə"dən */

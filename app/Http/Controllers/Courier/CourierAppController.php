@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Courier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Courier\CourierNotification;
+use App\Models\Finance\MoneyMovement;
 use App\Models\Order\Order;
 use App\Models\Procurement\OrderItemAllocation;
+use App\Services\Courier\CourierExpenses;
+use App\Services\Courier\PickPhotoStorage;
 use App\Services\FinanceService;
 use App\Services\OrderStatusService;
 use Illuminate\Http\JsonResponse;
@@ -13,9 +16,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Kuryer tətbiqi (/kuryer): ana səhifə (aktiv sifarişlər) və hesab (haqq-hesab tarixçəsi).
+ * Kuryer tətbiqi (/kuryer): ana səhifə (aktiv sifarişlər) və hesab (haqq-hesab tarixçəsi, xərclər).
  * Sifarişin səhifəsi və əməliyyatlar — Backend\CourierController, baş kuryer — Backend\CourierTeamController.
  */
 class CourierAppController extends Controller
@@ -40,7 +44,7 @@ class CourierAppController extends Controller
         ]);
     }
 
-    public function account(FinanceService $finance): View
+    public function account(FinanceService $finance, CourierExpenses $expenses): View
     {
         $user = auth('admin')->user();
         $account = $finance->courierAccount($user);
@@ -49,7 +53,35 @@ class CourierAppController extends Controller
             'user' => $user,
             'balance' => $finance->balances()[$account->id] ?? 0,
             'history' => $finance->courierHistory($account),
+            'expenses' => $expenses->of($user, null, 30),
         ]);
+    }
+
+    /** "Xərc yaz": məbləğ və açıqlama (Taxi...), qəbzin şəkli istəyə görə — balansdan dərhal çıxır (CourierExpenses) */
+    public function storeExpense(Request $request, CourierExpenses $expenses): RedirectResponse
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:10000'],
+            'note' => ['required', 'string', 'max:200'],
+            'photo' => ['nullable', 'file', 'image', 'max:10240'],
+        ], [
+            'amount.required' => 'Məbləği yazın.', 'amount.min' => 'Məbləğ sıfırdan böyük olmalıdır.',
+            'note.required' => 'Xərcin açıqlamasını yazın.', 'photo.image' => 'Şəkil oxunmadı — yenidən çəkin.', 'photo.max' => 'Şəkil çox böyükdür.',
+        ]);
+        $expense = $expenses->record(auth('admin')->user(), (float) $data['amount'], $data['note'], $request->file('photo'));
+
+        return redirect()->to(route('kuryer.account').'#expenses')->with('success', number_format((float) $expense->amount, 2).' AZN xərc yazıldı.');
+    }
+
+    /** Öz xərcinin qəbz şəkli */
+    public function expensePhoto(MoneyMovement $expense, FinanceService $finance): BinaryFileResponse
+    {
+        abort_unless($expense->kind === 'courier_expense'
+            && (int) $expense->from_account_id === (int) $finance->courierAccount(auth('admin')->user())->id, 404);
+        $path = PickPhotoStorage::path($expense->photo, PickPhotoStorage::EXPENSES);
+        abort_unless($path, 404);
+
+        return response()->file($path, ['Cache-Control' => 'private, max-age=86400']);
     }
 
     /** Bildirişlər: yenilər yuxarıda (son 30 gün — köhnələr silinir) */

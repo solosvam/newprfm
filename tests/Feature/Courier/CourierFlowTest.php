@@ -57,6 +57,7 @@ class CourierFlowTest extends TestCase
             '2026_11_07_160000_create_courier_locations.php',
             '2026_11_07_180000_add_pick_photo_to_order_item_allocations.php',
             '2026_11_07_200000_create_courier_notifications.php',
+            '2026_11_07_210000_courier_expenses.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();
         }
@@ -375,6 +376,80 @@ class CourierFlowTest extends TestCase
         Schema::table('products', fn (Blueprint $t) => $t->integer('type_id')->nullable());
 
         return $courier;
+    }
+
+    /**
+     * Xərc: kuryer yazır (balansdan dərhal çıxır, "Kuryer xərcləri"), qəbz şəkli istəyə görə; adminə zəng, baş kuryerə bildiriş.
+     * Ləğv: baş kuryer — başqasının son 3 gündəki xərcini (öz xərcini yox), admin — istənilənini; kuryerin özü — yox.
+     */
+    public function test_courier_expenses_and_cancellation(): void
+    {
+        $courier = $this->courierAppTables();
+        (require database_path('migrations/2026_10_29_130000_create_admin_notifications.php'))->up();
+        Schema::table('permissions', fn (Blueprint $t) => $t->string('description')->nullable());
+        (require database_path('migrations/2026_11_01_140000_head_courier.php'))->up();
+        $head = User::forceCreate(['name' => 'Rauf']);
+        $head->assignRole(FinanceService::HEAD_COURIER_ROLE);
+        $f = app(FinanceService::class);
+        $f->record($f->system('cash'), $f->courierAccount($courier), 50, 'courier_advance', [], 7);
+        $balance = fn (User $u) => (int) $f->balances()[$f->courierAccount($u)->id];
+        $this->actingAs($courier, 'admin');
+
+        $this->get(route('kuryer.account'))->assertOk()->assertSee('Xərc yaz')->assertSee('placeholder="Məsələn: Taxi"', false);
+        $this->post(route('kuryer.expenses.store'), ['amount' => 5])->assertSessionHasErrors('note');
+        $this->post(route('kuryer.expenses.store'), ['amount' => 0, 'note' => 'Taxi'])->assertSessionHasErrors('amount');
+        $this->post(route('kuryer.expenses.store'), ['amount' => 5, 'note' => ' Taxi ', 'photo' => \Illuminate\Http\UploadedFile::fake()->image('q.jpg', 2000, 3000)])
+            ->assertRedirect(route('kuryer.account').'#expenses')->assertSessionHas('success', '5.00 AZN xərc yazıldı.');
+        $this->post(route('kuryer.expenses.store'), ['amount' => 70, 'note' => 'Yemək'])->assertSessionHas('success'); // balansdan çox — şirkət borclu qalır
+
+        $taxi = \App\Models\Finance\MoneyMovement::where('kind', 'courier_expense')->where('note', 'Taxi')->sole();
+        $this->assertSame(-2500, $balance($courier)); // 50 − 5 − 70
+        $this->assertSame('courier_expense', $taxi->category->code);
+        $this->assertSame('Kuryer xərci', $taxi->kindLabel());
+        $photo = \App\Services\Courier\PickPhotoStorage::path($taxi->photo, \App\Services\Courier\PickPhotoStorage::EXPENSES);
+        $this->assertNotNull($photo);
+        $this->assertSame([853, 1280], array_slice(getimagesize($photo), 0, 2)); // 1280 px-ə kiçildilib
+        $this->assertFalse(\App\Models\Finance\FinanceCategory::where('code', 'courier_expense')->sole()->fits('outgo')); // "Yeni əməliyyat"da seçilmir
+
+        // Kuryer öz xərclərini və qəbzini görür, ləğv edə bilmir
+        $this->get(route('kuryer.account'))->assertSee('Taxi')->assertSee(route('kuryer.expenses.photo', $taxi), false)->assertDontSee('Ləğv et');
+        $this->get(route('kuryer.expenses.photo', $taxi))->assertOk();
+        $this->post(route('kuryer.team.expense-cancel', [$courier, $taxi]))->assertForbidden();
+        $this->actingAs($head, 'admin')->get(route('kuryer.expenses.photo', $taxi))->assertNotFound(); // başqasının "öz" linki
+
+        // Bildirişlər: adminə zəng, baş kuryerə tətbiqdə
+        $bell = DB::table('admin_notifications')->where('type', 'courier_expense')->where('subject_id', $taxi->id)->sole();
+        $this->assertSame('Fərid · 5.00 AZN · Taxi', $bell->body);
+        $this->assertSame(route('admin.courier.team.show', $courier, false).'#expenses', $bell->url);
+        $notice = \App\Models\Courier\CourierNotification::where('user_id', $head->id)->where('type', 'expense_added')->first();
+        $this->assertSame(['Fərid: 5.00 AZN xərc', 'Taxi'], [$notice->title, $notice->body]);
+
+        // Baş kuryer: görür, qəbzə baxır, ləğv edir — pul kuryerə qayıdır, kuryerə bildiriş
+        $this->get(route('kuryer.team.show', $courier))->assertOk()->assertSee('Taxi')->assertSee('Ləğv et');
+        $this->get(route('kuryer.team.expense-photo', [$courier, $taxi]))->assertOk();
+        $this->post(route('kuryer.team.expense-cancel', [$courier, $taxi]))->assertSessionHas('success');
+        $this->assertSame(-2000, $balance($courier));
+        $this->post(route('kuryer.team.expense-cancel', [$courier, $taxi]))->assertSessionHasErrors('expense'); // ikinci dəfə yox
+        $this->assertSame('expense_cancelled', \App\Models\Courier\CourierNotification::where('user_id', $courier->id)->latest('id')->value('type'));
+        $this->actingAs($courier, 'admin')->get(route('kuryer.account'))->assertSee('ləğv edilib — Rauf')->assertSee('Xərc ləğv edildi: Taxi');
+
+        // Baş kuryer öz xərcini ləğv edə bilmir; 3 gündən köhnə xərci də — admin edə bilər
+        $own = app(\App\Services\Courier\CourierExpenses::class)->record($head, 3, 'Taxi');
+        $this->actingAs($head, 'admin')->post(route('kuryer.team.expense-cancel', [$head, $own]))->assertSessionHasErrors('expense');
+        $food = \App\Models\Finance\MoneyMovement::where('note', 'Yemək')->sole();
+        $food->forceFill(['occurred_at' => now()->subDays(4)])->save();
+        $this->post(route('kuryer.team.expense-cancel', [$courier, $food]))->assertSessionHasErrors('expense');
+        $this->post(route('kuryer.team.expense-cancel', [$head, $taxi]))->assertNotFound(); // başqa kuryerin xərci
+        $admin = User::forceCreate(['name' => 'Admin']);
+        $admin->givePermissionTo('courier.team');
+        $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $courier))->assertOk()
+            ->assertSee('Yemək')->assertSee(route('admin.courier.team.expense-cancel', [$courier, $food]), false);
+        $this->post(route('admin.courier.team.expense-cancel', [$courier, $food]))->assertSessionHas('success');
+        $this->post(route('admin.courier.team.expense-cancel', [$head, $own]))->assertSessionHas('success');
+        $this->assertSame(5000, $balance($courier));
+        $this->assertSame(0, $balance($head));
+
+        \App\Services\Courier\PickPhotoStorage::delete($taxi->photo, \App\Services\Courier\PickPhotoStorage::EXPENSES);
     }
 
     /** Sifariş kuryerə təyin olunanda push (OneSignal, "user-{id}") — Telegram ilə yanaşı */

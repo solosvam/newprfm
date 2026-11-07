@@ -1,5 +1,5 @@
 {{--
-  Baş kuryer → kuryer: balans və "Pulu özümə köçür" (courier.collect), aktiv sifarişlər (depolar üzrə vəziyyət, başqa kuryerə ötürmə),
+  Baş kuryer → kuryer: balans və "Pulu özümə köçür" (courier.collect), aktiv sifarişlər (depolar üzrə vəziyyət, başqa kuryerə ötürmə), xərclər (ləğv),
   sifariş arxivi və haqq-hesab tarixçəsi. Baş kuryerə: filtrsiz — bu gün, filtrdə ən çox COURIER_DAYS_BACK gün geriyə.
 --}}
 @use('App\Models\Procurement\OrderItemAllocation', 'Part')
@@ -76,6 +76,11 @@
     @empty
         <div class="empty">Aktiv sifariş yoxdur.</div>
     @endforelse
+
+    {{-- Xərclər: baş kuryer yoxlayır, qaydasında deyilsə ləğv edir (pul kuryerin balansına qayıdır) --}}
+    <h2 class="section" id="expenses">Xərclər</h2>
+    @if($minDate)<p class="muted">Son {{ Team::COURIER_DAYS_BACK }} günün xərcləri.</p>@endif
+    @include('courier-app._expenses', ['expenses' => $expenses, 'self' => false, 'courier' => $courier, 'cancellable' => $cancellable])
 
     {{-- Sifariş arxivi --}}
     <h2 class="section" id="archive">Sifariş arxivi</h2>

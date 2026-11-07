@@ -143,6 +143,43 @@
         </details>
     @endif
 
+    {{-- Xərclər (kuryer tətbiqində yazılır, balansdan çıxır): qəbz şəkli, ləğv — əks əməliyyat, pul kuryerə qayıdır --}}
+    <h2 class="small-title mt-5" id="expenses">Xərclər</h2>
+    @if($minDate)<div class="text-muted text-small mb-1">Son {{ \App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK }} günün xərcləri.</div>@endif
+    @if($expenses->isEmpty())
+        <div class="card"><div class="card-body text-center text-muted py-4">Xərc yoxdur.</div></div>
+    @else
+        <div class="text-muted text-small mb-2">{{ $expenses->filter(fn ($e) => !$e->reversedBy)->count() }} xərc · {{ number_format($expenses->filter(fn ($e) => !$e->reversedBy)->sum('amount'), 2) }} AZN</div>
+        <div class="card"><div class="card-body courier-history">
+            @foreach($expenses as $expense)
+                @php $cancelled = $expense->reversedBy; @endphp
+                <div class="courier-history__row">
+                    @if($expense->photo)
+                        @php $photo = route('admin.courier.team.expense-photo', [$courier, $expense]); @endphp
+                        <a href="{{ $photo }}" target="_blank" rel="noopener" class="courier-expense__photo"><img src="{{ $photo }}" alt="Qəbz" loading="lazy"></a>
+                    @endif
+                    <div class="courier-history__main">
+                        <div class="courier-history__what @if($cancelled) text-decoration-line-through text-muted @endif">{{ $expense->note }}</div>
+                        <div class="courier-history__meta">
+                            {{ $expense->occurred_at->format('d.m.Y H:i') }}
+                            @if($cancelled) · <span class="text-danger">ləğv edilib{{ $cancelled->user ? ' — '.trim($cancelled->user->full_name).', '.$cancelled->occurred_at->format('d.m H:i') : '' }}</span>@endif
+                        </div>
+                    </div>
+                    <div class="courier-history__sum">
+                        <div class="{{ $cancelled ? 'text-muted text-decoration-line-through' : 'text-success' }}">−{{ number_format((float) $expense->amount, 2) }} AZN</div>
+                        @if(in_array($expense->id, $cancellable, true))
+                            <form method="POST" action="{{ route('admin.courier.team.expense-cancel', [$courier, $expense]) }}" class="mt-1"
+                                  onsubmit="return confirm('{{ number_format((float) $expense->amount, 2) }} AZN xərc ləğv edilsin? Məbləğ kuryerin balansına qayıdacaq.')">
+                                @csrf
+                                <button class="btn btn-sm btn-outline-danger">Ləğv et</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div></div>
+    @endif
+
     {{-- Sifariş arxivi --}}
     <h2 class="small-title mt-5" id="archive">Sifariş arxivi</h2>
     @php $aActive = collect(['a_from', 'a_to', 'a_status', 'a_q'])->contains(fn ($k) => filled($filters[$k] ?? null)); @endphp

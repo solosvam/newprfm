@@ -154,6 +154,36 @@
         canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
         return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.72));
     }
+    // İstəyə görə şəkil (data-photo-attach, məs. xərcin qəbzi): şəkil formaya qoşulur, önizləmə göstərilir, forma göndərilmir
+    function attachOnly(form, blob) {
+        const input = form.querySelector('[data-photo-input]');
+        try {
+            const files = new DataTransfer();
+            files.items.add(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+            input.files = files.files;
+        } catch (e) {
+            window.alert('Şəkil əlavə olunmadı — tətbiqi yeniləyin.');
+            return;
+        }
+        const done = form.querySelector('[data-photo-done]');
+        const preview = form.querySelector('[data-photo-preview]');
+        if (preview) {
+            if (preview.src) URL.revokeObjectURL(preview.src);
+            preview.src = URL.createObjectURL(blob);
+        }
+        if (done) done.hidden = false;
+        form.querySelector('[data-photo-attach]')?.setAttribute('hidden', '');
+    }
+    document.addEventListener('click', event => {
+        const attach = event.target.closest('[data-photo-attach]');
+        if (attach) { takePhoto(attach.form || attach.closest('form'), null, { attachOnly: true, hint: attach.dataset.photoAttach }); return; }
+        const remove = event.target.closest('[data-photo-remove]');
+        if (!remove) return;
+        const form = remove.closest('form');
+        form.querySelector('[data-photo-input]').value = '';
+        form.querySelector('[data-photo-done]').hidden = true;
+        form.querySelector('[data-photo-attach]')?.removeAttribute('hidden');
+    });
     function attachAndSubmit(form, submitter, blob) {
         const input = form.querySelector('[data-photo-input]');
         try {
@@ -167,7 +197,7 @@
         form.dataset.photoReady = '1';
         if (submitter && form.requestSubmit) form.requestSubmit(submitter); else form.requestSubmit ? form.requestSubmit() : form.submit();
     }
-    function pickFromDevice(form, submitter) {
+    function pickFromDevice(form, submitter, options = {}) {
         // Ehtiyat: telefonun öz seçicisi (kamera / qalereya), şəkil yenə kiçildilir
         const input = form.querySelector('[data-photo-input]');
         input.setAttribute('capture', 'environment');
@@ -178,21 +208,22 @@
             image.onload = async () => {
                 const blob = await shrink(image, image.naturalWidth, image.naturalHeight);
                 URL.revokeObjectURL(image.src);
-                attachAndSubmit(form, submitter, blob);
+                options.attachOnly ? attachOnly(form, blob) : attachAndSubmit(form, submitter, blob);
             };
             image.src = URL.createObjectURL(file);
         };
         input.click();
     }
-    async function takePhoto(form, submitter) {
-        if (!navigator.mediaDevices?.getUserMedia) { pickFromDevice(form, submitter); return; }
+    async function takePhoto(form, submitter, options = {}) {
+        if (!navigator.mediaDevices?.getUserMedia) { pickFromDevice(form, submitter, options); return; }
         closeCamera();
         const el = document.createElement('div');
         el.className = 'camera';
         el.setAttribute('role', 'dialog');
         el.setAttribute('aria-modal', 'true');
-        el.setAttribute('aria-label', 'Götürmə şəkli');
-        el.innerHTML = '<p class="camera__hint">Götürdüyünüz məhsulun şəklini çəkin</p>'
+        const hint = options.hint || 'Götürdüyünüz məhsulun şəklini çəkin';
+        el.setAttribute('aria-label', hint);
+        el.innerHTML = '<p class="camera__hint"></p>'
             + '<video class="camera__video" playsinline autoplay muted></video>'
             + '<img class="camera__preview" alt="" hidden>'
             + '<div class="camera__bar" data-camera-shoot>'
@@ -205,6 +236,7 @@
         document.body.append(el);
         document.documentElement.classList.add('has-camera');
         camera = { el, stream: null };
+        el.querySelector('.camera__hint').textContent = hint;
         const video = el.querySelector('video');
         const preview = el.querySelector('.camera__preview');
         let blob = null;
@@ -217,7 +249,7 @@
             await video.play().catch(() => {});
         } catch (e) {
             closeCamera();
-            pickFromDevice(form, submitter);
+            pickFromDevice(form, submitter, options);
             return;
         }
         el.addEventListener('click', async event => {
@@ -244,7 +276,7 @@
             if (event.target.closest('[data-camera-send]') && blob) {
                 const ready = blob;
                 closeCamera();
-                attachAndSubmit(form, submitter, ready);
+                options.attachOnly ? attachOnly(form, ready) : attachAndSubmit(form, submitter, ready);
             }
         });
     }

@@ -15,7 +15,8 @@
             'courier_advance' => $row['delta'] > 0 ? ($self ? 'Avans / qaytarma aldınız' : 'Avans / qaytarma aldı') : 'Avans qaytarıldı',
             'courier_collect' => $row['delta'] < 0 ? 'Baş kuryerə təhvil — '.$other : 'Kuryerdən götürüldü — '.$other,
             'outgo' => 'Xərc: '.($m->category?->name ?? '').($m->note ? ' — '.$m->note : ''),
-            'reversal' => 'Düzəliş (əks əməliyyat #'.$m->reversal_of_id.')',
+            'courier_expense' => 'Xərc'.($m->note ? ' — '.$m->note : ''),
+            'reversal' => str_starts_with((string) $m->note, 'Xərc ləğv edildi') ? $m->note : 'Düzəliş (əks əməliyyat #'.$m->reversal_of_id.')',
             default => $m->kindLabel(),
         };
     };
@@ -32,7 +33,7 @@
                     <div class="list__meta">
                         {{ $m->occurred_at->format('d.m.Y H:i') }}
                         @if($m->order) · {{ $m->order->order_no }}@endif
-                        @if($m->kind !== 'outgo' && $m->note && $m->kind !== 'reversal') · {{ $m->note }}@endif
+                        @if(!in_array($m->kind, ['outgo', 'courier_expense', 'reversal'], true) && $m->note) · {{ $m->note }}@endif
                         @if(!$self && $m->user) · {{ trim($m->user->full_name) }}@endif
                     </div>
                 </div>

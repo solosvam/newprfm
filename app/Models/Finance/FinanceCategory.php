@@ -12,7 +12,7 @@ class FinanceCategory extends Model
     public const TYPES = ['income' => 'Mədaxil', 'expense' => 'Məxaric', 'both' => 'Hər ikisi'];
 
     /** Avtomatik əməliyyatların kateqoriyaları — "Yeni əməliyyat"da seçilmir */
-    public const AUTO = ['sale', 'customer_refund', 'warehouse', 'warehouse_refund', 'transfer', 'credit_fee'];
+    public const AUTO = ['sale', 'customer_refund', 'warehouse', 'warehouse_refund', 'transfer', 'credit_fee', 'courier_expense'];
 
     protected $fillable = ['name', 'type', 'parent_id', 'code', 'system'];
 

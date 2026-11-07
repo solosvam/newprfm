@@ -75,3 +75,7 @@
 @media (max-width: 575px) { .courier-route { height: 320px; } }
 .courier-route__point { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
 .courier-route__point:hover { background: rgba(var(--primary-rgb), .05); }
+
+/* Kuryer xərcləri: qəbz şəkli (basanda yeni pəncərədə) */
+.courier-expense__photo { flex: none; width: 52px; height: 52px; border-radius: var(--border-radius-md, 8px); overflow: hidden; border: 1px solid var(--separator); }
+.courier-expense__photo img { width: 100%; height: 100%; object-fit: cover; }
