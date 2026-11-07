@@ -6,7 +6,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Web push (OneSignal REST API) — konkret müştərilərə: sayt onları "customer-{id}" xarici ID-si ilə bağlayır (push.js).
+ * Web push (OneSignal REST API) — konkret adamlara xarici ID ilə:
+ *  - müştərilər "customer-{id}" (sayt, push.js);
+ *  - əməkdaşlar "user-{id}" (kuryer tətbiqi, public/courier-app/app.js).
  * services.onesignal.rest_api_key yoxdursa, heç nə göndərilmir (false) və loga yazılır.
  */
 class PushService
@@ -24,23 +26,34 @@ class PushService
     /** @param int[] $customerIds  Uğurla göndərilibsə true */
     public function toCustomers(array $customerIds, string $title, string $message, ?string $url = null): bool
     {
-        $customerIds = array_values(array_unique(array_map('intval', $customerIds)));
-        if (!$customerIds) {
+        return $this->send('customer-', $customerIds, $title, $message, $url);
+    }
+
+    /** Əməkdaşlara (users.id) — kuryer tətbiqində icazə veriblərsə. @param int[] $userIds */
+    public function toUsers(array $userIds, string $title, string $message, ?string $url = null): bool
+    {
+        return $this->send('user-', $userIds, $title, $message, $url);
+    }
+
+    private function send(string $prefix, array $ids, string $title, string $message, ?string $url): bool
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (!$ids) {
             return true;
         }
         if (!$this->isConfigured()) {
-            Log::warning('Push not sent: ONESIGNAL_REST_API_KEY is not configured', ['customers' => count($customerIds)]);
+            Log::warning('Push not sent: ONESIGNAL_REST_API_KEY is not configured', ['recipients' => count($ids), 'prefix' => $prefix]);
 
             return false;
         }
 
-        foreach (array_chunk($customerIds, self::CHUNK) as $chunk) {
+        foreach (array_chunk($ids, self::CHUNK) as $chunk) {
             $response = Http::withHeaders(['Authorization' => 'Key '.config('services.onesignal.rest_api_key')])
                 ->acceptJson()->timeout(15)
                 ->post(self::URL, array_filter([
                     'app_id' => config('services.onesignal.app_id'),
                     'target_channel' => 'push',
-                    'include_aliases' => ['external_id' => array_map(fn ($id) => 'customer-'.$id, $chunk)],
+                    'include_aliases' => ['external_id' => array_map(fn ($id) => $prefix.$id, $chunk)],
                     'headings' => ['en' => $title, 'az' => $title],
                     'contents' => ['en' => $message, 'az' => $message],
                     'url' => $url,

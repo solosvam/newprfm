@@ -124,6 +124,14 @@ img { max-width: 100%; }
 .note--compact { margin: 10px 0 0; padding: 8px 10px; font-size: 14px; }
 .note--info { display: flex; align-items: flex-start; gap: 8px; border-color: #b9d3f0; background: var(--info-soft); color: #1d3f66; }
 
+/* Push icazəsi zolağı (app.js) */
+.push-ask { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--brand-soft); color: var(--brand); font-size: 14px; font-weight: 600; }
+.push-ask[hidden] { display: none; }
+.push-ask__text { flex: 1; }
+.push-ask .btn { min-height: 40px; padding: 8px 14px; white-space: nowrap; }
+.push-ask.is-denied { background: var(--warn-soft); color: #5b3a00; }
+.push-ask.is-denied .btn { display: none; }
+
 /* ---------- Kartlar ---------- */
 .card {
     display: block; margin-bottom: 12px; padding: 14px;

@@ -8,6 +8,7 @@
 @php
     $viewer = auth('admin')->user();
     $tab = $tab ?? null;
+    $pushAppId = config('services.onesignal.app_id'); // push bildirişləri (OneSignal) — qurulubsa
 @endphp
 <!doctype html>
 <html lang="az">
@@ -27,9 +28,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PS Kuryer">
     <link rel="stylesheet" href="{{ asset_v('courier-app/app.css') }}">
+    @if($pushAppId)<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>@endif
     <script src="{{ asset_v('courier-app/app.js') }}" defer></script>
 </head>
-<body data-sw="{{ route('kuryer.sw') }}" @if(!empty($refresh)) data-refresh @endif>
+<body data-sw="{{ route('kuryer.sw') }}" @if(!empty($refresh)) data-refresh @endif
+      @if($pushAppId) data-push-app="{{ $pushAppId }}" data-push-user="user-{{ $viewer->id }}" @endif>
     {{-- Quraşdırma ekranı: telefonda brauzerdə açılanda yalnız bu görünür --}}
     <section class="gate" aria-labelledby="gateTitle">
         <img class="gate__logo" src="{{ asset('courier-app/icons/icon-192.png') }}" alt="" width="88" height="88">
@@ -65,6 +68,13 @@
     </header>
 
     <main class="page">
+        @if($pushAppId)
+            {{-- Push icazəsi: iPhone yalnız düyməyə basanda icazə istəməyə imkan verir — app.js göstərir / gizlədir --}}
+            <div class="push-ask" data-push-ask hidden>
+                <div class="push-ask__text" data-push-text>Yeni sifarişlərdən dərhal xəbər tutmaq üçün bildirişləri açın.</div>
+                <button type="button" class="btn btn--primary" data-push-enable>Bildirişləri aç</button>
+            </div>
+        @endif
         @include('courier-app._flash')
         @yield('content')
     </main>

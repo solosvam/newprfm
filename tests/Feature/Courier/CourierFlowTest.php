@@ -373,6 +373,29 @@ class CourierFlowTest extends TestCase
         return $courier;
     }
 
+    /** Sifariş kuryerə təyin olunanda push (OneSignal, "user-{id}") — Telegram ilə yanaşı */
+    public function test_courier_gets_push_when_order_is_assigned(): void
+    {
+        config(['services.onesignal' => ['app_id' => 'app-1', 'rest_api_key' => 'key-1']]);
+        \Illuminate\Support\Facades\Http::fake(['api.onesignal.com/*' => \Illuminate\Support\Facades\Http::response(['id' => 'n1'])]);
+        $first = $this->courierAppTables();
+        [$order] = $this->assigned($first);
+        $courier = User::forceCreate(['name' => 'Vüsal']);
+        $courier->assignRole(FinanceService::COURIER_ROLE);
+        app(OrderStatusService::class)->assignCourier($order, $courier->fresh(), 7); // operator kuryeri dəyişir
+
+        $sent = collect(\Illuminate\Support\Facades\Http::recorded())->map(fn ($pair) => $pair[0]->data())
+            ->first(fn ($data) => ($data['include_aliases']['external_id'] ?? null) === ['user-'.$courier->id]);
+        $this->assertNotNull($sent, 'kuryerə push getməlidir');
+        $this->assertSame('Yeni sifariş: PS1', $sent['headings']['az']);
+        $this->assertSame(route('kuryer.order', $order), $sent['url']);
+
+        // Tətbiqdə: OneSignal qurulubsa — SDK və kuryerin xarici ID-si
+        $html = $this->actingAs($courier, 'admin')->get(route('kuryer.home'))->getContent();
+        $this->assertStringContainsString('data-push-user="user-'.$courier->id.'"', $html);
+        $this->assertStringContainsString('OneSignalSDK.page.js', $html);
+    }
+
     /** /kuryer: girişsiz — admin girişinə, kuryer admin panelə girəndə — tətbiqə, admin — tətbiqə yox */
     public function test_courier_app_access_and_redirects(): void
     {

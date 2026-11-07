@@ -128,6 +128,46 @@
         });
     }
 
+    // Push bildirişləri (OneSignal): kuryer "user-{id}" kimi bağlanır — server ona sifariş təyin olunanda göndərir (CourierPush).
+    // İcazə yalnız düymə ilə (iPhone başqa cür icazə vermir); rədd edilibsə — telefon ayarlarına yönləndirən mətn.
+    const pushApp = document.body.dataset.pushApp;
+    const pushAsk = document.querySelector('[data-push-ask]');
+    if (pushApp && pushAsk) {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.OneSignalDeferred.push(async OneSignal => {
+            try {
+                await OneSignal.init({
+                    appId: pushApp,
+                    serviceWorkerPath: 'kuryer/sw.js',
+                    serviceWorkerParam: { scope: '/kuryer' },
+                    promptOptions: { slidedown: { prompts: [] } }, // öz zolağımız var
+                });
+                await OneSignal.login(document.body.dataset.pushUser);
+            } catch (e) {
+                return; // bildiriş əsas işə mane olmamalıdır
+            }
+            const refresh = () => {
+                const supported = OneSignal.Notifications.isPushSupported();
+                const denied = typeof Notification !== 'undefined' && Notification.permission === 'denied';
+                const on = OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn !== false;
+                pushAsk.hidden = !supported || on;
+                pushAsk.classList.toggle('is-denied', denied);
+                pushAsk.querySelector('[data-push-text]').textContent = denied
+                    ? 'Bildirişlər bağlıdır. Telefonun ayarlarında PS Kuryer üçün bildirişlərə icazə verin.'
+                    : 'Yeni sifarişlərdən dərhal xəbər tutmaq üçün bildirişləri açın.';
+            };
+            pushAsk.querySelector('[data-push-enable]').addEventListener('click', async () => {
+                try {
+                    if (OneSignal.Notifications.permission) await OneSignal.User.PushSubscription.optIn();
+                    else await OneSignal.Notifications.requestPermission();
+                } catch (e) { /* */ }
+                refresh();
+            });
+            OneSignal.Notifications.addEventListener('permissionChange', refresh);
+            refresh();
+        });
+    }
+
     // Service worker: /kuryer/sw.js, əhatəsi /kuryer (server Service-Worker-Allowed başlığı ilə icazə verir)
     const sw = document.body.dataset.sw;
     if (sw && 'serviceWorker' in navigator) {
