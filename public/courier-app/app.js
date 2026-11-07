@@ -450,6 +450,8 @@
                     serviceWorkerPath: 'kuryer/sw.js',
                     serviceWorkerParam: { scope: '/kuryer' },
                     promptOptions: { slidedown: { prompts: [] } },
+                    // Müştəri saytının "Abunə olduğunuz üçün təşəkkür..." salamlama bildirişi kuryerə getməsin
+                    welcomeNotification: { disable: true },
                 });
                 await OneSignal.login(config.pushUser);
             } catch (e) {
