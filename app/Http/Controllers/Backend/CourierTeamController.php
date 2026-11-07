@@ -53,6 +53,7 @@ class CourierTeamController extends Controller
      * Arxiv filtri: a_from / a_to (son dəyişiklik tarixi), a_status, a_q (sifariş nömrəsi və ya müştəri);
      * tarixçə filtri: h_from / h_to, h_kind. Səhifələr: page (arxiv), hpage (tarixçə).
      * Baxan kuryerdirsə (baş kuryer): filtrsiz — yalnız bu gün; filtrdə ən çox COURIER_DAYS_BACK gün geriyə.
+     * Yer tarixçəsi (l_date — gün, standart bu gün) yalnız admin paneldə.
      */
     public function show(Request $request, User $courier, FinanceService $finance, OrderStatusService $statuses): View
     {
@@ -63,7 +64,18 @@ class CourierTeamController extends Controller
         $f = $request->validate([
             'a_from' => ['nullable', 'date'], 'a_to' => ['nullable', 'date'], 'a_status' => ['nullable', 'string', 'max:30'], 'a_q' => ['nullable', 'string', 'max:60'],
             'h_from' => ['nullable', 'date'], 'h_to' => ['nullable', 'date'], 'h_kind' => ['nullable', 'string', 'max:30'],
+            'l_date' => ['nullable', 'date'],
         ]);
+        // Yer tarixçəsi (admin panel): seçilən günün nöqtələri və həmin günün marşrutu Google Maps-də (ən çox 10 nöqtə)
+        $locationDate = \Illuminate\Support\Carbon::parse($f['l_date'] ?? today())->startOfDay();
+        $locations = $request->routeIs('kuryer.*') ? collect() : \App\Models\Courier\CourierLocation::where('user_id', $courier->id)
+            ->whereBetween('recorded_at', [$locationDate, $locationDate->copy()->endOfDay()])->orderBy('recorded_at')->get();
+        $routeUrl = null;
+        if ($locations->count() > 1) {
+            $step = max(1, (int) ceil($locations->count() / 10));
+            $points = $locations->filter(fn ($p, $i) => $i % $step === 0)->push($locations->last())->unique('id')->take(-10);
+            $routeUrl = 'https://www.google.com/maps/dir/'.$points->map(fn ($p) => $p->lat.','.$p->lng)->implode('/');
+        }
         $minDate = FinanceService::isCourier($me) ? today()->subDays(self::COURIER_DAYS_BACK)->toDateString() : null;
         // Sorğuda istifadə olunan "tarixdən": kuryerə tarix yazılmayıbsa — bu gün, yazılıbsa — həddən əvvəl deyil
         $since = function (?string $from) use ($minDate) {
@@ -108,6 +120,9 @@ class CourierTeamController extends Controller
             'balance' => $balance,
             'filters' => $f,
             'minDate' => $minDate,
+            'locations' => $locations,
+            'locationDate' => $locationDate,
+            'routeUrl' => $routeUrl,
             'history' => $historyPage,
             'historyTotals' => ['in' => $history->where('delta', '>', 0)->sum('delta'), 'out' => -$history->where('delta', '<', 0)->sum('delta')],
             'kinds' => $kinds,

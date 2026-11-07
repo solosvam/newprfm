@@ -50,7 +50,7 @@ class CourierAppController extends Controller
         ]);
     }
 
-    /** Kuryerin son yeri (tətbiq açılanda / qayıdanda — app.js); admin Kuryerlər səhifəsində görünür */
+    /** Kuryerin yeri (tətbiq açılanda / qayıdanda — app.js): tarixçəyə yazılır, son yer istifadəçidə; admin Kuryerlər səhifəsində görür */
     public function location(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -58,11 +58,17 @@ class CourierAppController extends Controller
             'lng' => ['required', 'numeric', 'between:-180,180'],
             'accuracy' => ['nullable', 'numeric', 'min:0'],
         ]);
-        auth('admin')->user()->forceFill([
-            'location_lat' => round((float) $data['lat'], 7),
-            'location_lng' => round((float) $data['lng'], 7),
-            'location_accuracy' => isset($data['accuracy']) ? (int) min(round((float) $data['accuracy']), 4294967295) : null,
-            'location_at' => now(),
+        $point = [
+            'lat' => round((float) $data['lat'], 7),
+            'lng' => round((float) $data['lng'], 7),
+            'accuracy' => isset($data['accuracy']) ? (int) min(round((float) $data['accuracy']), 4294967295) : null,
+        ];
+        $user = auth('admin')->user();
+        // Tarixçə (hər göndəriş) və son yer (siyahı üçün)
+        \App\Models\Courier\CourierLocation::create($point + ['user_id' => $user->id, 'recorded_at' => now()]);
+        $user->forceFill([
+            'location_lat' => $point['lat'], 'location_lng' => $point['lng'],
+            'location_accuracy' => $point['accuracy'], 'location_at' => now(),
         ])->save();
 
         return response()->json(['ok' => true]);

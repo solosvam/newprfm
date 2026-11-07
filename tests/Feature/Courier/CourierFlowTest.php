@@ -54,6 +54,7 @@ class CourierFlowTest extends TestCase
             '2026_11_02_100000_add_courier_pays_to_order_item_allocations.php',
             '2026_09_29_200000_create_finance_tables.php',
             '2026_10_16_100000_create_finance_categories.php',
+            '2026_11_07_160000_create_courier_locations.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();
         }
@@ -405,7 +406,9 @@ class CourierFlowTest extends TestCase
         $this->assertStringContainsString('class="geo-gate"', $this->get(route('kuryer.home'))->getContent());
 
         $this->postJson(route('kuryer.location'), ['lat' => 200, 'lng' => 49.8])->assertUnprocessable();
+        $this->postJson(route('kuryer.location'), ['lat' => 40.4000, 'lng' => 49.8500])->assertOk();
         $this->postJson(route('kuryer.location'), ['lat' => 40.4093, 'lng' => 49.8671, 'accuracy' => 12.4])->assertOk();
+        $this->assertSame(2, \App\Models\Courier\CourierLocation::where('user_id', $courier->id)->count()); // tarixçə
         $fresh = $courier->fresh();
         $this->assertEquals([40.4093, 49.8671, 12], [(float) $fresh->location_lat, (float) $fresh->location_lng, (int) $fresh->location_accuracy]);
         $this->assertTrue($fresh->location_at->isToday());
@@ -413,7 +416,10 @@ class CourierFlowTest extends TestCase
         $admin = User::forceCreate(['name' => 'Admin']);
         $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'courier.team', 'guard_name' => 'admin']));
         $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $courier))->assertOk()
-            ->assertSee(e($fresh->locationMapsUrl()), false)->assertSee('±12 m')->assertSee('Xəritədə aç');
+            ->assertSee(e($fresh->locationMapsUrl()), false)->assertSee('±12 m')->assertSee('Xəritədə aç')
+            ->assertSee('2 nöqtə')->assertSee('https://www.google.com/maps/dir/40.4,49.85/40.4093,49.8671', false);
+        $this->get(route('admin.courier.team.show', ['courier' => $courier, 'l_date' => today()->subDay()->toDateString()]))
+            ->assertSee('Bu gün üçün yer məlumatı yoxdur.');
     }
 
     /** /kuryer: girişsiz — admin girişinə, kuryer admin panelə girəndə — tətbiqə, admin — tətbiqə yox */

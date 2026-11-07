@@ -107,6 +107,31 @@
         <div class="card"><div class="card-body text-center text-muted py-4">Aktiv sifariş yoxdur.</div></div>
     @endforelse
 
+    {{-- Yer tarixçəsi: kuryer tətbiqi hər açılanda göndərir; gün seçilir, günün marşrutu xəritədə --}}
+    <h2 class="small-title mt-5" id="locations">Yer tarixçəsi</h2>
+    <form method="get" action="{{ route('admin.courier.team.show', $courier) }}#locations" class="d-flex flex-wrap gap-2 align-items-center mb-2">
+        @foreach(request()->except(['l_date', 'page', 'hpage']) as $key => $value)@if(is_string($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif @endforeach
+        <input type="date" name="l_date" class="form-control w-auto" value="{{ $locationDate->format('Y-m-d') }}" max="{{ today()->format('Y-m-d') }}" aria-label="Gün">
+        <button type="submit" class="btn btn-outline-primary">Göstər</button>
+        @if($routeUrl)<a href="{{ $routeUrl }}" target="_blank" rel="noopener" class="btn btn-primary">Günün marşrutu xəritədə</a>@endif
+    </form>
+    @if($locations->isEmpty())
+        <div class="card"><div class="card-body text-center text-muted py-4">Bu gün üçün yer məlumatı yoxdur.</div></div>
+    @else
+        <div class="text-muted text-small mb-2">{{ $locations->count() }} nöqtə</div>
+        <div class="card"><div class="card-body courier-history">
+            @foreach($locations->reverse() as $point)
+                <div class="courier-history__row">
+                    <div class="courier-history__main">
+                        <div class="courier-history__what">{{ $point->recorded_at->format('H:i') }}</div>
+                        <div class="courier-history__meta">{{ $point->lat }}, {{ $point->lng }}@if($point->accuracy) · ±{{ $point->accuracy }} m @endif</div>
+                    </div>
+                    <div class="courier-history__sum"><a href="{{ $point->mapsUrl() }}" target="_blank" rel="noopener">Xəritədə aç</a></div>
+                </div>
+            @endforeach
+        </div></div>
+    @endif
+
     {{-- Sifariş arxivi --}}
     <h2 class="small-title mt-5" id="archive">Sifariş arxivi</h2>
     @php $aActive = collect(['a_from', 'a_to', 'a_status', 'a_q'])->contains(fn ($k) => filled($filters[$k] ?? null)); @endphp
