@@ -88,18 +88,53 @@ class LegacyCustomerImportTest extends TestCase
         $this->assertSame('invalid', $importer->import($this->row(7, ['bonus' => '9999999999.999']), true)['status']);
     }
 
-    public function test_repeated_import_keeps_existing_balance_and_password(): void
+    public function test_repeated_import_updates_only_legacy_bonus_and_keeps_new_site_activity(): void
+    {
+        (new LegacyCustomerImporter())->import($this->row(), true); // açılış 12.50
+        $customer = Customer::first();
+        // Yeni saytda 10.50 xərclənib, parol qoyulub.
+        $customer->update(['password' => 'my-password', 'bonus_balance' => '2.00', 'name' => 'Yeni ad']);
+        $before = $customer->fresh();
+
+        // Eyni bonus — heç nə dəyişmir.
+        $this->assertSame('already_imported', (new LegacyCustomerImporter())->import($this->row(), true)['status']);
+
+        // Köhnə bonus 50 oldu: sınaqda yazılmır.
+        $result = (new LegacyCustomerImporter())->import($this->row(1, ['bonus' => '50', 'firstname' => 'Köhnə ad']), false);
+        $this->assertSame(['status' => 'would_update_bonus', 'old_customer_id' => 1, 'bonus_cents' => 3750], $result);
+        $this->assertEquals(2, $customer->fresh()->bonus_balance);
+
+        // Real: balans fərq qədər artır (2 − 12.50 + 50), açılış qeydi 50 olur, qalan sahələr toxunulmur.
+        $this->assertSame('bonus_updated', (new LegacyCustomerImporter())->import($this->row(1, ['bonus' => '50', 'firstname' => 'Köhnə ad']), true)['status']);
+        $after = $customer->fresh();
+        $this->assertEquals(39.50, $after->bonus_balance);
+        $this->assertSame('Yeni ad', $after->name);
+        $this->assertSame($before->password, $after->password);
+        $this->assertSame($before->updated_at->format('Y-m-d H:i:s'), $after->updated_at->format('Y-m-d H:i:s'));
+        $this->assertSame(1, DB::table('customer_bonus_transactions')->count());
+        $this->assertEquals(50, DB::table('customer_bonus_transactions')->value('amount'));
+        $this->assertSame(1, Customer::count());
+
+        // Köhnə bonus 0 oldu: açılış qeydi silinir, balans mənfiyə düşmür.
+        $this->assertSame('bonus_updated', (new LegacyCustomerImporter())->import($this->row(1, ['bonus' => '0']), true)['status']);
+        $this->assertEquals(0, $customer->fresh()->bonus_balance);
+        $this->assertSame(0, DB::table('customer_bonus_transactions')->count());
+
+        // Yenidən 5: açılış qeydi yaradılır.
+        $this->assertSame('bonus_updated', (new LegacyCustomerImporter())->import($this->row(1, ['bonus' => '5']), true)['status']);
+        $this->assertEquals(5, $customer->fresh()->bonus_balance);
+        $this->assertEquals(5, DB::table('customer_bonus_transactions')->value('amount'));
+    }
+
+    public function test_command_reports_bonus_updates(): void
     {
         (new LegacyCustomerImporter())->import($this->row(), true);
-        $customer = Customer::first();
-        $customer->update(['password' => 'my-password', 'bonus_balance' => '2.00']);
-        $password = $customer->fresh()->password;
-        $result = (new LegacyCustomerImporter())->import($this->row(1, ['bonus' => '50']), true);
-        $this->assertSame('already_imported', $result['status']);
-        $this->assertEquals(2, $customer->fresh()->bonus_balance);
-        $this->assertSame($password, $customer->fresh()->password);
-        $this->assertSame(1, Customer::count());
-        $this->assertSame(1, DB::table('customer_bonus_transactions')->count());
+        Http::fake(['*' => Http::response($this->page([$this->row(1, ['bonus' => '20'])]))]);
+        $this->artisan('parfumshop:import-customers --apply')
+            ->expectsOutputToContain('bonus (yeni + yenilənənlərin fərqi): 7.50')
+            ->assertExitCode(0);
+        $this->assertEquals(20, Customer::first()->bonus_balance);
+        $this->assertStringContainsString('"bonus_updated":1', file_get_contents(glob(storage_path('app/private/imports/*.jsonl'))[0]));
     }
 
     public function test_dry_run_detects_duplicates_across_rows_without_writing(): void

@@ -70,7 +70,7 @@ class ImportLegacyCustomers extends Command
 
         $stream = null;
         $path = null;
-        $counts = array_fill_keys(['created', 'would_create', 'already_imported', 'conflict', 'invalid', 'dates_updated', 'would_update_date'], 0);
+        $counts = array_fill_keys(['created', 'would_create', 'already_imported', 'conflict', 'invalid', 'dates_updated', 'would_update_date', 'bonus_updated', 'would_update_bonus'], 0);
         $bonus = 0;
         $finished = false;
         $error = null;
@@ -138,8 +138,8 @@ class ImportLegacyCustomers extends Command
             $lock->release();
             $this->untrap();
         }
-        $this->table(['Yaradıldı', 'Yaradılacaq', 'Əvvəl köçürülüb', 'Konflikt', 'Uyğunsuz', 'Tarix yeniləndi', 'Tarix yenilənəcək'], [array_values($counts)]);
-        $this->line(($apply ? 'Köçürülən' : 'Köçürüləcək').' bonus: '.LegacyCustomerImporter::decimal($bonus));
+        $this->table(['Yaradıldı', 'Yaradılacaq', 'Əvvəl köçürülüb', 'Konflikt', 'Uyğunsuz', 'Tarix yeniləndi', 'Tarix yenilənəcək', 'Bonus yeniləndi', 'Bonus yenilənəcək'], [array_values($counts)]);
+        $this->line(($apply ? 'Köçürülən' : 'Köçürüləcək').' bonus (yeni + yenilənənlərin fərqi): '.LegacyCustomerImporter::decimal($bonus));
         if ($path) $this->line('Hesabat: '.$path);
         if (!$finished || $counts['conflict'] > 0 || $counts['invalid'] > 0) {
             $this->warn('İmport tam problemsiz deyil. Hesabatı nəzərdən keçirin; əvvəl yaradılan hesablar təkrar yazılmayacaq.');

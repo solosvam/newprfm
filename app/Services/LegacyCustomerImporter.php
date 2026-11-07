@@ -101,15 +101,8 @@ class LegacyCustomerImporter
             return ['status' => 'already_imported', 'old_customer_id' => $id];
         }
         if (is_int($id) && $id > 0 && ($existing = $this->customers()->where('old_customer_id', $id)->first())) {
-            if ($existing->created_at?->format('Y-m-d H:i:s') !== $date) {
-                if ($apply) {
-                    // Query builder updates only this column; Eloquent would also touch updated_at.
-                    DB::table('customers')->where('id', $existing->id)->update(['created_at' => $date]);
-                }
-                $this->seenIds[$id] = true;
-                return ['status' => $apply ? 'dates_updated' : 'would_update_date', 'old_customer_id' => $id];
-            }
-            return ['status' => 'already_imported', 'old_customer_id' => $id];
+            $this->seenIds[$id] = true;
+            return $this->updateExisting($existing, $row, $date, $apply);
         }
         $data = [
             'old_customer_id' => $id,
@@ -175,6 +168,60 @@ class LegacyCustomerImporter
         }
 
         return $result;
+    }
+
+    /**
+     * Artıq köçürülmüş müştəri: yalnız köhnə bonus yenilənir (və köhnə created_at fərqlidirsə — tarix).
+     * Ad, nömrə, parol və s. toxunulmur. Bonus balansı fərq qədər dəyişir — yeni saytda qazanılan
+     * və xərclənən bonus itmir: yeni balans = indiki balans − köhnə açılış qeydi + yeni köhnə bonus.
+     * Açılış qeydinin ("Köhnə sistemdən köçürülən bonus") məbləği də yeni rəqəmə dəyişir.
+     */
+    private function updateExisting(Customer $existing, array $row, string $date, bool $apply): array
+    {
+        $id = $existing->old_customer_id;
+        $bonus = $row['bonus'] ?? null;
+        if (!is_string($bonus) || !preg_match('/^-?[0-9]{1,10}(?:\.[0-9]{1,6})?$/D', $bonus)) {
+            return ['status' => 'invalid', 'old_customer_id' => $id, 'reason' => 'Uyğunsuz sahələr: bonus'];
+        }
+        try {
+            $newCents = $this->bonusCents($bonus);
+        } catch (InvalidArgumentException $e) {
+            return ['status' => 'invalid', 'old_customer_id' => $id, 'reason' => $e->getMessage()];
+        }
+        $opening = $existing->bonusTransactions()->where('type', 'adjustment')->where('note', self::OPENING_NOTE)->orderBy('id')->first();
+        $oldCents = $opening ? self::cents($opening->amount) : 0;
+        $delta = $newCents - $oldCents;
+        $dateChanged = $existing->created_at?->format('Y-m-d H:i:s') !== $date;
+        if ($delta === 0 && !$dateChanged) {
+            return ['status' => 'already_imported', 'old_customer_id' => $id];
+        }
+        if ($apply) {
+            DB::transaction(function () use ($existing, $opening, $newCents, $delta, $dateChanged, $date) {
+                // Query builder: yalnız lazım olan sütunlar dəyişir (Eloquent updated_at-i də yeniləyərdi).
+                $columns = $dateChanged ? ['created_at' => $date] : [];
+                if ($delta !== 0) {
+                    $current = DB::table('customers')->where('id', $existing->id)->lockForUpdate()->value('bonus_balance');
+                    $columns['bonus_balance'] = self::decimal(max(0, self::cents($current) + $delta));
+                    if ($opening && $newCents > 0) {
+                        DB::table('customer_bonus_transactions')->where('id', $opening->id)->update(['amount' => self::decimal($newCents)]);
+                    } elseif ($opening) {
+                        DB::table('customer_bonus_transactions')->where('id', $opening->id)->delete();
+                    } else {
+                        $existing->bonusTransactions()->create(['type' => 'adjustment', 'amount' => self::decimal($newCents), 'note' => self::OPENING_NOTE]);
+                    }
+                }
+                DB::table('customers')->where('id', $existing->id)->update($columns);
+            });
+        }
+        if ($delta === 0) {
+            return ['status' => $apply ? 'dates_updated' : 'would_update_date', 'old_customer_id' => $id];
+        }
+        return ['status' => $apply ? 'bonus_updated' : 'would_update_bonus', 'old_customer_id' => $id, 'bonus_cents' => $delta];
+    }
+
+    private static function cents(mixed $amount): int
+    {
+        return (int) round(((float) $amount) * 100);
     }
 
     /** Köhnə sex: 1 — kişi (gender 1), 2 — qadın (gender 0), 0/boş — məlum deyil (NULL). */
@@ -243,6 +290,7 @@ class LegacyCustomerImporter
 
     public static function decimal(int $cents): string
     {
-        return intdiv($cents, 100).'.'.str_pad((string) ($cents % 100), 2, '0', STR_PAD_LEFT);
+        $abs = abs($cents);
+        return ($cents < 0 ? '-' : '').intdiv($abs, 100).'.'.str_pad((string) ($abs % 100), 2, '0', STR_PAD_LEFT);
     }
 }
