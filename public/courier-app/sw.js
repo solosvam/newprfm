@@ -22,26 +22,23 @@ function debug(info) {
     return fetch('/kuryer/sw-debug', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(info) }).catch(() => {});
 }
 self.addEventListener('push', event => {
+    // Rəqəm dərhal (şəbəkəsiz): push-dakı say, yoxdursa 1 — sonra diaqnostika (MÜVƏQQƏTİ) paralel
     const count = pushBadge(event);
+    const hasApi = !!(self.navigator && 'setAppBadge' in self.navigator);
     let raw = null;
     try { raw = event.data ? event.data.text() : null; } catch (e) { raw = 'unreadable: ' + e; }
-    const hasApi = !!(self.navigator && 'setAppBadge' in self.navigator);
-    if (count !== null && !Number.isNaN(count)) {
-        event.waitUntil(debug({ step: 'push', hasApi, count, raw: raw && raw.slice(0, 900) })
-            .then(() => (hasApi ? self.navigator.setAppBadge(count).then(() => 'ok', e => 'error: ' + e) : 'no-api'))
-            .then(result => debug({ step: 'badge', result })));
-        return;
-    }
-    event.waitUntil(debug({ step: 'push-no-count', hasApi, raw: raw && raw.slice(0, 900) }));
-    event.waitUntil(fetch('/kuryer/badge', { credentials: 'include', headers: { 'Accept': 'application/json' } })
-        .then(response => (response.ok ? response.json() : null))
-        .then(data => (data ? applyBadge(data.unread) : undefined))
-        .catch(() => {}));
+    const badge = hasApi
+        ? self.navigator.setAppBadge(count !== null && !Number.isNaN(count) && count > 0 ? count : 1).then(() => 'ok', e => 'error: ' + e)
+        : Promise.resolve('no-api');
+    event.waitUntil(Promise.all([
+        badge,
+        badge.then(result => debug({ step: 'push', hasApi, count, result, raw: raw && raw.slice(0, 900) })),
+    ]));
 });
 
 // OneSignal push işləyicisi bizimkindən SONRA qeyd olunur (yuxarıdakı rəqəm kodu push-u birinci alsın)
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-const VERSION = 'kuryer-v13';
+const VERSION = 'kuryer-v14';
 const OFFLINE = '/courier-app/offline.html';
 const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
 
