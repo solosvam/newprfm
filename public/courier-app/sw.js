@@ -1,7 +1,7 @@
 // Kuryer tətbiqinin service worker-i (/kuryer/sw.js, əhatəsi /kuryer — CourierAppController::serviceWorker).
 // Səhifələr həmişə şəbəkədən (məlumat təzə olmalıdır, keşə yazılmır); internet yoxdursa — "oflayn" səhifəsi.
 // Tətbiqin CSS / JS / ikonları — keşdən dərhal, arxa planda yenilənir.
-const VERSION = 'kuryer-v2';
+const VERSION = 'kuryer-v3';
 const OFFLINE = '/courier-app/offline.html';
 const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
 
