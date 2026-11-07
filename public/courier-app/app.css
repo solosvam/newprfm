@@ -125,6 +125,18 @@ a.card:active { background: #faf8fc; }
 .card > .balance { padding: 0; box-shadow: none; }
 .stat__label, .balance__label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
 .stat__value, .balance__value { margin-top: 2px; font-size: 26px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.balance__row { display: flex; align-items: center; gap: 10px; }
+.balance__value { transition: filter .25s ease; }
+.balance__value.is-hidden { filter: blur(9px); user-select: none; -webkit-user-select: none; }
+.eye {
+    flex: none; display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%;
+    background: var(--brand-soft); color: var(--brand-2); cursor: pointer;
+}
+.eye:active { transform: scale(.94); }
+.eye__hide, .eye[aria-pressed="true"] .eye__show { display: none; }
+.eye[aria-pressed="true"] .eye__hide { display: inline-flex; }
+.eye__show { display: inline-flex; }
 .balance--owe .balance__value { color: var(--warn); }
 .balance--due .balance__value { color: var(--ok); }
 

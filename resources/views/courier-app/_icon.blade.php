@@ -1,4 +1,4 @@
-{{-- Xətti ikonlar (24×24, currentColor). $name: back, box, wallet, users, phone, map, check, warning, gift, logout, chevron, share, plus, download --}}
+{{-- Xətti ikonlar (24×24, currentColor). $name: back, box, wallet, users, phone, map, check, warning, gift, logout, chevron, share, plus, download, eye, eye-off --}}
 @php
     $paths = [
         'back' => '<path d="M15 18l-6-6 6-6"/>',
@@ -14,6 +14,8 @@
         'logout' => '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/>',
         'share' => '<path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/>',
         'plus' => '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8"/><path d="M8 12h8"/>',
+        'eye' => '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+        'eye-off' => '<path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-3.2 4.2"/><path d="M6.6 6.6A17.4 17.4 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
         'download' => '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>',
     ];
 @endphp

@@ -56,6 +56,35 @@
     });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeZoom(); });
 
+    // Balans: bulanıq açılır; göz düyməsi — görünür (0-dan məbləğə sayılır) və yenidən gizlənir
+    const money = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.addEventListener('click', event => {
+        const toggle = event.target.closest('[data-money-toggle]');
+        if (!toggle) return;
+        const value = toggle.closest('[data-money]').querySelector('[data-money-value]');
+        const target = parseFloat(value.dataset.moneyValue) || 0;
+        const show = toggle.getAttribute('aria-pressed') !== 'true';
+        toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+        toggle.setAttribute('aria-label', show ? 'Məbləği gizlət' : 'Məbləği göstər');
+        cancelAnimationFrame(Number(value.dataset.frame || 0));
+        if (!show) {
+            value.classList.add('is-hidden');
+            value.textContent = money.format(target) + ' AZN';
+            return;
+        }
+        value.classList.remove('is-hidden');
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const duration = reduce ? 0 : 700;
+        const started = performance.now();
+        const step = now => {
+            const progress = duration ? Math.min(1, (now - started) / duration) : 1;
+            const eased = 1 - Math.pow(1 - progress, 3); // sonda yavaşlayır
+            value.textContent = money.format(target * eased) + ' AZN';
+            if (progress < 1) value.dataset.frame = String(requestAnimationFrame(step));
+        };
+        value.dataset.frame = String(requestAnimationFrame(step));
+    });
+
     // Siyahı səhifələri (data-refresh): tətbiqə 1 dəqiqədən sonra qayıdanda — təzə məlumat
     if (document.body.hasAttribute('data-refresh')) {
         let hiddenAt = 0;
