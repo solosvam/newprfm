@@ -5,7 +5,8 @@
   Telefonda / planşetdə tətbiq yalnız quraşdırılmış halda (ana ekrandakı ikondan) işləyir: brauzerdə açılanda
   .gate ekranı göstərilir (app.css — display-mode, app.js — quraşdırma düyməsi). Kompüterdə məhdudiyyət yoxdur.
   Quraşdırılmış tətbiqdə (telefonda) məkan icazəsi verilməyənə qədər .geo-gate göstərilir; icazədən sonra yer
-  hər açılışda serverə göndərilir (app.js, body.geo-check → geo-need / geo-ok).
+  hər açılışda serverə göndərilir (app.js, html.geo-check → geo-need / geo-ok).
+  Keçidlər Hotwire Turbo ilə (yalnız <body> dəyişir) — tətbiq səviyyəli ayarlar <html>-dədir.
   Splash: tətbiq açılanda bir dəfə (ps_k_splash sessiya cookie-si yoxdursa) — app.js qısa müddətdən sonra gizlədir.
 --}}
 @php
@@ -14,13 +15,17 @@
     $pushAppId = config('services.onesignal.app_id'); // push bildirişləri (OneSignal) — qurulubsa
 @endphp
 <!doctype html>
-<html lang="az">
+<html lang="az" class="geo-check" data-sw="{{ route('kuryer.sw') }}" data-geo-url="{{ route('kuryer.location') }}"
+      @if($pushAppId) data-push-app="{{ $pushAppId }}" data-push-user="user-{{ $viewer->id }}" @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#5b2a86">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex, nofollow">
+    {{-- Hotwire Turbo: keçidlər səhifəni yenidən yükləmədən (yalnız /kuryer daxilində), yumşaq keçid animasiyası ilə --}}
+    <meta name="turbo-root" content="/kuryer">
+    <meta name="view-transition" content="same-origin">
     <title>@yield('title') · PS Kuryer</title>
     <link rel="manifest" href="{{ asset('courier-app/manifest.webmanifest') }}">
     {{-- Kuryerin öz ikonu: loqolu hədiyyə çantası (public/courier-app/icons, mənbə — icon.svg / icon-maskable.svg) --}}
@@ -30,12 +35,12 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PS Kuryer">
-    <link rel="stylesheet" href="{{ asset_v('courier-app/app.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('courier-app/app.css') }}" data-turbo-track="reload">
     @if($pushAppId)<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>@endif
-    <script src="{{ asset_v('courier-app/app.js') }}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js" defer></script>
+    <script src="{{ asset_v('courier-app/app.js') }}" defer data-turbo-track="reload"></script>
 </head>
-<body class="geo-check" data-sw="{{ route('kuryer.sw') }}" data-geo-url="{{ route('kuryer.location') }}" @if(!empty($refresh)) data-refresh @endif
-      @if($pushAppId) data-push-app="{{ $pushAppId }}" data-push-user="user-{{ $viewer->id }}" @endif>
+<body @if(!empty($refresh)) data-refresh @endif>
     @unless(request()->cookie('ps_k_splash'))
         <div class="splash" data-splash aria-hidden="true">
             <img class="splash__icon" src="{{ asset('courier-app/icons/icon-192.png') }}" alt="" width="96" height="96">

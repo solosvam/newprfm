@@ -32,15 +32,14 @@
 }
 
 /* ---------- Səhifələr arası keçid ----------
- * Yeni səhifə yüklənəndə ağ yanıb-sönmə olmasın: köhnə səhifə yenisinə yumşaq keçir (View Transitions — iOS 18.2+, Chrome);
- * yuxarı zolaq və aşağı menyu yerində qalır. Dəstəkləməyən brauzerdə adi keçid. */
+ * Keçidlər Turbo ilə (səhifə yenidən yüklənmir — ağ ekran yoxdur). Animasiya View Transitions ilə (iOS 18.2+, Chrome):
+ * köhnə məzmun yerində qalır (şəffaflaşmır — yoxsa arxadan ağ fon görünür), yenisi üstündən yumşaq sürüşüb gəlir;
+ * yuxarı zolaq və aşağı menyu yerində qalır. */
 @view-transition { navigation: auto; }
 .bar { view-transition-name: bar; }
 .tabs { view-transition-name: tabs; }
-/* Mobil tətbiq kimi: köhnə məzmun solur, yenisi aşağıdan yumşaq sürüşüb gəlir */
-@keyframes page-out { to { opacity: 0; } }
 @keyframes page-in { from { opacity: 0; transform: translateY(14px); } }
-::view-transition-old(root) { animation: .14s ease-out both page-out; }
+::view-transition-old(root) { animation: none; }
 ::view-transition-new(root) { animation: .26s cubic-bezier(.2, .8, .2, 1) both page-in; }
 ::view-transition-group(bar), ::view-transition-group(tabs) { animation-duration: 0s; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
@@ -98,7 +97,7 @@ img { max-width: 100%; }
 .bar__title { flex: 1; min-width: 0; font-size: 19px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bar__user { max-width: 38vw; font-size: 13px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---------- Yüklənmə göstəricisi (keçid / forma göndərilir — app.js, body.is-loading) ---------- */
+/* ---------- Yüklənmə göstəricisi (keçid / forma göndərilir — app.js, html.is-loading) ---------- */
 .loader {
     position: fixed; left: 0; right: 0; z-index: 30;
     top: calc(var(--bar-h) + var(--safe-top)); height: 3px;
@@ -111,9 +110,9 @@ img { max-width: 100%; }
     animation: loader 1s ease-in-out infinite;
 }
 @keyframes loader { from { transform: translateX(-100%); } to { transform: translateX(240%); } }
-body.is-loading .loader { opacity: 1; }
+html.is-loading .loader { opacity: 1; }
 .page { transition: opacity .2s ease, transform .2s ease; }
-body.is-loading .page { opacity: .55; transform: scale(.992); }
+html.is-loading .page { opacity: .55; transform: scale(.992); }
 
 /* ---------- Səhifə ---------- */
 .page {
@@ -398,13 +397,13 @@ button.thumb { cursor: zoom-in; }
 .gate__hint { max-width: 340px; margin-top: auto; color: var(--muted); font-size: 13px; }
 
 /* ---------- Məkan icazəsi ----------
- * Yalnız telefonda / planşetdə, quraşdırılmış tətbiqdə: body.geo-check — yoxlanılır (boş ekran), geo-need — icazə ekranı,
+ * Yalnız telefonda / planşetdə, quraşdırılmış tətbiqdə: html.geo-check — yoxlanılır (boş ekran), geo-need — icazə ekranı,
  * geo-ok — tətbiq. Kompüterdə və brauzerdə (quraşdırma ekranı) təsiri yoxdur. app.js idarə edir. */
 .geo-gate { display: none; }
 @media (display-mode: standalone) and (pointer: coarse), (display-mode: fullscreen) and (pointer: coarse), (display-mode: minimal-ui) and (pointer: coarse) {
-    body.geo-check .bar, body.geo-check .page, body.geo-check .tabs,
-    body.geo-need .bar, body.geo-need .page, body.geo-need .tabs { display: none !important; }
-    body.geo-need .geo-gate {
+    html.geo-check .bar, html.geo-check .page, html.geo-check .tabs,
+    html.geo-need .bar, html.geo-need .page, html.geo-need .tabs { display: none !important; }
+    html.geo-need .geo-gate {
         display: flex; flex-direction: column; align-items: center; gap: 14px;
         min-height: 100vh; min-height: 100dvh;
         padding: calc(48px + var(--safe-top)) 22px calc(28px + var(--safe-bottom));
