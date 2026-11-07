@@ -154,6 +154,7 @@ Route::prefix('admin')
                     Route::post('/orders/{order}/allocations/{allocation}/cancel', 'cancelAllocation')->name('allocations.cancel');
                     Route::post('/orders/{order}/allocations/{allocation}/status', 'transitionAllocation')->name('allocations.status');
                     Route::post('/orders/{order}/allocations/{allocation}/sms', 'allocationSms')->name('allocations.sms');
+                    Route::get('/orders/{order}/allocations/{allocation}/photo', 'allocationPhoto')->whereNumber('allocation')->name('allocations.photo');
                     Route::post('/orders/{order}/requests/{warehouseRequest}/sms', 'requestSms')->name('requests.sms');
                 });
 

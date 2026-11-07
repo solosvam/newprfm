@@ -55,6 +55,7 @@ class CourierFlowTest extends TestCase
             '2026_09_29_200000_create_finance_tables.php',
             '2026_10_16_100000_create_finance_categories.php',
             '2026_11_07_160000_create_courier_locations.php',
+            '2026_11_07_180000_add_pick_photo_to_order_item_allocations.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();
         }
@@ -510,7 +511,19 @@ class CourierFlowTest extends TestCase
         $this->assertStringContainsString('Saat 18:00-dan sonra çatdırın', $html);
         $this->post(route('kuryer.pay', [$order, $part->id]), ['pick' => 1])->assertForbidden();
 
-        $this->post(route('kuryer.pick', [$order, $part->id]))->assertSessionHas('success');
+        // Götürmə şəkilsiz qəbul olunmur; şəkil 1280 px-ə kiçildilir, adminə icazə ilə verilir
+        $this->post(route('kuryer.pick', [$order, $part->id]))->assertSessionHasErrors('photo');
+        $this->assertSame('reserved', $part->fresh()->status === 'picked' ? 'picked' : 'reserved');
+        $this->post(route('kuryer.pick', [$order, $part->id]), ['photo' => \Illuminate\Http\UploadedFile::fake()->image('p.jpg', 3000, 2000)])
+            ->assertSessionHas('success');
+        $photo = \App\Services\Courier\PickPhotoStorage::path($part->fresh()->pick_photo);
+        $this->assertNotNull($photo, 'şəkil saxlanmalıdır');
+        $this->assertSame([1280, 853], array_slice(getimagesize($photo), 0, 2));
+        $admin = User::forceCreate(['name' => 'Operator']);
+        $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'crm', 'guard_name' => 'admin']));
+        $this->actingAs($admin, 'admin')->get(route('admin.procurement.allocations.photo', [$order, $part->id]))->assertOk();
+        $this->actingAs($courier, 'admin');
+        \App\Services\Courier\PickPhotoStorage::delete($part->fresh()->pick_photo);
         $f = app(FinanceService::class);
         $f->syncAccounts();
         $this->assertSame('picked', $part->fresh()->status);
@@ -530,7 +543,11 @@ class CourierFlowTest extends TestCase
         $f = app(FinanceService::class);
         $this->actingAs($courier, 'admin');
 
-        $this->post(route('kuryer.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHas('success', '80.00 AZN depoya ödəndi, götürüldü.');
+        $this->post(route('kuryer.pay', [$order, $part->id]), ['pick' => 1])->assertSessionHasErrors('photo'); // götürmə — şəkillə
+        $this->assertSame(0, $f->allocationPaid([$part->id])[$part->id] ?? 0);
+        $this->post(route('kuryer.pay', [$order, $part->id]), ['pick' => 1, 'photo' => \Illuminate\Http\UploadedFile::fake()->image('p.jpg', 800, 600)])
+            ->assertSessionHas('success', '80.00 AZN depoya ödəndi, götürüldü.');
+        \App\Services\Courier\PickPhotoStorage::delete($part->fresh()->pick_photo);
         $this->assertSame('picked', $part->fresh()->status);
         $this->assertSame(8000, $f->allocationPaid([$part->id])[$part->id]);
         $this->assertSame(0, $f->warehouseDebts()[$wh->id]);

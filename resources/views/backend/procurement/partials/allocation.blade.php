@@ -87,6 +87,13 @@
         @endif
         </div>
     @endunless
+    @if($allocation->pick_photo)
+        {{-- Kuryerin götürmə şəkli (kuryer tətbiqinin kamerası) --}}
+        <a href="{{ route('admin.procurement.allocations.photo', [$order, $allocation->id]) }}" target="_blank" rel="noopener" class="proc-alloc__photo">
+            <img src="{{ route('admin.procurement.allocations.photo', [$order, $allocation->id]) }}" alt="Götürmə şəkli" loading="lazy">
+            <span>📷 Götürmə şəkli</span>
+        </a>
+    @endif
     @if($status === 'problem')
         <div class="proc-alloc__problem">⚠ {{ $lastLog?->note ?? 'Problem' }}</div>
     @endif

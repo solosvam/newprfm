@@ -358,6 +358,28 @@ button.thumb { cursor: zoom-in; }
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
 .pager__info { color: var(--muted); font-size: 14px; }
 
+/* ---------- Götürmə şəkli: tətbiqin kamerası (app.js) ---------- */
+.camera {
+    position: fixed; inset: 0; z-index: 150;
+    display: flex; flex-direction: column;
+    padding: var(--safe-top) 0 var(--safe-bottom);
+    background: #000; color: #fff;
+}
+.camera__hint { padding: 14px 16px; text-align: center; font-weight: 600; }
+.camera__video, .camera__preview { flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #000; }
+.camera__video[hidden], .camera__preview[hidden], .camera__bar[hidden] { display: none; }
+.camera__bar { display: flex; align-items: center; justify-content: space-around; gap: 12px; padding: 18px 20px 22px; }
+.camera__bar--confirm .btn { flex: 1; }
+.camera__shutter {
+    width: 76px; height: 76px; padding: 0; border-radius: 50%;
+    border: 5px solid #fff; background: rgba(255, 255, 255, .25);
+    box-shadow: inset 0 0 0 4px #000; cursor: pointer;
+}
+.camera__shutter:active { transform: scale(.92); background: #fff; }
+.camera__side { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .14); color: #fff; font-size: 22px; }
+span.camera__side { background: transparent; }
+html.has-camera, html.has-camera body { overflow: hidden; }
+
 /* ---------- Splash (tətbiq açılanda bir dəfə, app.js gizlədir) ---------- */
 .splash {
     position: fixed; inset: 0; z-index: 200;

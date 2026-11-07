@@ -3,7 +3,7 @@
 // Tətbiqin CSS / JS / ikonları — keşdən dərhal, arxa planda yenilənir.
 // Push bildirişləri (OneSignal) də bu service worker-dədir — tətbiqdə bir service worker (app.js, serviceWorkerPath).
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-const VERSION = 'kuryer-v8';
+const VERSION = 'kuryer-v9';
 const OFFLINE = '/courier-app/offline.html';
 const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
 

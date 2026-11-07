@@ -94,6 +94,13 @@
             event.stopImmediatePropagation(); // Turbo da göndərməsin
             return;
         }
+        // Götürmə (data-photo): əvvəl tətbiqin kamerası ilə şəkil — çəkiləndən sonra forma özü yenidən göndərilir
+        if (form.hasAttribute('data-photo') && !form.dataset.photoReady) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (!form.dataset.sent) takePhoto(form, event.submitter);
+            return;
+        }
         if (form.hasAttribute('data-once')) {
             if (form.dataset.sent) { event.preventDefault(); event.stopImmediatePropagation(); return; }
             form.dataset.sent = '1';
@@ -101,8 +108,9 @@
             setTimeout(() => form.querySelectorAll('button').forEach(button => { button.disabled = true; button.classList.add('is-busy'); }), 0);
         }
     }, true);
-    const unlockForms = () => document.querySelectorAll('form[data-sent]').forEach(form => {
+    const unlockForms = () => document.querySelectorAll('form[data-sent], form[data-photo-ready]').forEach(form => {
         delete form.dataset.sent;
+        delete form.dataset.photoReady; // xəta olsa — növbəti cəhddə yenidən şəkil
         form.querySelectorAll('button').forEach(button => { button.disabled = false; button.classList.remove('is-busy'); });
     });
     document.addEventListener('turbo:submit-end', event => { if (!event.detail?.success) unlockForms(); }); // xəta — yenidən cəhd
@@ -110,6 +118,7 @@
     document.addEventListener('turbo:before-cache', () => {
         unlockForms();
         closeZoom();
+        closeCamera();
         document.querySelectorAll('.tabs__item').forEach(item => {
             item.classList.toggle('is-active', item.getAttribute('aria-current') === 'page');
             item.classList.remove('is-pressed');
@@ -124,6 +133,121 @@
             item.classList.remove('is-pressed');
         });
     });
+
+    // ---------- Götürmə şəkli: tətbiqin öz kamerası (getUserMedia), telefonun kamera tətbiqi yox ----------
+    // Çəkilən kadr 1280 px-ə kiçildilir, JPEG 72% (~100–250 KB) — formadakı gizli fayl sahəsinə qoyulur və forma göndərilir.
+    // Kamera açılmasa (icazə yox / köhnə telefon) — ehtiyat: telefonun şəkil seçicisi (iş dayanmasın).
+    const PHOTO_MAX = 1280;
+    let camera = null; // { el, stream }
+    function closeCamera() {
+        if (!camera) return;
+        camera.stream?.getTracks().forEach(track => track.stop());
+        camera.el.remove();
+        camera = null;
+        document.documentElement.classList.remove('has-camera');
+    }
+    function shrink(source, width, height) {
+        const scale = Math.min(1, PHOTO_MAX / Math.max(width, height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(width * scale);
+        canvas.height = Math.round(height * scale);
+        canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.72));
+    }
+    function attachAndSubmit(form, submitter, blob) {
+        const input = form.querySelector('[data-photo-input]');
+        try {
+            const files = new DataTransfer();
+            files.items.add(new File([blob], 'pick.jpg', { type: 'image/jpeg' }));
+            input.files = files.files;
+        } catch (e) {
+            window.alert('Şəkil əlavə olunmadı — tətbiqi yeniləyin.');
+            return;
+        }
+        form.dataset.photoReady = '1';
+        if (submitter && form.requestSubmit) form.requestSubmit(submitter); else form.requestSubmit ? form.requestSubmit() : form.submit();
+    }
+    function pickFromDevice(form, submitter) {
+        // Ehtiyat: telefonun öz seçicisi (kamera / qalereya), şəkil yenə kiçildilir
+        const input = form.querySelector('[data-photo-input]');
+        input.setAttribute('capture', 'environment');
+        input.onchange = () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const image = new Image();
+            image.onload = async () => {
+                const blob = await shrink(image, image.naturalWidth, image.naturalHeight);
+                URL.revokeObjectURL(image.src);
+                attachAndSubmit(form, submitter, blob);
+            };
+            image.src = URL.createObjectURL(file);
+        };
+        input.click();
+    }
+    async function takePhoto(form, submitter) {
+        if (!navigator.mediaDevices?.getUserMedia) { pickFromDevice(form, submitter); return; }
+        closeCamera();
+        const el = document.createElement('div');
+        el.className = 'camera';
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-modal', 'true');
+        el.setAttribute('aria-label', 'Götürmə şəkli');
+        el.innerHTML = '<p class="camera__hint">Götürdüyünüz məhsulun şəklini çəkin</p>'
+            + '<video class="camera__video" playsinline autoplay muted></video>'
+            + '<img class="camera__preview" alt="" hidden>'
+            + '<div class="camera__bar" data-camera-shoot>'
+            + '<button type="button" class="camera__side" data-camera-cancel aria-label="Ləğv et">✕</button>'
+            + '<button type="button" class="camera__shutter" data-camera-shutter aria-label="Şəkil çək"></button>'
+            + '<span class="camera__side" aria-hidden="true"></span></div>'
+            + '<div class="camera__bar camera__bar--confirm" data-camera-confirm hidden>'
+            + '<button type="button" class="btn btn--ghost" data-camera-retake>Yenidən çək</button>'
+            + '<button type="button" class="btn btn--success" data-camera-send>Göndər</button></div>';
+        document.body.append(el);
+        document.documentElement.classList.add('has-camera');
+        camera = { el, stream: null };
+        const video = el.querySelector('video');
+        const preview = el.querySelector('.camera__preview');
+        let blob = null;
+        try {
+            camera.stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                audio: false,
+            });
+            video.srcObject = camera.stream;
+            await video.play().catch(() => {});
+        } catch (e) {
+            closeCamera();
+            pickFromDevice(form, submitter);
+            return;
+        }
+        el.addEventListener('click', async event => {
+            if (event.target.closest('[data-camera-cancel]')) { closeCamera(); return; }
+            if (event.target.closest('[data-camera-shutter]')) {
+                if (!video.videoWidth) return;
+                blob = await shrink(video, video.videoWidth, video.videoHeight);
+                preview.src = URL.createObjectURL(blob);
+                preview.hidden = false;
+                video.hidden = true;
+                el.querySelector('[data-camera-shoot]').hidden = true;
+                el.querySelector('[data-camera-confirm]').hidden = false;
+                return;
+            }
+            if (event.target.closest('[data-camera-retake]')) {
+                URL.revokeObjectURL(preview.src);
+                blob = null;
+                preview.hidden = true;
+                video.hidden = false;
+                el.querySelector('[data-camera-shoot]').hidden = false;
+                el.querySelector('[data-camera-confirm]').hidden = true;
+                return;
+            }
+            if (event.target.closest('[data-camera-send]') && blob) {
+                const ready = blob;
+                closeCamera();
+                attachAndSubmit(form, submitter, ready);
+            }
+        });
+    }
 
     // ---------- Məhsulun şəkli: basanda tam ekranda ----------
     function closeZoom() {
@@ -150,7 +274,7 @@
         document.body.append(overlay);
         close.focus();
     });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeZoom(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeZoom(); closeCamera(); } });
 
     // ---------- Balans: bulanıq; göz — görünür (0-dan sayılaraq) və gizlənir ----------
     const money = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

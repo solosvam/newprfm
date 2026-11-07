@@ -50,3 +50,7 @@
 .proc-sms__state.is-ok, .proc-alloc__sms.is-ok { color: var(--success); }
 .proc-sms__state.is-bad, .proc-alloc__sms.is-bad { color: var(--danger); }
 .proc-alloc__sms { margin-top: 6px; font-size: 12.5px; }
+
+/* Kuryerin götürmə şəkli */
+.proc-alloc__photo { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+.proc-alloc__photo img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--separator); }

@@ -46,10 +46,11 @@ class CourierController extends Controller
         ]);
     }
 
-    public function pick(Order $order, int $allocation, ProcurementService $procurement): RedirectResponse
+    /** "Götürdüm": kuryer tətbiqinin kamerası ilə çəkilən şəkil məcburidir (PickPhotoStorage), sonra status dəyişir */
+    public function pick(Request $request, Order $order, int $allocation, ProcurementService $procurement): RedirectResponse
     {
         $this->authorizeCourier($order);
-        $procurement->transition($order, $allocation, OrderItemAllocation::PICKED, [], $this->me());
+        $this->withPickPhoto($request, $allocation, fn () => $procurement->transition($order, $allocation, OrderItemAllocation::PICKED, [], $this->me()));
 
         return back()->with('success', 'Götürüldü.');
     }
@@ -76,20 +77,21 @@ class CourierController extends Controller
         $part = OrderItemAllocation::with('warehouse')->whereIn('order_item_id', $order->items()->select('id'))->findOrFail($allocation);
         abort_unless($part->courier_pays, 403, 'Bu depoya pulu şirkət ödəyir — yalnız "Götürdüm" seçin.');
         $left = (int) round($part->quantity * (float) $part->unit_cost * 100) - ($finance->allocationPaid([$part->id])[$part->id] ?? 0);
-        $pick = $request->boolean('pick');
+        $pick = $request->boolean('pick') && $part->status !== OrderItemAllocation::PICKED;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($finance, $procurement, $order, $part, $left, $pick) {
+        $pay = fn () => \Illuminate\Support\Facades\DB::transaction(function () use ($finance, $procurement, $order, $part, $left, $pick) {
             if ($left > 0) {
                 $finance->record($finance->courierAccount(auth('admin')->user()), $finance->warehouseAccount($part->warehouse),
                     $left / 100, 'warehouse_payment', ['order_item_allocation_id' => $part->id, 'note' => 'Kuryer ödədi'], $this->me());
             }
-            if ($pick && $part->status !== OrderItemAllocation::PICKED) {
+            if ($pick) {
                 $procurement->transition($order, $part->id, OrderItemAllocation::PICKED, [], $this->me());
             }
         });
+        $pick ? $this->withPickPhoto($request, $part->id, $pay) : $pay(); // götürmə — şəkillə
         $paid = $left > 0 ? number_format($left / 100, 2).' AZN depoya ödəndi' : 'Depoya artıq ödənilib';
 
-        return back()->with('success', $paid.($pick ? ', götürüldü.' : '.'));
+        return back()->with('success', $paid.($request->boolean('pick') ? ', götürüldü.' : '.'));
     }
 
     /** Ünvan "əlaqə ilə" olan sifariş: kuryer müştəri ilə danışandan sonra görüş yerini yazır */
@@ -177,6 +179,30 @@ class CourierController extends Controller
         $statuses->transferCourier($order, $to, $this->me());
 
         return redirect()->route('kuryer.home')->with('success', 'Sifariş '.$order->order_no.' '.trim($to->full_name).' adlı kuryerə ötürüldü.');
+    }
+
+    /**
+     * Götürmə şəkli: yoxlanılır və saxlanılır, sonra əməliyyat; əməliyyat alınmasa fayl silinir.
+     * Şəkil təminat hissəsinə yazılır (admin sifarişin təminatında görür).
+     */
+    private function withPickPhoto(Request $request, int $allocationId, \Closure $action): void
+    {
+        $request->validate(
+            ['photo' => ['required', 'file', 'image', 'max:10240']],
+            ['photo.required' => 'Götürdüyünüz məhsulun şəklini çəkin.', 'photo.image' => 'Şəkil oxunmadı — yenidən çəkin.', 'photo.max' => 'Şəkil çox böyükdür.'],
+        );
+        $name = \App\Services\Courier\PickPhotoStorage::store($request->file('photo'));
+        try {
+            $action();
+        } catch (\Throwable $e) {
+            \App\Services\Courier\PickPhotoStorage::delete($name);
+            throw $e;
+        }
+        $old = OrderItemAllocation::whereKey($allocationId)->value('pick_photo');
+        OrderItemAllocation::whereKey($allocationId)->update(['pick_photo' => $name]);
+        if ($old && $old !== $name) {
+            \App\Services\Courier\PickPhotoStorage::delete($old);
+        }
     }
 
     private function authorizeCourier(Order $order): void

@@ -101,14 +101,15 @@
                             <div class="part__problem">{{ $part->logs->last()?->note }} — operator həll edir.</div>
                         @else
                             <div class="actions">
-                                {{-- Götürmə: ödəniş qalıbsa iki yol — tam ödəyib götürmək və ya ödənişsiz (depoya borc qalır) --}}
+                                {{-- Götürmə: ödəniş qalıbsa iki yol — tam ödəyib götürmək və ya ödənişsiz (depoya borc qalır).
+                                     data-photo — basanda tətbiqin kamerası açılır, şəkil formaya qoşulur (app.js), server şəkilsiz qəbul etmir --}}
                                 @if($part->status !== Part::PICKED)
                                     @if($canPay && $left > 0)
-                                        <form method="POST" action="{{ route('kuryer.pay', [$order, $part->id]) }}" data-once>@csrf<input type="hidden" name="pick" value="1">
+                                        <form method="POST" action="{{ route('kuryer.pay', [$order, $part->id]) }}" enctype="multipart/form-data" data-once data-photo>@csrf<input type="hidden" name="pick" value="1"><input type="file" name="photo" accept="image/*" hidden data-photo-input>
                                             <button class="btn btn--primary btn--block">{{ $money($left) }} ödədim, götürdüm</button></form>
-                                        <form method="POST" action="{{ route('kuryer.pick', [$order, $part->id]) }}" data-once>@csrf<button class="btn btn--outline btn--block">Ödənişsiz götürdüm</button></form>
+                                        <form method="POST" action="{{ route('kuryer.pick', [$order, $part->id]) }}" enctype="multipart/form-data" data-once data-photo>@csrf<input type="file" name="photo" accept="image/*" hidden data-photo-input><button class="btn btn--outline btn--block">Ödənişsiz götürdüm</button></form>
                                     @else
-                                        <form method="POST" action="{{ route('kuryer.pick', [$order, $part->id]) }}" data-once>@csrf<button class="btn btn--primary btn--block">Götürdüm</button></form>
+                                        <form method="POST" action="{{ route('kuryer.pick', [$order, $part->id]) }}" enctype="multipart/form-data" data-once data-photo>@csrf<input type="file" name="photo" accept="image/*" hidden data-photo-input><button class="btn btn--primary btn--block">Götürdüm</button></form>
                                     @endif
                                     <details class="more">
                                         <summary class="btn btn--danger-outline btn--block">Problem</summary>

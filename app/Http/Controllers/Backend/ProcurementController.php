@@ -239,6 +239,16 @@ class ProcurementController extends Controller
     }
 
     /** "SMS göndər / təkrar göndər" — seçim üzrə (Seçilib → Depoya bildirildi) */
+    /** Kuryerin götürmə şəkli (storage/app/private/pick-photos — yalnız icazə ilə) */
+    public function allocationPhoto(Order $order, int $allocation)
+    {
+        $part = \App\Models\Procurement\OrderItemAllocation::whereIn('order_item_id', $order->items()->select('id'))->findOrFail($allocation);
+        $path = \App\Services\Courier\PickPhotoStorage::path($part->pick_photo);
+        abort_unless($path, 404);
+
+        return response()->file($path, ['Cache-Control' => 'private, max-age=86400']);
+    }
+
     public function allocationSms(Order $order, int $allocation, WarehouseNotifier $notifier)
     {
         $this->ensureOpen($order, \App\Services\OrderStatusService::SUPPLY_FLOW);
