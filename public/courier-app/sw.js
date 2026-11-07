@@ -17,28 +17,22 @@ function applyBadge(count) {
     if (!self.navigator || !('setAppBadge' in self.navigator)) return Promise.resolve();
     return (count ? self.navigator.setAppBadge(count) : self.navigator.clearAppBadge()).catch(() => {});
 }
-// MÜVƏQQƏTİ diaqnostika (routes/courier.php — sw-debug)
-function debug(info) {
-    return fetch('/kuryer/sw-debug', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(info) }).catch(() => {});
-}
 self.addEventListener('push', event => {
-    // Rəqəm dərhal (şəbəkəsiz): push-dakı say, yoxdursa 1 — sonra diaqnostika (MÜVƏQQƏTİ) paralel
+    // Rəqəm dərhal (şəbəkəsiz): push-dakı say, yoxdursa — serverdən soruşulur.
+    // Qeyd: iPhone (iOS 18.4+) push-u service worker-i oyatmadan özü göstərir — orada rəqəm tətbiq açılanda yenilənir (app.js).
     const count = pushBadge(event);
-    const hasApi = !!(self.navigator && 'setAppBadge' in self.navigator);
-    let raw = null;
-    try { raw = event.data ? event.data.text() : null; } catch (e) { raw = 'unreadable: ' + e; }
-    const badge = hasApi
-        ? self.navigator.setAppBadge(count !== null && !Number.isNaN(count) && count > 0 ? count : 1).then(() => 'ok', e => 'error: ' + e)
-        : Promise.resolve('no-api');
-    event.waitUntil(Promise.all([
-        badge,
-        badge.then(result => debug({ step: 'push', hasApi, count, result, raw: raw && raw.slice(0, 900) })),
-    ]));
+    const work = count !== null && !Number.isNaN(count)
+        ? applyBadge(count)
+        : fetch('/kuryer/badge', { credentials: 'include', headers: { Accept: 'application/json' } })
+            .then(r => (r.ok ? r.json() : null))
+            .then(json => (json ? applyBadge(Number(json.unread) || 0) : null))
+            .catch(() => {});
+    event.waitUntil(work);
 });
 
 // OneSignal push işləyicisi bizimkindən SONRA qeyd olunur (yuxarıdakı rəqəm kodu push-u birinci alsın)
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-const VERSION = 'kuryer-v14';
+const VERSION = 'kuryer-v15';
 const OFFLINE = '/courier-app/offline.html';
 const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
 

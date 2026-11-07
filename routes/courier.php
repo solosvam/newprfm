@@ -16,13 +16,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('kuryer')->name('kuryer.')->group(function () {
     // Service worker /kuryer/ altında verilir ki, əhatəsi (scope) bütün tətbiq olsun
     Route::get('/sw.js', [CourierAppController::class, 'serviceWorker'])->name('sw');
-    // MÜVƏQQƏTİ diaqnostika: service worker push gələndə ikon rəqəmi barədə yazır (laravel.log) — səbəb tapılandan sonra silinəcək
-    Route::post('/sw-debug', function (\Illuminate\Http\Request $request) {
-        \Illuminate\Support\Facades\Log::info('kuryer-sw', ['ua' => mb_substr((string) $request->userAgent(), 0, 120), 'data' => mb_substr($request->getContent(), 0, 1500)]);
-
-        return response()->noContent();
-    })->middleware('throttle:30,1')->name('sw-debug');
-
     Route::middleware(['auth:admin', \App\Http\Middleware\CourierOnly::class, 'throttle:60,1'])->group(function () {
         Route::get('/', [CourierAppController::class, 'home'])->name('home');
         Route::get('/hesab', [CourierAppController::class, 'account'])->name('account');
