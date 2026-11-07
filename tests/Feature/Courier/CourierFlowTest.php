@@ -415,9 +415,13 @@ class CourierFlowTest extends TestCase
 
         $admin = User::forceCreate(['name' => 'Admin']);
         $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'courier.team', 'guard_name' => 'admin']));
-        $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $courier))->assertOk()
-            ->assertSee(e($fresh->locationMapsUrl()), false)->assertSee('±12 m')->assertSee('Xəritədə aç')
-            ->assertSee('2 nöqtə')->assertSee('https://www.google.com/maps/dir/40.4,49.85/40.4093,49.8671', false);
+        $html = $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $courier))->assertOk()
+            ->assertSee('±12 m')->assertSee('2 nöqtə')->assertSee('Xəritədə bax')->getContent();
+        // Marşrut admin panelin öz xəritəsində (courier-route.js) — xarici Google linki yoxdur
+        $this->assertStringContainsString('data-courier-route', $html);
+        $this->assertStringContainsString('backend/js/courier-route.js', $html);
+        $this->assertMatchesRegularExpression('/data-points="\[\[40\.4,49\.85,&quot;\d\d:\d\d&quot;,null\],\[40\.4093,49\.8671,&quot;\d\d:\d\d&quot;,12\]\]"/', $html);
+        $this->assertStringNotContainsString('google.com/maps', $html);
         $this->get(route('admin.courier.team.show', ['courier' => $courier, 'l_date' => today()->subDay()->toDateString()]))
             ->assertSee('Bu gün üçün yer məlumatı yoxdur.');
     }

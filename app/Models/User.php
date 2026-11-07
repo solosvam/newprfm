@@ -39,14 +39,6 @@ class User extends Authenticatable
         ];
     }
 
-    /** Kuryerin son yeri Google Maps-də (kuryer tətbiqi göndərir); yer yoxdursa null */
-    public function locationMapsUrl(): ?string
-    {
-        return $this->location_lat !== null && $this->location_lng !== null
-            ? 'https://www.google.com/maps/search/?api=1&query='.$this->location_lat.','.$this->location_lng
-            : null;
-    }
-
     public function getFullNameAttribute()
     {
         return $this->name.' '.$this->surname;

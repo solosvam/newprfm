@@ -66,16 +66,11 @@ class CourierTeamController extends Controller
             'h_from' => ['nullable', 'date'], 'h_to' => ['nullable', 'date'], 'h_kind' => ['nullable', 'string', 'max:30'],
             'l_date' => ['nullable', 'date'],
         ]);
-        // Yer tarixçəsi (admin panel): seçilən günün nöqtələri və həmin günün marşrutu Google Maps-də (ən çox 10 nöqtə)
+        // Yer tarixçəsi (admin panel): seçilən günün nöqtələri — səhifədəki xəritədə marşrut kimi (courier-route.js)
         $locationDate = \Illuminate\Support\Carbon::parse($f['l_date'] ?? today())->startOfDay();
         $locations = $request->routeIs('kuryer.*') ? collect() : \App\Models\Courier\CourierLocation::where('user_id', $courier->id)
             ->whereBetween('recorded_at', [$locationDate, $locationDate->copy()->endOfDay()])->orderBy('recorded_at')->get();
-        $routeUrl = null;
-        if ($locations->count() > 1) {
-            $step = max(1, (int) ceil($locations->count() / 10));
-            $points = $locations->filter(fn ($p, $i) => $i % $step === 0)->push($locations->last())->unique('id')->take(-10);
-            $routeUrl = 'https://www.google.com/maps/dir/'.$points->map(fn ($p) => $p->lat.','.$p->lng)->implode('/');
-        }
+
         $minDate = FinanceService::isCourier($me) ? today()->subDays(self::COURIER_DAYS_BACK)->toDateString() : null;
         // Sorğuda istifadə olunan "tarixdən": kuryerə tarix yazılmayıbsa — bu gün, yazılıbsa — həddən əvvəl deyil
         $since = function (?string $from) use ($minDate) {
@@ -121,8 +116,10 @@ class CourierTeamController extends Controller
             'filters' => $f,
             'minDate' => $minDate,
             'locations' => $locations,
+            // xəritə üçün: [lat, lng, "HH:MM", dəqiqlik]
+            'routePoints' => $locations->map(fn ($p) => [$p->lat, $p->lng, $p->recorded_at->format('H:i'), $p->accuracy])->values(),
             'locationDate' => $locationDate,
-            'routeUrl' => $routeUrl,
+
             'history' => $historyPage,
             'historyTotals' => ['in' => $history->where('delta', '>', 0)->sum('delta'), 'out' => -$history->where('delta', '<', 0)->sum('delta')],
             'kinds' => $kinds,

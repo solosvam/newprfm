@@ -15,9 +15,4 @@ class CourierLocation extends Model
     {
         return ['recorded_at' => 'datetime', 'lat' => 'float', 'lng' => 'float'];
     }
-
-    public function mapsUrl(): string
-    {
-        return 'https://www.google.com/maps/search/?api=1&query='.$this->lat.','.$this->lng;
-    }
 }

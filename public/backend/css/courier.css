@@ -69,3 +69,9 @@
 .courier-note__title { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-weight: 700; color: var(--warning); }
 .courier-note__text { white-space: pre-line; font-size: 15px; }
 .courier-note--compact { padding: 8px 12px; font-size: 13px; white-space: pre-line; }
+
+/* Kuryerin günlük marşrutu (team-show → Yer tarixçəsi, courier-route.js) */
+.courier-route { height: 420px; border-radius: 8px; overflow: hidden; z-index: 0; }
+@media (max-width: 575px) { .courier-route { height: 320px; } }
+.courier-route__point { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.courier-route__point:hover { background: rgba(var(--primary-rgb), .05); }

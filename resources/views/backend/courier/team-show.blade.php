@@ -14,7 +14,13 @@
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
 @section('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <link rel="stylesheet" href="{{ asset_v('backend/css/courier.css') }}">
+@endsection
+
+@section('js_page')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="{{ asset_v('backend/js/courier-route.js') }}"></script>
 @endsection
 
 @section('content')
@@ -107,29 +113,34 @@
         <div class="card"><div class="card-body text-center text-muted py-4">Aktiv sifariş yoxdur.</div></div>
     @endforelse
 
-    {{-- Yer tarixçəsi: kuryer tətbiqi hər açılanda göndərir; gün seçilir, günün marşrutu xəritədə --}}
+    {{-- Yer tarixçəsi: kuryer tətbiqi göndərir; seçilən günün nöqtələri xəritədə saat sırası ilə xətlə birləşir (courier-route.js) --}}
     <h2 class="small-title mt-5" id="locations">Yer tarixçəsi</h2>
-    <form method="get" action="{{ route('admin.courier.team.show', $courier) }}#locations" class="d-flex flex-wrap gap-2 align-items-center mb-2">
+    <form method="get" action="{{ route('admin.courier.team.show', $courier) }}#locations" class="d-flex flex-wrap gap-2 align-items-center mb-3">
         @foreach(request()->except(['l_date', 'page', 'hpage']) as $key => $value)@if(is_string($value))<input type="hidden" name="{{ $key }}" value="{{ $value }}">@endif @endforeach
         <input type="date" name="l_date" class="form-control w-auto" value="{{ $locationDate->format('Y-m-d') }}" max="{{ today()->format('Y-m-d') }}" aria-label="Gün">
         <button type="submit" class="btn btn-outline-primary">Göstər</button>
-        @if($routeUrl)<a href="{{ $routeUrl }}" target="_blank" rel="noopener" class="btn btn-primary">Günün marşrutu xəritədə</a>@endif
+        @if($locations->isNotEmpty())<span class="text-muted text-small">{{ $locations->count() }} nöqtə · {{ $locations->first()->recorded_at->format('H:i') }}–{{ $locations->last()->recorded_at->format('H:i') }} · <span data-route-distance></span></span>@endif
     </form>
     @if($locations->isEmpty())
         <div class="card"><div class="card-body text-center text-muted py-4">Bu gün üçün yer məlumatı yoxdur.</div></div>
     @else
-        <div class="text-muted text-small mb-2">{{ $locations->count() }} nöqtə</div>
-        <div class="card"><div class="card-body courier-history">
-            @foreach($locations->reverse() as $point)
-                <div class="courier-history__row">
-                    <div class="courier-history__main">
-                        <div class="courier-history__what">{{ $point->recorded_at->format('H:i') }}</div>
-                        <div class="courier-history__meta">{{ $point->lat }}, {{ $point->lng }}@if($point->accuracy) · ±{{ $point->accuracy }} m @endif</div>
-                    </div>
-                    <div class="courier-history__sum"><a href="{{ $point->mapsUrl() }}" target="_blank" rel="noopener">Xəritədə aç</a></div>
-                </div>
-            @endforeach
+        <div class="card mb-3"><div class="card-body p-2">
+            <div class="courier-route" data-courier-route data-points="{{ $routePoints->toJson() }}"></div>
         </div></div>
+        <details class="courier-more">
+            <summary class="btn btn-outline-primary w-100">Nöqtələr ({{ $locations->count() }})</summary>
+            <div class="card mt-2"><div class="card-body courier-history">
+                @foreach($locations as $i => $point)
+                    <button type="button" class="courier-history__row courier-route__point" data-route-point="{{ $loop->index }}">
+                        <span class="courier-history__main">
+                            <span class="courier-history__what">{{ $point->recorded_at->format('H:i:s') }}</span>
+                            <span class="courier-history__meta d-block">{{ $point->lat }}, {{ $point->lng }}@if($point->accuracy) · ±{{ $point->accuracy }} m @endif</span>
+                        </span>
+                        <span class="courier-history__sum text-primary">Xəritədə göstər</span>
+                    </button>
+                @endforeach
+            </div></div>
+        </details>
     @endif
 
     {{-- Sifariş arxivi --}}
