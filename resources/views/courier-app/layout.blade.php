@@ -23,8 +23,9 @@
     <meta name="theme-color" content="#5b2a86">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex, nofollow">
-    {{-- Hotwire Turbo: keçidlər səhifəni yenidən yükləmədən (yalnız /kuryer daxilində), yumşaq keçid animasiyası ilə --}}
-    <meta name="turbo-root" content="/kuryer">
+    {{-- Hotwire Turbo: keçidlər səhifəni yenidən yükləmədən, yumşaq keçid animasiyası ilə.
+         turbo-root qoyulmur: Turbo "/kuryer"-i "/kuryer/" kimi oxuyur və ana səhifə (/kuryer) kənarda qalırdı.
+         Tətbiqdən çıxan linklər (Çıxış) data-turbo="false" ilə adi keçiddir. --}}
     <meta name="view-transition" content="same-origin">
     <title>@yield('title') · PS Kuryer</title>
     <link rel="manifest" href="{{ asset('courier-app/manifest.webmanifest') }}">

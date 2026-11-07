@@ -8,5 +8,5 @@
     <h2 class="section">Haqq-hesab tarixçəsi</h2>
     @include('courier-app._history', ['history' => $history, 'self' => true])
 
-    <a href="{{ route('admin.logout') }}" class="btn btn--ghost btn--block logout">@include('courier-app._icon', ['name' => 'logout']) Çıxış</a>
+    <a href="{{ route('admin.logout') }}" class="btn btn--ghost btn--block logout" data-turbo="false">@include('courier-app._icon', ['name' => 'logout']) Çıxış</a>
 @endsection
