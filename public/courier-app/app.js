@@ -129,9 +129,10 @@
     }
 
     // Məkan: quraşdırılmış tətbiqdə (telefon) icazə verilməyənə qədər tətbiq açılmır (.geo-gate).
-    // İcazə bir dəfə verilibsə yadda qalır (localStorage) — səhifə keçidlərində ekran göstərilmir (iPhone tətbiqdə
-    // icazənin vəziyyətini hər səhifədə "prompt" kimi qaytarır). Yer ən çox 2 dəqiqədə bir oxunur və serverə göndərilir:
-    // açılanda, tətbiqə qayıdanda. Rədd edilsə — yaddaş silinir, ekran yenidən göstərilir. Kompüterdə məcbur deyil.
+    // iPhone tətbiqdə icazənin vəziyyətini hər səhifədə "prompt" kimi qaytarır — ona görə ekran dərhal göstərilmir:
+    // əvvəl səssizcə yer oxunur (telefonun ayarında icazə varsa dərhal gəlir), yalnız rədd edilsə ekran çıxır.
+    // İcazə bir dəfə alınıbsa yadda qalır (localStorage) — tətbiq gözləmədən açılır. Yer ən çox 2 dəqiqədə bir
+    // serverə göndərilir: açılanda, tətbiqə qayıdanda. Kompüterdə məcbur deyil.
     (function geo() {
         const body = document.body;
         const url = body.dataset.geoUrl;
@@ -173,7 +174,7 @@
             navigator.geolocation.getCurrentPosition(
                 position => { store.set(OK_KEY, '1'); state('ok'); send(position); },
                 error => { if (error.code === error.PERMISSION_DENIED) denied(); else state('ok'); }, // yer tapılmadı — icazə var
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
             );
         };
 
@@ -189,7 +190,8 @@
                 if (permission === 'granted' || store.get(OK_KEY)) locate(); // yer arxa planda (2 dəqiqədə bir)
                 return;
             }
-            state('need');       // ilk dəfə: izah və düymə
+            // "prompt": ekran göstərmədən yer oxunur — icazə varsa tətbiq açılır, rədd edilsə ekran çıxır
+            locate(true);
         };
         if (navigator.permissions && navigator.permissions.query) {
             navigator.permissions.query({ name: 'geolocation' }).then(status => {
