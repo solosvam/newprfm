@@ -25,6 +25,9 @@ class CourierController extends Controller
     public function order(Order $order, FinanceService $finance, OrderStatusService $statuses): View
     {
         $this->authorizeCourier($order);
+        // Kuryer sifarişi açdı — həmin sifarişin bildirişləri oxunmuş sayılır
+        rescue(fn () => \App\Models\Courier\CourierNotification::where('user_id', $this->me())->where('order_id', $order->id)
+            ->whereNull('read_at')->update(['read_at' => now()]), null, false);
         $order->load(['status', 'paymentMethod', 'customer', 'address',
             'items.product.brand', 'items.product.images', 'items.product.type', 'items.product.genders', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs']);
 

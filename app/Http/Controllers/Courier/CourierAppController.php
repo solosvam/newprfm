@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Courier;
 
 use App\Http\Controllers\Controller;
+use App\Models\Courier\CourierNotification;
 use App\Models\Order\Order;
 use App\Models\Procurement\OrderItemAllocation;
 use App\Services\FinanceService;
 use App\Services\OrderStatusService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -48,6 +50,38 @@ class CourierAppController extends Controller
             'balance' => $finance->balances()[$account->id] ?? 0,
             'history' => $finance->courierHistory($account),
         ]);
+    }
+
+    /** Bildirişlər: yenilər yuxarıda (son 30 gün — köhnələr silinir) */
+    public function notifications(): View
+    {
+        return view('courier-app.notifications', [
+            'notifications' => CourierNotification::where('user_id', auth('admin')->id())->latest('created_at')->latest('id')->limit(100)->get(),
+        ]);
+    }
+
+    /** Bildirişi açmaq: oxunmuş olur və aid olduğu yerə (sifariş, hesab) keçir — push-un linki də budur */
+    public function openNotification(CourierNotification $notification): RedirectResponse
+    {
+        abort_unless((int) $notification->user_id === (int) auth('admin')->id(), 404);
+        if (!$notification->read_at) {
+            $notification->update(['read_at' => now()]);
+        }
+
+        return redirect($notification->url ?: route('kuryer.notifications'));
+    }
+
+    public function readAll(): RedirectResponse
+    {
+        CourierNotification::where('user_id', auth('admin')->id())->whereNull('read_at')->update(['read_at' => now()]);
+
+        return redirect()->route('kuryer.notifications');
+    }
+
+    /** Oxunmamış bildirişlərin sayı — tətbiqin ikonundakı rəqəm (service worker push gələndə soruşur) */
+    public function badge(): JsonResponse
+    {
+        return response()->json(['unread' => CourierNotification::unreadCount((int) auth('admin')->id())])->header('Cache-Control', 'no-store');
     }
 
     /** Kuryerin yeri (tətbiq açılanda / qayıdanda — app.js): tarixçəyə yazılır, son yer istifadəçidə; admin Kuryerlər səhifəsində görür */

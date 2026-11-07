@@ -20,6 +20,11 @@ Route::prefix('kuryer')->name('kuryer.')->group(function () {
     Route::middleware(['auth:admin', \App\Http\Middleware\CourierOnly::class, 'throttle:60,1'])->group(function () {
         Route::get('/', [CourierAppController::class, 'home'])->name('home');
         Route::get('/hesab', [CourierAppController::class, 'account'])->name('account');
+        // Bildirişlər: siyahı, açmaq (oxunmuş olur → sifariş), hamısını oxunmuş et; badge — oxunmamış sayı (service worker)
+        Route::get('/bildirisler', [CourierAppController::class, 'notifications'])->name('notifications');
+        Route::get('/bildirisler/{notification}', [CourierAppController::class, 'openNotification'])->whereNumber('notification')->name('notifications.open');
+        Route::post('/bildirisler/oxundu', [CourierAppController::class, 'readAll'])->name('notifications.read-all');
+        Route::get('/badge', [CourierAppController::class, 'badge'])->name('badge');
         // Kuryerin yeri: tətbiq hər açılanda göndərir (app.js)
         Route::post('/location', [CourierAppController::class, 'location'])->name('location');
 

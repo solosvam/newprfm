@@ -461,6 +461,15 @@
         });
     }
 
+    // ---------- Tətbiqin ikonundakı rəqəm: oxunmamış bildirişlər (zəngin data-unread) ----------
+    // iPhone (iOS 16.4+, bildiriş icazəsi ilə) və kompüterdə rəqəm; Android-də telefon özü nöqtə / say göstərir.
+    onPage(() => {
+        const bell = document.querySelector('[data-unread]');
+        if (!bell || !('setAppBadge' in navigator)) return;
+        const count = Number(bell.dataset.unread) || 0;
+        (count ? navigator.setAppBadge(count) : navigator.clearAppBadge()).catch(() => {});
+    });
+
     // ---------- Service worker: /kuryer/sw.js, əhatəsi /kuryer ----------
     if (config.sw && 'serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register(config.sw, { scope: '/kuryer' }).catch(() => {}));

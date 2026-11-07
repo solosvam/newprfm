@@ -56,6 +56,7 @@ class CourierFlowTest extends TestCase
             '2026_10_16_100000_create_finance_categories.php',
             '2026_11_07_160000_create_courier_locations.php',
             '2026_11_07_180000_add_pick_photo_to_order_item_allocations.php',
+            '2026_11_07_200000_create_courier_notifications.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();
         }
@@ -391,7 +392,10 @@ class CourierFlowTest extends TestCase
             ->first(fn ($data) => ($data['include_aliases']['external_id'] ?? null) === ['user-'.$courier->id]);
         $this->assertNotNull($sent, 'kuryerə push getməlidir');
         $this->assertSame('Yeni sifariş: PS1', $sent['headings']['az']);
-        $this->assertSame(route('kuryer.order', $order), $sent['url']);
+        // Push-a basanda bildiriş oxunmuş olur və sifariş açılır
+        $notice = \App\Models\Courier\CourierNotification::where('user_id', $courier->id)->sole();
+        $this->assertSame(route('kuryer.notifications.open', $notice), $sent['url']);
+        $this->assertSame(['order_assigned', route('kuryer.order', $order, false)], [$notice->type, $notice->url]);
 
         // Tətbiqdə: OneSignal qurulubsa — SDK və kuryerin xarici ID-si
         $html = $this->actingAs($courier, 'admin')->get(route('kuryer.home'))->getContent();
@@ -425,6 +429,38 @@ class CourierFlowTest extends TestCase
         $this->assertStringNotContainsString('google.com/maps', $html);
         $this->get(route('admin.courier.team.show', ['courier' => $courier, 'l_date' => today()->subDay()->toDateString()]))
             ->assertSee('Bu gün üçün yer məlumatı yoxdur.');
+    }
+
+    /** Bildirişlər: təyin olunanda yazılır; zəngdə oxunmamış sayı; açanda / sifarişi açanda oxunmuş; badge JSON; hamısını oxu */
+    public function test_courier_notifications_unread_badge_and_read(): void
+    {
+        $first = $this->courierAppTables();
+        [$order] = $this->assigned($first);
+        $courier = User::forceCreate(['name' => 'Vüsal']);
+        $courier->assignRole(FinanceService::COURIER_ROLE);
+        app(OrderStatusService::class)->assignCourier($order, $courier->fresh(), 7);
+        $other = \App\Models\Courier\CourierNotification::create(['user_id' => $courier->id, 'type' => 'money_collected',
+            'title' => 'Rauf balansınızdan 10.00 AZN götürdü', 'url' => route('kuryer.account', [], false), 'created_at' => now()]);
+        $this->actingAs($courier, 'admin');
+
+        $this->get(route('kuryer.badge'))->assertExactJson(['unread' => 2]);
+        $home = $this->get(route('kuryer.home'))->getContent();
+        $this->assertStringContainsString('data-unread="2"', $home);
+        $this->assertStringContainsString('<span class="bar__count">2</span>', $home);
+        $this->get(route('kuryer.notifications'))->assertOk()->assertSee('Yeni sifariş: PS1')->assertSee('Hamısını oxunmuş et');
+
+        // Sifarişi açmaq — onun bildirişi oxunmuş olur
+        $this->get(route('kuryer.order', $order))->assertOk();
+        $this->get(route('kuryer.badge'))->assertExactJson(['unread' => 1]);
+        // Bildirişi açmaq — oxunmuş olur və öz yerinə keçir; başqasının bildirişi açılmır
+        $this->get(route('kuryer.notifications.open', $other))->assertRedirect(route('kuryer.account'));
+        $this->assertNotNull($other->fresh()->read_at);
+        $this->actingAs($first, 'admin')->get(route('kuryer.notifications.open', $other))->assertNotFound();
+
+        \App\Models\Courier\CourierNotification::create(['user_id' => $courier->id, 'type' => 'x', 'title' => 'T', 'created_at' => now()]);
+        $this->actingAs($courier, 'admin')->post(route('kuryer.notifications.read-all'))->assertRedirect(route('kuryer.notifications'));
+        $this->get(route('kuryer.badge'))->assertExactJson(['unread' => 0]);
+        $this->assertStringNotContainsString('bar__count', $this->get(route('kuryer.home'))->getContent());
     }
 
     /** /kuryer: girişsiz — admin girişinə, kuryer admin panelə girəndə — tətbiqə, admin — tətbiqə yox */

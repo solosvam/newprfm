@@ -13,6 +13,7 @@
     $viewer = auth('admin')->user();
     $tab = $tab ?? null;
     $pushAppId = config('services.onesignal.app_id'); // push bildirişləri (OneSignal) — qurulubsa
+    $unread = \App\Models\Courier\CourierNotification::unreadCount($viewer->id); // zəng və tətbiqin ikonundakı rəqəm
 @endphp
 <!doctype html>
 <html lang="az" class="geo-check" data-sw="{{ route('kuryer.sw') }}" data-geo-url="{{ route('kuryer.location') }}"
@@ -96,6 +97,11 @@
         @endif
         <h1 class="bar__title">@yield('title')</h1>
         <span class="bar__user">{{ trim($viewer->full_name) }}</span>
+        <a href="{{ route('kuryer.notifications') }}" class="bar__bell {{ $tab === 'notifications' ? 'is-active' : '' }}" data-unread="{{ $unread }}"
+           aria-label="Bildirişlər{{ $unread ? ' — '.$unread.' oxunmamış' : '' }}">
+            @include('courier-app._icon', ['name' => 'bell'])
+            @if($unread)<span class="bar__count">{{ $unread > 99 ? '99+' : $unread }}</span>@endif
+        </a>
     </header>
 
     <div class="loader" aria-hidden="true"></div>

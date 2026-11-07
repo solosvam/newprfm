@@ -172,11 +172,11 @@ class OrderStatusService
         }
     }
 
-    /** Kuryerə Telegram və push (kuryer tətbiqi): sifariş ona təhkim olundu (xəta əməliyyatı pozmur) */
+    /** Kuryerə Telegram və tətbiq bildirişi + push (CourierNotifier): sifariş ona təhkim olundu (xəta əməliyyatı pozmur) */
     private function notifyCourier(Order $order, User $courier, ?User $from, int $actor): void
     {
         rescue(fn () => app(\App\Services\Telegram\CourierTelegram::class)->orderAssigned($order->fresh(), $courier, $from, $actor), null, !app()->runningUnitTests());
-        rescue(fn () => app(\App\Services\Courier\CourierPush::class)->orderAssigned($order->fresh(), $courier, $from), null, !app()->runningUnitTests());
+        rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->orderAssigned($order->fresh(), $courier, $from), null, !app()->runningUnitTests());
     }
 
     /*
@@ -311,9 +311,10 @@ class OrderStatusService
             return [$from, $head];
         });
         rescue(fn () => app(\App\Services\Telegram\CourierTelegram::class)->orderAssigned($order->fresh(), $to, $from, $actor, $head), null, !app()->runningUnitTests());
-        rescue(fn () => app(\App\Services\Courier\CourierPush::class)->orderAssigned($order->fresh(), $to, $from), null, !app()->runningUnitTests());
+        rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->orderAssigned($order->fresh(), $to, $from), null, !app()->runningUnitTests());
         if ($head && $from && $from->id !== $head->id) {
             rescue(fn () => app(\App\Services\Telegram\CourierTelegram::class)->orderTakenAway($order->fresh(), $from, $to, $head), null, !app()->runningUnitTests());
+            rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->orderTakenAway($order->fresh(), $from, $to, $head), null, !app()->runningUnitTests());
         }
     }
 

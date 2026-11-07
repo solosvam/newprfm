@@ -95,6 +95,16 @@ img { max-width: 100%; }
 }
 .bar__back:active { background: rgba(255, 255, 255, .18); }
 .bar__title { flex: 1; min-width: 0; font-size: 19px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar__bell {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; margin-right: -6px; border-radius: 50%; color: #fff;
+}
+.bar__bell:active, .bar__bell.is-active { background: rgba(255, 255, 255, .18); }
+.bar__count {
+    position: absolute; top: 2px; right: 1px; min-width: 18px; height: 18px; padding: 0 5px;
+    border: 2px solid var(--brand); border-radius: 999px; background: #e5484d; color: #fff;
+    font-size: 11px; font-weight: 750; line-height: 14px; text-align: center;
+}
 .bar__user { max-width: 38vw; font-size: 13px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Yüklənmə göstəricisi (keçid / forma göndərilir — app.js, html.is-loading) ---------- */
@@ -204,6 +214,18 @@ a.card:active { background: #faf8fc; }
 .order__who { margin-top: 6px; font-weight: 600; }
 .order__where { color: var(--muted); font-size: 14px; }
 .order__meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 14px; }
+
+/* Bildirişlər */
+.notices__all { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+.notices__all .btn { min-height: 38px; padding: 6px 14px; font-size: 14px; }
+.notice { display: flex; align-items: flex-start; gap: 10px; }
+.notice__dot { flex: none; width: 10px; height: 10px; margin-top: 6px; border-radius: 50%; background: transparent; }
+.notice.is-unread .notice__dot { background: #e5484d; }
+.notice__main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.notice__title { color: var(--muted); font-weight: 600; }
+.notice.is-unread .notice__title { color: var(--text); font-weight: 750; }
+.notice__body { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.notice__time { color: var(--muted); font-size: 12px; }
 
 /* Siyahı (tarixçə, arxiv) */
 .list { padding: 0 14px; }

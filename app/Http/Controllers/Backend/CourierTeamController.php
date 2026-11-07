@@ -161,6 +161,7 @@ class CourierTeamController extends Controller
             return [$movement, $balance - $cents];
         });
         rescue(fn () => $telegram->moneyCollected($movement, $courier, $me, $after), null, !app()->runningUnitTests());
+        rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->moneyCollected($movement, $courier, $me, $after), null, !app()->runningUnitTests());
 
         return back()->with('success', number_format((float) $movement->amount, 2).' AZN '.trim($courier->full_name).' adlı kuryerdən hesabınıza köçürüldü.');
     }
