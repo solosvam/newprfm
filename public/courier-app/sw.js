@@ -3,7 +3,7 @@
 // Tətbiqin CSS / JS / ikonları — keşdən dərhal, arxa planda yenilənir.
 // Push bildirişləri (OneSignal) də bu service worker-dədir — tətbiqdə bir service worker (app.js, serviceWorkerPath).
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-const VERSION = 'kuryer-v10';
+const VERSION = 'kuryer-v11';
 const OFFLINE = '/courier-app/offline.html';
 const PRECACHE = [OFFLINE, '/courier-app/app.css', '/courier-app/manifest.webmanifest', '/courier-app/icons/icon-192.png'];
 
@@ -17,15 +17,30 @@ self.addEventListener('activate', event => {
         .then(() => self.clients.claim()));
 });
 
-// Push gələndə tətbiqin ikonundakı rəqəm — oxunmamış bildirişlərin sayı serverdən (tətbiq bağlı olsa da)
+// Push gələndə tətbiqin ikonundakı rəqəm — oxunmamış bildirişlərin sayı (tətbiq bağlı olsa da).
+// Say push-un özündədir (OneSignal əlavə məlumatı: custom.a.badge — CourierNotifier); yoxdursa — serverdən soruşulur.
+function pushBadge(event) {
+    try {
+        const payload = event.data ? event.data.json() : null;
+        const value = payload && payload.custom && payload.custom.a ? payload.custom.a.badge : undefined;
+        return value === undefined || value === null ? null : Number(value);
+    } catch (e) {
+        return null;
+    }
+}
+function applyBadge(count) {
+    if (!self.navigator || !('setAppBadge' in self.navigator)) return Promise.resolve();
+    return (count ? self.navigator.setAppBadge(count) : self.navigator.clearAppBadge()).catch(() => {});
+}
 self.addEventListener('push', event => {
-    if (!self.navigator || !('setAppBadge' in self.navigator)) return;
+    const count = pushBadge(event);
+    if (count !== null && !Number.isNaN(count)) {
+        event.waitUntil(applyBadge(count));
+        return;
+    }
     event.waitUntil(fetch('/kuryer/badge', { credentials: 'include', headers: { 'Accept': 'application/json' } })
         .then(response => (response.ok ? response.json() : null))
-        .then(data => {
-            if (!data) return undefined;
-            return data.unread ? self.navigator.setAppBadge(data.unread) : self.navigator.clearAppBadge();
-        })
+        .then(data => (data ? applyBadge(data.unread) : undefined))
         .catch(() => {}));
 });
 

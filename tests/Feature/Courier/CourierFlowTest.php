@@ -392,6 +392,7 @@ class CourierFlowTest extends TestCase
             ->first(fn ($data) => ($data['include_aliases']['external_id'] ?? null) === ['user-'.$courier->id]);
         $this->assertNotNull($sent, 'kuryerə push getməlidir');
         $this->assertSame('Yeni sifariş: PS1', $sent['headings']['az']);
+        $this->assertSame(['badge' => 1], $sent['data']); // ikonun rəqəmi push-un özündə
         // Push-a basanda bildiriş oxunmuş olur və sifariş açılır
         $notice = \App\Models\Courier\CourierNotification::where('user_id', $courier->id)->sole();
         $this->assertSame(route('kuryer.notifications.open', $notice), $sent['url']);
