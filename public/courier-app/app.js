@@ -131,8 +131,8 @@
     // Məkan: quraşdırılmış tətbiqdə (telefon) icazə verilməyənə qədər tətbiq açılmır (.geo-gate).
     // iPhone tətbiqdə icazənin vəziyyətini hər səhifədə "prompt" kimi qaytarır — ona görə ekran dərhal göstərilmir:
     // əvvəl səssizcə yer oxunur (telefonun ayarında icazə varsa dərhal gəlir), yalnız rədd edilsə ekran çıxır.
-    // İcazə bir dəfə alınıbsa yadda qalır (localStorage) — tətbiq gözləmədən açılır. Yer ən çox 2 dəqiqədə bir
-    // serverə göndərilir: açılanda, tətbiqə qayıdanda. Kompüterdə məcbur deyil.
+    // İcazə bir dəfə alınıbsa yadda qalır (localStorage) — tətbiq gözləmədən açılır. Tətbiq açıq və ekranda olduqca
+    // yer 30 saniyədən bir serverə göndərilir (açılanda, qayıdanda və taymerlə; fonda telefon icazə vermir). Kompüterdə məcbur deyil.
     (function geo() {
         const body = document.body;
         const url = body.dataset.geoUrl;
@@ -142,7 +142,7 @@
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
         const OK_KEY = 'ps-geo-ok';      // icazə verilib (1)
         const LAST_KEY = 'ps-geo-last';  // son göndəriş vaxtı (ms)
-        const EVERY = 2 * 60 * 1000;
+        const EVERY = 30 * 1000;
         const store = {
             get: key => { try { return localStorage.getItem(key); } catch (e) { return null; } },
             set: (key, value) => { try { value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch (e) { /* */ } },
@@ -174,7 +174,7 @@
             navigator.geolocation.getCurrentPosition(
                 position => { store.set(OK_KEY, '1'); state('ok'); send(position); },
                 error => { if (error.code === error.PERMISSION_DENIED) denied(); else state('ok'); }, // yer tapılmadı — icazə var
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 20000 },
             );
         };
 
@@ -183,11 +183,15 @@
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && body.classList.contains('geo-ok')) locate();
         });
+        // Tətbiq açıq və ekranda olduqca — 30 saniyədən bir (icazə varsa)
+        setInterval(() => {
+            if (document.visibilityState === 'visible' && body.classList.contains('geo-ok') && store.get(OK_KEY)) locate();
+        }, EVERY);
         const start = permission => {
             if (permission === 'denied') { denied(); return; }
             if (permission === 'granted' || store.get(OK_KEY) || !mustAsk) {
                 state('ok');     // tətbiq dərhal açılır
-                if (permission === 'granted' || store.get(OK_KEY)) locate(); // yer arxa planda (2 dəqiqədə bir)
+                if (permission === 'granted' || store.get(OK_KEY)) locate(); // yer arxa planda (30 saniyədə bir)
                 return;
             }
             // "prompt": ekran göstərmədən yer oxunur — icazə varsa tətbiq açılır, rədd edilsə ekran çıxır
