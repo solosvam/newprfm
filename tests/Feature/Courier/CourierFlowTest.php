@@ -365,6 +365,10 @@ class CourierFlowTest extends TestCase
         $courier->assignRole(FinanceService::COURIER_ROLE);
 
         Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->string('image'), $t->integer('sort_order')->default(0)]);
+        Schema::create('types', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('genders', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
+        Schema::table('products', fn (Blueprint $t) => $t->integer('type_id')->nullable());
 
         return $courier;
     }
@@ -395,7 +399,10 @@ class CourierFlowTest extends TestCase
     {
         $courier = $this->courierAppTables();
         [$order] = $this->assigned($courier);
-        $productId = DB::table('products')->insertGetId(['name' => 'Sauvage']);
+        DB::table('types')->insert(['id' => 2, 'name_az' => 'Eau De Toilette']);
+        DB::table('genders')->insert(['id' => 1, 'name_az' => 'Kişi üçün']);
+        $productId = DB::table('products')->insertGetId(['name' => 'Sauvage', 'type_id' => 2]);
+        DB::table('product_genders')->insert(['product_id' => $productId, 'gender_id' => 1]);
         $order->items()->update(['product_id' => $productId]);
         DB::table('product_images')->insert(['product_id' => $productId, 'image' => 'sauvage.jpg']);
         $this->actingAs($courier, 'admin');
@@ -411,6 +418,7 @@ class CourierFlowTest extends TestCase
         $page = $this->get(route('kuryer.order', $order))->assertOk()->getContent();
         $this->assertStringNotContainsString('backend/', $page);
         $this->assertStringContainsString('data-zoom="'.asset('frontend/uploads/products/sauvage.jpg').'"', $page);
+        $this->assertStringContainsString('<div class="product__kind">Eau De Toilette · Kişi üçün</div>', $page); // növ və cins
         $this->assertStringContainsString(route('kuryer.pick', [$order, $order->items()->first()->allocations()->first()->id]), $page);
 
         $this->get(route('kuryer.account'))->assertOk()->assertSee('Haqq-hesab tarixçəsi')->assertSee(route('admin.logout'), false);

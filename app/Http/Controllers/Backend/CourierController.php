@@ -26,7 +26,7 @@ class CourierController extends Controller
     {
         $this->authorizeCourier($order);
         $order->load(['status', 'paymentMethod', 'customer', 'address',
-            'items.product.brand', 'items.product.images', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs']);
+            'items.product.brand', 'items.product.images', 'items.product.type', 'items.product.genders', 'items.variant.size', 'items.allocations.warehouse', 'items.allocations.logs']);
 
         $rows = fn (array $statuses, bool $not = false) => $order->items->flatMap(fn ($item) => $item->allocations
             ->filter(fn ($a) => in_array($a->status, $statuses, true) !== $not)->map(fn ($a) => ['item' => $item, 'a' => $a]));

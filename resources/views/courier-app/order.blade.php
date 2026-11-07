@@ -19,6 +19,8 @@
     $phone2 = $order->customer?->mobile_2; // ehtiyat nömrə
     $cancelled = $code === 'cancelled';
     $variant = fn ($item) => collect([$item->product?->brand?->name, $item->variant?->size?->name_az])->filter()->implode(' · ');
+    // Ətrin növü (Eau De Parfum / Eau De Toilette...) və cinsi (Kişi / Qadın üçün, Unisex) — kuryer düzgün malı götürsün
+    $kind = fn ($item) => collect([$item->product?->type?->name_az, $item->product?->genders->pluck('name_az')->implode(', ')])->filter()->implode(' · ');
 @endphp
 @extends('courier-app.layout', ['tab' => 'orders'])
 @section('title', $order->order_no)
@@ -82,6 +84,7 @@
                             <div class="product__text">
                                 <div class="product__name">{{ $item->product?->name }}</div>
                                 <div class="muted">{{ $variant($item) }}</div>
+                                @if($k = $kind($item))<div class="product__kind">{{ $k }}</div>@endif
                             </div>
                             <div class="product__qty">× {{ $part->quantity }}</div>
                         </div>
@@ -165,6 +168,7 @@
                             <div class="product__text">
                                 <div class="product__name">{{ $item->product?->name }}</div>
                                 <div class="muted">{{ $variant($item) }}</div>
+                                @if($k = $kind($item))<div class="product__kind">{{ $k }}</div>@endif
                             </div>
                             <div class="product__qty">× {{ $part->quantity }}</div>
                         </div>
@@ -272,6 +276,7 @@
                                         <div class="product__text">
                                             <div class="product__name">{{ $ri->product?->name }}</div>
                                             <div class="muted">{{ $variant($ri) }} · {{ number_format((float) $ri->unit_price, 2) }} AZN</div>
+                                            @if($k = $kind($ri))<div class="product__kind">{{ $k }}</div>@endif
                                         </div>
                                     </div>
                                     <select name="quantity" class="field" aria-label="Neçə ədəd götürmədi">

@@ -276,6 +276,7 @@ textarea.field { min-height: 80px; resize: vertical; }
 .product { display: flex; align-items: flex-start; gap: 10px; }
 .product__text { flex: 1; min-width: 0; }
 .product__name { font-weight: 650; overflow-wrap: anywhere; }
+.product__kind { margin-top: 2px; color: var(--brand-2); font-size: 13px; font-weight: 600; }
 .product__qty { font-size: 18px; font-weight: 750; white-space: nowrap; }
 
 /* Məhsulun şəkli: kiçik, basanda tam ekranda (app.js) */
