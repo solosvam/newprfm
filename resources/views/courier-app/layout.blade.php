@@ -4,6 +4,8 @@
   Aşağı menyu: Sifarişlər, Hesab, Kuryerlər (baş kuryer).
   Telefonda / planşetdə tətbiq yalnız quraşdırılmış halda (ana ekrandakı ikondan) işləyir: brauzerdə açılanda
   .gate ekranı göstərilir (app.css — display-mode, app.js — quraşdırma düyməsi). Kompüterdə məhdudiyyət yoxdur.
+  Quraşdırılmış tətbiqdə (telefonda) məkan icazəsi verilməyənə qədər .geo-gate göstərilir; icazədən sonra yer
+  hər açılışda serverə göndərilir (app.js, body.geo-check → geo-need / geo-ok).
 --}}
 @php
     $viewer = auth('admin')->user();
@@ -31,7 +33,7 @@
     @if($pushAppId)<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>@endif
     <script src="{{ asset_v('courier-app/app.js') }}" defer></script>
 </head>
-<body data-sw="{{ route('kuryer.sw') }}" @if(!empty($refresh)) data-refresh @endif
+<body class="geo-check" data-sw="{{ route('kuryer.sw') }}" data-geo-url="{{ route('kuryer.location') }}" @if(!empty($refresh)) data-refresh @endif
       @if($pushAppId) data-push-app="{{ $pushAppId }}" data-push-user="user-{{ $viewer->id }}" @endif>
     {{-- Quraşdırma ekranı: telefonda brauzerdə açılanda yalnız bu görünür --}}
     <section class="gate" aria-labelledby="gateTitle">
@@ -57,6 +59,21 @@
         </ol>
 
         <p class="gate__hint">Artıq quraşdırmısınızsa — ana ekrandakı <b>PS Kuryer</b> ikonundan açın. Telegram-dan açılıbsa, linki Chrome-da açın.</p>
+    </section>
+
+    {{-- Məkan icazəsi: quraşdırılmış tətbiqdə icazə olmadan tətbiq açılmır --}}
+    <section class="geo-gate" aria-labelledby="geoTitle">
+        <span class="geo-gate__icon">@include('courier-app._icon', ['name' => 'map'])</span>
+        <h1 class="gate__title" id="geoTitle">Məkana icazə verin</h1>
+        <p class="gate__text">PS Kuryer yerinizi bilməlidir — operator sifarişləri yaxınlıqdakı kuryerə verir. Yeriniz yalnız tətbiq açılanda göndərilir.</p>
+        <button type="button" class="btn btn--primary btn--block btn--lg" data-geo-allow>@include('courier-app._icon', ['name' => 'map']) Məkana icazə ver</button>
+        <div class="geo-gate__denied" data-geo-denied hidden>
+            <p><b>İcazə bağlıdır.</b> Telefonun ayarlarında açın, sonra tətbiqi bağlayıb yenidən açın:</p>
+            <ul>
+                <li><b>iPhone:</b> Ayarlar → Məxfilik → Məkan xidmətləri → Safari saytları → “Tətbiqdən istifadə zamanı”</li>
+                <li><b>Android:</b> Chrome → ⋮ → Ayarlar → Sayt ayarları → Məkan → {{ request()->getHost() }} → İcazə ver</li>
+            </ul>
+        </div>
     </section>
 
     <header class="bar">

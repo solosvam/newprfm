@@ -36,6 +36,7 @@
             <div class="courier-summary__label">Hesablaşma</div>
             <div class="courier-summary__value">0.00 AZN</div>
         @endif
+        <div class="mt-2">@include('backend.courier._location', ['user' => $courier, 'link' => true])</div>
         @if($canCollect)
             <form method="post" action="{{ route('admin.courier.team.collect', $courier) }}" class="courier-deliver mt-3"
                   onsubmit="return confirm('Kuryerin balansından ' + this.amount.value + ' AZN hesabınıza köçürülsün?')">

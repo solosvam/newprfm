@@ -366,6 +366,7 @@ class CourierFlowTest extends TestCase
 
         Schema::create('product_images', fn (Blueprint $t) => [$t->id(), $t->integer('product_id'), $t->string('image'), $t->integer('sort_order')->default(0)]);
         Schema::create('types', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        (require database_path('migrations/2026_11_07_140000_add_location_to_users.php'))->up();
         Schema::create('genders', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
         Schema::table('products', fn (Blueprint $t) => $t->integer('type_id')->nullable());
@@ -394,6 +395,25 @@ class CourierFlowTest extends TestCase
         $html = $this->actingAs($courier, 'admin')->get(route('kuryer.home'))->getContent();
         $this->assertStringContainsString('data-push-user="user-'.$courier->id.'"', $html);
         $this->assertStringContainsString('OneSignalSDK.page.js', $html);
+    }
+
+    /** Tətbiq açılanda kuryerin yeri yazılır; admin Kuryerlər səhifəsində görür */
+    public function test_courier_location_is_saved_and_shown_to_admin(): void
+    {
+        $courier = $this->courierAppTables();
+        $this->actingAs($courier, 'admin');
+        $this->assertStringContainsString('class="geo-gate"', $this->get(route('kuryer.home'))->getContent());
+
+        $this->postJson(route('kuryer.location'), ['lat' => 200, 'lng' => 49.8])->assertUnprocessable();
+        $this->postJson(route('kuryer.location'), ['lat' => 40.4093, 'lng' => 49.8671, 'accuracy' => 12.4])->assertOk();
+        $fresh = $courier->fresh();
+        $this->assertEquals([40.4093, 49.8671, 12], [(float) $fresh->location_lat, (float) $fresh->location_lng, (int) $fresh->location_accuracy]);
+        $this->assertTrue($fresh->location_at->isToday());
+
+        $admin = User::forceCreate(['name' => 'Admin']);
+        $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'courier.team', 'guard_name' => 'admin']));
+        $this->actingAs($admin, 'admin')->get(route('admin.courier.team.show', $courier))->assertOk()
+            ->assertSee(e($fresh->locationMapsUrl()), false)->assertSee('±12 m')->assertSee('Xəritədə aç');
     }
 
     /** /kuryer: girişsiz — admin girişinə, kuryer admin panelə girəndə — tətbiqə, admin — tətbiqə yox */

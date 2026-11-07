@@ -349,6 +349,28 @@ button.thumb { cursor: zoom-in; }
 .gate__num { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--brand-2); color: #fff; font-weight: 700; font-size: 14px; }
 .gate__hint { max-width: 340px; margin-top: auto; color: var(--muted); font-size: 13px; }
 
+/* ---------- Məkan icazəsi ----------
+ * Yalnız telefonda / planşetdə, quraşdırılmış tətbiqdə: body.geo-check — yoxlanılır (boş ekran), geo-need — icazə ekranı,
+ * geo-ok — tətbiq. Kompüterdə və brauzerdə (quraşdırma ekranı) təsiri yoxdur. app.js idarə edir. */
+.geo-gate { display: none; }
+@media (display-mode: standalone) and (pointer: coarse), (display-mode: fullscreen) and (pointer: coarse), (display-mode: minimal-ui) and (pointer: coarse) {
+    body.geo-check .bar, body.geo-check .page, body.geo-check .tabs,
+    body.geo-need .bar, body.geo-need .page, body.geo-need .tabs { display: none !important; }
+    body.geo-need .geo-gate {
+        display: flex; flex-direction: column; align-items: center; gap: 14px;
+        min-height: 100vh; min-height: 100dvh;
+        padding: calc(48px + var(--safe-top)) 22px calc(28px + var(--safe-bottom));
+        background: linear-gradient(180deg, var(--brand-soft), var(--bg) 45%);
+        text-align: center;
+    }
+}
+.geo-gate__icon { display: inline-flex; align-items: center; justify-content: center; width: 88px; height: 88px; border-radius: 50%; background: var(--brand-2); color: #fff; }
+.geo-gate__icon .icon { width: 44px; height: 44px; }
+.geo-gate .btn { max-width: 360px; }
+.geo-gate__denied { max-width: 360px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--warn-soft); color: #5b3a00; font-size: 14px; text-align: left; }
+.geo-gate__denied[hidden] { display: none; }
+.geo-gate__denied ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; }
+
 /* Böyük ekranda (planşet) — mərkəzdə dar sütun; menyu də */
 @media (min-width: 680px) {
     .tabs { left: 50%; right: auto; width: 640px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; border-radius: 16px 16px 0 0; }

@@ -128,6 +128,63 @@
         });
     }
 
+    // Məkan: quraşdırılmış tətbiqdə (telefon) icazə verilməyənə qədər tətbiq açılmır (.geo-gate);
+    // icazə varsa yer hər açılışda və tətbiqə qayıdanda serverə göndərilir (ən çox dəqiqədə bir). Kompüterdə məcbur deyil.
+    (function geo() {
+        const body = document.body;
+        const url = body.dataset.geoUrl;
+        const allow = document.querySelector('[data-geo-allow]');
+        const deniedBox = document.querySelector('[data-geo-denied]');
+        const mustAsk = window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(display-mode: browser)').matches;
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        let lastSent = 0;
+        const state = name => {
+            body.classList.remove('geo-check', 'geo-need', 'geo-ok');
+            body.classList.add('geo-' + name);
+        };
+        const denied = () => {
+            if (!mustAsk) { state('ok'); return; }
+            state('need');
+            if (deniedBox) deniedBox.hidden = false;
+            if (allow) allow.textContent = 'Yenidən yoxla';
+        };
+        const send = position => {
+            if (!url || Date.now() - lastSent < 60000) return;
+            lastSent = Date.now();
+            fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: JSON.stringify({ lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy }),
+            }).catch(() => {});
+        };
+        const locate = () => navigator.geolocation.getCurrentPosition(
+            position => { state('ok'); send(position); },
+            error => { if (error.code === error.PERMISSION_DENIED) denied(); else state('ok'); }, // yer tapılmadı — icazə var, tətbiq açılır
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+        );
+
+        if (!('geolocation' in navigator)) { state('ok'); return; }
+        if (allow) allow.addEventListener('click', locate); // icazə pəncərəsi düymə ilə (iPhone başqa cür göstərmir)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && body.classList.contains('geo-ok')) locate();
+        });
+        const start = permission => {
+            if (permission === 'granted') { state('ok'); locate(); }
+            else if (permission === 'denied') denied();
+            else if (mustAsk) state('need');
+            else state('ok'); // kompüter: soruşmuruq
+        };
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(status => {
+                start(status.state);
+                status.onchange = () => start(status.state);
+            }).catch(() => start('prompt'));
+        } else {
+            start('prompt');
+        }
+    })();
+
     // Push bildirişləri (OneSignal): kuryer "user-{id}" kimi bağlanır — server ona sifariş təyin olunanda göndərir (CourierPush).
     // İcazə yalnız düymə ilə (iPhone başqa cür icazə vermir); rədd edilibsə — telefon ayarlarına yönləndirən mətn.
     const pushApp = document.body.dataset.pushApp;

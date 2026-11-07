@@ -7,6 +7,8 @@ use App\Models\Order\Order;
 use App\Models\Procurement\OrderItemAllocation;
 use App\Services\FinanceService;
 use App\Services\OrderStatusService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
@@ -46,6 +48,24 @@ class CourierAppController extends Controller
             'balance' => $finance->balances()[$account->id] ?? 0,
             'history' => $finance->courierHistory($account),
         ]);
+    }
+
+    /** Kuryerin son yeri (tətbiq açılanda / qayıdanda — app.js); admin Kuryerlər səhifəsində görünür */
+    public function location(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
+            'accuracy' => ['nullable', 'numeric', 'min:0'],
+        ]);
+        auth('admin')->user()->forceFill([
+            'location_lat' => round((float) $data['lat'], 7),
+            'location_lng' => round((float) $data['lng'], 7),
+            'location_accuracy' => isset($data['accuracy']) ? (int) min(round((float) $data['accuracy']), 4294967295) : null,
+            'location_at' => now(),
+        ])->save();
+
+        return response()->json(['ok' => true]);
     }
 
     /** public/courier-app/sw.js — əhatəsi /kuryer (ana səhifə /kuryer sonda "/" olmadan açılır, ona görə Service-Worker-Allowed) */

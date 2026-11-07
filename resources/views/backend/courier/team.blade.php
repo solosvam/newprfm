@@ -50,6 +50,7 @@
                     <span>Bu gün təhvil: <b>{{ $row['deliveredToday'] }}</b></span>
                     @if(!$user->telegram_id)<span class="text-muted">Telegram qoşulmayıb</span>@endif
                 </div>
+                <div class="courier-order__meta">@include('backend.courier._location', ['user' => $user])</div>
             </div>
         </a>
     @empty

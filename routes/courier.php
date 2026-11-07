@@ -20,6 +20,8 @@ Route::prefix('kuryer')->name('kuryer.')->group(function () {
     Route::middleware(['auth:admin', \App\Http\Middleware\CourierOnly::class, 'throttle:60,1'])->group(function () {
         Route::get('/', [CourierAppController::class, 'home'])->name('home');
         Route::get('/hesab', [CourierAppController::class, 'account'])->name('account');
+        // Kuryerin yeri: tətbiq hər açılanda göndərir (app.js)
+        Route::post('/location', [CourierAppController::class, 'location'])->name('location');
 
         Route::controller(CourierController::class)->prefix('order/{order}')->group(function () {
             Route::get('/', 'order')->name('order');
