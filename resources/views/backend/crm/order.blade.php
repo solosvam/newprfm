@@ -246,7 +246,12 @@
                             <div><dt>Tarix</dt><dd>{{ $order->created_at?->format('d.m.Y H:i') ?? '—' }}</dd></div>
                             <div><dt>Status</dt><dd><span class="badge bg-outline-primary">{{ $order->status?->name_az ?? '—' }}</span></dd></div>
                             <div><dt>Mənbə</dt><dd>{{ $sourceLabels[$order->source] ?? ($order->source ?: '—') }}@if($order->created_by && $staff->has($order->created_by)) · {{ $staff[$order->created_by] }}@endif</dd></div>
-                            <div><dt>Ödəniş üsulu</dt><dd>{{ $order->paymentMethod?->name_az ?? '—' }}@if($order->birbank_installment_months) · {{ $order->birbank_installment_months }} ay @endif</dd></div>
+                            <div><dt>Ödəniş üsulu</dt><dd>{{ $order->paymentMethod?->name_az ?? '—' }}@if($order->birbank_installment_months) · {{ $order->birbank_installment_months }} ay @endif
+                                {{-- Hissə-hissə: müddət və aylıq ödəniş müraciətdən --}}
+                                @if($order->paymentMethod?->code === 'installment' && $order->creditApplication)
+                                    @php $ca = $order->creditApplication; @endphp
+                                    <span class="d-block small text-muted">@if($ca->period){{ $ca->period->month }} ay · @endif aylıq {{ number_format((float) $ca->monthly, 2) }} AZN · cəmi {{ number_format((float) $ca->total, 2) }} AZN</span>
+                                @endif</dd></div>
                             <div><dt>Ödəniş vəziyyəti</dt><dd><span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span></dd></div>
                             @if($order->paymentMethod?->code === 'installment' && $order->creditApplication)
                                 <div><dt>Kredit statusu</dt><dd>
