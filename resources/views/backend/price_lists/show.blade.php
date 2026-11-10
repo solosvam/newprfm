@@ -128,6 +128,7 @@
                             <th class="text-muted text-small text-uppercase text-end">Alış</th>
                         @endif
                         <th class="text-muted text-small text-uppercase">Bizim məhsul</th>
+                        <th></th>
                     </tr></thead>
                     <tbody>
                     @forelse($diffRows['rows'] as $row)
@@ -160,9 +161,20 @@
                                     <span class="text-muted text-small">bağlanmayıb</span>
                                 @endif
                             </td>
+                            {{-- Məhsulun redaktəsi (satış qiyməti) yeni tabda; uyğunlaşdırma — digər tablardakı pəncərə ilə --}}
+                            <td class="text-end text-nowrap">
+                                @if($item->variant?->product)
+                                    <a href="{{ route('admin.product.edit', $item->variant->product_id) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">Redaktə</a>
+                                @endif
+                                @if($diffType !== 'removed')
+                                    <button type="button" class="btn btn-sm {{ $item->product_variant_id ? 'btn-link px-1' : 'btn-outline-primary' }}" data-bs-toggle="modal" data-bs-target="#plMatchModal"
+                                            data-candidates="{{ route('admin.price-lists.items.candidates', $item) }}" data-match="{{ route('admin.price-lists.items.match', $item) }}"
+                                            data-title="{{ $item->raw_name }}" data-price="{{ number_format((float) $item->price, 2) }}">{{ $item->product_variant_id ? 'Dəyiş' : 'Uyğunlaşdır' }}</button>
+                                @endif
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-muted">Fərq yoxdur.</td></tr>
+                        <tr><td colspan="6" class="text-muted">Fərq yoxdur.</td></tr>
                     @endforelse
                     </tbody>
                 </table></div>
