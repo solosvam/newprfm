@@ -52,9 +52,8 @@
     @if($code === 'courier_assigned')
         <h2 class="section">Depolardan götürmə</h2>
         @php
-            // Depodan hər şey götürülüb və ödənilibsə (və ya pulu şirkət ödəyir) — yalnız "götürüldü" sətri
-            $doneGroups = $byWarehouse->filter(fn ($rows) => $rows->every(fn ($r) => $r['a']->status === Part::PICKED
-                && (!$r['a']->courier_pays || (int) round($r['a']->quantity * (float) $r['a']->unit_cost * 100) <= ($paid[$r['a']->id] ?? 0))));
+            // Depodan hər şey götürülübsə — pul ödənsə də, ödənməsə də — depo gizlənir, yalnız "götürüldü" sətri qalır
+            $doneGroups = $byWarehouse->filter(fn ($rows) => $rows->every(fn ($r) => $r['a']->status === Part::PICKED));
             $pickedCount = $doneGroups->flatten(1)->sum(fn ($r) => $r['a']->quantity);
         @endphp
         @if($pickedCount)
