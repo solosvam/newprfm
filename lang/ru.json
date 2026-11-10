@@ -887,5 +887,8 @@
     "profile_google_not_connected": "Не привязан",
     "profile_google_connect": "Привязать",
     "profile_google_disconnect": "Отвязать",
-    "profile_google_disconnect_confirm": "Отвязать аккаунт Google? Вход по номеру телефона останется."
+    "profile_google_disconnect_confirm": "Отвязать аккаунт Google? Вход по номеру телефона останется.",
+    "checkout_gift_wrap_item": "Упаковать в подарок",
+    "checkout_gift_wrap_hint": "Подарочная упаковка выбирается для каждого товара отдельно — отметьте «Упаковать в подарок» под товаром в заказе.",
+    "checkout_gift_wrap_label": "Подарочная упаковка"
 }

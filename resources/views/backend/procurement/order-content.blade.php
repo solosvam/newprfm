@@ -120,7 +120,7 @@
                      aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="procItem{{ $item->id }}">
                     <div class="card-body py-3">
                         <div class="list-item-heading justify-content-between d-flex flex-wrap align-items-center gap-2">
-                            <span>{{ $itemLabel($item) }}</span>
+                            <span>{{ $itemLabel($item) }}@if($item->gift_wrap) <span class="badge bg-outline-primary ms-1">Hədiyyəlik</span>@endif</span>
                             {{-- Xülasə: məhsul hansı vəziyyətdədir (kart yığılı olanda da görünür) --}}
                             <span class="text-alternate fw-normal">
                                 @if($group === 'selected')

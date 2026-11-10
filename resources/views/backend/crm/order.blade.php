@@ -335,7 +335,10 @@
                                     </a>
                                 @endif
                             </dd></div>
-                            <div><dt>Qablaşdırma</dt><dd>@if($order->gift_wrap)<span class="badge bg-outline-primary">Hədiyyəlik</span>@else Standart @endif</dd></div>
+                            <div><dt>Qablaşdırma</dt><dd>@if($order->gift_wrap)<span class="badge bg-outline-primary">Hədiyyəlik</span>
+                                @php $wrappedItems = $order->items->filter(fn ($i) => $i->gift_wrap && $i->activeQuantity() > 0); @endphp
+                                @if($wrappedItems->isNotEmpty())<span class="d-block small text-muted">{{ $wrappedItems->map(fn ($i) => ($i->product?->name ?? 'Məhsul').' × '.$i->activeQuantity())->implode(', ') }}</span>@endif
+                            @else Standart @endif</dd></div>
                             <div><dt>Kuryer</dt><dd>
                                 @if($order->courier)
                                     {{ $order->courier->full_name }}@if($order->courier->mobile)<a class="d-block small" href="tel:{{ $order->courier->mobile }}">{{ $order->courier->mobile }}</a>@endif

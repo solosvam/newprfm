@@ -5,6 +5,9 @@
     if (!page) return;
 
     let displayedCart = [];
+    // Hədiyyəlik bükülmə məhsul sətri üzrə: işarələnmiş variant_id-lər (səbət yenidən yüklənəndə qalır)
+    const giftVariants = new Set();
+    const giftQty = new Map(); // variant_id → say (haqq hər bükülən ədədə)
     let loadVersion = 0;
     let submitting = false;
     const BONUS = 'bonus_balance';
@@ -270,9 +273,10 @@
         const freeFrom = Number(delivery.free_from) || 0;
         const fee = delivery.mode === 'free' || (freeFrom > 0 && goods >= freeFrom) ? 0 : Number(delivery.fee) || 0;
 
-        const giftWrapSelected = Boolean($('giftWrap')?.checked);
+        const giftUnits = [...giftVariants].reduce((sum, id) => sum + (giftQty.get(id) || 0), 0);
+        const giftWrapSelected = giftUnits > 0;
         const giftWrapFee = giftWrapSelected && config.giftWrap?.mode === 'paid'
-            ? Math.max(0, Number(config.giftWrap.fee) || 0) : 0;
+            ? round2(Math.max(0, Number(config.giftWrap.fee) || 0) * giftUnits) : 0;
         state.total = round2(goods + fee + giftWrapFee);
         if (els.giftWrapRow && els.giftWrapFee) {
             els.giftWrapRow.hidden = !giftWrapSelected;
@@ -312,7 +316,13 @@
     }
 
     window.addEventListener('parfumshop:promo-updated', updateTotals);
-    $('giftWrap')?.addEventListener('change', updateTotals);
+    els.items?.addEventListener('change', event => {
+        const box = event.target.closest('[data-gift-variant]');
+        if (!box) return;
+        const id = Number(box.dataset.giftVariant);
+        if (box.checked) giftVariants.add(id); else giftVariants.delete(id);
+        updateTotals();
+    });
 
     /* =========================================================
        Items
@@ -336,6 +346,17 @@
             .filter(Boolean)
             .forEach(value => meta.appendChild(el('span', '', value)));
         info.append(el('div', 'checkout-item__name', product.name), meta);
+        // Hədiyyə kartından başqa hər məhsul ayrıca bükülə bilər
+        if (!product.is_gift_card) {
+            const id = Number(product.variant_id);
+            const gift = el('label', 'checkout-item__gift');
+            const box = el('input');
+            box.type = 'checkbox';
+            box.dataset.giftVariant = String(id);
+            box.checked = giftVariants.has(id);
+            gift.append(box, el('span', '', t.giftWrapItem || 'Hədiyyəlik bük'));
+            info.appendChild(gift);
+        }
 
         const priceCell = el('strong', 'checkout-item__price', money(line));
         // endirimli məhsul: köhnə məbləğ üstündən xətt
@@ -370,9 +391,12 @@
             let subtotal = 0;
             let regularSubtotal = 0; // hissə-hissə ödəniş — endirimsiz
 
+            giftQty.clear();
             for (const item of cart) {
                 const product = productMap.get(Number(item.variant_id));
                 if (!product) continue;
+                giftQty.set(Number(item.variant_id), Math.max(1, Number(item.quantity) || 1));
+                if (product.is_gift_card) giftVariants.delete(Number(item.variant_id));
                 const { row, line } = buildItem(product, Math.max(1, Number(item.quantity) || 1));
                 fragment.appendChild(row);
                 subtotal += line;
@@ -455,7 +479,7 @@
         const isInstallment = selectedCode() === INSTALLMENT;
 
         const body = {
-            cart: displayedCart,
+            cart: displayedCart.map(item => ({ ...item, gift_wrap: giftVariants.has(Number(item.variant_id)) ? 1 : 0 })),
             address_mode: isNew ? 'new' : 'existing',
             address_id: isNew ? null : Number(addressSelect.value),
             title: val('addressTitle'),
@@ -474,7 +498,6 @@
             birbank_installment_months: selectedCode() === BIRBANK_INSTALLMENT
                 ? (Number(birbankMonthRadios.find(r => r.checked)?.value) || null) : null,
             accept_terms: isInstallment && els.creditTerms?.checked ? 1 : 0,
-            gift_wrap: $('giftWrap')?.checked ? 1 : 0,
             customer_note: val('customerNote'),
         };
 

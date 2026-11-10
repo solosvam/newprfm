@@ -887,5 +887,8 @@
     "profile_google_not_connected": "Not linked",
     "profile_google_connect": "Link",
     "profile_google_disconnect": "Unlink",
-    "profile_google_disconnect_confirm": "Unlink Google account? You can still sign in with your phone number."
+    "profile_google_disconnect_confirm": "Unlink Google account? You can still sign in with your phone number.",
+    "checkout_gift_wrap_item": "Gift-wrap",
+    "checkout_gift_wrap_hint": "Gift wrapping is chosen for each product separately — tick \"Gift-wrap\" under the product in your order.",
+    "checkout_gift_wrap_label": "Gift wrapping"
 }

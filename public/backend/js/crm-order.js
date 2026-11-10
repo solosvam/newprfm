@@ -37,7 +37,6 @@
         credit: $('crmOrderCredit'),
         creditRow: $('crmOrderCreditRow'),
         creditFee: $('crmOrderCreditFee'),
-        giftWrap: $('crmOrderGiftWrap'),
         giftRow: $('crmOrderGiftRow'),
         gift: $('crmOrderGift'),
         bonus: $('crmOrderBonus'),
@@ -168,6 +167,7 @@
                             <div class="crm-cart-item__name">${esc(i.name)}</div>
                             <div class="crm-cart-item__meta">${esc([i.brand, i.variant].filter(Boolean).join(' · '))}</div>
                             ${i.purchase ? `<div class="crm-result__purchase">${esc(i.purchase)}</div>` : ''}
+                            <label class="form-check small mt-1 mb-0"><input type="checkbox" class="form-check-input" data-gift ${i.gift ? 'checked' : ''}><span class="form-check-label">Hədiyyəlik bük</span></label>
                         </div>
                     </div>
                     <div class="crm-cart-item__ctrl">
@@ -233,6 +233,12 @@
     });
     // Sahədən çıxanda dəyər düzəldilir (məs. 150 → 129, boş → 129)
     els.cart.addEventListener('change', event => {
+        // Hədiyyəlik bükülmə — sətir üzrə (sətrin bütün ədədləri)
+        if (event.target.matches('[data-gift]')) {
+            cart[Number(event.target.closest('.crm-cart-item').dataset.index)].gift = event.target.checked;
+            updateTotals();
+            return;
+        }
         if (!event.target.matches('[data-price]')) return;
         const row = event.target.closest('.crm-cart-item');
         const item = cart[Number(row.dataset.index)];
@@ -258,7 +264,9 @@
         if (delivery.free_from > 0 && goods >= delivery.free_from) return 0;
         return Number(delivery.fee) || 0;
     }
-    const giftTotal = () => (els.giftWrap.checked ? giftFee : 0);
+    // Haqq hər bükülən ədədə
+    const giftUnits = () => cart.reduce((n, i) => n + (i.gift ? i.qty : 0), 0);
+    const giftTotal = () => round2(giftFee * giftUnits());
     // Ödəniləcək məbləğ (kredit faizi olmadan)
     const payable = () => subtotal() + deliveryFee(subtotal()) + giftTotal();
     const selectedPeriod = () => selectedCode() === 'installment'
@@ -292,8 +300,8 @@
         els.discount.textContent = '−' + money(off);
         els.delivery.textContent = !goods ? '—' : fee ? money(fee) : 'Pulsuz';
 
-        els.giftRow.hidden = !els.giftWrap.checked;
-        els.gift.textContent = giftFee ? money(giftFee) : 'Pulsuz';
+        els.giftRow.hidden = !giftUnits();
+        els.gift.textContent = giftTotal() ? money(giftTotal()) + ' (' + giftUnits() + ' əd.)' : 'Pulsuz';
 
         const interest = total() - payable();
         els.creditRow.hidden = !(goods && interest > 0);
@@ -370,7 +378,6 @@
     }));
     root.querySelectorAll('input[name="crm_birbank_months"], input[name="crm_credit_period"]')
         .forEach(r => r.addEventListener('change', updateTotals));
-    els.giftWrap.addEventListener('change', updateTotals);
 
     // Bonus balansı yetmirsə, bonusla ödəniş deaktiv
     function updateBonusAvailability() {
@@ -477,7 +484,7 @@
         const onCall = els.address.value === 'on_call'; // "Müştəri ilə əlaqə saxlayın" — ünvan sonra dəqiqləşir
         const code = selectedCode();
         const payload = {
-            cart: cart.map(i => ({ variant_id: i.variantId, quantity: i.qty, price: i.price })),
+            cart: cart.map(i => ({ variant_id: i.variantId, quantity: i.qty, price: i.price, gift_wrap: i.gift ? 1 : 0 })),
             address_mode: isNew ? 'new' : (onCall ? 'on_call' : 'existing'),
             address_id: isNew || onCall ? null : Number(els.address.value),
             ...(isNew ? Object.fromEntries([...els.newAddress.querySelectorAll('[name]')].map(i => [i.name, i.value.trim() || null])) : {}),
@@ -487,7 +494,6 @@
             credit_period_id: code === 'installment'
                 ? Number(root.querySelector('input[name="crm_credit_period"]:checked')?.value) || null : null,
             credit_total: code === 'installment' && creditOverride !== null ? creditOverride : null,
-            gift_wrap: els.giftWrap.checked,
             courier_note: root.querySelector('#crmOrderCourierNote')?.value.trim() || null,
             // qiymət əl ilə dəyişibsə — seçilən bonus faizi (server də yoxlayır)
             bonus_percent: priceChanged() ? manualBonusPercent : null,

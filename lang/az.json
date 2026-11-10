@@ -849,5 +849,7 @@
     "profile_google_not_connected": "Bağlı deyil",
     "profile_google_connect": "Bağla",
     "profile_google_disconnect": "Ayır",
-    "profile_google_disconnect_confirm": "Google hesabı ayrılsın? Nömrə ilə daxil olmaq qalır."
+    "profile_google_disconnect_confirm": "Google hesabı ayrılsın? Nömrə ilə daxil olmaq qalır.",
+    "checkout_gift_wrap_item": "Hədiyyəlik bük",
+    "checkout_gift_wrap_hint": "Hədiyyəlik bükülmə hər məhsul üçün ayrıca seçilir — sifarişinizdə məhsulun altındakı \"Hədiyyəlik bük\" işarəsi ilə."
 }

@@ -81,7 +81,7 @@
                         <div class="product">
                             @include('courier-app._thumb', ['product' => $item->product])
                             <div class="product__text">
-                                <div class="product__name">{{ $item->product?->name }}</div>
+                                <div class="product__name">{{ $item->product?->name }}@if($item->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
                                 <div class="muted">{{ $variant($item) }}</div>
                                 @if($k = $kind($item))<div class="product__kind">{{ $k }}</div>@endif
                             </div>
@@ -166,7 +166,7 @@
                         <div class="product">
                             @include('courier-app._thumb', ['product' => $item->product])
                             <div class="product__text">
-                                <div class="product__name">{{ $item->product?->name }}</div>
+                                <div class="product__name">{{ $item->product?->name }}@if($item->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
                                 <div class="muted">{{ $variant($item) }}</div>
                                 @if($k = $kind($item))<div class="product__kind">{{ $k }}</div>@endif
                             </div>
@@ -189,7 +189,14 @@
 
     @if(!$cancelled)
         @if($order->gift_wrap && $code !== 'delivered')
-            <div class="note note--info">@include('courier-app._icon', ['name' => 'gift']) <span><b>Hədiyyəlik qablaşdırma:</b> məhsulları bükün və loqolu çantaya qoyun.</span></div>
+            @php $wrapped = $order->items->filter(fn ($i) => $i->gift_wrap && $i->activeQuantity() > 0); @endphp
+            <div class="note note--info">@include('courier-app._icon', ['name' => 'gift']) <span><b>Hədiyyəlik qablaşdırma:</b>
+                @if($wrapped->isNotEmpty())
+                    {{ $wrapped->map(fn ($i) => ($i->product?->name ?? 'Məhsul').' × '.$i->activeQuantity())->implode(', ') }} — bükün və loqolu çantaya qoyun.
+                @else
+                    məhsulları bükün və loqolu çantaya qoyun.
+                @endif
+            </span></div>
         @endif
 
         {{-- 2. Müştəri --}}
@@ -274,7 +281,7 @@
                                     <div class="product">
                                         @include('courier-app._thumb', ['product' => $ri->product])
                                         <div class="product__text">
-                                            <div class="product__name">{{ $ri->product?->name }}</div>
+                                            <div class="product__name">{{ $ri->product?->name }}@if($ri->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
                                             <div class="muted">{{ $variant($ri) }} · {{ number_format((float) $ri->unit_price, 2) }} AZN</div>
                                             @if($k = $kind($ri))<div class="product__kind">{{ $k }}</div>@endif
                                         </div>

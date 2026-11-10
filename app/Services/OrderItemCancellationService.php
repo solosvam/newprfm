@@ -103,14 +103,16 @@ class OrderItemCancellationService
         $amount = $unit * $quantity - $promoPart;
         $subtotal = $cents($order->subtotal) - $base * $quantity;
         $discount = max(0, $cents($order->discount) - ($base - $unit) * $quantity - $promoPart);
-        $total = max(0, $cents($order->total) - $amount);
+        // Bükülmüş sətir: ləğv olunan ədədlərin bükülmə haqqı da yekundan çıxır (ayrıca qaytarma sətri ilə)
+        $wrap = $item->gift_wrap ? min($cents($item->gift_wrap_fee) * $quantity, $cents($order->gift_wrap_fee)) : 0;
+        $total = max(0, $cents($order->total) - $amount - $wrap);
 
         // Kredit: yeni yekun = qalan məhsullar + çatdırılma + qablaşdırma, üstünə kreditin faizi
         $credit = null;
         if ($order->paymentMethod?->code === 'installment' && ($application = $order->creditApplication()->with('period')->first())) {
-            $payable = $subtotal - $discount + $cents($order->delivery_fee) + $cents($order->gift_wrap_fee);
+            $payable = $subtotal - $discount + $cents($order->delivery_fee) + $cents($order->gift_wrap_fee) - $wrap;
             $total = max(0, (int) round($payable * (1 + (float) $application->interest_rate / 100)));
-            $amount = max(0, $cents($order->total) - $total);
+            $amount = max(0, $cents($order->total) - $total - $wrap);
             $months = max(1, (int) ($application->period?->month ?? 1));
             $credit = ['total' => $total / 100, 'monthly' => round($total / 100 / $months, 2)];
         }
@@ -130,6 +132,7 @@ class OrderItemCancellationService
             'bonus' => $bonus,
             'refund' => $this->refundStatus($order),
             'credit' => $credit,
+            'gift_wrap' => $wrap / 100,
         ];
     }
 
@@ -327,7 +330,12 @@ class OrderItemCancellationService
                 ? round(min((float) $order->referral_discount * $result['discount'] / (float) $order->discount, $result['discount']), 2)
                 : 0,
             'total' => $result['total'],
+            'gift_wrap_fee' => max(0, round((float) $order->gift_wrap_fee - $result['gift_wrap'], 2)),
         ]);
+        // Bükülən sətir qalmayıbsa sifariş də "hədiyyəlik" deyil (tam ləğvdə tarixçə üçün saxlanır)
+        if ($mode !== 'order' && $item->gift_wrap && $item->activeQuantity() === 0) {
+            $order->update(['gift_wrap' => $order->items->contains(fn ($i) => $i->id !== $item->id && $i->gift_wrap && $i->activeQuantity() > 0)]);
+        }
         if ($result['credit']) {
             $order->creditApplication()->update([
                 'total' => $result['credit']['total'], 'monthly' => $result['credit']['monthly'],
@@ -365,6 +373,17 @@ class OrderItemCancellationService
             'refund_status' => $result['refund'],
             'created_by' => $actor,
         ]);
+        // Bükülmə haqqı ödənilibsə — ayrıca sətirlə qaytarılır (kartda ödənişin "gift_wrap" sətrinə, bonusla — balansa)
+        if ($result['gift_wrap'] > 0 && $result['refund'] !== null) {
+            if ($result['refund'] === OrderItemCancellation::REFUND_BONUS && $order->customer) {
+                $this->refundToBonus($order, $result['gift_wrap'], OrderItemCancellation::FEE_LABELS['gift_wrap'], $actor);
+            }
+            OrderItemCancellation::create([
+                'order_id' => $order->id, 'order_item_id' => null, 'fee_type' => 'gift_wrap', 'quantity' => $quantity,
+                'amount' => $result['gift_wrap'], 'reason' => $reason, 'note' => $note, 'customer_agreed' => true,
+                'refund_status' => $result['refund'], 'created_by' => $actor,
+            ]);
+        }
         if ($mode === 'door') {
             // Sifariş səhifəsində "Kuryer bildirişləri"ndə görünür
             DB::table('order_status_logs')->insert([

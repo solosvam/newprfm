@@ -58,6 +58,8 @@ class CheckoutController extends Controller
                 'cart' => ['required', 'array', 'min:1'],
                 'cart.*.variant_id' => ['required', 'integer'],
                 'cart.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
+                // Hədiyyəlik bükülmə məhsul sətri üzrə (sətrin bütün ədədləri)
+                'cart.*.gift_wrap' => ['nullable', 'boolean'],
 
                 'address_mode' => [
                     'required',
@@ -173,6 +175,10 @@ class CheckoutController extends Controller
             $saleDiscount = 0;
             $promoBase = 0; // promo kod yalnız endirimsiz məhsullara
             $items = [];
+            // Köhnə səhifədən gələn ümumi "gift_wrap" (sətir seçimi yoxdursa) — bütün sətirlər bükülür
+            $wrapAll = (bool) ($data['gift_wrap'] ?? false) && !collect($data['cart'])->contains(fn ($row) => array_key_exists('gift_wrap', $row));
+            $unitWrapFee = app(ShopPricing::class)->giftWrapFee(1);
+            $wrapUnits = 0;
 
             foreach($variants as $variant) {
                 $quantity = (int)$cart[$variant -> id]['quantity'];
@@ -187,6 +193,8 @@ class CheckoutController extends Controller
                     $promoBase += $lineTotal;
                 }
 
+                $wrap = $wrapAll || (bool) ($cart[$variant->id]['gift_wrap'] ?? false);
+                $wrapUnits += $wrap ? $quantity : 0;
                 $items[] = [
                     'product_id' => $variant -> product_id,
                     'product_variant_id' => $variant -> id,
@@ -194,6 +202,8 @@ class CheckoutController extends Controller
                     'list_price' => $sale < $regular ? $regular : null,
                     'quantity' => $quantity,
                     'total' => $lineTotal,
+                    'gift_wrap' => $wrap,
+                    'gift_wrap_fee' => $wrap ? $unitWrapFee : 0,
                 ];
             }
 
@@ -214,7 +224,7 @@ class CheckoutController extends Controller
             $discount = round($saleDiscount + $discount + $referralDiscount, 2);
             $goods = round($subtotal - $discount, 2);
             $delivery = app(ShopPricing::class)->deliveryFee($goods);
-            $giftWrapFee = app(ShopPricing::class)->giftWrapFee((bool)($data['gift_wrap'] ?? false));
+            $giftWrapFee = app(ShopPricing::class)->giftWrapFee($wrapUnits);
             $payable = round($goods + $delivery + $giftWrapFee, 2);
             $period = $paymentMethod->code === 'installment' ? CreditPeriod::whereKey($data['credit_period_id'])->where('active', 1)->firstOrFail() : null;
             if ($period && !$period->availableFor($payable)) {
@@ -236,7 +246,7 @@ class CheckoutController extends Controller
                 'payment_status' => in_array($paymentMethod->code, ['bonus_balance'], true) ? 'paid' : ($paymentMethod->code === 'cash' ? 'cod' : 'pending'),
                 'source' => 'customer',
                 'order_status_id' => $initialStatus -> id,
-                'gift_wrap' => (bool)($data['gift_wrap'] ?? false),
+                'gift_wrap' => $wrapUnits > 0,
                 'customer_note' => $data['customer_note'] ?? null,
                 'subtotal' => $subtotal,
                 'discount' => $discount,

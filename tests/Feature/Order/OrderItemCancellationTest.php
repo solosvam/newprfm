@@ -39,11 +39,13 @@ class OrderItemCancellationTest extends TestCase
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->unsignedBigInteger('payment_method_id'); $t->string('payment_status')->default('pending');
             foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'total', 'bonus_earned'] as $c) $t->decimal($c, 12, 2)->default(0);
+            $t->boolean('gift_wrap')->default(false);
             $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
             $t->id(); $t->foreignId('order_id')->constrained(); $t->integer('product_id')->nullable(); $t->integer('product_variant_id')->nullable();
-            $t->decimal('unit_price', 12, 2); $t->decimal('list_price', 12, 2)->nullable(); $t->integer('quantity'); $t->decimal('total', 12, 2); $t->timestamps();
+            $t->decimal('unit_price', 12, 2); $t->decimal('list_price', 12, 2)->nullable(); $t->integer('quantity'); $t->decimal('total', 12, 2);
+            $t->boolean('gift_wrap')->default(false); $t->decimal('gift_wrap_fee', 10, 2)->default(0); $t->timestamps();
         });
         Schema::create('products', function (Blueprint $t) { $t->id(); $t->string('name'); });
         Schema::create('payments', function (Blueprint $t) {
@@ -425,5 +427,36 @@ class OrderItemCancellationTest extends TestCase
 
         $this->assertSame('cancelled', $this->statusCode($order));
         $this->assertTrue(collect($result['cancellations'])->every(fn ($c) => $c->refund_status === null));
+    }
+
+    public function test_cancelling_wrapped_item_removes_and_refunds_its_wrap_fee(): void
+    {
+        // Rose Oud ×2 bükülür (2 ₼ × 2 = 4 ₼) → yekun 395 + 4 = 399
+        $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'payment_method_id' => 1, 'payment_status' => 'paid',
+            'subtotal' => 400, 'discount' => 10, 'delivery_fee' => 5, 'gift_wrap_fee' => 4, 'gift_wrap' => true, 'total' => 399, 'bonus_earned' => 0]);
+        $order->items()->create(['product_id' => 1, 'unit_price' => 150, 'quantity' => 2, 'total' => 300, 'gift_wrap' => true, 'gift_wrap_fee' => 2]);
+        $order->items()->create(['product_id' => 2, 'unit_price' => 100, 'quantity' => 1, 'total' => 100]);
+        $order = $order->fresh('items');
+
+        $c = $this->cancel($order, 0, 1);
+        $this->assertEquals(146.25, $c->amount);
+        $order->refresh();
+        $this->assertEquals(250.75, $order->total); // 399 − 146.25 − 2
+        $this->assertEquals(2, $order->gift_wrap_fee);
+        $this->assertTrue($order->gift_wrap);
+        $fee = OrderItemCancellation::where('fee_type', 'gift_wrap')->first();
+        $this->assertEquals(2, $fee->amount);
+        $this->assertSame(OrderItemCancellation::REFUND_PENDING, $fee->refund_status);
+
+        // Ödəniş tərkibi yeni yekunla üst-üstə düşür (bükülmə sətri 2 ₼)
+        $lines = app(PaymentItemsBuilder::class)->lines($order->fresh('items'), (float) $order->total);
+        $this->assertSame(['146.25', '97.50', '5.00', '2.00'], array_column($lines, 'amount'));
+
+        // Sonuncu bükülən ədəd də ləğv olunur — sifariş artıq hədiyyəlik deyil
+        $this->cancel($order->fresh('items'), 0, 1);
+        $order->refresh();
+        $this->assertEquals(0, $order->gift_wrap_fee);
+        $this->assertFalse($order->gift_wrap);
+        $this->assertEquals(102.50, $order->total);
     }
 }

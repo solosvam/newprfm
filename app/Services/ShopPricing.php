@@ -14,8 +14,9 @@ class ShopPricing {
   $mode=Setting::valueOf('gift_wrap_mode','free');
   return ['mode'=>$mode,'fee'=>$mode==='paid'?max(0,(float)Setting::valueOf('gift_wrap_fee',0)):0];
  }
- public function giftWrapFee(bool $selected):float {
-  return $selected ? $this->giftWrap()['fee'] : 0;
+ /** Bükülmə haqqı hər bükülən ədədə: bir ədədin haqqı × ədəd sayı (pulsuz rejimdə 0) */
+ public function giftWrapFee(int $units):float {
+  return $units > 0 ? round($this->giftWrap()['fee'] * $units, 2) : 0;
  }
  public function bonusRate():float{return (float)Setting::valueOf('order_bonus_percent',5)/100;}
 }

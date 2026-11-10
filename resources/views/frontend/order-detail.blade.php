@@ -103,6 +103,7 @@
                                             <div class="od-item__meta">
                                                 @if($item->product?->brand)<span>{{ $item->product->brand->name }}</span>@endif
                                                 @if($size)<span>{{ $size }}</span>@endif
+                                                @if($item->gift_wrap)<span>{{ __('checkout_gift_wrap_label') }}</span>@endif
                                             </div>
                                         </div>
                                         <div class="od-item__price">

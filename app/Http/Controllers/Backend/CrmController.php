@@ -399,6 +399,8 @@ class CrmController extends Controller
             'cart.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
             // Operatorun satdığı vahid qiymət (boşdursa sayt qiyməti)
             'cart.*.price' => ['nullable', 'numeric', 'min:0', 'max:999999'],
+            // Hədiyyəlik bükülmə məhsul sətri üzrə
+            'cart.*.gift_wrap' => ['nullable', 'boolean'],
 
             // on_call — "Müştəri ilə əlaqə saxlayın və yeri dəqiqləşdirin" (CustomerAddress::onCallFor)
             'address_mode' => ['required', Rule::in(['existing', 'new', 'on_call'])],
@@ -477,6 +479,10 @@ class CrmController extends Controller
             $discount = 0; // operatorun endirimi
             $items = [];
             $manualPrice = false; // operator qiyməti əl ilə dəyişib (avtomatik məhsul endirimi sayılmır)
+            $pricing = app(ShopPricing::class);
+            $wrapAll = (bool) ($data['gift_wrap'] ?? false) && !collect($data['cart'])->contains(fn ($row) => array_key_exists('gift_wrap', $row));
+            $unitWrapFee = $pricing->giftWrapFee(1);
+            $wrapUnits = 0;
             foreach ($variants as $variant) {
                 $quantity = (int) $cart[$variant->id]['quantity'];
                 $listPrice = round((float) $variant->price, 2);
@@ -496,6 +502,8 @@ class CrmController extends Controller
 
                 $subtotal += $listPrice * $quantity;
                 $discount += ($listPrice - $unitPrice) * $quantity;
+                $wrap = $wrapAll || (bool) ($cart[$variant->id]['gift_wrap'] ?? false);
+                $wrapUnits += $wrap ? $quantity : 0;
                 $items[] = [
                     'product_id' => $variant->product_id,
                     'product_variant_id' => $variant->id,
@@ -503,16 +511,17 @@ class CrmController extends Controller
                     'list_price' => $unitPrice < $listPrice ? $listPrice : null,
                     'quantity' => $quantity,
                     'total' => round($unitPrice * $quantity, 2),
+                    'gift_wrap' => $wrap,
+                    'gift_wrap_fee' => $wrap ? $unitWrapFee : 0,
                 ];
             }
             $subtotal = round($subtotal, 2);
             $discount = round($discount, 2);
             $goods = round($subtotal - $discount, 2);
 
-            $pricing = app(ShopPricing::class);
-            $giftWrap = (bool) ($data['gift_wrap'] ?? false);
+            $giftWrap = $wrapUnits > 0;
             $delivery = $pricing->deliveryFee($goods); // checkout-dakı kimi: endirimdən sonrakı məbləğə görə
-            $giftWrapFee = $pricing->giftWrapFee($giftWrap);
+            $giftWrapFee = $pricing->giftWrapFee($wrapUnits);
             $payable = round($goods + $delivery + $giftWrapFee, 2);
             $standardTotal = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
             $total = $standardTotal;

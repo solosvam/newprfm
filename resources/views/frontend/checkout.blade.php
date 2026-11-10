@@ -14,6 +14,7 @@
             'bonusBalance'      => __('checkout_bonus_balance'),
             'bonusInsufficient' => __('checkout_bonus_insufficient'),
             'perMonth'          => __('checkout_credit_per_month'),
+            'giftWrapItem'      => __('checkout_gift_wrap_item'),
             'earnedBonus'       => __('cart_bonus_hint'),
             'errPayment'        => __('checkout_select_payment_error'),
             'errProfile'        => __('credit_application_complete_profile'),
@@ -172,10 +173,8 @@
                             <h2 class="checkout-step__title">{{ __('checkout_additional_options') }}</h2>
                         </div>
 
-                        <label class="checkout-check">
-                            <input type="checkbox" id="giftWrap" value="1">
-                            <span>{{ __('checkout_gift_wrap_the_order') }}</span>
-                        </label>
+                        {{-- Hədiyyəlik bükülmə hər məhsul üçün ayrıca seçilir (xülasədə məhsulun altında) --}}
+                        <p class="checkout-gift-hint">{{ __('checkout_gift_wrap_hint') }}</p>
                         <textarea id="customerNote" class="checkout-note" placeholder="{{ __('checkout_order_note') }}"></textarea>
                     </section>
 

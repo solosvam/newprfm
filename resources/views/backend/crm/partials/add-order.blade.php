@@ -95,11 +95,8 @@
             </div>
 
             <h6 class="crm-order__step mt-4"><span>3</span> Əlavə seçimlər</h6>
-            <label class="crm-order__check">
-                <input type="checkbox" class="form-check-input" id="crmOrderGiftWrap">
-                <span>Hədiyyəlik bükülsün</span>
-                <small class="text-muted ms-auto">{{ $giftFee > 0 ? '+' . number_format($giftFee, 2) . ' ₼' : 'Pulsuz' }}</small>
-            </label>
+            {{-- Hədiyyəlik bükülmə hər məhsul üçün ayrıca — səbətdə məhsulun altında "Hədiyyəlik bük" --}}
+            <p class="text-muted small mb-0">Hədiyyəlik bükülmə səbətdə hər məhsulun altından seçilir ({{ $giftFee > 0 ? '+' . number_format($giftFee, 2) . ' ₼ hər ədədə' : 'pulsuz' }}).</p>
             {{-- Kuryerə qeyd: kuryer təyin olunanda operator gözdən keçirir, kuryerin səhifəsində rəngli görünür --}}
             <label for="crmOrderCourierNote" class="form-label mt-3 mb-1">Kuryer üçün qeyd <span class="text-muted small">(istəyə görə)</span></label>
             <textarea class="form-control" id="crmOrderCourierNote" rows="2" maxlength="1000" placeholder="Məs.: saat 18:00-dan sonra çatdırın, qapıda zəng etməyin…"></textarea>

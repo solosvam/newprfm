@@ -350,3 +350,12 @@
 .address-form__note { margin-top: 10px; }
 .address-form__note textarea { min-height: 80px; }
 
+
+/* Hədiyyəlik bükülmə — hər məhsulun altında ayrıca seçim */
+.checkout-item__gift {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+    font-size: 12.5px; color: var(--text-secondary); cursor: pointer; user-select: none;
+}
+.checkout-item__gift input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.checkout-item__gift:has(input:checked) { color: var(--accent); font-weight: 600; }
+.checkout-gift-hint { margin: 0 0 12px; font-size: 13px; color: var(--text-secondary); }

@@ -48,10 +48,12 @@ $(document).ready(function () {
             const r = previews[qty.value];
             if (!r) return;
             const set = (key, text) => { cancelModal.querySelector('[data-r="' + key + '"]').textContent = text; };
-            set('amount', '−' + money(r.amount));
+            // bükülmüş sətir: ləğv olunan ədədlərin bükülmə haqqı da çıxılır / qaytarılır
+            const out = (Number(r.amount) || 0) + (Number(r.gift_wrap) || 0);
+            set('amount', '−' + money(out));
             set('total', money(r.total));
             cancelModal.querySelector('[data-r-row="refund"]').hidden = !r.refund;
-            if (r.refund) { set('refund-label', refundLabels[r.refund] || 'Qaytarılacaq'); set('refund', money(r.amount)); }
+            if (r.refund) { set('refund-label', refundLabels[r.refund] || 'Qaytarılacaq'); set('refund', money(out)); }
             cancelModal.querySelector('[data-r-row="bonus"]').hidden = !(r.bonus > 0);
             set('bonus', '−' + money(r.bonus));
             // Kredit sifarişi: yeni yekun faizlə, aylıq ödəniş də yenilənir

@@ -9,6 +9,8 @@ class OrderItem extends Model
 {
     protected $guarded = [];
 
+    protected $casts = ['gift_wrap' => 'boolean', 'gift_wrap_fee' => 'decimal:2'];
+
     /** Aktiv (ləğv olunmamış) miqdar; quantity — sifariş edilən, tarixçə üçün dəyişmir */
     public function activeQuantity(): int
     {

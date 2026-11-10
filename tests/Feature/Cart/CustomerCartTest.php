@@ -150,7 +150,8 @@ class CustomerCartTest extends TestCase
         });
         Schema::create('order_items', function (Blueprint $t) {
             $t->id(); $t->integer('order_id'); $t->integer('product_id'); $t->integer('product_variant_id');
-            $t->integer('quantity'); $t->decimal('unit_price', 12, 2); $t->decimal('list_price', 12, 2)->nullable(); $t->decimal('total', 12, 2); $t->timestamps();
+            $t->integer('quantity'); $t->decimal('unit_price', 12, 2); $t->decimal('list_price', 12, 2)->nullable(); $t->decimal('total', 12, 2);
+            $t->boolean('gift_wrap')->default(false); $t->decimal('gift_wrap_fee', 10, 2)->default(0); $t->timestamps();
         });
         Schema::create('order_status_logs', function (Blueprint $t) {
             $t->id(); $t->integer('order_id'); $t->integer('status_id'); $t->timestamps();
@@ -180,5 +181,42 @@ class CustomerCartTest extends TestCase
         $this->assertEquals([20.0, 3.0, 17.0], [(float) $order->subtotal, (float) $order->discount, (float) $order->total]);
         $this->assertEquals([8.5, 10.0, 17.0], [(float) $item->unit_price, (float) $item->list_price, (float) $item->total]);
         $this->assertEquals(5.0, (float) $order->bonus_percent, 'sifariş anındakı admin faizi sabitlənir');
+    }
+
+    public function test_checkout_gift_wrap_is_chosen_per_line_and_fee_is_per_unit(): void
+    {
+        $this->checkoutSchema();
+        DB::table('settings')->insert([['key' => 'gift_wrap_mode', 'value' => 'paid'], ['key' => 'gift_wrap_fee', 'value' => '2']]);
+        $service = app(CartService::class);
+        $service->change($this->customer(), 1, 'add', 3);
+        $cart = array_map(fn ($row) => $row + ['gift_wrap' => 1], $service->items($this->customer()));
+        $body = ['cart' => $cart, 'address_mode' => 'existing', 'address_id' => 1, 'payment_method_id' => 1];
+
+        $this->actingAs($this->customer())->postJson('/checkout', $body)->assertOk();
+        $order = DB::table('orders')->first();
+        $item = DB::table('order_items')->first();
+        // 3 ədəd bükülür × 2 ₼
+        $this->assertEquals(6.0, (float) $order->gift_wrap_fee);
+        $this->assertEquals(36.0, (float) $order->total);
+        $this->assertSame(1, (int) $order->gift_wrap);
+        $this->assertSame(1, (int) $item->gift_wrap);
+        $this->assertEquals(2.0, (float) $item->gift_wrap_fee);
+    }
+
+    public function test_checkout_without_wrapped_lines_has_no_gift_wrap(): void
+    {
+        $this->checkoutSchema();
+        DB::table('settings')->insert([['key' => 'gift_wrap_mode', 'value' => 'paid'], ['key' => 'gift_wrap_fee', 'value' => '2']]);
+        $service = app(CartService::class);
+        $service->change($this->customer(), 1, 'add', 2);
+        $cart = array_map(fn ($row) => $row + ['gift_wrap' => 0], $service->items($this->customer()));
+        // köhnə səhifənin ümumi işarəsi sətir seçimi olanda nəzərə alınmır
+        $body = ['cart' => $cart, 'gift_wrap' => 1, 'address_mode' => 'existing', 'address_id' => 1, 'payment_method_id' => 1];
+
+        $this->actingAs($this->customer())->postJson('/checkout', $body)->assertOk();
+        $order = DB::table('orders')->first();
+        $this->assertEquals(0.0, (float) $order->gift_wrap_fee);
+        $this->assertSame(0, (int) $order->gift_wrap);
+        $this->assertEquals(20.0, (float) $order->total);
     }
 }
