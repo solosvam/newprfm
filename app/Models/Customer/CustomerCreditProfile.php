@@ -48,19 +48,23 @@ class CustomerCreditProfile extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function isComplete(): bool
+    /**
+     * $staff — CRM / operator: qohumların ad və nömrələri, iş yeri məcburi deyil
+     * (operator sifarişi telefonla götürür, bu məlumatı sonra əlavə edə bilər). Saytda müştəri üçün hamısı məcburidir.
+     */
+    public function isComplete(bool $staff = false): bool
     {
         return !empty($this->father_name)
             && !empty($this->fin)
             && !empty($this->id_card_series)
             && !empty($this->id_card_number)
-            && !empty($this->relative_1_name)
-            && !empty($this->relative_1_phone)
-            && !empty($this->relative_2_name)
-            && !empty($this->relative_2_phone)
+            && ($staff || (!empty($this->relative_1_name)
+                && !empty($this->relative_1_phone)
+                && !empty($this->relative_2_name)
+                && !empty($this->relative_2_phone)
+                && !empty($this->workplace_name)))
             && !empty($this->id_card_front)
             && (!self::needsBackSide($this->id_card_series) || !empty($this->id_card_back))
-            && !empty($this->workplace_name)
             && $this->salary !== null;
     }
 }

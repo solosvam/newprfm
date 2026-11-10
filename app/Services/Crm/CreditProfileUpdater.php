@@ -26,11 +26,12 @@ class CreditProfileUpdater
             'fin' => ['required', 'regex:/^[A-Z0-9]{7}$/', Rule::unique('customer_credit_profiles', 'fin')->ignore($profile?->id)],
             'id_card_series' => ['required', Rule::in(CustomerCreditProfile::ID_CARD_SERIES)],
             'id_card_number' => ['required', 'regex:/^[A-Z0-9]{1,8}$/'],
-            'relative_1_name' => ['required', 'string', 'max:100'],
-            'relative_1_phone' => ['required', 'regex:/^\+?[0-9 ]{9,16}$/'],
-            'relative_2_name' => ['required', 'string', 'max:100'],
-            'relative_2_phone' => ['required', 'regex:/^\+?[0-9 ]{9,16}$/'],
-            'workplace_name' => ['required', 'string', 'max:255'],
+            'relative_1_name' => ['nullable', 'string', 'max:100'],
+            'relative_1_phone' => ['nullable', 'regex:/^\+?[0-9 ]{9,16}$/'],
+            'relative_2_name' => ['nullable', 'string', 'max:100'],
+            'relative_2_phone' => ['nullable', 'regex:/^\+?[0-9 ]{9,16}$/'],
+            // Qohumlar və iş yeri CRM-də məcburi deyil (CustomerCreditProfile::isComplete(staff: true))
+            'workplace_name' => ['nullable', 'string', 'max:255'],
             'salary' => ['required', 'numeric', 'gt:0', 'max:99999999.99'],
             'id_card_front' => [$profile?->id_card_front ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'id_card_back' => [Rule::requiredIf(fn () => !$profile?->id_card_back

@@ -26,11 +26,11 @@
                     <input class="form-control text-uppercase" id="crm-id-card-number" name="id_card_number" maxlength="8" value="{{ old('id_card_number', $profile?->id_card_number) }}" required>
                 </div>
             </div>
-            <div class="col-md-6"><label class="form-label">Qohum ad</label><input class="form-control" name="relative_1_name" value="{{ old('relative_1_name', $profile?->relative_1_name) }}" required></div>
-            <div class="col-md-6"><label class="form-label">Qohum mobil</label><input class="form-control" name="relative_1_phone" value="{{ old('relative_1_phone', $profile?->relative_1_phone) }}" required></div>
-            <div class="col-md-6"><label class="form-label">Qohum ad</label><input class="form-control" name="relative_2_name" value="{{ old('relative_2_name', $profile?->relative_2_name) }}" required></div>
-            <div class="col-md-6"><label class="form-label">Qohum mobil</label><input class="form-control" name="relative_2_phone" value="{{ old('relative_2_phone', $profile?->relative_2_phone) }}" required></div>
-            <div class="col-md-6"><label class="form-label">İş yeri</label><input class="form-control" name="workplace_name" value="{{ old('workplace_name', $profile?->workplace_name) }}" required></div>
+            <div class="col-md-6"><label class="form-label">Qohum ad <span class="text-muted small">(istəyə görə)</span></label><input class="form-control" name="relative_1_name" value="{{ old('relative_1_name', $profile?->relative_1_name) }}"></div>
+            <div class="col-md-6"><label class="form-label">Qohum mobil <span class="text-muted small">(istəyə görə)</span></label><input class="form-control" name="relative_1_phone" value="{{ old('relative_1_phone', $profile?->relative_1_phone) }}"></div>
+            <div class="col-md-6"><label class="form-label">Qohum ad <span class="text-muted small">(istəyə görə)</span></label><input class="form-control" name="relative_2_name" value="{{ old('relative_2_name', $profile?->relative_2_name) }}"></div>
+            <div class="col-md-6"><label class="form-label">Qohum mobil <span class="text-muted small">(istəyə görə)</span></label><input class="form-control" name="relative_2_phone" value="{{ old('relative_2_phone', $profile?->relative_2_phone) }}"></div>
+            <div class="col-md-6"><label class="form-label">İş yeri <span class="text-muted small">(istəyə görə)</span></label><input class="form-control" name="workplace_name" value="{{ old('workplace_name', $profile?->workplace_name) }}"></div>
             <div class="col-md-6"><label class="form-label">Əmək haqqı</label><input class="form-control" type="number" step="0.01" min="0.01" name="salary" value="{{ old('salary', $profile?->salary) }}" required></div>
             <div class="col-12"><p class="text-muted mb-0">{{ __('credit_section_documents_hint') }}</p></div>
             @php $needsBack = \App\Models\Customer\CustomerCreditProfile::needsBackSide($series); @endphp

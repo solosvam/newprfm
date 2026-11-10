@@ -61,7 +61,7 @@ class AssistantController extends Controller
                 'id' => $customer->id,
                 'fullname' => $customer->fullname,
                 'bonus' => number_format((float) $customer->bonus_balance, 2, '.', ''),
-                'credit_ready' => (bool) $customer->creditProfile?->isComplete(),
+                'credit_ready' => (bool) $customer->creditProfile?->isComplete(staff: true),
                 'credit' => $this->creditData($customer),
                 'orders_count' => $customer->orders()->count(),
                 'url' => route('admin.crm.customer', $customer->id),
@@ -210,7 +210,7 @@ class AssistantController extends Controller
 
         return response()->json([
             'message' => 'Kredit profili yadda saxlanıldı.',
-            'complete' => $profile->isComplete(),
+            'complete' => $profile->isComplete(staff: true),
             'credit' => $this->creditData($customer),
         ]);
     }

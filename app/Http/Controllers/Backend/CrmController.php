@@ -65,7 +65,7 @@ class CrmController extends Controller
             'addresses' => $customer->addresses()->orderByDesc('is_default')->latest()->get(),
             'paymentMethods' => PaymentMethod::where('active', 1)->whereIn('code', self::ORDER_PAYMENT_CODES)->orderBy('sort_order')->get(),
             'creditPeriods' => CreditPeriod::where('active', 1)->orderBy('sort_order')->get(),
-            'creditReady' => (bool) $customer->creditProfile?->isComplete(),
+            'creditReady' => (bool) $customer->creditProfile?->isComplete(staff: true),
             'bonusBalance' => (float) $customer->bonus_balance,
             'delivery' => $pricing->delivery(),
             'giftWrap' => $pricing->giftWrap(),
@@ -440,7 +440,7 @@ class CrmController extends Controller
         }
         $period = null;
         if ($code === 'installment') {
-            if (!$customer->creditProfile?->isComplete()) {
+            if (!$customer->creditProfile?->isComplete(staff: true)) {
                 return response()->json(['success' => false, 'message' => 'Müştərinin kredit profili tamamlanmayıb.'], 422);
             }
             $period = CreditPeriod::whereKey($data['credit_period_id'] ?? 0)->where('active', 1)->first();

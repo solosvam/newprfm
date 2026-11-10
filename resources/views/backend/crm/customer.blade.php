@@ -150,7 +150,7 @@
                 {{-- Hissəli ödəniş məlumatları --}}
                 @php
                     $creditProfile = $customer->creditProfile;
-                    $creditProfileComplete = $creditProfile?->isComplete() ?? false;
+                    $creditProfileComplete = $creditProfile?->isComplete(staff: true) ?? false;
                 @endphp
 
                 <div class="card d-flex mb-2 crm-credit-card">
