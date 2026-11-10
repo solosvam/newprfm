@@ -222,4 +222,44 @@ class PriceListImportTest extends TestCase
         $this->post($next, ['sheet' => 0, 'first_row' => 1, 'name_col' => 1, 'price_col' => 1, 'brand_mode' => 'none'])->assertSessionHasErrors('name_col');
         \Illuminate\Support\Facades\File::deleteDirectory($storage);
     }
+
+    /** Eyni deponun ikinci siyahısı əvvəlki ilə müqayisə olunur: yeni gələn, çıxan, qiyməti dəyişən */
+    public function test_new_price_list_is_compared_with_the_previous_one(): void
+    {
+        $make = function (array $rows) {
+            $list = \App\Models\PriceList\WarehousePriceList::create(['warehouse_id' => $this->warehouse->id, 'file_name' => 'x.xlsx', 'mapping' => [], 'rows_count' => count($rows)]);
+            foreach ($rows as $i => [$name, $price, $variant]) {
+                WarehousePriceItem::create(['price_list_id' => $list->id, 'warehouse_id' => $this->warehouse->id, 'row_no' => $i + 1,
+                    'raw_name' => $name, 'name_key' => PriceListNameParser::key($name), 'price' => $price, 'product_variant_id' => $variant]);
+            }
+
+            return $list;
+        };
+        $make([['VERSACE EROS EDP M 50ML', 87.72, 11], ['YSL BLACK OPIUM EDP L 50ML', 141.59, null], ['AZZARO CHROME EDT M 100ML', 55, 52], ['ROJA ELYSIUM EDP M 100ML', 480, null]]);
+        $new = $make([
+            ['VERSACE EROS EDP 50 ML', 90, 11],          // ad dəyişib, variant eyni — qiymət artıb
+            ['YSL BLACK OPIUM EDP L 50ML', 141.59, null], // dəyişməyib
+            ['ROJA ELYSIUM EDP M 100ML', 450, null],      // adla cütlənir — qiymət düşüb
+            ['VERSACE EROS FLAME EDP M 100ML', 99, null], // yeni
+        ]);
+
+        $diff = app(\App\Services\PriceList\PriceListDiff::class)->compare($new);
+        $this->assertSame(['VERSACE EROS FLAME EDP M 100ML'], $diff['added']->pluck('raw_name')->all());
+        $this->assertSame(['AZZARO CHROME EDT M 100ML'], $diff['removed']->pluck('raw_name')->all());
+        // ən böyük faiz dəyişikliyi əvvəl: Roja −6.25%, Eros +2.6%
+        $this->assertSame(['ROJA ELYSIUM EDP M 100ML', 'VERSACE EROS EDP 50 ML'], $diff['changed']->map(fn ($p) => $p['new']->raw_name)->all());
+        $this->assertSame(['added' => 1, 'removed' => 1, 'changed' => 2], app(\App\Services\PriceList\PriceListDiff::class)->counts($new));
+        $this->assertNull(app(\App\Services\PriceList\PriceListDiff::class)->compare(\App\Models\PriceList\WarehousePriceList::first()));
+
+        // Səhifə: "Əvvəlki ilə fərq" tabı
+        Permission::create(['name' => 'crm', 'guard_name' => 'admin']);
+        Role::create(['name' => 'Admin', 'guard_name' => 'admin'])->givePermissionTo('crm');
+        $admin = User::forceCreate(['name' => 'Rufat']);
+        $admin->assignRole('Admin');
+        $this->actingAs($admin, 'admin');
+        $this->get(route('admin.price-lists.show', [$new, 'tab' => 'diff', 'type' => 'removed']))->assertOk()
+            ->assertSee('Əvvəlki ilə fərq')->assertSee('AZZARO CHROME EDT M 100ML')->assertSee('başqa depoların siyahısında yoxdur');
+        $this->get(route('admin.price-lists.show', [$new, 'tab' => 'diff', 'type' => 'changed']))->assertOk()
+            ->assertSee('ROJA ELYSIUM EDP M 100ML')->assertSee('-6.3%', false);
+    }
 }

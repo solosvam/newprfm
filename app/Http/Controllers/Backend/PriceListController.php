@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PriceList\WarehousePriceItem;
 use App\Models\PriceList\WarehousePriceList;
 use App\Models\Procurement\Warehouse;
+use App\Services\PriceList\PriceListDiff;
 use App\Services\PriceList\PriceListImporter;
 use App\Services\PriceList\PriceListMatcher;
 use App\Services\PriceList\PriceListNameParser;
@@ -13,6 +14,7 @@ use App\Services\PriceList\PriceListReader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -96,7 +98,7 @@ class PriceListController extends Controller
     }
 
     /** 3-cü addım: import */
-    public function import(Request $request, string $token, PriceListImporter $importer): RedirectResponse
+    public function import(Request $request, string $token, PriceListImporter $importer, PriceListDiff $diff): RedirectResponse
     {
         if (!$upload = session('price_list_upload.'.$token)) {
             return redirect()->route('admin.price-lists.index')->withErrors(['file' => 'Yükləmə tapılmadı — faylı yenidən seçin.']);
@@ -120,13 +122,22 @@ class PriceListController extends Controller
         File::delete($this->tmpDir().'/'.$upload['file']);
         session()->forget('price_list_upload.'.$token);
 
-        return redirect()->route('admin.price-lists.show', $list)->with('success', 'Price list yükləndi: '.$list->rows_count.' sətir.');
+        // Əvvəlki siyahı varsa — qısa xülasə; tam siyahı "Əvvəlki ilə fərq" tabındadır
+        $counts = $diff->counts($list);
+        $summary = $counts ? ' Əvvəlki ilə fərq: yeni '.$counts['added'].', çıxan '.$counts['removed'].', qiyməti dəyişən '.$counts['changed'].'.' : '';
+
+        return redirect()->route('admin.price-lists.show', $counts && array_sum($counts) > 0 ? [$list, 'tab' => 'diff'] : $list)
+            ->with('success', 'Price list yükləndi: '.$list->rows_count.' sətir.'.$summary);
     }
 
-    public function show(Request $request, WarehousePriceList $priceList, PriceListMatcher $matcher): View
+    public function show(Request $request, WarehousePriceList $priceList, PriceListMatcher $matcher, PriceListDiff $differ): View
     {
-        $tab = in_array($request->query('tab'), ['matched', 'all'], true) ? $request->query('tab') : 'unmatched';
+        $tab = in_array($request->query('tab'), ['matched', 'all', 'diff'], true) ? $request->query('tab') : 'unmatched';
+        $diff = $differ->compare($priceList);
+        $diffType = in_array($request->query('type'), PriceListDiff::TYPES, true) ? $request->query('type') : 'added';
+        $diffRows = $diff && $tab === 'diff' ? $this->diffRows($diff, $diffType, $request) : null;
         $items = $priceList->items()
+            ->when($tab === 'diff', fn ($q) => $q->whereRaw('1 = 0'))
             ->when($tab === 'unmatched', fn ($q) => $q->whereNull('product_variant_id'))
             ->when($tab === 'matched', fn ($q) => $q->whereNotNull('product_variant_id'))
             ->when($request->filled('q'), fn ($q) => $this->whereName($q, (string) $request->query('q')))
@@ -158,7 +169,51 @@ class PriceListController extends Controller
             'brandNames' => $priceList->items()->whereNotNull('brand_raw')->distinct()->orderBy('brand_raw')->pluck('brand_raw'),
             'brands' => DB::table('brands')->orderBy('name')->pluck('name', 'id'),
             'isCurrent' => in_array($priceList->id, WarehousePriceList::currentIds(), true),
+            'diff' => $diff,
+            'diffType' => $diffType,
+            'diffRows' => $diffRows,
         ]);
+    }
+
+    /**
+     * "Əvvəlki ilə fərq" tabının səhifəsi: seçilmiş növün sətirləri (axtarış və brend filtri ilə), 50-50.
+     * Çıxanlarda: bizim məhsul başqa deponun cari siyahısında varmı (yoxdursa — heç bir depoda qalmayıb).
+     */
+    /** @return array{rows: LengthAwarePaginator, elsewhere: array<int, string>} */
+    private function diffRows(array $diff, string $type, Request $request): array
+    {
+        $words = array_filter(explode(' ', PriceListNameParser::key((string) $request->query('q'))));
+        $brand = (string) $request->query('brand');
+        $rows = $diff[$type]->filter(function ($row) use ($words, $brand) {
+            $item = is_array($row) ? $row['new'] : $row;
+            if ($brand !== '' && $item->brand_raw !== $brand) return false;
+            foreach ($words as $word) {
+                if (!str_contains((string) $item->name_key, $word)) return false;
+            }
+            return true;
+        })->values();
+
+        $perPage = 50;
+        $page = max(1, (int) $request->query('page', 1));
+        $slice = $rows->forPage($page, $perPage)->values();
+
+        $items = $slice->flatMap(fn ($row) => is_array($row) ? [$row['old'], $row['new']] : [$row]);
+        (new \Illuminate\Database\Eloquent\Collection($items->all()))->load(['variant.product.brand', 'variant.size']);
+
+        $elsewhere = [];
+        if ($type === 'removed' && ($variants = $slice->pluck('product_variant_id')->filter()->unique()->values())->isNotEmpty()) {
+            $current = array_diff(WarehousePriceList::currentIds(), [$diff['previous']->id]);
+            $warehouseId = $diff['previous']->warehouse_id;
+            $elsewhere = WarehousePriceItem::whereIn('price_list_id', $current)->where('warehouse_id', '!=', $warehouseId)
+                ->whereIn('product_variant_id', $variants)->with('warehouse:id,name_az')->get(['product_variant_id', 'warehouse_id', 'price'])
+                ->groupBy('product_variant_id')->map(fn ($g) => $g->map(fn ($i) => $i->warehouse?->name_az.' '.number_format((float) $i->price, 2))->unique()->implode(', '))
+                ->all();
+        }
+
+        return [
+            'rows' => new LengthAwarePaginator($slice, $rows->count(), $perPage, $page, ['path' => $request->url(), 'query' => $request->query()]),
+            'elsewhere' => $elsewhere,
+        ];
     }
 
     /** Fayldakı brend adı bizim brendə bağlanır (bütün depolar üçün yadda qalır), sətirlər yenidən yoxlanır */
