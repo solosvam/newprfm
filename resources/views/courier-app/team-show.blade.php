@@ -40,7 +40,8 @@
         @endphp
         <div class="card">
             @include('courier-app._order-card', ['order' => $order, 'statuses' => $statuses, 'href' => null, 'plain' => true])
-            @foreach($parts->groupBy(fn ($row) => $row['a']->warehouse_id) as $rows)
+            {{-- Depodan hər şey götürülübsə (pul ödənsə də, ödənməsə də) — depo gizlənir; "Götürülüb: X / Y" kartda görünür --}}
+            @foreach($parts->groupBy(fn ($row) => $row['a']->warehouse_id)->reject(fn ($rows) => $rows->every(fn ($row) => $row['a']->status === Part::PICKED)) as $rows)
                 <div class="part">
                     <div class="wh__name">{{ $rows->first()['a']->warehouse?->name_az ?? 'Depo' }}</div>
                     @foreach($rows as $row)
