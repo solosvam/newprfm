@@ -268,7 +268,7 @@ class CourierFlowTest extends TestCase
         Schema::table('orders', fn (Blueprint $t) => [$t->unsignedBigInteger('customer_address_id')->nullable(), $t->string('meeting_place')->nullable(), $t->boolean('gift_wrap')->default(false)]);
         DB::table('customers')->insert(['id' => 1, 'name' => 'Aysel', 'surname' => 'Quliyeva']);
         \Spatie\Permission\Models\Role::create(['name' => FinanceService::COURIER_ROLE, 'guard_name' => 'admin']);
-        config(['services.telegram.bot_token' => 'test-token']);
+        config(['services.telegram.bot_token' => 'test-token', 'services.telegram.courier_group_id' => '-407456641']);
         \Illuminate\Support\Facades\Http::fake(['api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => ['message_id' => 5]])]);
 
         $anar = User::forceCreate(['name' => 'Anar', 'telegram_id' => '111']);
@@ -282,9 +282,11 @@ class CourierFlowTest extends TestCase
         $this->assertEqualsCanonicalizing(['Anar', 'Rauf'], $s->couriers()->pluck('name')->all());
         [$order] = $this->assigned($head);
         $s->transferCourier($order, $anar->fresh(), $head->id);
-        $sent = \App\Models\SmsLog::where('context', 'courier_order')->sole();
-        $this->assertSame(['111', 'sent', 'telegram'], [$sent->msisdn, $sent->status, $sent->channel]);
-        $this->assertSame('🔁 Rauf sizə PS1 sifarişini ötürdü', $sent->message); // yalnız bildiriş — məlumat linkdədir
+        // Təyin / ötürmə — yalnız kuryerlərin qrupuna, kuryerin adı ilə; şəxsi Telegram-a getmir
+        $this->assertSame(0, \App\Models\SmsLog::where('context', 'courier_order')->count());
+        $sent = \App\Models\SmsLog::where('context', 'courier_group')->sole();
+        $this->assertSame(['-407456641', 'sent', 'telegram'], [$sent->msisdn, $sent->status, $sent->channel]);
+        $this->assertSame('🔁 Anar, sizə sifariş ötürüldü: PS1 (Rauf ötürdü)', $sent->message);
         $request = collect(\Illuminate\Support\Facades\Http::recorded())->first()[0]->data();
         $this->assertSame('Sifarişi aç', $request['reply_markup']['inline_keyboard'][0][0]['text']);
         $this->assertSame(route('kuryer.order', $order), $request['reply_markup']['inline_keyboard'][0][0]['url']);
@@ -342,9 +344,9 @@ class CourierFlowTest extends TestCase
         $this->post(route('kuryer.team.transfer', [$anar, $order]), ['courier_id' => $vusal->id])->assertSessionHas('success');
         $this->assertSame($vusal->id, (int) $order->fresh()->courier_id);
         $this->assertStringContainsString('Baş kuryer (Rauf) sifarişi ötürdü: Anar → Vüsal', DB::table('order_status_logs')->where('kind', 'courier_change')->latest('id')->value('note'));
-        $messages = \App\Models\SmsLog::where('context', 'courier_order')->pluck('message', 'msisdn');
-        $this->assertSame('🔁 Rauf Anar adlı kuryerin PS1 sifarişini sizə ötürdü', $messages['222']);
-        $this->assertSame('↪️ Rauf PS1 sifarişini sizdən Vüsal adlı kuryerə ötürdü', $messages['111']);
+        $this->assertSame('🔁 Vüsal, sizə sifariş ötürüldü: PS1 (Anar ötürdü)', \App\Models\SmsLog::where('context', 'courier_group')->latest('id')->value('message'));
+        // Sifariş götürülən kuryerə — şəxsi
+        $this->assertSame(['111' => '↪️ Rauf PS1 sifarişini sizdən Vüsal adlı kuryerə ötürdü'], \App\Models\SmsLog::where('context', 'courier_order')->pluck('message', 'msisdn')->all());
         // Artıq Anarın sifarişi deyil
         $this->post(route('kuryer.team.transfer', [$anar, $order]), ['courier_id' => $head->id])->assertNotFound();
     }

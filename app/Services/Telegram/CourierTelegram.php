@@ -10,9 +10,9 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Kuryerin şəxsi Telegram-ına bildiriş (users.telegram_id; bot ilə bir dəfə /start yazılmalıdır):
- *  - sifariş ona təhkim olundu (operator təyin etdi və ya başqa kuryer ötürdü);
- *  - baş kuryer onun balansındakı pulu özünə köçürdü.
+ * Kuryerlərə Telegram bildirişləri:
+ *  - sifariş təyin olundu / ötürüldü — yalnız kuryerlərin ümumi qrupuna, kuryerin adı ilə (şəxsi mesaj getmir);
+ *  - şəxsi Telegram-a (users.telegram_id; bot ilə bir dəfə /start yazılmalıdır): sifariş ondan götürüldü, baş kuryer balansındakı pulu köçürdü.
  * Jurnal — sms_logs (channel = telegram). Xəta kuryerin / operatorun əməliyyatını pozmur.
  */
 class CourierTelegram
@@ -21,17 +21,22 @@ class CourierTelegram
     {
     }
 
-    /** $from — sifarişi ötürən kuryer (operator təyin edibsə null). Yalnız bildiriş və "Sifarişi aç" düyməsi — sifarişin məlumatı linkdədir */
-    public function orderAssigned(Order $order, User $courier, ?User $from, int $actor, ?User $head = null): ?SmsLog
+    /**
+     * Kuryerlərin ümumi Telegram qrupuna (TELEGRAM_COURIER_GROUP_ID): "Filankəs Filankəsov, sizə sifariş təyin olundu".
+     * Bot qrupa əlavə olunmalıdır. Qrup yazılmayıbsa heç nə göndərilmir.
+     */
+    public function groupAssigned(Order $order, User $courier, ?User $from, int $actor): ?SmsLog
     {
-        $text = match (true) {
-            $head && $from && $from->id !== $head->id => '🔁 <b>'.e(trim($head->full_name)).' '.e(trim($from->full_name)).' adlı kuryerin '.e($order->order_no).' sifarişini sizə ötürdü</b>',
-            (bool) $from => '🔁 <b>'.e(trim($from->full_name)).' sizə '.e($order->order_no).' sifarişini ötürdü</b>',
-            default => '📦 <b>Sizə sifariş təyin olundu: '.e($order->order_no).'</b>',
-        };
+        $chat = trim((string) config('services.telegram.courier_group_id'));
+        if ($chat === '') {
+            return null;
+        }
+        $text = $from
+            ? '🔁 <b>'.e(trim($courier->full_name)).'</b>, sizə sifariş ötürüldü: '.e($order->order_no).' ('.e(trim($from->full_name)).' ötürdü)'
+            : '📦 <b>'.e(trim($courier->full_name)).'</b>, sizə sifariş təyin olundu: '.e($order->order_no);
         $button = ['inline_keyboard' => [[['text' => 'Sifarişi aç', 'url' => route('kuryer.order', $order)]]]];
 
-        return $this->send($courier, $text, 'courier_order', $order->getMorphClass(), $order->id, $actor, $button);
+        return $this->sendTo($chat, $text, 'courier_group', $order->getMorphClass(), $order->id, $actor, $button);
     }
 
     /** Baş kuryer kuryerin sifarişini başqasına ötürdü — köhnə kuryerə (sifariş onun siyahısından çıxdı) */
@@ -53,7 +58,11 @@ class CourierTelegram
 
     private function send(User $to, string $text, string $context, string $subjectType, int $subjectId, int $actor, ?array $markup = null): ?SmsLog
     {
-        $chat = trim((string) $to->telegram_id);
+        return $this->sendTo(trim((string) $to->telegram_id), $text, $context, $subjectType, $subjectId, $actor, $markup);
+    }
+
+    private function sendTo(string $chat, string $text, string $context, string $subjectType, int $subjectId, int $actor, ?array $markup = null): ?SmsLog
+    {
         if ($chat === '' || !$this->api->configured()) {
             return null;
         }
