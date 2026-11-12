@@ -179,7 +179,7 @@
                         <a href="{{ $photo }}" target="_blank" rel="noopener" class="courier-expense__photo"><img src="{{ $photo }}" alt="Qəbz" loading="lazy"></a>
                     @endif
                     <div class="courier-history__main">
-                        <div class="courier-history__what @if($cancelled) text-decoration-line-through text-muted @endif">{{ $expense->note }}</div>
+                        <div class="courier-history__what @if($cancelled) text-decoration-line-through text-muted @endif">{{ $expense->kind === 'outgo' ? collect([$expense->category?->name, $expense->note])->filter()->implode(' · ') : $expense->note }}</div>
                         <div class="courier-history__meta">
                             {{ $expense->occurred_at->format('d.m.Y H:i') }}
                             @if($cancelled) · <span class="text-danger">ləğv edilib{{ $cancelled->user ? ' — '.trim($cancelled->user->full_name).', '.$cancelled->occurred_at->format('d.m H:i') : '' }}</span>@endif

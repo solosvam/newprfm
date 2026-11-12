@@ -20,6 +20,9 @@ use Illuminate\Validation\ValidationException;
  */
 class CourierExpenses
 {
+    /** Kuryerin "Xərclər"ində görünənlər: özünün / adminin kuryer xərci və Maliyyədən kuryerin balansından yazılan Məxaric */
+    public const KINDS = ['courier_expense', 'outgo'];
+
     public function __construct(private FinanceService $finance) {}
 
     /** $by — xərci kuryerin əvəzinə admin yazırsa (admin panel → Kuryerlər): kuryerə bildiriş gedir, adminə / baş kuryerə yox */
@@ -54,8 +57,8 @@ class CourierExpenses
     /** Kuryerin xərcləri (yenisi yuxarıda); $since — bu tarixdən (baş kuryerə məhdudiyyət) */
     public function of(User $courier, ?string $since = null, int $limit = 100): Collection
     {
-        return MoneyMovement::with(['reversedBy.user', 'user'])
-            ->where('kind', 'courier_expense')
+        return MoneyMovement::with(['reversedBy.user', 'user', 'category'])
+            ->whereIn('kind', self::KINDS)
             ->where('from_account_id', $this->finance->courierAccount($courier)->id)
             ->when($since, fn ($q, $d) => $q->whereDate('occurred_at', '>=', $d))
             ->orderByDesc('occurred_at')->orderByDesc('id')->limit($limit)->get();
@@ -63,7 +66,11 @@ class CourierExpenses
 
     public function canCancel(MoneyMovement $expense, User $actor): bool
     {
-        if ($expense->kind !== 'courier_expense' || $expense->reversedBy()->exists()) {
+        if (!in_array($expense->kind, self::KINDS, true) || $expense->reversedBy()->exists()) {
+            return false;
+        }
+        // Maliyyədən yazılan Məxaric — yalnız admin / rəhbər ləğv edir (baş kuryer yox)
+        if ($expense->kind === 'outgo' && FinanceService::isCourier($actor)) {
             return false;
         }
         if (!FinanceService::isCourier($actor)) {

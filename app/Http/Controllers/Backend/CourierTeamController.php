@@ -213,7 +213,7 @@ class CourierTeamController extends Controller
 
     private function ensureExpenseOf(User $courier, MoneyMovement $expense): void
     {
-        abort_unless(FinanceService::isCourier($courier) && $expense->kind === 'courier_expense'
+        abort_unless(FinanceService::isCourier($courier) && in_array($expense->kind, CourierExpenses::KINDS, true)
             && (int) $expense->from_account_id === (int) app(FinanceService::class)->courierAccount($courier)->id, 404);
     }
 

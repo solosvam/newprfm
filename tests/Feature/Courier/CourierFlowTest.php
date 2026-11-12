@@ -466,6 +466,19 @@ class CourierFlowTest extends TestCase
         $this->assertSame('expense_written', \App\Models\Courier\CourierNotification::where('user_id', $courier->id)->latest('id')->value('type'));
         $this->post(route('admin.courier.team.expense-store', $courier), ['amount' => 4])->assertSessionHasErrors('note', null, 'expense');
 
+        // Maliyyə → Məxaric kuryerin balansından — kuryerin "Xərclər"ində də görünür, kuryerə bildiriş; baş kuryer ləğv edə bilmir
+        $fuel = \App\Models\Finance\FinanceCategory::create(['name' => 'Yanacaq', 'type' => 'expense']);
+        $this->post(route('admin.finance.store'), ['kind' => 'outgo', 'account_id' => $f->courierAccount($courier)->id, 'category_id' => $fuel->id, 'amount' => 6, 'note' => 'Avqust'])
+            ->assertSessionHas('success');
+        $this->assertSame($before - 1000, $balance($courier));
+        $outgo = \App\Models\Finance\MoneyMovement::where('kind', 'outgo')->sole();
+        $this->assertSame(['expense_written', 'Yanacaq · Avqust · Admin yazdı'], [
+            \App\Models\Courier\CourierNotification::where('user_id', $courier->id)->latest('id')->value('type'),
+            \App\Models\Courier\CourierNotification::where('user_id', $courier->id)->latest('id')->value('body')]);
+        $this->actingAs($courier, 'admin')->get(route('kuryer.account'))->assertSee('Yanacaq · Avqust')->assertSee('Benzin');
+        $this->assertFalse(app(\App\Services\Courier\CourierExpenses::class)->canCancel($outgo, $head));
+        $this->assertTrue(app(\App\Services\Courier\CourierExpenses::class)->canCancel($outgo, $admin));
+
         \App\Services\Courier\PickPhotoStorage::delete($taxi->photo, \App\Services\Courier\PickPhotoStorage::EXPENSES);
     }
 

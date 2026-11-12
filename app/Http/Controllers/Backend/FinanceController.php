@@ -214,6 +214,11 @@ class FinanceController extends Controller
             'note' => $data['note'] ?? null,
         ]), (int) auth('admin')->id());
 
+        // Kuryerin balansından Məxaric — kuryerin "Xərclər"ində görünür, kuryerə bildiriş
+        if ($movement->kind === 'outgo' && $from->type === 'courier' && $from->user && $from->user->id !== (int) auth('admin')->id()) {
+            rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->expenseWritten($movement->load('category'), $from->user, auth('admin')->user()), null, !app()->runningUnitTests());
+        }
+
         return back()->with('success', $movement->load('category')->label().': '.number_format((float) $movement->amount, 2).' AZN qeydə alındı.');
     }
 

@@ -76,7 +76,7 @@ class CourierAppController extends Controller
     /** Öz xərcinin qəbz şəkli */
     public function expensePhoto(MoneyMovement $expense, FinanceService $finance): BinaryFileResponse
     {
-        abort_unless($expense->kind === 'courier_expense'
+        abort_unless(in_array($expense->kind, \App\Services\Courier\CourierExpenses::KINDS, true)
             && (int) $expense->from_account_id === (int) $finance->courierAccount(auth('admin')->user())->id, 404);
         $path = PickPhotoStorage::path($expense->photo, PickPhotoStorage::EXPENSES);
         abort_unless($path, 404);

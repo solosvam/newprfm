@@ -16,7 +16,7 @@
                     <button type="button" class="thumb" data-zoom="{{ $photo }}" aria-label="Qəbzin şəkli"><img src="{{ $photo }}" alt="" loading="lazy"></button>
                 @endif
                 <div class="list__main">
-                    <div class="list__what">{{ $expense->note }}</div>
+                    <div class="list__what">{{ $expense->kind === 'outgo' ? collect([$expense->category?->name, $expense->note])->filter()->implode(' · ') : $expense->note }}</div>
                     <div class="list__meta">
                         {{ $expense->occurred_at->format('d.m.Y H:i') }}
                         @if($cancelled) · <span class="danger">ləğv edilib{{ $cancelled->user ? ' — '.trim($cancelled->user->full_name) : '' }}</span>@endif
