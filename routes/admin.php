@@ -93,6 +93,7 @@ Route::prefix('admin')
                     Route::get('/{courier}', 'show')->whereNumber('courier')->name('.show');
                     Route::post('/{courier}/collect', 'collect')->whereNumber('courier')->middleware('can:courier.collect')->name('.collect');
                     Route::post('/{courier}/orders/{order}/transfer', 'transfer')->whereNumber(['courier', 'order'])->name('.transfer');
+                    Route::post('/{courier}/expenses', 'storeExpense')->whereNumber('courier')->middleware('can:finance')->name('.expense-store');
                     Route::post('/{courier}/expenses/{expense}/cancel', 'cancelExpense')->whereNumber(['courier', 'expense'])->name('.expense-cancel');
                     Route::get('/{courier}/expenses/{expense}/photo', 'expensePhoto')->whereNumber(['courier', 'expense'])->name('.expense-photo');
                 });

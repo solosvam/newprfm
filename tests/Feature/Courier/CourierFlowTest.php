@@ -448,8 +448,23 @@ class CourierFlowTest extends TestCase
             ->assertSee('Yemək')->assertSee(route('admin.courier.team.expense-cancel', [$courier, $food]), false);
         $this->post(route('admin.courier.team.expense-cancel', [$courier, $food]))->assertSessionHas('success');
         $this->post(route('admin.courier.team.expense-cancel', [$head, $own]))->assertSessionHas('success');
+
         $this->assertSame(5000, $balance($courier));
         $this->assertSame(0, $balance($head));
+
+        // Admin kuryerin balansından birbaşa xərc yazır ("finance" icazəsi ilə) — kuryerin xərclərinə düşür, kuryerə bildiriş
+        $this->post(route('admin.courier.team.expense-store', $courier), ['amount' => 4, 'note' => 'Benzin'])->assertForbidden();
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'finance', 'guard_name' => 'admin']);
+        $admin->givePermissionTo('finance');
+        $this->get(route('admin.courier.team.show', $courier))->assertSee('Xərc yaz');
+        $before = $balance($courier);
+        $this->post(route('admin.courier.team.expense-store', $courier), ['amount' => 4, 'note' => 'Benzin'])
+            ->assertRedirect(route('admin.courier.team.show', $courier).'#expenses')->assertSessionHas('success');
+        $this->assertSame($before - 400, $balance($courier));
+        $benzin = \App\Models\Finance\MoneyMovement::where('note', 'Benzin')->sole();
+        $this->assertSame(['courier_expense', $admin->id], [$benzin->kind, (int) $benzin->created_by]);
+        $this->assertSame('expense_written', \App\Models\Courier\CourierNotification::where('user_id', $courier->id)->latest('id')->value('type'));
+        $this->post(route('admin.courier.team.expense-store', $courier), ['amount' => 4])->assertSessionHasErrors('note', null, 'expense');
 
         \App\Services\Courier\PickPhotoStorage::delete($taxi->photo, \App\Services\Courier\PickPhotoStorage::EXPENSES);
     }

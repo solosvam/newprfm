@@ -39,6 +39,9 @@
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#warehousePayModal"
                             data-allocation="" data-left="" data-title="{{ $account->name }} — ümumi ödəniş (sifarişə bağlı olmadan)">Ümumi ödəniş</button>
                 @endif
+                @if($expenseCategories->isNotEmpty())
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#expenseModal">Xərc yaz</button>
+                @endif
                 @if($editable)
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#accountModal">Redaktə et</button>
                 @endif
@@ -152,6 +155,33 @@
 
 @if($editable)
     @include('backend.finance.partials.account-modal', ['editAccount' => $account, 'editBalance' => $balance])
+@endif
+
+@if($expenseCategories->isNotEmpty())
+    {{-- Xərc yaz: bu balansdan Məxaric (→ Kənar), kateqoriya ilə. Kuryerdə — kuryerin qalığı azalır --}}
+    <div class="modal modal-right fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseTitle" aria-hidden="true">
+        <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.finance.store') }}" data-movement-form>
+            @csrf
+            <input type="hidden" name="kind" value="outgo">
+            <input type="hidden" name="account_id" value="{{ $account->id }}">
+            <div class="modal-header"><h5 class="modal-title" id="expenseTitle">Xərc yaz</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+            <div class="modal-body">
+                <p class="mb-3">Balans: <strong>{{ $account->name }}</strong> — {{ $balance < 0 ? '−' : '' }}{{ number_format(abs($balance) / 100, 2) }} AZN</p>
+                <div class="mb-3"><label class="form-label" for="exAmount">Məbləğ, AZN</label>
+                    <input id="exAmount" type="number" name="amount" min="0.01" step="0.01" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label" for="exCategory">Kateqoriya</label>
+                    <select id="exCategory" name="category_id" class="form-select" required>
+                        <option value="">Seçin</option>
+                        @foreach($expenseCategories as $c)<option value="{{ $c->id }}">{{ $c->parent_id ? '— ' : '' }}{{ $c->name }}</option>@endforeach
+                    </select></div>
+                <div class="mb-3"><label class="form-label" for="exAt">Real tarix <small class="text-muted">(boş — indi)</small></label>
+                    <input id="exAt" type="datetime-local" name="occurred_at" class="form-control"></div>
+                <label class="form-label" for="exNote">Açıqlama</label>
+                <textarea id="exNote" name="note" rows="2" maxlength="2000" class="form-control"></textarea>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Qeydə al</button></div>
+        </form></div>
+    </div>
 @endif
 
 @if($account->type === 'courier')

@@ -57,6 +57,15 @@ class CourierNotifier
             (string) $expense->note, null, route('kuryer.team.show', $courier, false).'#expenses');
     }
 
+    /** Admin kuryerin balansından xərc yazdı — kuryerə */
+    public function expenseWritten(MoneyMovement $expense, User $courier, User $by): CourierNotification
+    {
+        return $this->notify($courier, 'expense_written',
+            'Balansınızdan xərc yazıldı: '.number_format((float) $expense->amount, 2).' AZN',
+            collect([$expense->note, trim($by->full_name).' yazdı'])->filter()->implode(' · '),
+            null, route('kuryer.account', [], false).'#expenses');
+    }
+
     /** Xərc ləğv edildi — kuryerə (pul balansına qayıtdı) */
     public function expenseCancelled(MoneyMovement $expense, User $courier, User $by): CourierNotification
     {

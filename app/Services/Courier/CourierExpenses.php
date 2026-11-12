@@ -22,18 +22,25 @@ class CourierExpenses
 {
     public function __construct(private FinanceService $finance) {}
 
-    public function record(User $courier, float $amount, string $note, ?UploadedFile $photo = null): MoneyMovement
+    /** $by — xərci kuryerin əvəzinə admin yazırsa (admin panel → Kuryerlər): kuryerə bildiriş gedir, adminə / baş kuryerə yox */
+    public function record(User $courier, float $amount, string $note, ?UploadedFile $photo = null, ?User $by = null): MoneyMovement
     {
         $photoName = $photo ? PickPhotoStorage::store($photo, PickPhotoStorage::EXPENSES) : null;
+        $staff = $by && $by->id !== $courier->id ? $by : null;
         try {
             $movement = $this->finance->record($this->finance->courierAccount($courier), $this->finance->system('external'), $amount, 'courier_expense',
-                ['note' => trim($note), 'photo' => $photoName], $courier->id);
+                ['note' => trim($note), 'photo' => $photoName], $staff?->id ?? $courier->id);
         } catch (\Throwable $e) {
             PickPhotoStorage::delete($photoName, PickPhotoStorage::EXPENSES);
             throw $e;
         }
 
         $quiet = !app()->runningUnitTests();
+        if ($staff) {
+            rescue(fn () => app(CourierNotifier::class)->expenseWritten($movement, $courier, $staff), null, $quiet);
+
+            return $movement;
+        }
         $line = trim($courier->full_name).' · '.$this->money($movement).' · '.$movement->note;
         rescue(fn () => app(AdminNotifier::class)->notify('courier_expense', 'money_movement', $movement->id, AdminNotifier::TYPES['courier_expense'],
             $line, route('admin.courier.team.show', $courier, false).'#expenses'), null, $quiet);

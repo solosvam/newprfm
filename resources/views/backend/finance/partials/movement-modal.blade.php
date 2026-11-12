@@ -37,6 +37,12 @@
                             @foreach($persons as $a)<option value="{{ $a->id }}" data-kinds="outgo" @selected((int) old('account_id') === $a->id)>{{ $a->name }}{{ $amount($a) }}</option>@endforeach
                         </optgroup>
                     @endif
+                    @if($couriers->isNotEmpty())
+                        {{-- Admin kuryerin balansından birbaşa xərc yazır (Məxaric: kuryer → Kənar) --}}
+                        <optgroup label="Kuryerlər">
+                            @foreach($couriers as $a)<option value="{{ $a->id }}" data-kinds="outgo" @selected((int) old('account_id') === $a->id)>{{ $a->name }}{{ $amount($a) }}</option>@endforeach
+                        </optgroup>
+                    @endif
                 </select></div>
 
             <div class="mb-3" data-for="outgo income"><label class="form-label" for="mvCategory">Kateqoriya</label>

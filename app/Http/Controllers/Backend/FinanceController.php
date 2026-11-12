@@ -142,7 +142,11 @@ class FinanceController extends Controller
         }
         $cash = $finance->system('cash');
 
-        return view('backend.finance.account', compact('account', 'balance', 'movements', 'parts', 'payers', 'debt', 'cash', 'byDay'));
+        // "Xərc yaz" (Məxaric bu hesabdan): yalnız məxaric icazəli hesablar və məxaric kateqoriyaları
+        $expenseCategories = in_array($account->type, MoneyMovement::KINDS['outgo'][1], true) && $account->active
+            ? FinanceCategory::tree()->filter(fn ($c) => $c->fits('outgo'))->values() : collect();
+
+        return view('backend.finance.account', compact('account', 'balance', 'movements', 'parts', 'payers', 'debt', 'cash', 'byDay', 'expenseCategories'));
     }
 
     /**

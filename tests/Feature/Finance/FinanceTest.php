@@ -141,6 +141,22 @@ class FinanceTest extends TestCase
         $this->assertSame(4000, $this->f()->balances()[$courier->id]);
     }
 
+    /** Admin istənilən balansdan (kuryer də) Məxaric yazır; hesab səhifəsində "Xərc yaz" yalnız məxaric icazəli hesablarda */
+    public function test_outgo_from_courier_balance_and_expense_button_on_account_page(): void
+    {
+        $courier = $this->courier();
+        $cash = $this->f()->system('cash');
+        $salary = FinanceCategory::create(['name' => 'Əməkhaqqı', 'type' => 'expense']);
+        $this->f()->record($cash, $courier, 100, 'courier_advance', [], 7);
+        $this->f()->record($courier, $this->f()->system('external'), 30, 'outgo', ['category_id' => $salary->id], 7);
+        $this->assertSame(7000, $this->f()->balances()[$courier->id]);
+
+        $page = fn ($account) => app(\App\Http\Controllers\Backend\FinanceController::class)->account($account, $this->f())->getData()['expenseCategories'];
+        $this->assertSame(['Əməkhaqqı'], $page($courier)->pluck('name')->intersect(['Əməkhaqqı'])->values()->all());
+        $this->assertTrue($page($courier)->every(fn ($c) => $c->fits('outgo')));
+        $this->assertTrue($page($this->f()->system('external'))->isEmpty());
+    }
+
     public function test_income_outgo_need_fitting_category_and_persons_settle_by_transfer(): void
     {
         $cash = $this->f()->system('cash');

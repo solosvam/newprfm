@@ -174,6 +174,24 @@ class CourierTeamController extends Controller
         return back()->with('success', number_format((float) $movement->amount, 2).' AZN '.trim($courier->full_name).' adlı kuryerdən hesabınıza köçürüldü.');
     }
 
+    /** Admin kuryerin balansından birbaşa xərc yazır (kuryer tətbiqindəki "Xərc yaz" ilə eyni; kuryerə bildiriş gedir) */
+    public function storeExpense(Request $request, User $courier, CourierExpenses $expenses): RedirectResponse
+    {
+        abort_unless(FinanceService::isCourier($courier), 404);
+        $data = $request->validateWithBag('expense', [
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:10000'],
+            'note' => ['required', 'string', 'max:200'],
+            'photo' => ['nullable', 'file', 'image', 'max:10240'],
+        ], [
+            'amount.required' => 'Məbləği yazın.', 'amount.min' => 'Məbləğ sıfırdan böyük olmalıdır.',
+            'note.required' => 'Xərcin açıqlamasını yazın.', 'photo.image' => 'Şəkil oxunmadı.', 'photo.max' => 'Şəkil çox böyükdür.',
+        ]);
+        $expense = $expenses->record($courier, (float) $data['amount'], $data['note'], $request->file('photo'), auth('admin')->user());
+
+        return redirect()->to(route('admin.courier.team.show', $courier).'#expenses')
+            ->with('success', trim($courier->full_name).' adlı kuryerin balansından '.number_format((float) $expense->amount, 2).' AZN xərc yazıldı.');
+    }
+
     /** Kuryerin xərcini ləğv etmək — əks əməliyyat, pul kuryerin balansına qayıdır (kim edə bilər — CourierExpenses::canCancel) */
     public function cancelExpense(User $courier, MoneyMovement $expense, CourierExpenses $expenses): RedirectResponse
     {

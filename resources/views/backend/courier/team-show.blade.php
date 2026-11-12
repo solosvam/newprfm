@@ -146,6 +146,26 @@
     {{-- Xərclər (kuryer tətbiqində yazılır, balansdan çıxır): qəbz şəkli, ləğv — əks əməliyyat, pul kuryerə qayıdır --}}
     <h2 class="small-title mt-5" id="expenses">Xərclər</h2>
     @if($minDate)<div class="text-muted text-small mb-1">Son {{ \App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK }} günün xərcləri.</div>@endif
+    @can('finance')
+        {{-- Admin kuryerin balansından birbaşa xərc yazır — kuryerin xərcləri siyahısına düşür, kuryerə bildiriş gedir --}}
+        <details class="mb-3" @if($errors->expense->any()) open @endif>
+            <summary class="btn btn-outline-primary w-100">Xərc yaz</summary>
+            <form method="POST" action="{{ route('admin.courier.team.expense-store', $courier) }}" enctype="multipart/form-data" class="card mt-2"><div class="card-body">
+                @csrf
+                @if($errors->expense->any())<div class="alert alert-danger">{{ $errors->expense->first() }}</div>@endif
+                <div class="row g-2">
+                    <div class="col-12 col-sm-4"><label class="form-label" for="exAmount">Məbləğ, AZN</label>
+                        <input id="exAmount" type="number" name="amount" min="0.01" max="10000" step="0.01" inputmode="decimal" class="form-control" value="{{ old('amount') }}" required></div>
+                    <div class="col-12 col-sm-8"><label class="form-label" for="exNote">Açıqlama</label>
+                        <input id="exNote" type="text" name="note" maxlength="200" class="form-control" value="{{ old('note') }}" placeholder="Məsələn: Taxi" required></div>
+                    <div class="col-12"><label class="form-label" for="exPhoto">Qəbz şəkli <span class="text-muted small">(istəyə görə)</span></label>
+                        <input id="exPhoto" type="file" name="photo" accept="image/*" class="form-control"></div>
+                </div>
+                <div class="form-text">Məbləğ {{ trim($courier->full_name) }} adlı kuryerin balansından dərhal çıxır, kuryerə bildiriş gedir.</div>
+                <button class="btn btn-primary w-100 mt-2">Qeydə al</button>
+            </div></form>
+        </details>
+    @endcan
     @if($expenses->isEmpty())
         <div class="card"><div class="card-body text-center text-muted py-4">Xərc yoxdur.</div></div>
     @else
