@@ -49,6 +49,7 @@ class FinanceTest extends TestCase
         foreach ([
             '2026_09_27_210000_create_payment_operations_and_saved_cards.php',
             '2026_09_29_150000_create_procurement_tables.php',
+            '2026_11_12_140000_add_opening_debt_to_warehouses.php',
             '2026_09_29_150000_create_payment_items_table.php',
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
             '2026_11_02_100000_add_courier_pays_to_order_item_allocations.php',
@@ -104,6 +105,20 @@ class FinanceTest extends TestCase
     }
 
     /** Borc günlər üzrə: dünən götürülən hissə qismən ödənilib, bu gün götürülən ödənilməyib; ümumi ödəniş ayrıca */
+    /** Başlanğıc borc (köhnə proqramdan): depo borcuna əlavə olunur, ümumi ödəniş onu azaldır; kassaya təsir etmir */
+    public function test_warehouse_opening_debt_is_added_to_debt(): void
+    {
+        $warehouse = \App\Models\Procurement\Warehouse::create(['name_az' => 'Köhnə depo', 'opening_debt' => 120.50]);
+        $this->assertSame(12050, $this->f()->warehouseDebts()[$warehouse->id]); // depo hesabı yox idi — yaranır
+
+        $cash = $this->f()->system('cash');
+        $this->f()->record($this->f()->system('external'), $cash, 100, 'income', ['category_id' => FinanceCategory::byCode('adjustment')->id], 7);
+        $this->f()->record($cash, $this->f()->warehouseAccount($warehouse), 20.50, 'warehouse_payment', [], 7);
+        $this->assertSame(10000, $this->f()->warehouseDebts()[$warehouse->id]);
+        $this->assertSame(['unlinked' => 2050, 'opening' => 12050], array_intersect_key($this->f()->warehouseDebtByDay($warehouse), ['unlinked' => 0, 'opening' => 0]));
+        $this->assertSame(7950, $this->f()->balances()[$cash->id]);
+    }
+
     public function test_warehouse_debt_is_split_by_pickup_day(): void
     {
         [$order, $yesterdayPart, $warehouse] = $this->allocation(); // 50 AZN

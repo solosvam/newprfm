@@ -210,6 +210,15 @@ class ProcurementTest extends TestCase
         $this->get(route('admin.procurement.warehouses'))->assertSee('Sorğu tipi')->assertSee('Telegram');
         $this->assertSame('987654321', $warehouse->fresh()->telegram_id);
         $this->get(route('admin.procurement.warehouses.edit', $warehouse))->assertOk()->assertSee('value="987654321"', false);
+
+        // Başlanğıc borc (köhnə proqramdan) — yaradanda və redaktədə yazılır
+        $this->get(route('admin.procurement.warehouses.edit', $warehouse))->assertSee('Başlanğıc borc');
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo B', 'opening_debt' => '350.40', 'active' => 1])->assertSessionHasNoErrors();
+        $this->assertEquals(350.40, (float) Warehouse::where('name_az', 'Depo B')->value('opening_debt'));
+        $this->put(route('admin.procurement.warehouses.update', $warehouse), ['name_az' => 'Depo T', 'opening_debt' => '-20', 'active' => 1])->assertSessionHasNoErrors();
+        $this->assertEquals(-20, (float) $warehouse->fresh()->opening_debt);
+        $this->get(route('admin.procurement.warehouses.edit', $warehouse))->assertSee('value="-20.00"', false);
+        $this->post(route('admin.procurement.warehouses.store'), ['name_az' => 'Depo C', 'opening_debt' => 'çox', 'active' => 1])->assertSessionHasErrors('opening_debt');
     }
 
     public function test_warehouse_is_deleted_unless_something_was_bought_from_it(): void

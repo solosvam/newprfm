@@ -53,6 +53,7 @@ class OrderItemCancellationTest extends TestCase
             $t->string('provider_order_id')->nullable(); $t->decimal('amount', 12, 2); $t->string('status'); $t->timestamps();
         });
         (require database_path('migrations/2026_09_29_150000_create_procurement_tables.php'))->up();
+        (require database_path('migrations/2026_11_12_140000_add_opening_debt_to_warehouses.php'))->up();
         (require database_path('migrations/2026_09_29_160000_create_order_item_cancellations_table.php'))->up();
         (require database_path('migrations/2026_10_06_203155_add_fee_type_to_order_item_cancellations.php'))->up();
         (require database_path('migrations/2026_09_29_190000_add_supply_flow_to_order_item_allocations.php'))->up();

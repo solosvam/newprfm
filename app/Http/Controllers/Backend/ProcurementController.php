@@ -57,12 +57,20 @@ class ProcurementController extends Controller
             'request_channel' => ['nullable', 'in:'.implode(',', array_keys(Warehouse::CHANNELS))],
             'address' => ['nullable', 'string', 'max:500'],
             'active' => ['required', 'boolean'],
+            // Başlanğıc borc (köhnə proqramdan); mənfi — depo bizə borcludur. Yalnız maliyyə icazəsi ilə dəyişir
+            'opening_debt' => ['nullable', 'numeric', 'min:-9999999', 'max:9999999'],
         ], [
+            'opening_debt.numeric' => 'Başlanğıc borc rəqəm olmalıdır.',
             'telegram_id.regex' => 'Telegram ID yalnız rəqəmlərdən ibarət olmalıdır (qrupda əvvəlində "-" ola bilər).',
             'telegram_id.required_if' => 'Sorğu tipi Telegram olanda Telegram ID yazılmalıdır.',
         ]);
 
         $data['request_channel'] ??= 'sms';
+        if (auth('admin')->user()?->can('finance')) {
+            $data['opening_debt'] = round((float) ($data['opening_debt'] ?? 0), 2);
+        } else {
+            unset($data['opening_debt']);
+        }
 
         return $data;
     }

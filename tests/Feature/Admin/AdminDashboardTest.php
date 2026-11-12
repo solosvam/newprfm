@@ -52,7 +52,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('order_item_allocations', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_item_id'), $t->unsignedBigInteger('warehouse_id')->nullable(), $t->integer('quantity'), $t->decimal('unit_cost', 12, 2), $t->string('status')]);
         Schema::create('customers', fn (Blueprint $t) => [$t->id(), $t->string('name')->nullable(), $t->string('surname')->nullable(), $t->string('mobile')->nullable(), $t->integer('old_customer_id')->nullable(), $t->string('source', 20)->nullable(), $t->boolean('active')->default(true), $t->decimal('bonus_balance', 12, 2)->default(0), $t->timestamps()]);
         Schema::create('price_alerts', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->integer('product_variant_id'), $t->decimal('price', 10, 2), $t->timestamp('notified_at')->nullable(), $t->timestamps()]);
-        Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az'), $t->decimal('opening_debt', 12, 2)->default(0)]);
         Schema::table('permissions', fn (Blueprint $t) => $t->string('description')->nullable());
         (require database_path('migrations/2026_09_29_200000_create_finance_tables.php'))->up();
         (require database_path('migrations/2026_10_16_100000_create_finance_categories.php'))->up();

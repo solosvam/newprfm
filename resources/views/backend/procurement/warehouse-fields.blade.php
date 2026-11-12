@@ -29,6 +29,19 @@
         @error('request_channel')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 </div>
+@can('finance')
+    {{-- Köhnə hesabat proqramındakı borc: depo borcuna əlavə olunur (Maliyyə → depo). Mənfi — depo bizə borcludur --}}
+    <div class="mb-3 {{ $horizontal ? 'row' : '' }}">
+        <label for="warehouse_opening_debt" class="{{ $horizontal ? 'col-lg-2 col-md-3 col-sm-4 col-form-label' : 'form-label' }}">Başlanğıc borc, AZN</label>
+        <div @class(['col-sm-8 col-md-9 col-lg-10' => $horizontal])>
+            <input type="number" step="0.01" id="warehouse_opening_debt" name="opening_debt" inputmode="decimal"
+                   class="form-control @error('opening_debt') is-invalid @enderror"
+                   value="{{ old('opening_debt', $warehouse && (float) $warehouse->opening_debt != 0 ? number_format((float) $warehouse->opening_debt, 2, '.', '') : '') }}" placeholder="0.00">
+            <div class="form-text">Köhnə hesabat proqramındakı borcumuz. Depo borcuna əlavə olunur, kassaya təsir etmir. Depo bizə borcludursa — mənfi yazın.</div>
+            @error('opening_debt')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+    </div>
+@endcan
 <div class="mb-3 {{ $horizontal ? 'row' : '' }}">
     <label for="warehouse_active" class="{{ $horizontal ? 'col-lg-2 col-md-3 col-sm-4 col-form-label' : 'form-label' }}">Aktiv</label>
     <div @class(['col-sm-8 col-md-9 col-lg-10' => $horizontal])>

@@ -85,7 +85,7 @@
         @endif
     </div>
 
-    @if($account->type === 'warehouse' && $byDay && $byDay['days'])
+    @if($account->type === 'warehouse' && $byDay && ($byDay['days'] || $byDay['opening'] !== 0))
         {{-- Borc günlər üzrə: hansı gün nə qədər mal götürülüb, nə qədəri ödənilib, nə qədəri qalıb --}}
         <h2 class="small-title">Borc günlər üzrə</h2>
         <div class="card mb-4"><div class="card-body">
@@ -101,6 +101,13 @@
                         <td class="text-nowrap fw-bold {{ $day['left'] > 0 ? 'text-danger' : 'text-muted' }}">{{ $day['left'] > 0 ? $money($day['left']) : 'ödənilib' }}</td>
                     </tr>
                 @endforeach
+                @if($byDay['opening'] !== 0)
+                    {{-- Köhnə hesabat proqramından köçürülən borc (Depolar → redaktə → "Başlanğıc borc") --}}
+                    <tr>
+                        <td colspan="3" class="text-muted">Başlanğıc borc (köhnə proqramdan){{ $byDay['opening'] < 0 ? ' — depo bizə borcludur' : '' }}</td>
+                        <td class="text-nowrap fw-bold {{ $byDay['opening'] > 0 ? 'text-danger' : 'text-success' }}">{{ $byDay['opening'] < 0 ? '−' : '' }}{{ $money(abs($byDay['opening'])) }}</td>
+                    </tr>
+                @endif
                 @if($byDay['unlinked'] !== 0)
                     <tr>
                         <td colspan="3" class="text-muted">{{ $byDay['unlinked'] > 0 ? 'Ümumi ödəniş (sifarişə bağlı olmadan) — borcdan çıxılır' : 'Deponun qaytardığı pul (sifarişə bağlı olmadan)' }}</td>

@@ -50,6 +50,7 @@ class CourierFlowTest extends TestCase
         foreach ([
             '2026_09_27_210000_create_payment_operations_and_saved_cards.php',
             '2026_09_29_150000_create_procurement_tables.php',
+            '2026_11_12_140000_add_opening_debt_to_warehouses.php',
             '2026_09_29_190000_add_supply_flow_to_order_item_allocations.php',
             '2026_11_02_100000_add_courier_pays_to_order_item_allocations.php',
             '2026_09_29_200000_create_finance_tables.php',

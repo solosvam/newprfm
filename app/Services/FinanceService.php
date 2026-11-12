@@ -108,8 +108,15 @@ class FinanceService
             ->selectRaw('warehouse_id, SUM(quantity * unit_cost) as total')->groupBy('warehouse_id')->pluck('total', 'warehouse_id');
         $balances = $this->balances();
 
+        // Başlanğıc borc (köhnə proqramdan) — depo hesabı hələ yaranmayıbsa da görünsün
+        $opening = Warehouse::where('opening_debt', '!=', 0)->pluck('opening_debt', 'id');
+        foreach ($opening->keys() as $warehouseId) {
+            $this->warehouseAccount(Warehouse::find($warehouseId));
+        }
+
         return FinanceAccount::where('type', 'warehouse')->get()->mapWithKeys(fn ($a) => [
-            $a->warehouse_id => (int) round((float) ($owed[$a->warehouse_id] ?? 0) * 100) - ($balances[$a->id] ?? 0),
+            $a->warehouse_id => (int) round((float) ($owed[$a->warehouse_id] ?? 0) * 100) + (int) round((float) ($opening[$a->warehouse_id] ?? 0) * 100)
+                - ($balances[$a->id] ?? 0),
         ]);
     }
 
@@ -118,7 +125,7 @@ class FinanceService
      * ("2350-nin 350-si bu günə aiddir"). Gün — hissənin "Götürüldü" olduğu tarix. Sifarişə bağlanmayan ümumi ödənişlər
      * (və deponun qaytardığı pul) ayrıca qaytarılır: qalıqların cəmi − ümumi ödəniş = cari borc.
      *
-     * @return array{days: list<array{date: \Illuminate\Support\Carbon, cost: int, paid: int, left: int, parts: int}>, unlinked: int}
+     * @return array{days: list<array{date: \Illuminate\Support\Carbon, cost: int, paid: int, left: int, parts: int}>, unlinked: int, opening: int}
      */
     public function warehouseDebtByDay(Warehouse $warehouse): array
     {
@@ -142,7 +149,7 @@ class FinanceService
             ->where(fn ($q) => $q->where('to_account_id', $account->id)->orWhere('from_account_id', $account->id))->get()
             ->sum(fn ($m) => ((int) $m->to_account_id === $account->id ? 1 : -1) * (int) round((float) $m->amount * 100));
 
-        return ['days' => $days, 'unlinked' => $unlinked];
+        return ['days' => $days, 'unlinked' => $unlinked, 'opening' => (int) round((float) $warehouse->opening_debt * 100)];
     }
 
     /** Hər təminat hissəsinə ödənilən (əks əməliyyatlar çıxılmış): allocation_id => cents */
