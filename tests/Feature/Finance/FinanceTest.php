@@ -172,6 +172,32 @@ class FinanceTest extends TestCase
         $this->assertTrue($page($this->f()->system('external'))->isEmpty());
     }
 
+    /** Yeni hesab → Şəxs: başlanğıc qalıq — şirkət ona borcludur (mənfi) və ya o şirkətə borcludur (müsbət); pul axınına düşmür */
+    public function test_person_account_can_be_created_with_opening_balance(): void
+    {
+        $store = fn (array $data) => app(\App\Http\Controllers\Backend\FinanceController::class)
+            ->storeAccount(\Illuminate\Http\Request::create('/', 'POST', $data), $this->f());
+        $store(['type' => 'person', 'name' => 'Elçin', 'opening' => 250, 'opening_direction' => 'we_owe']);
+        $store(['type' => 'person', 'name' => 'Murad', 'opening' => 40, 'opening_direction' => 'owes_us']);
+        $store(['type' => 'person', 'name' => 'Boş']);
+
+        $balances = $this->f()->balances();
+        $id = fn ($name) => FinanceAccount::where('name', $name)->value('id');
+        $this->assertSame(-25000, $balances[$id('Elçin')]);
+        $this->assertSame(4000, $balances[$id('Murad')]);
+        $this->assertSame(0, $balances[$id('Boş')] ?? 0);
+        $opening = MoneyMovement::where('kind', 'person_opening')->first();
+        $this->assertSame(['Başlanğıc qalıq', 'adjustment'], [$opening->note, $opening->category->code]);
+        $this->assertSame(0, $balances[$this->f()->system('cash')->id] ?? 0); // kassaya toxunmur
+
+        $report = app(\App\Services\Finance\CashFlowReport::class);
+        $built = $report->build(now()->startOfMonth(), now()->startOfMonth());
+        $this->assertSame(0, array_sum($built['totals']['income']) + array_sum($built['totals']['expense']) + array_sum($built['persons']['in']) + array_sum($built['persons']['out']));
+
+        $this->expectException(ValidationException::class); // şəxsdən şəxsə olmaz
+        $this->f()->record(FinanceAccount::find($id('Elçin')), FinanceAccount::find($id('Murad')), 10, 'person_opening', [], 7);
+    }
+
     public function test_income_outgo_need_fitting_category_and_persons_settle_by_transfer(): void
     {
         $cash = $this->f()->system('cash');

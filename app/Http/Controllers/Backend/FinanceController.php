@@ -226,11 +226,16 @@ class FinanceController extends Controller
     public function storeAccount(Request $request, FinanceService $finance): RedirectResponse
     {
         $data = $this->accountData($request);
-        $opening = $data['type'] !== 'person' ? (float) ($data['opening'] ?? 0) : 0;
+        $opening = (float) ($data['opening'] ?? 0);
 
         $account = \Illuminate\Support\Facades\DB::transaction(function () use ($data, $opening, $finance) {
             $account = FinanceAccount::create(['type' => $data['type'], 'name' => trim($data['name']), 'description' => $data['description'] ?? null]);
-            if ($opening > 0) {
+            if ($opening > 0 && $data['type'] === 'person') {
+                // Şəxs: şirkət ona borcludur (qalıq mənfi) və ya o şirkətə borcludur (qalıq müsbət)
+                $external = $finance->system('external');
+                [$from, $to] = ($data['opening_direction'] ?? 'we_owe') === 'we_owe' ? [$account, $external] : [$external, $account];
+                $finance->record($from, $to, $opening, 'person_opening', ['note' => 'Başlanğıc qalıq'], (int) auth('admin')->id());
+            } elseif ($opening > 0) {
                 $finance->record($finance->system('external'), $account, $opening, 'income',
                     ['category_id' => FinanceCategory::byCode('adjustment')?->id, 'note' => 'Başlanğıc qalıq'], (int) auth('admin')->id());
             }
@@ -268,6 +273,7 @@ class FinanceController extends Controller
             'name' => ['required', 'string', 'max:120', Rule::unique('finance_accounts', 'name')->where('active', true)->ignore($account?->id)],
             'type' => [$account ? 'nullable' : 'required', Rule::in(FinanceAccount::CREATABLE)],
             'opening' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'opening_direction' => ['nullable', Rule::in(['we_owe', 'owes_us'])],
             'description' => ['nullable', 'string', 'max:2000'],
         ], [
             'name.required' => 'Hesabın adını yazın.',

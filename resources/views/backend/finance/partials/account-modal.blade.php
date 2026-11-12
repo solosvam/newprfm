@@ -20,9 +20,16 @@
                         @endforeach
                     </select>
                     <div class="form-text">Şəxs — pul aldığımız və ya verdiyimiz adam (sahibkar, borc verən tanış). Onun qalığı şirkətin pulu sayılmır.</div></div>
-                <div class="mb-3" data-account-opening><label class="form-label" for="accOpening">Başlanğıc qalıq, AZN</label>
+                <div class="mb-3"><label class="form-label" for="accOpening">Başlanğıc qalıq, AZN</label>
                     <input id="accOpening" type="number" name="opening" min="0" step="0.01" class="form-control" value="{{ old('opening') }}" placeholder="0">
-                    <div class="form-text">"Düzəliş" kateqoriyalı mədaxil kimi yazılır.</div></div>
+                    <div class="form-text" data-account-opening="own">"Düzəliş" kateqoriyalı mədaxil kimi yazılır.</div></div>
+                {{-- Şəxs: kim kimə borcludur (köhnə hesabdan köçürmək üçün); pul axınına düşmür --}}
+                <div class="mb-3" data-account-opening="person"><label class="form-label" for="accOpeningDirection">Başlanğıc qalıq nədir</label>
+                    <select id="accOpeningDirection" name="opening_direction" class="form-select">
+                        <option value="we_owe" @selected(old('opening_direction', 'we_owe') === 'we_owe')>Şirkət ona borcludur (bizə borc verib)</option>
+                        <option value="owes_us" @selected(old('opening_direction') === 'owes_us')>O, şirkətə borcludur (biz ona borc vermişik)</option>
+                    </select>
+                    <div class="form-text">Gəlir və ya xərc sayılmır — yalnız şəxsin qalığı.</div></div>
             @endif
             <label class="form-label" for="accDescription">Açıqlama</label>
             <textarea id="accDescription" name="description" rows="2" maxlength="2000" class="form-control">{{ old('description', $editAccount?->description) }}</textarea>

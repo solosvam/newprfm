@@ -49,14 +49,16 @@
         filter();
     });
 
-    // Yeni hesab: şəxsin başlanğıc qalığı olmur (onunla hesablaşma köçürmə ilə aparılır)
+    // Yeni hesab: şəxsdə başlanğıc qalığın istiqaməti seçilir (şirkət ona borcludur / o şirkətə), digərlərində — mədaxil
     document.querySelectorAll('[data-account-form]').forEach(form => {
         const type = form.querySelector('[name="type"]');
-        const opening = form.querySelector('[data-account-opening]');
-        if (!type || !opening) return;
+        const own = form.querySelector('[data-account-opening="own"]');
+        const person = form.querySelector('[data-account-opening="person"]');
+        if (!type || !own || !person) return;
         const sync = () => {
-            opening.hidden = type.value === 'person';
-            opening.querySelector('input').disabled = opening.hidden;
+            own.hidden = type.value === 'person';
+            person.hidden = !own.hidden;
+            person.querySelector('select').disabled = person.hidden;
         };
         type.addEventListener('change', sync);
         sync();

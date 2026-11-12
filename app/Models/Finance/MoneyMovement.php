@@ -34,6 +34,9 @@ class MoneyMovement extends Model
         // Hissə-hissə: Ferrum ümumi məbləğdən öz faizini çıxır (credit_applications.bank_fee_rate)
         'credit_fee' => ['Ferrum komissiyası', ['bank'], ['external']],
         'customer_refund' => ['Müştəriyə qaytarma', ['online', 'courier', 'cash'], ['customer']],
+        // Şəxsin başlanğıc qalığı (hesab yaradılanda): Kənar → Şəxs — o şirkətə borcludur, Şəxs → Kənar — şirkət ona borcludur.
+        // Pul axınına (hesabata) düşmür
+        'person_opening' => ['Başlanğıc qalıq', ['external', 'person'], ['person', 'external']],
         'reversal' => ['Əks əməliyyat', [], []],
     ];
 
@@ -41,7 +44,7 @@ class MoneyMovement extends Model
     public const KIND_CATEGORY = [
         'customer_payment' => 'sale', 'customer_refund' => 'customer_refund', 'credit_fee' => 'credit_fee',
         'warehouse_payment' => 'warehouse', 'warehouse_refund' => 'warehouse_refund',
-        'courier_expense' => 'courier_expense',
+        'courier_expense' => 'courier_expense', 'person_opening' => 'adjustment',
         'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer', 'courier_collect' => 'transfer',
     ];
 

@@ -175,6 +175,9 @@ class FinanceService
         $this->ensure(in_array($from->type, $rule[1], true), '"'.$rule[0].'" üçün göndərən hesab uyğun deyil ('.$from->name.').');
         $this->ensure(in_array($to->type, $rule[2], true), '"'.$rule[0].'" üçün alan hesab uyğun deyil ('.$to->name.').');
         $this->ensure($from->active && $to->active, 'Hesab deaktivdir.');
+        if ($kind === 'person_opening') {
+            $this->ensure(($from->type === 'person') !== ($to->type === 'person'), 'Başlanğıc qalıq şəxslə Kənar arasında olur.');
+        }
         if ($kind === 'transfer') {
             $this->ensure(in_array($from->type, FinanceAccount::OWN, true) || in_array($to->type, FinanceAccount::OWN, true),
                 'Köçürmədə ən azı bir tərəf şirkətin hesabı olmalıdır.');
