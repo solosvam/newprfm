@@ -62,6 +62,7 @@
         current = { candidates: btn.dataset.candidates, match: btn.dataset.match };
         modal.querySelector('[data-match-title]').textContent = btn.dataset.title;
         modal.querySelector('[data-match-price]').textContent = btn.dataset.price;
+        modal.querySelector('[data-match-create]').href = btn.dataset.create || '#';
         search.value = '';
         load();
     });

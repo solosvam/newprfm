@@ -262,4 +262,14 @@ class PriceListImportTest extends TestCase
         $this->get(route('admin.price-lists.show', [$new, 'tab' => 'diff', 'type' => 'changed']))->assertOk()
             ->assertSee('ROJA ELYSIUM EDP M 100ML')->assertSee('-6.3%', false);
     }
+
+    /** "Yeni ətir yarat": forma brend seçilmiş, model adı yazılmış açılır */
+    public function test_create_product_link_prefills_brand_and_model_name(): void
+    {
+        $item = new WarehousePriceItem(['raw_name' => 'VERSACE EROS FLAME EDP M 100ML TESTER', 'brand_raw' => 'VERSACE', 'brand_id' => 1]);
+        $this->assertSame(route('admin.product.add', ['brand_id' => 1, 'name' => 'Eros Flame']), $item->createProductUrl());
+
+        $unknown = new WarehousePriceItem(['raw_name' => 'ROJA ELYSIUM EDP M 100ML', 'brand_raw' => 'ROJA', 'brand_id' => null]);
+        $this->assertSame(route('admin.product.add', ['name' => 'Elysium']), $unknown->createProductUrl());
+    }
 }

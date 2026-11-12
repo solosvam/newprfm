@@ -169,7 +169,7 @@
                                 @if($diffType !== 'removed')
                                     <button type="button" class="btn btn-sm {{ $item->product_variant_id ? 'btn-link px-1' : 'btn-outline-primary' }}" data-bs-toggle="modal" data-bs-target="#plMatchModal"
                                             data-candidates="{{ route('admin.price-lists.items.candidates', $item) }}" data-match="{{ route('admin.price-lists.items.match', $item) }}"
-                                            data-title="{{ $item->raw_name }}" data-price="{{ number_format((float) $item->price, 2) }}">{{ $item->product_variant_id ? 'Dəyiş' : 'Uyğunlaşdır' }}</button>
+                                            data-title="{{ $item->raw_name }}" data-price="{{ number_format((float) $item->price, 2) }}" data-create="{{ $item->createProductUrl() }}">{{ $item->product_variant_id ? 'Dəyiş' : 'Uyğunlaşdır' }}</button>
                                 @endif
                             </td>
                         </tr>
@@ -218,7 +218,7 @@
                         <td class="text-end text-nowrap">
                             <button type="button" class="btn btn-sm {{ $item->product_variant_id ? 'btn-link px-1' : 'btn-outline-primary' }}" data-bs-toggle="modal" data-bs-target="#plMatchModal"
                                     data-candidates="{{ route('admin.price-lists.items.candidates', $item) }}" data-match="{{ route('admin.price-lists.items.match', $item) }}"
-                                    data-title="{{ $item->raw_name }}" data-price="{{ number_format((float) $item->price, 2) }}">{{ $item->product_variant_id ? 'Dəyiş' : 'Uyğunlaşdır' }}</button>
+                                    data-title="{{ $item->raw_name }}" data-price="{{ number_format((float) $item->price, 2) }}" data-create="{{ $item->createProductUrl() }}">{{ $item->product_variant_id ? 'Dəyiş' : 'Uyğunlaşdır' }}</button>
                             @if($item->product_variant_id)
                                 <button type="button" class="btn btn-sm btn-link px-1 text-danger" data-unmatch="{{ route('admin.price-lists.items.unmatch', $item) }}">Ayır</button>
                             @endif
@@ -243,6 +243,8 @@
                 <div class="mb-3"><div class="fw-bold" data-match-title></div><div class="text-muted text-small">Alış: <span data-match-price></span> AZN</div></div>
                 <input type="search" class="form-control mb-3" placeholder="Bizim məhsullarda axtar (ad, brend, ölçü)" data-match-search aria-label="Bizim məhsullarda axtar">
                 <div data-match-results><p class="text-muted">Yüklənir…</p></div>
+                {{-- Bizdə yoxdursa: məhsul yaratma formu yeni tabda (brend seçilmiş, model adı yazılmış); yaradandan sonra burada axtarıb "Seç" --}}
+                <a href="#" target="_blank" rel="noopener" class="btn btn-outline-primary w-100 mt-3" data-match-create>Yeni ətir yarat</a>
                 <div class="form-text mt-3">Seçim yadda qalır: bu deponun növbəti price listində eyni ad avtomatik bağlanacaq.</div>
             </div>
         </div></div>

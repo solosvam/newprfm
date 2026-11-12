@@ -379,9 +379,9 @@
                                                     <div class="col-md-9">
                                                         <label for="brand_id">Brend</label>
                                                         <select class="form-select select2" id="brand_id" name="brand_id">
-                                                            <option value="" @selected(!old('brand_id'))>Seçin</option>
+                                                            <option value="" @selected(!old('brand_id', request('brand_id')))>Seçin</option>
                                                             @foreach($brands as $brand)
-                                                                <option value="{{ $brand->id }}" @selected(old('brand_id') == $brand->id)>
+                                                                <option value="{{ $brand->id }}" @selected(old('brand_id', request('brand_id')) == $brand->id)>
                                                                     {{ $brand->name }}
                                                                 </option>
                                                             @endforeach
@@ -432,7 +432,7 @@
                                             <div class="col-md-6">
                                                 <div>
                                                     <label for="name">Ətir adı</label>
-                                                    <input type="text" id="name" name="name" value="{{ old('name') }}" class="form-control" placeholder="Ətir adı" required>
+                                                    <input type="text" id="name" name="name" value="{{ old('name', request('name')) }}" class="form-control" placeholder="Ətir adı" required>
                                                 </div>
 
                                                 <div class="mt-3">
