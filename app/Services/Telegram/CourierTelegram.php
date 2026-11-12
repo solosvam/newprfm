@@ -34,9 +34,9 @@ class CourierTelegram
         $text = $from
             ? '🔁 <b>'.e(trim($courier->full_name)).'</b>, sizə sifariş ötürüldü: '.e($order->order_no).' ('.e(trim($from->full_name)).' ötürdü)'
             : '📦 <b>'.e(trim($courier->full_name)).'</b>, sizə sifariş təyin olundu: '.e($order->order_no);
-        $button = ['inline_keyboard' => [[['text' => 'Sifarişi aç', 'url' => route('kuryer.order', $order)]]]];
 
-        return $this->sendTo($chat, $text, 'courier_group', $order->getMorphClass(), $order->id, $actor, $button);
+        // Yalnız mətn — "Sifarişi aç" düyməsi yoxdur (kuryer sifarişi tətbiqdən açır)
+        return $this->sendTo($chat, $text, 'courier_group', $order->getMorphClass(), $order->id, $actor);
     }
 
     /** Baş kuryer kuryerin sifarişini başqasına ötürdü — köhnə kuryerə (sifariş onun siyahısından çıxdı) */

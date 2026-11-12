@@ -289,8 +289,7 @@ class CourierFlowTest extends TestCase
         $this->assertSame(['-407456641', 'sent', 'telegram'], [$sent->msisdn, $sent->status, $sent->channel]);
         $this->assertSame('🔁 Anar, sizə sifariş ötürüldü: PS1 (Rauf ötürdü)', $sent->message);
         $request = collect(\Illuminate\Support\Facades\Http::recorded())->first()[0]->data();
-        $this->assertSame('Sifarişi aç', $request['reply_markup']['inline_keyboard'][0][0]['text']);
-        $this->assertSame(route('kuryer.order', $order), $request['reply_markup']['inline_keyboard'][0][0]['url']);
+        $this->assertArrayNotHasKey('reply_markup', $request); // "Sifarişi aç" düyməsi yoxdur
 
         // Anarda 50 AZN şirkət pulu var
         $f->record($f->system('cash'), $f->courierAccount($anar), 50, 'courier_advance', [], 7);
