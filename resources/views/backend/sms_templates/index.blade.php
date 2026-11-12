@@ -4,6 +4,7 @@
     $variables = [
         'crm_order_accepted' => ['name', 'fullname', 'bonus', 'order_no'],
         'crm_order_accepted_no_bonus' => ['name', 'fullname', 'order_no'],
+        'crm_order_accepted_installment' => ['name', 'fullname', 'order_no', 'months', 'monthly', 'total'],
         'crm_order_cancelled' => ['name', 'fullname', 'order_no'],
         'easy_order_registration_bonus' => ['bonus'],
         'easy_order_registration' => [],

@@ -18,6 +18,7 @@ class SmsTemplateController extends Controller
     public const USAGE = [
         'crm_order_accepted' => 'Operator CRM-də sifariş yaradanda müştəriyə ({bonus} — təhvildə yazılacaq bonus)',
         'crm_order_accepted_no_bonus' => 'Operator CRM-də sifariş yaradanda müştəriyə — bonus yazılmayacaqsa (məs. bonusla ödəniş)',
+        'crm_order_accepted_installment' => 'Operator CRM-də hissə-hissə ödənişli sifariş yaradanda müştəriyə ({months} ay, {monthly} — aylıq, {total} — cəmi)',
         'crm_order_cancelled' => 'Operator CRM-də sifarişi ləğv edəndə müştəriyə',
         'easy_order_registration_bonus' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (qeydiyyat bonusu varsa)',
         'easy_order_registration' => 'Asan sifariş təsdiqlənəndə yeni yaranan müştəriyə (bonus yoxdursa)',
@@ -36,7 +37,7 @@ class SmsTemplateController extends Controller
         // Sonradan əlavə olunan alt şablon (məs. crm_order_accepted_no_bonus) əsas şablonun yanında görünsün
         $templates = SmsTemplate::orderBy('id')->get();
         $ids = $templates->pluck('id', 'code');
-        $templates = $templates->sortBy(fn ($t) => [$ids[preg_replace('/_no_bonus$/', '', $t->code)] ?? $t->id, $t->id])->values();
+        $templates = $templates->sortBy(fn ($t) => [$ids[preg_replace('/_(no_bonus|installment)$/', '', $t->code)] ?? $t->id, $t->id])->values();
 
         $logs = null;
         if ($tab !== 'templates') {

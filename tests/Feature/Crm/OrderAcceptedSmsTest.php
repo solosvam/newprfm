@@ -65,4 +65,21 @@ class OrderAcceptedSmsTest extends TestCase
         $this->assertNull(app(OrderAcceptedSms::class)->send($this->order()));
         $this->assertSame([], $this->sent);
     }
+
+    public function test_installment_order_uses_its_own_template(): void
+    {
+        Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code')]);
+        Schema::create('credit_periods', fn (Blueprint $t) => [$t->id(), $t->integer('month')]);
+        Schema::create('credit_applications', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->unsignedBigInteger('credit_period_id'), $t->decimal('total', 12, 2), $t->decimal('monthly', 12, 2), $t->timestamps()]);
+        DB::table('payment_methods')->insert(['id' => 4, 'code' => 'installment']);
+        DB::table('credit_periods')->insert(['id' => 1, 'month' => 6]);
+        DB::table('sms_templates')->insert(['code' => 'crm_order_accepted_installment', 'template' => 'Hormetli {name}, {order_no}: {months} ay, ayliq {monthly} AZN, cemi {total} AZN.', 'active' => 1]);
+        self::$bonus = 0;
+        $order = $this->order();
+        $order->forceFill(['payment_method_id' => 4])->save();
+        DB::table('credit_applications')->insert(['order_id' => $order->id, 'credit_period_id' => 1, 'total' => 351.62, 'monthly' => 58.60]);
+
+        $this->assertTrue(app(OrderAcceptedSms::class)->send($order->fresh()));
+        $this->assertSame('Hormetli Aysel, PS261106000001: 6 ay, ayliq 58.60 AZN, cemi 351.62 AZN.', $this->sent[0][1]);
+    }
 }

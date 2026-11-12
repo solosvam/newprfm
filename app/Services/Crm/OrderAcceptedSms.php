@@ -11,7 +11,8 @@ use Throwable;
 
 /**
  * Operator CRM-də sifariş yaradanda müştəriyə SMS: crm_order_accepted ({bonus} — təhvil veriləndə yazılacaq bonus, BonusService::pendingFor),
- * bonus yazılmayacaqsa — crm_order_accepted_no_bonus. Xəta sifarişi pozmur.
+ * bonus yazılmayacaqsa — crm_order_accepted_no_bonus; hissə-hissə ödəniş (öz kreditimiz) — crm_order_accepted_installment
+ * ({months}, {monthly}, {total} — kredit müraciətindən). Xəta sifarişi pozmur.
  * true — göndərildi, false — alınmadı, null — şablon söndürülüb və ya nömrə yoxdur.
  */
 class OrderAcceptedSms
@@ -23,8 +24,9 @@ class OrderAcceptedSms
         $order->loadMissing(['customer', 'status', 'paymentMethod']);
         $mobile = $order->customer?->mobile;
         $bonus = $this->bonus->pendingFor($order);
-        // Bonus yazılmayacaqsa (məs. bonusla ödəniş) — ayrıca şablon
-        $code = $bonus > 0 ? 'crm_order_accepted' : 'crm_order_accepted_no_bonus';
+        $credit = $order->paymentMethod?->code === 'installment' ? $order->creditApplication()->with('period')->first() : null;
+        // Hissə-hissə ödəniş — öz şablonu; bonus yazılmayacaqsa (məs. bonusla ödəniş) — ayrıca şablon
+        $code = $credit ? 'crm_order_accepted_installment' : ($bonus > 0 ? 'crm_order_accepted' : 'crm_order_accepted_no_bonus');
         $template = SmsTemplate::where('code', $code)->where('active', 1)->first();
         if (!$mobile || !$template) {
             return null;
@@ -34,6 +36,9 @@ class OrderAcceptedSms
             'fullname' => $order->customer?->fullname ?? '',
             'bonus' => number_format($bonus, 2, '.', ''),
             'order_no' => $order->order_no,
+            'months' => (string) ($credit?->period?->month ?? ''),
+            'monthly' => $credit ? number_format((float) $credit->monthly, 2, '.', '') : '',
+            'total' => number_format((float) ($credit?->total ?? $order->total), 2, '.', ''),
         ]);
         try {
             SmsLog::deliver($this->sms, $mobile, $text, $code, $order, $by);
