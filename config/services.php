@@ -2,14 +2,19 @@
 
 return [
 
+    // Köhnə OpenCart saytı (parfumshop.az yeni sayta keçəndən sonra — old.parfumshop.az): köçürmə API-ləri, şəkillər
+    'legacy_site' => [
+        'url' => rtrim((string) env('LEGACY_SITE_URL', 'https://old.parfumshop.az'), '/'),
+    ],
+
     'legacy_customers' => [
-        'url' => env('LEGACY_CUSTOMER_EXPORT_URL', 'https://www.parfumshop.az/customer-export.php'),
+        'url' => env('LEGACY_CUSTOMER_EXPORT_URL', rtrim((string) env('LEGACY_SITE_URL', 'https://old.parfumshop.az'), '/').'/customer-export.php'),
         'token' => env('LEGACY_CUSTOMER_EXPORT_TOKEN'),
     ],
 
     'legacy_credit_profiles' => [
-        'url' => env('LEGACY_CREDIT_EXPORT_URL', 'https://www.parfumshop.az/credit-profile-export.php'),
-        'images_url' => 'https://www.parfumshop.az/credit_images/',
+        'url' => env('LEGACY_CREDIT_EXPORT_URL', rtrim((string) env('LEGACY_SITE_URL', 'https://old.parfumshop.az'), '/').'/credit-profile-export.php'),
+        'images_url' => rtrim((string) env('LEGACY_SITE_URL', 'https://old.parfumshop.az'), '/').'/credit_images/',
     ],
 
     /*

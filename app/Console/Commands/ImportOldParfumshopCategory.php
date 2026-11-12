@@ -24,7 +24,7 @@ class ImportOldParfumshopCategory extends Command
     protected $signature = 'parfumshop:import-category {path? : Köhnə saytdakı category path} {--all : Kateqoriyasız, bütün product_id-ləri API-dən yoxla (deaktivlər daxil)} {--from-id=1 : --all: başlanğıc köhnə product_id} {--to-id= : --all: son köhnə product_id (verilməsə, ardıcıl boşluqlara qədər)} {--stop-after-misses=300 : --all: --to-id yoxdursa, bazadakı ən böyük old_id-dən sonra neçə ardıcıl tapılmayan ID-də dayansın} {--category-id= : Yeni saytdakı category ID} {--dry-run : DB və fayllara yazma} {--limit= : Import ediləcək maksimum məhsul sayı} {--from-page=1 : Importa başlanacaq səhifə} {--to-page= : Importun bitəcəyi səhifə}';
     protected $description = 'Köhnə ParfumShop kateqoriyasındakı məhsulları yeni sistemə import edir';
 
-    private string $base = 'https://www.parfumshop.az';
+    private string $base = '';
 
     /**
      * --all: köhnə oc_product-da məhsul olmayan ID aralıqları — yoxlanmır.
@@ -38,6 +38,7 @@ class ImportOldParfumshopCategory extends Command
 
     public function handle(): int
     {
+        $this->base = (string) config('services.legacy_site.url'); // köhnə OpenCart (old.parfumshop.az)
         if ($this->option('all')) {
             return $this->importAllIds();
         }

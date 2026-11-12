@@ -32,7 +32,7 @@ class SyncLegacyParfumType extends Command
         $parfumType = (string) $this->option('parfum-type');
 
         $response = Http::acceptJson()->timeout(60)
-            ->get('https://www.parfumshop.az/migration-parfum-type.php', ['parfum_type' => $parfumType])
+            ->get(config('services.legacy_site.url').'/migration-parfum-type.php', ['parfum_type' => $parfumType])
             ->json();
 
         if (!($response['success'] ?? false) || !isset($response['product_ids'])) {
