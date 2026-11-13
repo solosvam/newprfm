@@ -56,6 +56,15 @@ class CourierTelegram
         return $this->send($courier, $text, 'courier_collect', 'money_movement', $movement->id, $head->id);
     }
 
+    public function moneyGiven(MoneyMovement $movement, User $courier, User $head, int $balanceAfterCents): ?SmsLog
+    {
+        $text = '💵 <b>'.e(trim($head->full_name)).' sizə '.number_format((float) $movement->amount, 2).' AZN verdi</b>'
+            ."\n\nBalans: ".($balanceAfterCents < 0 ? '−' : '').number_format(abs($balanceAfterCents) / 100, 2).' AZN'
+            .($movement->note ? "\nQeyd: ".e($movement->note) : '');
+
+        return $this->send($courier, $text, 'courier_give', 'money_movement', $movement->id, $head->id);
+    }
+
     private function send(User $to, string $text, string $context, string $subjectType, int $subjectId, int $actor, ?array $markup = null): ?SmsLog
     {
         return $this->sendTo(trim((string) $to->telegram_id), $text, $context, $subjectType, $subjectId, $actor, $markup);

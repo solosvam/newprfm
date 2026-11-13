@@ -14,6 +14,7 @@
             'courier_handover' => $self ? 'Kassaya təhvil verdiniz' : 'Kassaya təhvil verdi',
             'courier_advance' => $row['delta'] > 0 ? ($self ? 'Avans / qaytarma aldınız' : 'Avans / qaytarma aldı') : 'Avans qaytarıldı',
             'courier_collect' => $row['delta'] < 0 ? 'Baş kuryerə təhvil — '.$other : 'Kuryerdən götürüldü — '.$other,
+            'courier_give' => $row['delta'] > 0 ? 'Baş kuryerdən alındı — '.$other : 'Kuryerə verildi — '.$other,
             'outgo' => 'Xərc: '.($m->category?->name ?? '').($m->note ? ' — '.$m->note : ''),
             'courier_expense' => 'Xərc'.($m->note ? ' — '.$m->note : ''),
             'reversal' => str_starts_with((string) $m->note, 'Xərc ləğv edildi') ? $m->note : 'Düzəliş (əks əməliyyat #'.$m->reversal_of_id.')',

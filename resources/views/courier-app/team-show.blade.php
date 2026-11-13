@@ -1,5 +1,5 @@
 {{--
-  Baş kuryer → kuryer: balans və "Pulu özümə köçür" (courier.collect), aktiv sifarişlər (depolar üzrə vəziyyət, başqa kuryerə ötürmə), xərclər (ləğv),
+  Baş kuryer → kuryer: balans, "Pulu özümə köçür" və "Kuryerə pul ver" (courier.collect), aktiv sifarişlər (depolar üzrə vəziyyət, başqa kuryerə ötürmə), xərclər (ləğv),
   sifariş arxivi və haqq-hesab tarixçəsi. Baş kuryerə: filtrsiz — bu gün, filtrdə ən çox COURIER_DAYS_BACK gün geriyə.
 --}}
 @use('App\Models\Procurement\OrderItemAllocation', 'Part')
@@ -29,6 +29,20 @@
                 <input type="text" name="note" class="field" maxlength="200" placeholder="Qeyd (istəyə görə)" value="{{ old('note') }}">
                 <button type="submit" class="btn btn--primary btn--block">Hesabıma köçür</button>
             </form>
+        @endif
+        @if($canGive)
+            <details class="more" @if($errors->give->any()) open @endif>
+                <summary class="btn btn--ghost btn--block">Kuryerə pul ver</summary>
+                <form method="post" action="{{ route('kuryer.team.give', $courier) }}" class="stack" data-once data-confirm="Balansınızdan {amount} AZN {{ trim($courier->full_name) }} adlı kuryerə verilsin?">
+                    @csrf
+                    <label class="label" for="giveAmount">Məbləğ (AZN) — balansınızda {{ $money($myBalance) }}</label>
+                    <input type="number" step="0.01" min="0.01" max="{{ number_format($myBalance / 100, 2, '.', '') }}" name="amount" id="giveAmount"
+                           class="field" value="{{ $errors->give->any() ? old('amount') : '' }}" inputmode="decimal" required>
+                    @if($errors->give->has('amount'))<div class="danger">{{ $errors->give->first('amount') }}</div>@endif
+                    <input type="text" name="note" class="field" maxlength="200" placeholder="Qeyd (istəyə görə)" value="{{ $errors->give->any() ? old('note') : '' }}">
+                    <button type="submit" class="btn btn--primary btn--block">Kuryerə ver</button>
+                </form>
+            </details>
         @endif
     </div>
 

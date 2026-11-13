@@ -349,6 +349,20 @@ class CourierFlowTest extends TestCase
         $this->assertSame(['111' => '↪️ Rauf PS1 sifarişini sizdən Vüsal adlı kuryerə ötürdü'], \App\Models\SmsLog::where('context', 'courier_order')->pluck('message', 'msisdn')->all());
         // Artıq Anarın sifarişi deyil
         $this->post(route('kuryer.team.transfer', [$anar, $order]), ['courier_id' => $head->id])->assertNotFound();
+
+        // Baş kuryer öz balansından (30 AZN) kuryerə pul verir
+        $this->get(route('kuryer.team.show', $vusal))->assertOk()->assertSee('Kuryerə pul ver');
+        $this->post(route('kuryer.team.give', $vusal), ['amount' => 31])->assertSessionHasErrorsIn('give', 'amount');
+        $this->post(route('kuryer.team.give', $head), ['amount' => 1])->assertSessionHasErrorsIn('give', 'amount'); // özünə
+        $this->actingAs($anar, 'admin')->post(route('kuryer.team.give', $vusal), ['amount' => 1])->assertForbidden(); // adi kuryer
+        $this->actingAs($head, 'admin')->post(route('kuryer.team.give', $vusal), ['amount' => 25, 'note' => 'yol pulu'])->assertSessionHas('success');
+        $balances = $f->balances();
+        $this->assertSame(500, (int) $balances[$f->courierAccount($head)->id]);
+        $this->assertSame(2500, (int) $balances[$f->courierAccount($vusal)->id]);
+        $give = \App\Models\SmsLog::where('context', 'courier_give')->sole();
+        $this->assertStringContainsString('Rauf sizə 25.00 AZN verdi', $give->message);
+        $this->assertStringContainsString('Balans: 25.00 AZN', $give->message);
+        $this->actingAs($vusal, 'admin')->get(route('kuryer.account'))->assertOk()->assertSee('Baş kuryerdən alındı — ');
     }
 
     /** Kuryer tətbiqinin səhifələri üçün cədvəllər, "Kuryer" rolu; kuryeri qaytarır */

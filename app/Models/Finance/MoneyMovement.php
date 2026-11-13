@@ -27,6 +27,8 @@ class MoneyMovement extends Model
         'courier_advance' => ['Kuryerə avans / qaytarma', ['cash', 'card', 'bank'], ['courier']],
         // Baş kuryer kuryerin balansındakı pulu özünə köçürür (courier.collect) — şirkətin pulu kuryerdən kuryerə keçir
         'courier_collect' => ['Baş kuryerə təhvil', ['courier'], ['courier']],
+        // Baş kuryer öz balansındakı pulu kuryerə verir (courier.collect) — əksi
+        'courier_give' => ['Baş kuryerdən pul', ['courier'], ['courier']],
         // Kuryer öz tətbiqində xərc yazır (Taxi...) — balansından çıxır; kateqoriya həmişə "Kuryer xərcləri" (CourierExpenses)
         'courier_expense' => ['Kuryer xərci', ['courier'], ['external']],
         // Sistem (avtomatik) — əl ilə seçilmir
@@ -45,13 +47,13 @@ class MoneyMovement extends Model
         'customer_payment' => 'sale', 'customer_refund' => 'customer_refund', 'credit_fee' => 'credit_fee',
         'warehouse_payment' => 'warehouse', 'warehouse_refund' => 'warehouse_refund',
         'courier_expense' => 'courier_expense', 'person_opening' => 'adjustment',
-        'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer', 'courier_collect' => 'transfer',
+        'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer', 'courier_collect' => 'transfer', 'courier_give' => 'transfer',
     ];
 
     /** İstiqamət qrupları: şirkətə gələn, şirkətdən çıxan, daxili / şəxslə köçürmə */
     public const IN_KINDS = ['income', 'customer_payment', 'warehouse_refund'];
     public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment', 'credit_fee', 'courier_expense'];
-    public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover', 'courier_collect'];
+    public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover', 'courier_collect', 'courier_give'];
 
     /** "Yeni əməliyyat" pəncərəsi: Məxaric / Mədaxil / Köçürmə (kuryerə köçürmə — avans, kuryerdən — təhvil) */
     public const MANUAL = ['outgo', 'income', 'transfer', 'courier_advance', 'courier_handover'];

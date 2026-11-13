@@ -22,7 +22,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Baş kuryer (courier.team): bütün kuryerlərin balansı, haqq-hesabı və sifarişləri (aktivlər və arxiv).
- * courier.collect — kuryerin balansındakı pulu öz hesabına köçürmək ("Baş kuryerə təhvil"); kuryerə Telegram bildirişi gedir.
+ * courier.collect — kuryerin balansındakı pulu öz hesabına köçürmək ("Baş kuryerə təhvil") və öz balansından kuryerə pul vermək;
+ * kuryerə Telegram bildirişi gedir.
  * Xərclər — kuryerin yazdığı xərclər (qəbz şəkli, ləğv — CourierExpenses).
  */
 class CourierTeamController extends Controller
@@ -135,6 +136,9 @@ class CourierTeamController extends Controller
             'statuses' => $statuses,
             'couriers' => $statuses->couriers()->reject(fn ($u) => $u->id === $courier->id)->values(),
             'canCollect' => $me->can('courier.collect') && FinanceService::isCourier($me) && $me->id !== $courier->id && $balance > 0,
+            // Kuryerə pul vermək — baş kuryerin öz balansından (əlində olan şirkət pulu)
+            'myBalance' => $myBalance = FinanceService::isCourier($me) ? (int) ($finance->balances()[$finance->courierAccount($me)->id] ?? 0) : 0,
+            'canGive' => $me->can('courier.collect') && FinanceService::isCourier($me) && $me->id !== $courier->id && $myBalance > 0,
             // Xərclər: baş kuryerə son COURIER_DAYS_BACK gün, adminə son 100
             'expenses' => $expenses = app(CourierExpenses::class)->of($courier, $minDate),
             'cancellable' => $expenses->filter(fn ($e) => app(CourierExpenses::class)->canCancel($e, $me))->pluck('id')->all(),
@@ -172,6 +176,40 @@ class CourierTeamController extends Controller
         rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->moneyCollected($movement, $courier, $me, $after), null, !app()->runningUnitTests());
 
         return back()->with('success', number_format((float) $movement->amount, 2).' AZN '.trim($courier->full_name).' adlı kuryerdən hesabınıza köçürüldü.');
+    }
+
+    /** Baş kuryerin balansındakı pul kuryerə (məbləğ baş kuryerin qalığından çox ola bilməz) */
+    public function give(Request $request, User $courier, FinanceService $finance, CourierTelegram $telegram): RedirectResponse
+    {
+        $me = auth('admin')->user();
+        abort_unless(FinanceService::isCourier($courier), 404);
+        abort_unless(FinanceService::isCourier($me), 403, 'Pulu yalnız kuryer hesabı olan baş kuryer verə bilər.');
+        $data = $request->validateWithBag('give', [
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:1000000'],
+            'note' => ['nullable', 'string', 'max:200'],
+        ], ['amount.required' => 'Məbləği yazın.']);
+        if ($me->id === $courier->id) {
+            throw ValidationException::withMessages(['amount' => 'Özünüzə pul vermək olmaz.'])->errorBag('give');
+        }
+
+        $from = $finance->courierAccount($me);
+        $to = $finance->courierAccount($courier);
+        [$movement, $after] = DB::transaction(function () use ($finance, $from, $to, $data, $me) {
+            FinanceAccount::whereKey([$from->id, $to->id])->lockForUpdate()->get();
+            $balances = $finance->balances();
+            $mine = (int) ($balances[$from->id] ?? 0);
+            $cents = (int) round((float) $data['amount'] * 100);
+            if ($cents > $mine) {
+                throw ValidationException::withMessages(['amount' => 'Balansınızda '.number_format(max(0, $mine) / 100, 2).' AZN var.'])->errorBag('give');
+            }
+            $movement = $finance->record($from, $to, $cents / 100, 'courier_give', ['note' => $data['note'] ?? null], $me->id);
+
+            return [$movement, (int) ($balances[$to->id] ?? 0) + $cents];
+        });
+        rescue(fn () => $telegram->moneyGiven($movement, $courier, $me, $after), null, !app()->runningUnitTests());
+        rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->moneyGiven($movement, $courier, $me, $after), null, !app()->runningUnitTests());
+
+        return back()->with('success', number_format((float) $movement->amount, 2).' AZN hesabınızdan '.trim($courier->full_name).' adlı kuryerə verildi.');
     }
 
     /** Admin kuryerin balansından birbaşa xərc yazır (kuryer tətbiqindəki "Xərc yaz" ilə eyni; kuryerə bildiriş gedir) */

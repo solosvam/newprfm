@@ -49,6 +49,16 @@ class CourierNotifier
             null, route('kuryer.account', [], false));
     }
 
+    /** Baş kuryer kuryerin balansına pul verdi */
+    public function moneyGiven(MoneyMovement $movement, User $courier, User $head, int $balanceAfterCents): CourierNotification
+    {
+        return $this->notify($courier, 'money_given',
+            trim($head->full_name).' sizə '.number_format((float) $movement->amount, 2).' AZN verdi',
+            'Balans: '.($balanceAfterCents < 0 ? '−' : '').number_format(abs($balanceAfterCents) / 100, 2).' AZN'
+                .($movement->note ? ' · '.$movement->note : ''),
+            null, route('kuryer.account', [], false));
+    }
+
     /** Komandadakı kuryer xərc yazdı — baş kuryerə (basanda kuryerin səhifəsindəki "Xərclər") */
     public function expenseAdded(MoneyMovement $expense, User $courier, User $head): CourierNotification
     {

@@ -36,6 +36,7 @@ class SmsLog extends Model
         'otp' => 'Təsdiq kodu (OTP)',
         'courier_order' => 'Kuryerə sifariş təhkim olundu (Telegram)',
         'courier_collect' => 'Kuryerin pulu baş kuryerə köçürüldü (Telegram)',
+        'courier_give' => 'Baş kuryer kuryerə pul verdi (Telegram)',
     ];
 
     public $timestamps = false;

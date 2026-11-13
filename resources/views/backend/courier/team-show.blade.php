@@ -54,6 +54,18 @@
                 <button type="submit" class="btn btn-primary w-100">Hesabıma köçür</button>
             </form>
         @endif
+        @if($canGive)
+            <form method="post" action="{{ route('admin.courier.team.give', $courier) }}" class="courier-deliver mt-3"
+                  onsubmit="return confirm('Balansınızdan ' + this.amount.value + ' AZN kuryerə verilsin?')">
+                @csrf
+                <label class="form-label" for="giveAmount">Kuryerə pul ver (AZN) — balansınızda {{ $money($myBalance) }}</label>
+                <input type="number" step="0.01" min="0.01" max="{{ number_format($myBalance / 100, 2, '.', '') }}" name="amount" id="giveAmount"
+                       class="form-control mb-2 @if($errors->give->has('amount')) is-invalid @endif" value="{{ $errors->give->any() ? old('amount') : '' }}" inputmode="decimal" required>
+                @if($errors->give->has('amount'))<div class="invalid-feedback mb-2">{{ $errors->give->first('amount') }}</div>@endif
+                <input type="text" name="note" class="form-control mb-2" maxlength="200" placeholder="Qeyd (istəyə görə)" value="{{ $errors->give->any() ? old('note') : '' }}">
+                <button type="submit" class="btn btn-outline-primary w-100">Kuryerə ver</button>
+            </form>
+        @endif
     </div></div>
 
     <h2 class="small-title">Aktiv sifarişlər</h2>
