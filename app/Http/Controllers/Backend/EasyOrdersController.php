@@ -33,7 +33,8 @@ class EasyOrdersController extends Controller
     public function show(Order $order)
     {
         abort_unless($order->one_click && $order->customer_id === null, 404);
-        $order->load(['items.product', 'items.variant.size']);
+        // Məhsul kartı: şəkil, brend, model, cins, ətir növü, həcm (show.blade.php)
+        $order->load(['items.product.brand', 'items.product.type', 'items.product.genders', 'items.product.images', 'items.variant.size']);
         $existing = Customer::where('mobile', $order->guest_mobile)->first();
         return view('backend.easy-orders.show', [
             'order' => $order,

@@ -13,10 +13,47 @@
         <div class="col-lg-5">
             <div class="card"><div class="card-body">
                 <h5>Məhsullar</h5>
+                @php
+                    // Ətir növü qısa: "Eau De Parfum" → EDP (tanınmırsa — adın özü)
+                    $kindShort = fn (?string $type) => match (true) {
+                        $type === null || $type === '' => null,
+                        (bool) preg_match('/toilette/i', $type) => 'EDT',
+                        (bool) preg_match('/cologne/i', $type) => 'EDC',
+                        (bool) preg_match('/eau\s*de\s*parfum/i', $type) => 'EDP',
+                        (bool) preg_match('/extrait/i', $type) => 'Extrait',
+                        default => $type,
+                    };
+                @endphp
                 @foreach($order->items as $item)
-                    <div class="d-flex justify-content-between border-bottom py-2">
-                        <span>{{ $item->product?->name ?? 'Məhsul' }} · {{ $item->variant?->size?->name_az }} ×{{ $item->quantity }}</span>
-                        <strong>{{ number_format((float)$item->total, 2) }} ₼</strong>
+                    @php
+                        $product = $item->product;
+                        $image = $product?->images->first();
+                        // Ada / şəklə klik — məhsulun saytdakı səhifəsi yeni tabda
+                        $url = $product?->slug ? route('product', $product->slug) : null;
+                    @endphp
+                    <div class="d-flex align-items-center gap-3 border rounded p-2 mb-2">
+                        <a @if($url) href="{{ $url }}" target="_blank" rel="noopener" @endif class="flex-shrink-0">
+                            @if($image)
+                                <img src="{{ asset('frontend/uploads/products/'.$image->image) }}" alt="{{ $product->name }}" width="56" height="56" class="rounded" style="object-fit: contain" loading="lazy">
+                            @else
+                                <span class="d-inline-block rounded bg-light" style="width: 56px; height: 56px"></span>
+                            @endif
+                        </a>
+                        <div class="flex-grow-1 min-width-0">
+                            @if($product?->brand)<div class="text-muted small">{{ html_entity_decode($product->brand->name) }}</div>@endif
+                            <div class="d-flex flex-wrap align-items-center gap-1">
+                                @if($url)
+                                    <a href="{{ $url }}" target="_blank" rel="noopener" class="fw-bold body-link me-1">{{ $product->name }}</a>
+                                @else
+                                    <span class="fw-bold me-1">{{ $product?->name ?? 'Məhsul' }}</span>
+                                @endif
+                                @foreach($product?->genders ?? [] as $gender)<span class="badge {{ match (mb_strtolower($gender->name_az)) { 'qadın' => 'bg-outline-danger', 'kişi' => 'bg-outline-primary', default => 'bg-outline-muted' } }}">{{ $gender->name_az }}</span>@endforeach
+                                @if($kind = $kindShort($product?->type?->name_az))<span class="badge bg-outline-info">{{ $kind }}</span>@endif
+                                @if($item->variant?->size)<span class="badge bg-outline-muted">{{ $item->variant->size->name_az }}</span>@endif
+                                <span class="text-muted small ms-1">×{{ $item->quantity }}</span>
+                            </div>
+                        </div>
+                        <strong class="text-nowrap">{{ number_format((float)$item->total, 2) }} ₼</strong>
                     </div>
                 @endforeach
                 <div class="d-flex justify-content-between mt-3"><strong>Məhsullar</strong><strong>{{ number_format((float)$order->subtotal, 2) }} ₼</strong></div>
