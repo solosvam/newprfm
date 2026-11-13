@@ -27,7 +27,8 @@
     $activeParts = $order->items->flatMap->allocations->whereNotIn('status', $inactive);
     $returningParts = $order->items->flatMap(fn ($item) => $item->allocations->where('status', 'returning')->map(fn ($a) => ['item' => $item, 'a' => $a]));
     $doorBlock = $doorBlock ?? 'x';
-    $paymentChangeBlock = $paymentChangeBlock ?? 'x';
+    // null — dəyişmək olar; dəyişən verilməyibsə (başqa səhifə) — düymə yoxdur. ?? null-u da əvəz edərdi
+    $paymentChangeBlock = array_key_exists('paymentChangeBlock', get_defined_vars()) ? $paymentChangeBlock : 'x';
 
     // Kuryer bildirişləri: problem, qapıda imtina, depoya qaytarma, kuryerin ötürməsi (yenisi yuxarıda)
     $noticeLabels = ['delivery_problem' => ['Çatdırılma problemi', 'danger'], 'door_refusal' => ['Qapıda imtina', 'warning'],
