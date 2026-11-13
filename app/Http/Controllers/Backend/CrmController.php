@@ -311,6 +311,8 @@ class CrmController extends Controller
 
         // Ödəniş linki: ödənişə başlamaq mümkündür və ya yarımçıq cəhd var (Order::payLinkAvailable)
         $payLinkUrl = $order->payLinkAvailable() ? app(OrderPayLinkService::class)->url($order) : null;
+        // Ödəniş üsulunu dəyişmək (qapıda ↔ onlayn): mane olan səbəb, null — olar
+        $paymentChangeBlock = app(\App\Services\OrderPaymentMethodChange::class)->block($order);
 
         $requests = \App\Models\Procurement\WarehouseRequest::where('order_id', $order->id)
             ->with(['warehouse', 'items.offers', 'items.orderItem.product', 'items.orderItem.variant.size'])->latest('id')->get();
@@ -373,6 +375,7 @@ class CrmController extends Controller
             'warehouses' => \App\Models\Procurement\Warehouse::where('active', true)->orderBy('name_az')->get(),
             'order' => $order,
             'payLinkUrl' => $payLinkUrl,
+            'paymentChangeBlock' => $paymentChangeBlock,
             'customer' => $customer,
             'addresses' => $customer->addresses()->get(),
             'oneClickPaymentMethods' => PaymentMethod::where('active', 1)->whereIn('code', ['cash', 'card_online'])->get(),
@@ -746,6 +749,42 @@ class CrmController extends Controller
         return back()->with('success', $cancellation->refund_status === OrderItemCancellation::REFUND_DONE
             ? number_format((float) $cancellation->amount, 2).' AZN müştərinin kartına qaytarıldı.'
             : 'Qaytarma bankda yoxlanılır.');
+    }
+
+    /**
+     * Sifariş detalı → ödəniş üsulunu dəyiş: qapıda ödəniş ↔ onlayn ödəniş (OrderPaymentMethodChange).
+     * Onlayna keçəndə (istəyə görə) ödəniş linki müştəriyə SMS ilə gedir; link "Ödənişlər" tabında kopyalanır.
+     */
+    public function changePaymentMethod(Request $request, Customer $customer, Order $order, \App\Services\OrderPaymentMethodChange $change, OrderPayLinkService $payLink): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+        $data = $request->validate([
+            'payment_method' => ['required', 'in:'.implode(',', \App\Services\OrderPaymentMethodChange::CODES)],
+            'send_sms' => ['nullable', 'boolean'],
+        ]);
+        $order = $change->change($order, $data['payment_method'], auth('admin')->id());
+        $url = route('admin.crm.order', [$customer, $order]);
+
+        if ($data['payment_method'] === 'cash') {
+            return redirect()->to($url)->with('success', 'Ödəniş üsulu: Qapıda ödəniş. Kuryer məbləği müştəridən alacaq.');
+        }
+        $message = 'Ödəniş üsulu: Onlayn ödəniş.';
+        if ($request->boolean('send_sms')) {
+            try {
+                $payLink->sendSms($order);
+                $message .= ' Ödəniş linki müştəriyə SMS ilə göndərildi.';
+            } catch (\RuntimeException $e) {
+                $message .= ' SMS göndərilmədi: '.$e->getMessage();
+            } catch (\Throwable $e) {
+                report($e);
+                $message .= ' SMS göndərilmədi — linki "Ödənişlər" tabından göndərin və ya kopyalayın.';
+            }
+        } else {
+            $payLink->ensureToken($order);
+            $payLink->renew($order);
+        }
+
+        return redirect()->to($url.'#payments')->with('success', $message);
     }
 
     /** Sifariş detalı → "SMS ilə göndər": ödəniş linkini müştəriyə yenidən göndərir */

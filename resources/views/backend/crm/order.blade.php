@@ -27,10 +27,11 @@
     $activeParts = $order->items->flatMap->allocations->whereNotIn('status', $inactive);
     $returningParts = $order->items->flatMap(fn ($item) => $item->allocations->where('status', 'returning')->map(fn ($a) => ['item' => $item, 'a' => $a]));
     $doorBlock = $doorBlock ?? 'x';
+    $paymentChangeBlock = $paymentChangeBlock ?? 'x';
 
     // Kuryer bildirişləri: problem, qapıda imtina, depoya qaytarma, kuryerin ötürməsi (yenisi yuxarıda)
     $noticeLabels = ['delivery_problem' => ['Çatdırılma problemi', 'danger'], 'door_refusal' => ['Qapıda imtina', 'warning'],
-        'warehouse_return' => ['Depoya qaytarıldı', 'success'], 'courier_change' => ['Kuryer dəyişdi', 'info']];
+        'warehouse_return' => ['Depoya qaytarıldı', 'success'], 'courier_change' => ['Kuryer dəyişdi', 'info'], 'payment_change' => ['Ödəniş üsulu dəyişdi', 'info']];
     $notices = $order->statusLogs->whereIn('kind', array_keys($noticeLabels))->sortByDesc('id')->values();
     $openProblems = $activeParts->where('status', 'problem');
     $pickedTotal = (int) $activeParts->where('status', 'picked')->sum('quantity');
@@ -251,7 +252,12 @@
                                 @if($order->paymentMethod?->code === 'installment' && $order->creditApplication)
                                     @php $ca = $order->creditApplication; @endphp
                                     <span class="d-block small text-muted">@if($ca->period){{ $ca->period->month }} ay · @endif aylıq {{ number_format((float) $ca->monthly, 2) }} AZN · cəmi {{ number_format((float) $ca->total, 2) }} AZN</span>
-                                @endif</dd></div>
+                                @endif
+                                {{-- Qapıda ödəniş ↔ onlayn ödəniş (OrderPaymentMethodChange) --}}
+                                @if(!$paymentChangeBlock)
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1 align-baseline" data-bs-toggle="modal" data-bs-target="#paymentMethodModal">Dəyiş</button>
+                                @endif
+                                @error('payment_method')<span class="d-block small text-danger">{{ $message }}</span>@enderror</dd></div>
                             <div><dt>Ödəniş vəziyyəti</dt><dd><span class="badge {{ $paymentBadges[$order->payment_status] ?? 'bg-outline-secondary' }}">{{ $paymentLabels[$order->payment_status] ?? '—' }}</span></dd></div>
                             @if($order->paymentMethod?->code === 'installment' && $order->creditApplication)
                                 <div><dt>Kredit statusu</dt><dd>
@@ -555,6 +561,31 @@
                     <div class="form-text">Sifarişin yekunu azalır, kuryer yeni məbləği alır. Məhsul kuryerdə "Depoya qaytarılır" olur — kuryer depoya verəndə "Qaytardım" seçir.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-warning">Qeyd et</button></div>
+            </form></div>
+        </div>
+    @endif
+
+    {{-- Ödəniş üsulunu dəyiş: qapıda ödəniş ↔ onlayn ödəniş --}}
+    @if(!$paymentChangeBlock)
+        @php $toOnline = $order->paymentMethod?->code === 'cash'; @endphp
+        <div class="modal modal-right fade" id="paymentMethodModal" tabindex="-1" aria-labelledby="paymentMethodTitle" aria-hidden="true">
+            <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.crm.order.payment-method', [$customer, $order]) }}">
+                @csrf
+                <input type="hidden" name="payment_method" value="{{ $toOnline ? 'card_online' : 'cash' }}">
+                <div class="modal-header"><h5 class="modal-title" id="paymentMethodTitle">Ödəniş üsulunu dəyiş</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+                <div class="modal-body">
+                    <p class="mb-3">{{ $order->paymentMethod?->name_az }} → <b>{{ $toOnline ? 'Onlayn ödəniş' : 'Qapıda ödəniş' }}</b> · {{ number_format((float) $order->total, 2) }} AZN</p>
+                    @if($toOnline)
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="send_sms" value="1" id="paymentMethodSms" checked>
+                            <label class="form-check-label" for="paymentMethodSms">Ödəniş linkini müştəriyə SMS ilə göndər ({{ $customer->mobile ?: 'nömrə yoxdur' }})</label>
+                        </div>
+                        <div class="form-text">Kuryer müştəridən pul almayacaq. Linki "Ödənişlər" tabından kopyalaya və ya yenidən göndərə bilərsiniz.</div>
+                    @else
+                        <div class="form-text">Ödəniş linki bağlanır, kuryer məbləği qapıda müştəridən alır.</div>
+                    @endif
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Dəyiş</button></div>
             </form></div>
         </div>
     @endif

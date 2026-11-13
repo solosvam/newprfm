@@ -388,6 +388,7 @@ Route::prefix('admin')
                     Route::post('/customer/{customer}/order/{order}/courier', 'assignCourier')->name('order.courier');
                     Route::post('/customer/{customer}/order/{order}/cancellation/{cancellation}/refund', 'refundCancellation')
                         ->middleware(['can:refund', 'throttle:10,1'])->name('order.cancellation.refund');
+                    Route::post('/customer/{customer}/order/{order}/payment-method', 'changePaymentMethod')->middleware('throttle:10,1')->name('order.payment-method');
                     Route::post('/customer/{customer}/order/{order}/pay-link', 'sendPayLink')->middleware('throttle:10,1')->name('order.pay-link');
                     Route::post('/customer/{customer}/order/{order}/pay-link/renew', 'renewPayLink')->middleware('throttle:20,1')->name('order.pay-link-renew');
                     Route::post('/customer/{customer}/order/{order}/payment-check', 'checkPendingPayment')->middleware('throttle:20,1')->name('order.payment-check');
