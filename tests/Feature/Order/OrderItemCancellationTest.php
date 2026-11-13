@@ -302,6 +302,37 @@ class OrderItemCancellationTest extends TestCase
         $this->assertSame('Müştəri imtina etdi: fikrini dəyişdi', $log->note);
     }
 
+    public function test_courier_stage_cancel_closes_unpicked_and_returns_picked(): void
+    {
+        [$order, $parts] = $this->atDoor();
+        app(\App\Services\OrderStatusService::class)->set($order, 'courier_assigned', 7);
+        $order = $order->fresh(['items', 'status']);
+        // Birinci məhsul (2 ədəd): 1-i götürülüb, 1-i depo ayırıb; ikinci məhsul götürülüb
+        $parts[0]->update(['quantity' => 1]);
+        $reserved = $parts[0]->replicate();
+        $reserved->forceFill(['quantity' => 1, 'status' => OrderItemAllocation::RESERVED, 'idempotency_key' => (string) \Illuminate\Support\Str::uuid()])->save();
+        $service = app(OrderItemCancellationService::class);
+        $this->assertNull($service->blockReason($order));
+
+        // 1 ədəd ləğv — götürülməyən bağlanır, depoya SMS siyahısına düşür; götürülən toxunulmur
+        $notify = [];
+        $c = $service->cancel($order, $order->items[0], 1, 'not_in_stock', null, 7, $notify);
+        $this->assertGreaterThan(0, (float) $c->amount);
+        $this->assertSame('cancelled', $reserved->fresh()->status);
+        $this->assertSame([$reserved->id], $notify);
+        $this->assertSame('picked', $parts[0]->fresh()->status);
+        $this->assertSame(round((float) $order->total - (float) $c->amount, 2), (float) $order->fresh()->total);
+
+        // Qalan 1 ədəd də — kuryerin götürdüyü depoya qaytarılır
+        $notify = [];
+        $service->cancel($order->fresh(['items', 'status']), $order->fresh('items')->items[0], 1, 'not_in_stock', null, 7, $notify);
+        $this->assertSame('returning', $parts[0]->fresh()->status);
+        $this->assertSame([], $notify);
+        $this->assertSame('courier_assigned', $this->statusCode($order));
+        app(ProcurementService::class)->markReturned($order->fresh(), $parts[0]->id, 9);
+        $this->assertSame('returned', $parts[0]->fresh()->status);
+    }
+
     public function test_whole_order_cancel_returns_picked_goods_and_releases_reservations(): void
     {
         [$order, $parts] = $this->atDoor();

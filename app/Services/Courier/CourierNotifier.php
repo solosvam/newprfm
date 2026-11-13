@@ -39,6 +39,15 @@ class CourierNotifier
             trim($head->full_name).' sifarişi '.trim($to->full_name).' adlı kuryerə ötürdü', $order, route('kuryer.home', [], false));
     }
 
+    /** Operator kuryerdəki sifarişdən məhsul ləğv etdi (götürdüyü varsa — depoya qaytarmalıdır) */
+    public function itemCancelled(Order $order, User $courier, \App\Models\Order\OrderItem $item, \App\Models\Order\OrderItemCancellation $cancellation): CourierNotification
+    {
+        return $this->notify($courier, 'item_cancelled',
+            'Sifarişdən məhsul ləğv edildi: '.$order->order_no,
+            ($item->product?->name ?? 'Məhsul').' ×'.$cancellation->quantity.' · yeni məbləğ '.number_format((float) $order->total, 2).' AZN',
+            $order);
+    }
+
     /** Baş kuryer kuryerin balansından pul götürdü */
     public function moneyCollected(MoneyMovement $movement, User $courier, User $head, int $balanceAfterCents): CourierNotification
     {

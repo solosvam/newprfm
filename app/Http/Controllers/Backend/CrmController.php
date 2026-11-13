@@ -637,9 +637,27 @@ class CrmController extends Controller
             'ferrum_not_approved.accepted' => 'Ferrum-da müraciətin təsdiqlənmədiyini təsdiqləyin.',
         ]);
 
-        $cancellation = $service->cancel($order, $item, (int) $data['quantity'], $data['reason'], $data['note'] ?? null, (int) (auth('admin')->id() ?? auth()->id()));
+        $actor = (int) (auth('admin')->id() ?? auth()->id());
+        $notify = [];
+        $cancellation = $service->cancel($order, $item, (int) $data['quantity'], $data['reason'], $data['note'] ?? null, $actor, $notify);
 
         $message = 'Məhsul ləğv edildi: '.$cancellation->quantity.' ədəd, '.number_format((float) $cancellation->amount, 2).' AZN.';
+        // Kuryer mərhələsi: götürülən mal depoya qaytarılacaq, malı ayıran depoya SMS, kuryerə bildiriş
+        if ($order->fresh('status')->status?->code === 'courier_assigned') {
+            $returning = OrderItemAllocation::where('order_item_id', $item->id)->where('status', OrderItemAllocation::RETURNING)->sum('quantity');
+            if ($returning > 0) {
+                $message .= ' Kuryer götürdüyü '.$returning.' ədədi depoya qaytarmalıdır.';
+            }
+            if ($notify) {
+                $notifier = app(WarehouseNotifier::class);
+                $sms = OrderItemAllocation::with('warehouse')->whereIn('id', $notify)->get()
+                    ->mapWithKeys(fn ($allocation) => [$allocation->warehouse->name_az => rescue(fn () => $notifier->notifyCancelled($allocation, $actor), null)]);
+                $message .= ' '.WarehouseNotifier::summary($sms);
+            }
+            if ($order->courier) {
+                rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->itemCancelled($order->fresh(), $order->courier, $item, $cancellation), null, !app()->runningUnitTests());
+            }
+        }
         if ($credit = $order->creditApplication()->first()) {
             $message .= ' Kredit: '.number_format((float) $credit->total, 2).' AZN, aylıq '.number_format((float) $credit->monthly, 2).' AZN.';
         }

@@ -44,6 +44,12 @@ class OrderItemCancellationService
     /** Müştərinin öz imtinasının tarixçədəki qeydi */
     public const CUSTOMER_NOTE = 'Müştəri saytdan özü imtina etdi';
 
+    /**
+     * Kuryer təyin olunub (malları depolardan götürür) — operator məhsulu yenə ləğv edə bilər:
+     * götürülməmiş hissə bağlanır (xəbərdar edilmiş / ayıran depoya SMS), kuryerin götürdüyü "Depoya qaytarılır" olur.
+     */
+    public const COURIER_STATUSES = ['courier_assigned'];
+
     /** Qapıda imtina — kuryer yoldadır / ünvandadır */
     public const DOOR_STATUSES = ['sent'];
 
@@ -62,7 +68,7 @@ class OrderItemCancellationService
         $order->loadMissing(['status', 'paymentMethod']);
 
         return match (true) {
-            !in_array($order->status?->code, self::EDITABLE_STATUSES, true) => 'Bu mərhələdə məhsul ləğv edilə bilməz.',
+            !in_array($order->status?->code, [...self::EDITABLE_STATUSES, ...self::COURIER_STATUSES], true) => 'Bu mərhələdə məhsul ləğv edilə bilməz.',
             // Ferrum təsdiq veribsə müqavilə köhnə məbləğlədir — əvvəl Ferrum-da dəyişmək lazımdır
             $order->paymentMethod?->code === 'installment' && $order->creditApplication()->whereHas('status', fn ($q) => $q->where('code', 'approved'))->exists()
                 => 'Ferrum-da müraciət təsdiqlənib — məhsul ləğv edilə bilməz. Əvvəl Ferrum-da müqaviləni dəyişin.',
@@ -261,9 +267,10 @@ class OrderItemCancellationService
         });
     }
 
-    public function cancel(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor): OrderItemCancellation
+    /** @param  list<int>  $notify  kuryer mərhələsində: depoya "rezerv lazım deyil" SMS-i göndəriləcək seçimlər */
+    public function cancel(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor, array &$notify = []): OrderItemCancellation
     {
-        return $this->apply($order, $item, $quantity, $reason, $note, $actor, false);
+        return $this->apply($order, $item, $quantity, $reason, $note, $actor, false, $notify);
     }
 
     /** Qapıda imtina — operator (CRM) və ya kuryer (öz səhifəsi) */
@@ -272,9 +279,9 @@ class OrderItemCancellationService
         return $this->apply($order, $item, $quantity, 'door_refused', $note, $actor, true);
     }
 
-    private function apply(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor, bool $door): OrderItemCancellation
+    private function apply(Order $order, OrderItem $item, int $quantity, string $reason, ?string $note, int $actor, bool $door, array &$notify = []): OrderItemCancellation
     {
-        return DB::transaction(function () use ($order, $item, $quantity, $reason, $note, $actor, $door) {
+        return DB::transaction(function () use ($order, $item, $quantity, $reason, $note, $actor, $door, &$notify) {
             $order = Order::with(['items', 'status', 'paymentMethod', 'customer'])->lockForUpdate()->findOrFail($order->id);
             $item = $order->items->firstWhere('id', $item->id);
 
@@ -287,7 +294,9 @@ class OrderItemCancellationService
                 ? 'Müştəri bütün məhsullardan imtina edirsə, "Problem" bildirin — operator sifarişi ləğv edəcək.'
                 : 'Sifarişdə ən azı bir məhsul qalmalıdır. Hamısı ləğv olunursa, "Sifarişi ləğv et" düyməsindən istifadə edin.');
 
-            return $this->applyLocked($order, $item, $quantity, $reason, $note, $actor, $door ? 'door' : 'item');
+            $mode = $door ? 'door' : (in_array($order->status?->code, self::COURIER_STATUSES, true) ? 'courier' : 'item');
+
+            return $this->applyLocked($order, $item, $quantity, $reason, $note, $actor, $mode, $notify);
         });
     }
 
@@ -306,6 +315,8 @@ class OrderItemCancellationService
             $this->returnPicked($item, $quantity, $note, $actor);
         } elseif ($mode === 'order') {
             $this->releaseAllAllocations($item, $actor, $notify);
+        } elseif ($mode === 'courier') {
+            $this->releaseForCourier($item, $quantity, $actor, $notify);
         } else {
             // Artıq qalan depo seçimləri: ən yenisindən bağlanır
             $keep = $item->activeQuantity() - $quantity;
@@ -426,6 +437,48 @@ class OrderItemCancellationService
                 'order_item_allocation_id' => $target->id, 'from_status' => OrderItemAllocation::PICKED,
                 'to_status' => OrderItemAllocation::RETURNING, 'user_id' => $actor,
                 'note' => 'Qapıda imtina: '.$take.' ədəd'.($target->id !== $part->id ? ' (#'.$part->id.'-dən ayrıldı)' : '').($note ? ' — '.$note : ''),
+                'created_at' => now(),
+            ]);
+            $left -= $take;
+        }
+    }
+
+    /**
+     * Kuryer mərhələsində məhsulun ləğvi: artıq qalan miqdar əvvəlcə hələ götürülməmiş hissələrdən bağlanır
+     * (xəbərdar edilmiş / ayıran depo SMS siyahısına düşür), çatmasa kuryerin götürdüyü "Depoya qaytarılır" olur.
+     * Hissə ləğv olunan saydan böyükdürsə bölünür.
+     *
+     * @param  list<int>  $notify
+     */
+    private function releaseForCourier(OrderItem $item, int $quantity, int $actor, array &$notify): void
+    {
+        $parts = OrderItemAllocation::where('order_item_id', $item->id)
+            ->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)->lockForUpdate()->orderByDesc('id')->get();
+        // Seçilən miqdar aktiv saydan çoxdursa (əvvəlki ləğvdən qalıb), artıq hissə də bağlanır
+        $left = max($quantity, (int) $parts->sum('quantity') - ($item->activeQuantity() - $quantity));
+        $note = 'Məhsul ləğv edildi (kuryer mərhələsi)';
+
+        // Götürülməyənlər əvvəl, sonra götürülənlər
+        foreach ($parts->sortBy(fn ($p) => $p->status === OrderItemAllocation::PICKED ? 1 : 0)->values() as $part) {
+            if ($left <= 0) break;
+            $take = min($left, (int) $part->quantity);
+            $from = $part->status;
+            $to = $from === OrderItemAllocation::PICKED ? OrderItemAllocation::RETURNING : OrderItemAllocation::CANCELLED;
+            if ($take === (int) $part->quantity) {
+                $part->update(['status' => $to, 'problem_type' => $to === OrderItemAllocation::CANCELLED ? null : $part->problem_type]);
+                $target = $part;
+            } else {
+                $part->update(['quantity' => (int) $part->quantity - $take]);
+                $target = $part->replicate();
+                $target->forceFill(['quantity' => $take, 'status' => $to, 'idempotency_key' => (string) Str::uuid()])->save();
+            }
+            if (in_array($from, [OrderItemAllocation::NOTIFIED, OrderItemAllocation::RESERVED], true)) {
+                $notify[] = $target->id;
+            }
+            AllocationStatusLog::create([
+                'order_item_allocation_id' => $target->id, 'from_status' => $from, 'to_status' => $to, 'user_id' => $actor,
+                'note' => $note.': '.$take.' ədəd'.($to === OrderItemAllocation::RETURNING ? ' depoya qaytarılır' : '')
+                    .($target->id !== $part->id ? ' (#'.$part->id.'-dən ayrıldı)' : ''),
                 'created_at' => now(),
             ]);
             $left -= $take;
