@@ -4,7 +4,7 @@
 @php $money = fn ($cents) => number_format(abs($cents) / 100, 2).' AZN'; @endphp
 
 @section('content')
-    <div class="stats stats--two">
+    <div class="stats">
         <div class="stat">
             <div class="stat__label">Kuryerlərdə olan pul</div>
             <div class="stat__value warn">{{ $money($couriers->sum(fn ($c) => max(0, $c['balance']))) }}</div>
@@ -12,6 +12,10 @@
         <div class="stat">
             <div class="stat__label">Aktiv sifariş</div>
             <div class="stat__value">{{ $couriers->sum('active') }}</div>
+        </div>
+        <div class="stat" style="grid-column: 1 / -1">
+            <div class="stat__label">Bu gün əlavə çatdırılma qazancı (hamısı)</div>
+            <div class="stat__value ok">{{ number_format($couriers->sum('feeToday'), 2) }} AZN</div>
         </div>
     </div>
 
@@ -27,6 +31,7 @@
             <div class="order__meta">
                 <span>Aktiv: <b>{{ $row['active'] }}</b></span>
                 <span>Bu gün təhvil: <b>{{ $row['deliveredToday'] }}</b></span>
+                @if($row['feeToday'] > 0)<span>Əlavə qazanc: <b class="ok">{{ number_format($row['feeToday'], 2) }} AZN</b></span>@endif
                 @if(!$user->telegram_id)<span class="muted">Telegram qoşulmayıb</span>@endif
             </div>
         </a>

@@ -291,7 +291,7 @@ class CrmController extends Controller
                 'payment_method_id' => $method->id,
                 'payment_status' => $method->code === 'cash' ? 'cod' : 'pending',
                 'delivery_fee' => $delivery,
-                'total' => round((float)$locked->subtotal - (float)$locked->discount + $delivery + (float)$locked->gift_wrap_fee, 2),
+                'total' => round((float)$locked->subtotal - (float)$locked->discount + $delivery + (float)$locked->gift_wrap_fee + (float)$locked->courier_fee, 2),
             ]);
         });
         return redirect()->route('admin.crm.customer', $customer->id)
@@ -313,6 +313,8 @@ class CrmController extends Controller
         $payLinkUrl = $order->payLinkAvailable() ? app(OrderPayLinkService::class)->url($order) : null;
         // Ödəniş üsulunu dəyişmək (qapıda ↔ onlayn): mane olan səbəb, null — olar
         $paymentChangeBlock = app(\App\Services\OrderPaymentMethodChange::class)->block($order);
+        // Əlavə çatdırılmanı dəyişmək: mane olan səbəb, null — olar
+        $courierFeeBlock = app(\App\Services\Courier\CourierFees::class)->changeBlock($order);
 
         $requests = \App\Models\Procurement\WarehouseRequest::where('order_id', $order->id)
             ->with(['warehouse', 'items.offers', 'items.orderItem.product', 'items.orderItem.variant.size'])->latest('id')->get();
@@ -377,6 +379,7 @@ class CrmController extends Controller
             'order' => $order,
             'payLinkUrl' => $payLinkUrl,
             'paymentChangeBlock' => $paymentChangeBlock,
+            'courierFeeBlock' => $courierFeeBlock,
             'customer' => $customer,
             'addresses' => $customer->addresses()->get(),
             'oneClickPaymentMethods' => PaymentMethod::where('active', 1)->whereIn('code', ['cash', 'card_online'])->get(),
@@ -419,6 +422,8 @@ class CrmController extends Controller
             'credit_total' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'gift_wrap' => ['nullable', 'boolean'],
             'courier_note' => ['nullable', 'string', 'max:1000'],
+            // Əlavə çatdırılma (uzaq ünvan) — müştəri ödəyir, kuryerin qazancıdır (CourierFees)
+            'courier_fee' => ['nullable', 'numeric', 'min:0', 'max:'.\App\Services\Courier\CourierFees::MAX],
             // Operator qiyməti əl ilə dəyişibsə — bonus faizi 0..admin ayarı (standart 0)
             'bonus_percent' => ['nullable', 'integer', 'min:0', 'max:'.(int) floor((float) \App\Models\Setting::valueOf('order_bonus_percent', 5))],
         ], [
@@ -526,7 +531,8 @@ class CrmController extends Controller
             $giftWrap = $wrapUnits > 0;
             $delivery = $pricing->deliveryFee($goods); // checkout-dakı kimi: endirimdən sonrakı məbləğə görə
             $giftWrapFee = $pricing->giftWrapFee($wrapUnits);
-            $payable = round($goods + $delivery + $giftWrapFee, 2);
+            $courierFee = \App\Services\Courier\CourierFees::normalize($data['courier_fee'] ?? 0);
+            $payable = round($goods + $delivery + $giftWrapFee + $courierFee, 2);
             $standardTotal = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
             $total = $standardTotal;
             $creditEdited = false;
@@ -554,6 +560,7 @@ class CrmController extends Controller
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'delivery_fee' => $delivery,
+                'courier_fee' => $courierFee,
                 'gift_wrap_fee' => $giftWrapFee,
                 'total' => $total,
             ]);
@@ -769,6 +776,20 @@ class CrmController extends Controller
         return back()->with('success', $cancellation->refund_status === OrderItemCancellation::REFUND_DONE
             ? number_format((float) $cancellation->amount, 2).' AZN müştərinin kartına qaytarıldı.'
             : 'Qaytarma bankda yoxlanılır.');
+    }
+
+    /** Sifariş detalı → əlavə çatdırılma (uzaq ünvan): məbləğ yekuna əlavə olunur, kuryerin qazancıdır (CourierFees) */
+    public function changeCourierFee(Request $request, Customer $customer, Order $order, \App\Services\Courier\CourierFees $fees): RedirectResponse
+    {
+        abort_unless($order->customer_id === $customer->id, 404);
+        $data = $request->validate(['courier_fee' => ['required', 'numeric', 'min:0', 'max:'.\App\Services\Courier\CourierFees::MAX]],
+            ['courier_fee.required' => 'Məbləği yazın (0 — əlavə çatdırılma yoxdur).']);
+        $fees->change($order, (float) $data['courier_fee'], auth('admin')->id());
+        $fee = (float) $order->refresh()->courier_fee;
+
+        return redirect()->route('admin.crm.order', [$customer, $order])->with('success', $fee > 0
+            ? 'Əlavə çatdırılma: '.number_format($fee, 2).' AZN. Yekun: '.number_format((float) $order->total, 2).' AZN.'
+            : 'Əlavə çatdırılma silindi. Yekun: '.number_format((float) $order->total, 2).' AZN.');
     }
 
     /**

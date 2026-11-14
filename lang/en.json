@@ -580,6 +580,7 @@
     "credit_section_documents": "ID card",
     "credit_section_documents_hint": "Upload the front side of your ID card first — patronymic, FIN, series and number will be filled in automatically.For the old ID card (AZE) the back side is also required.",
     "orders_delivery": "Delivery",
+    "orders_courier_fee": "Extra delivery",
     "orders_payment_failed": "Payment was unsuccessful",
     "orders_payment_failed_hint": "Your order has been saved. You can try paying again.",
     "orders_payment_retry": "Try again",

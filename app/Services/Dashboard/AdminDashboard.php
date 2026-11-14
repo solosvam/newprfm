@@ -106,7 +106,7 @@ class AdminDashboard
                 ->join('payment_methods', 'payment_methods.id', '=', 'orders.payment_method_id')
                 ->whereBetween('orders.created_at', [$from, $to])
                 ->groupBy('payment_methods.id', 'payment_methods.code', 'payment_methods.name_az')
-                ->selectRaw('payment_methods.code, COALESCE(payment_methods.name_az, payment_methods.code) as name, COUNT(*) as orders, SUM(orders.total) as total_sum')
+                ->selectRaw('payment_methods.code, COALESCE(payment_methods.name_az, payment_methods.code) as name, COUNT(*) as orders, SUM(orders.total - COALESCE(orders.courier_fee, 0)) as total_sum')
                 ->orderByDesc('total_sum')
                 ->get();
             $all = (float) $rows->sum('total_sum');
@@ -122,7 +122,7 @@ class AdminDashboard
     }
 
     /**
-     * Son N gün üzrə günlük dövriyyə və sifariş sayı (qrafik üçün, bu gün daxil).
+     * Son N gün üzrə günlük dövriyyə və sifariş sayı (qrafik üçün, bu gün daxil). Dövriyyəyə əlavə çatdırılma (kuryerin qazancı) daxil deyil.
      *
      * @return array{labels: string[], revenue: float[], orders: int[], dates: string[]}
      */
@@ -132,7 +132,7 @@ class AdminDashboard
             $start = CarbonImmutable::today()->subDays($days - 1);
             $rows = $this->validOrders()
                 ->where('created_at', '>=', $start)
-                ->selectRaw('DATE(created_at) as day, COUNT(*) as orders, SUM(total) as revenue')
+                ->selectRaw('DATE(created_at) as day, COUNT(*) as orders, SUM(total - COALESCE(courier_fee, 0)) as revenue')
                 ->groupBy('day')
                 ->get()
                 ->keyBy('day');
@@ -354,7 +354,7 @@ class AdminDashboard
             $rows = $this->validOrders()->whereBetween('created_at', [$from, $to])
                 ->selectRaw("CASE WHEN one_click = 1 THEN 'one_click'
                     WHEN source IN ('customer', 'operator') THEN source ELSE 'other' END as src,
-                    COUNT(*) as total, SUM(total) as total_sum")
+                    COUNT(*) as total, SUM(total - COALESCE(courier_fee, 0)) as total_sum")
                 ->groupBy('src')->get()->keyBy('src');
             $all = (int) $rows->sum('total');
 
@@ -586,7 +586,7 @@ class AdminDashboard
     {
         $row = $this->validOrders()
             ->whereBetween('created_at', [$from, $to])
-            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')
+            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total - COALESCE(courier_fee, 0)), 0) as revenue')
             ->first();
 
         return ['count' => (int) $row->orders, 'sum' => round((float) $row->revenue, 2)];
@@ -594,7 +594,7 @@ class AdminDashboard
 
     /**
      * Təhvil verilmiş sifarişlər üzrə mənfəət.
-     * Mal satışı = yekun − çatdırılma − hədiyyə bükməsi (endirim və ləğv olunan məhsullar yekunda artıq çıxılıb);
+     * Mal satışı = yekun − çatdırılma − əlavə çatdırılma (kuryerin qazancı) − hədiyyə bükməsi (endirim və ləğv olunan məhsullar yekunda artıq çıxılıb);
      * alış = depodan götürülən hissələrin (ləğv/qaytarılma xaric) miqdar × alış qiyməti.
      *
      * @return array{sales: float, cost: float, profit: float, orders: int}
@@ -608,7 +608,7 @@ class AdminDashboard
         $orders = Order::where('order_status_id', $delivered)->whereBetween('created_at', [$from, $to]);
 
         $sales = (clone $orders)
-            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total - COALESCE(delivery_fee, 0) - COALESCE(gift_wrap_fee, 0)), 0) as sales')
+            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total - COALESCE(delivery_fee, 0) - COALESCE(courier_fee, 0) - COALESCE(gift_wrap_fee, 0)), 0) as sales')
             ->first();
         $cost = (float) DB::table('order_item_allocations')
             ->join('order_items', 'order_items.id', '=', 'order_item_allocations.order_item_id')

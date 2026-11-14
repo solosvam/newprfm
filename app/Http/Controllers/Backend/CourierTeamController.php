@@ -37,8 +37,10 @@ class CourierTeamController extends Controller
     public function index(FinanceService $finance): View
     {
         $balances = $finance->balances();
+        // Əlavə çatdırılma qazancı — bu gün (CourierFees)
+        $fees = app(\App\Services\Courier\CourierFees::class)->todayByCourier();
         $couriers = FinanceService::courierUsers()->orderByDesc('active')->orderBy('name')->get()
-            ->map(function (User $user) use ($finance, $balances) {
+            ->map(function (User $user) use ($finance, $balances, $fees) {
                 $account = $finance->courierAccount($user);
 
                 return [
@@ -47,6 +49,7 @@ class CourierTeamController extends Controller
                     'active' => $this->activeOrders($user)->count(),
                     'deliveredToday' => Order::where('courier_id', $user->id)->whereHas('status', fn ($q) => $q->where('code', 'delivered'))
                         ->whereDate('updated_at', today())->count(),
+                    'feeToday' => (float) ($fees[$user->id] ?? 0),
                 ];
             })
             // Deaktiv kuryer yalnız balansı varsa görünür
@@ -142,6 +145,9 @@ class CourierTeamController extends Controller
             // Xərclər: baş kuryerə son COURIER_DAYS_BACK gün, adminə son 100
             'expenses' => $expenses = app(CourierExpenses::class)->of($courier, $minDate),
             'cancellable' => $expenses->filter(fn ($e) => app(CourierExpenses::class)->canCancel($e, $me))->pluck('id')->all(),
+            // Əlavə çatdırılma qazancı: baş kuryerə son COURIER_DAYS_BACK gün, adminə son 30 gün
+            'earningDays' => $earningDays = $minDate ? self::COURIER_DAYS_BACK + 1 : 30,
+            'earnings' => app(\App\Services\Courier\CourierFees::class)->daily([$courier->id], today()->subDays($earningDays - 1), today()),
         ]);
     }
 

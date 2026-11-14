@@ -97,7 +97,8 @@ class SoldItemsReport
             return 1.0;
         }
 
-        return ($credit->netAmount() ?? (float) $credit->total) / $payable;
+        // Əlavə çatdırılma kreditə daxildir, amma malın deyil — kuryerin qazancıdır (maliyyədə də satışdan çıxılır)
+        return max(0.0, ($credit->netAmount() ?? (float) $credit->total) - (float) $order->courier_fee) / $payable;
     }
 
     /** @return array{count: int, sales: float, cost: float, profit: float, unknown: int} */

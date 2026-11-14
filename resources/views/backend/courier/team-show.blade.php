@@ -155,6 +155,36 @@
         </details>
     @endif
 
+    {{-- Əlavə çatdırılma qazancı (CourierFees): günlər üzrə 5 + 10 + 5 = 20 AZN --}}
+    <h2 class="small-title mt-5" id="earnings">Əlavə çatdırılma qazancı</h2>
+    @php
+        $feeToday = $earnings->first(fn ($row) => $row['date']->isToday())['total'] ?? 0;
+        $fmt = fn ($v) => rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');
+    @endphp
+    <div class="text-muted text-small mb-2">Bu gün: <b class="text-success">{{ number_format($feeToday, 2) }} AZN</b> · son {{ $earningDays }} gün: <b>{{ number_format($earnings->sum('total'), 2) }} AZN</b></div>
+    @if($earnings->isEmpty())
+        <div class="card"><div class="card-body text-center text-muted py-4">Son {{ $earningDays }} gündə əlavə çatdırılma yoxdur.</div></div>
+    @else
+        <div class="card"><div class="card-body courier-history">
+            @foreach($earnings as $row)
+                <div class="courier-history__row">
+                    <div class="courier-history__main">
+                        <div class="courier-history__what">{{ $row['date']->isToday() ? 'Bu gün' : $row['date']->format('d.m.Y') }} ·
+                            {{ $row['orders']->count() > 1 ? $row['orders']->reverse()->map(fn ($m) => $fmt($m->amount))->implode(' + ').' =' : '' }} {{ $fmt($row['total']) }} AZN</div>
+                        <div class="courier-history__meta">
+                            @foreach($row['orders']->reverse() as $m)
+                                @if($m->order?->customer_id)<a href="{{ route('admin.crm.order', [$m->order->customer_id, $m->order_id]) }}">{{ $m->order->order_no }}</a>@else{{ $m->order?->order_no ?? '#'.$m->order_id }}@endif
+                                — {{ number_format((float) $m->amount, 2) }}{{ $m->order?->paymentMethod?->code === 'cash' ? ' (nağd)' : ' (balansa)' }}@if(!$loop->last) · @endif
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="courier-history__sum"><div class="text-success">+{{ number_format($row['total'], 2) }} AZN</div></div>
+                </div>
+            @endforeach
+        </div></div>
+    @endif
+    <div class="text-muted text-small mt-1">Qapıda ödənişdə əlavə məbləğ kuryerdə qalır (təhvil veriləcək pula düşmür); kartla ödənilibsə — balansına yazılır, şirkət ona borcludur.</div>
+
     {{-- Xərclər (kuryer tətbiqində yazılır, balansdan çıxır): qəbz şəkli, ləğv — əks əməliyyat, pul kuryerə qayıdır --}}
     <h2 class="small-title mt-5" id="expenses">Xərclər</h2>
     @if($minDate)<div class="text-muted text-small mb-1">Son {{ \App\Http\Controllers\Backend\CourierTeamController::COURIER_DAYS_BACK }} günün xərcləri.</div>@endif

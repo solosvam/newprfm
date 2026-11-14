@@ -247,6 +247,10 @@
                     <span>Ödəniş</span><b>Ödənilib — pul alınmır</b>
                 @endif
             </div>
+            @if((float) $order->courier_fee > 0)
+                {{-- Əlavə çatdırılma — kuryerin qazancı (CourierFees): qapıda ödənişdə məbləğə daxildir, özündə qalır --}}
+                <div class="ok small">Əlavə çatdırılma: <b>{{ number_format((float) $order->courier_fee, 2) }} AZN</b> — sizin qazancınız{{ $collect > 0 ? ' (alınacaq məbləğə daxildir, özünüzdə qalır)' : ' (müştəri ödəyib — balansınıza yazılır)' }}</div>
+            @endif
         </div>
 
         {{-- 3. Çatdırılma — əsas düymə ekranın aşağısında --}}

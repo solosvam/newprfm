@@ -74,6 +74,8 @@ class EasyOrdersController extends Controller
             ...CustomerAddress::formRules('required_if:address_choice,new', withTitle: false),
             'payment_method_id' => ['required', 'integer', 'exists:payment_methods,id'],
             'birbank_installment_months' => ['nullable', 'integer', 'in:2,3,6'],
+            // Əlavə çatdırılma (uzaq ünvan) — müştəri ödəyir, kuryerin qazancıdır (CourierFees)
+            'courier_fee' => ['nullable', 'numeric', 'min:0', 'max:'.\App\Services\Courier\CourierFees::MAX],
         ], [
             'city_id.required_if' => 'Şəhəri seçin.',
             'city_id.exists' => 'Şəhəri siyahıdan seçin.',
@@ -134,7 +136,8 @@ class EasyOrdersController extends Controller
                 'birbank_installment_months' => $method->code === 'birbank_installment'
                     ? (int) $data['birbank_installment_months'] : null,
                 'delivery_fee' => $delivery,
-                'total' => round((float) $locked->subtotal - (float) $locked->discount + $delivery + (float) $locked->gift_wrap_fee, 2),
+                'courier_fee' => $courierFee = \App\Services\Courier\CourierFees::normalize($data['courier_fee'] ?? 0),
+                'total' => round((float) $locked->subtotal - (float) $locked->discount + $delivery + (float) $locked->gift_wrap_fee + $courierFee, 2),
             ]);
             // Sifariş bonusu təhvildə yazılır (BonusService::earnOnDelivery)
             return $customer;

@@ -17,6 +17,9 @@
             'courier_give' => $row['delta'] > 0 ? 'Baş kuryerdən alındı — '.$other : 'Kuryerə verildi — '.$other,
             'outgo' => 'Xərc: '.($m->category?->name ?? '').($m->note ? ' — '.$m->note : ''),
             'courier_expense' => 'Xərc'.($m->note ? ' — '.$m->note : ''),
+            // Əlavə çatdırılma: qapıda — müştəridən alındı, qazanc — kuryerin özünə (təhvil veriləcək puldan çıxır)
+            'courier_fee_in' => $self ? 'Əlavə çatdırılma — müştəridən aldınız' : 'Əlavə çatdırılma — müştəridən aldı',
+            'courier_earning' => $self ? 'Əlavə çatdırılma — sizin qazancınız' : 'Əlavə çatdırılma — kuryerin qazancı',
             'reversal' => str_starts_with((string) $m->note, 'Xərc ləğv edildi') ? $m->note : 'Düzəliş (əks əməliyyat #'.$m->reversal_of_id.')',
             default => $m->kindLabel(),
         };
@@ -34,7 +37,7 @@
                     <div class="courier-history__meta">
                         {{ $m->occurred_at->format('d.m.Y H:i') }}
                         @if($m->order) · {{ $m->order->order_no }}@endif
-                        @if(!in_array($m->kind, ['outgo', 'courier_expense', 'reversal'], true) && $m->note) · {{ $m->note }}@endif
+                        @if(!in_array($m->kind, ['outgo', 'courier_expense', 'reversal', 'courier_fee_in', 'courier_earning'], true) && $m->note) · {{ $m->note }}@endif
                         @if(!$self && $m->user) · {{ trim($m->user->full_name) }}@endif
                     </div>
                 </div>

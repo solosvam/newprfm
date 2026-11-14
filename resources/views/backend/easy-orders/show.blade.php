@@ -177,6 +177,9 @@
                                 @endforeach
                             </div>
                         </div>
+                        <div class="col-12">
+                            @include('backend.crm.partials.courier-fee-field', ['id' => 'easyOrderCourierFee', 'value' => old('courier_fee', $order->courier_fee)])
+                        </div>
                         @if($errors->any())
                             <div class="col-12"><div class="alert alert-danger">{{ $errors->first() }}</div></div>
                         @endif

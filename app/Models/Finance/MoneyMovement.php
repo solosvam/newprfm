@@ -36,6 +36,11 @@ class MoneyMovement extends Model
         // Hissə-hissə: Ferrum ümumi məbləğdən öz faizini çıxır (credit_applications.bank_fee_rate)
         'credit_fee' => ['Ferrum komissiyası', ['bank'], ['external']],
         'customer_refund' => ['Müştəriyə qaytarma', ['online', 'courier', 'cash'], ['customer']],
+        // Əlavə çatdırılma (orders.courier_fee): pul şirkətin deyil — kuryerin qazancıdır (CourierFees).
+        // Müştəridən gələn hissə pulun düşdüyü yerə (qapıda — kuryer, kartla — onlayn, hissə-hissə — Ferrum);
+        // təhvildə kuryerin qazancı onun balansından çıxır: qapıda aldığını özündə saxlayır, kartla ödənilibsə şirkət ona borclu qalır.
+        'courier_fee_in' => ['Əlavə çatdırılma (müştəridən)', ['customer'], ['courier', 'online', 'bank']],
+        'courier_earning' => ['Kuryerin əlavə qazancı', ['courier'], ['external']],
         // Şəxsin başlanğıc qalığı (hesab yaradılanda): Kənar → Şəxs — o şirkətə borcludur, Şəxs → Kənar — şirkət ona borcludur.
         // Pul axınına (hesabata) düşmür
         'person_opening' => ['Başlanğıc qalıq', ['external', 'person'], ['person', 'external']],
@@ -47,13 +52,15 @@ class MoneyMovement extends Model
         'customer_payment' => 'sale', 'customer_refund' => 'customer_refund', 'credit_fee' => 'credit_fee',
         'warehouse_payment' => 'warehouse', 'warehouse_refund' => 'warehouse_refund',
         'courier_expense' => 'courier_expense', 'person_opening' => 'adjustment',
+        'courier_fee_in' => 'courier_fee', 'courier_earning' => 'courier_fee',
         'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer', 'courier_collect' => 'transfer', 'courier_give' => 'transfer',
     ];
 
     /** İstiqamət qrupları: şirkətə gələn, şirkətdən çıxan, daxili / şəxslə köçürmə */
     public const IN_KINDS = ['income', 'customer_payment', 'warehouse_refund'];
     public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment', 'credit_fee', 'courier_expense'];
-    public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover', 'courier_collect', 'courier_give'];
+    // Əlavə çatdırılma da gəlir / xərc deyil — kuryerin pulu şirkətdən keçir (hesabatda köçürmə kimi, nəticəyə düşmür)
+    public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover', 'courier_collect', 'courier_give', 'courier_fee_in', 'courier_earning'];
 
     /** "Yeni əməliyyat" pəncərəsi: Məxaric / Mədaxil / Köçürmə (kuryerə köçürmə — avans, kuryerdən — təhvil) */
     public const MANUAL = ['outgo', 'income', 'transfer', 'courier_advance', 'courier_handover'];

@@ -267,8 +267,11 @@
     // Haqq hər bükülən ədədə
     const giftUnits = () => cart.reduce((n, i) => n + (i.gift ? i.qty : 0), 0);
     const giftTotal = () => round2(giftFee * giftUnits());
+    // Əlavə çatdırılma (uzaq ünvan) — kuryerin qazancı, yekuna əlavə olunur (CourierFees: 0..500)
+    const courierFeeInput = $('crmOrderCourierFee');
+    const courierFee = () => Math.min(500, Math.max(0, round2(Number(courierFeeInput?.value) || 0)));
     // Ödəniləcək məbləğ (kredit faizi olmadan)
-    const payable = () => subtotal() + deliveryFee(subtotal()) + giftTotal();
+    const payable = () => subtotal() + deliveryFee(subtotal()) + giftTotal() + courierFee();
     const selectedPeriod = () => selectedCode() === 'installment'
         ? root.querySelector('input[name="crm_credit_period"]:checked') : null;
     // Standart kredit məbləği: müddətin faizi ilə
@@ -299,6 +302,9 @@
         els.discountRow.hidden = !(off > 0);
         els.discount.textContent = '−' + money(off);
         els.delivery.textContent = !goods ? '—' : fee ? money(fee) : 'Pulsuz';
+
+        $('crmOrderCourierFeeRow').hidden = !courierFee();
+        $('crmOrderCourierFeeSum').textContent = money(courierFee());
 
         els.giftRow.hidden = !giftUnits();
         els.gift.textContent = giftTotal() ? money(giftTotal()) + ' (' + giftUnits() + ' əd.)' : 'Pulsuz';
@@ -426,6 +432,7 @@
         updateTotals();
     });
     creditInput?.addEventListener('change', updateTotals); // fokus gedəndə dəyəri formatla
+    courierFeeInput?.addEventListener('input', updateTotals);
     els.credit.addEventListener('click', event => {
         if (!event.target.closest('[data-credit-reset]')) return;
         creditOverride = null;
@@ -495,6 +502,7 @@
                 ? Number(root.querySelector('input[name="crm_credit_period"]:checked')?.value) || null : null,
             credit_total: code === 'installment' && creditOverride !== null ? creditOverride : null,
             courier_note: root.querySelector('#crmOrderCourierNote')?.value.trim() || null,
+            courier_fee: courierFee() || null,
             // qiymət əl ilə dəyişibsə — seçilən bonus faizi (server də yoxlayır)
             bonus_percent: priceChanged() ? manualBonusPercent : null,
         };

@@ -744,4 +744,91 @@ class CourierFlowTest extends TestCase
         $this->assertSame('delivered', $this->statusCode($order));
         $this->assertSame(0, app(FinanceService::class)->balances()[app(FinanceService::class)->courierAccount($courier)->id] ?? 0);
     }
+
+    /**
+     * Əlavə çatdırılma (CourierFees): qapıda ödənişdə kuryer tam məbləği alır, amma təhvil verəcəyi pula yalnız satış düşür —
+     * əlavə məbləğ özündə qalır; satış (customer_payment) əlavəsiz yazılır. Kartla ödənilibsə — şirkət kuryerə borclu qalır.
+     */
+    public function test_courier_fee_is_the_couriers_earning_not_a_sale(): void
+    {
+        (require database_path('migrations/2026_11_14_130000_add_courier_fee_to_orders.php'))->up();
+        (require database_path('migrations/2026_09_29_150000_create_payment_items_table.php'))->up();
+        $courier = User::forceCreate(['name' => 'Fərid']);
+        [$order, $part] = $this->assigned($courier);
+        $order->forceFill(['courier_fee' => 10, 'total' => 130])->save();
+        app(ProcurementService::class)->transition($order, $part->id, 'picked', [], $courier->id);
+        $s = app(OrderStatusService::class);
+        $f = app(FinanceService::class);
+        $account = $f->courierAccount($courier);
+
+        $s->startDelivery($order, $courier->id);
+        $this->assertSame(130.0, $s->collectAmount($order->fresh())); // müştəri əlavə ilə ödəyir
+        $s->deliver($order->fresh(), $courier->id, 130);
+
+        // +120 satış (kuryer şirkətə verəcək), +10 −10 əlavə çatdırılma (özündə qalır), depoya ödəniş yoxdur
+        $this->assertSame(12000, $f->balances()[$account->id]);
+        $this->assertSame('120.00', \App\Models\Finance\MoneyMovement::where('kind', 'customer_payment')->value('amount'));
+        $this->assertSame('courier_fee', \App\Models\Finance\MoneyMovement::where('kind', 'courier_earning')->first()->category?->code);
+        // Gəlir / xərc hesabatına düşmür
+        $report = app(\App\Services\Finance\CashFlowReport::class)->build(today(), today());
+        $this->assertSame(12000, array_sum($report['totals']['income']));
+        $this->assertSame(0, array_sum($report['totals']['expense']));
+
+        // Kartla ödənilmiş ikinci sifariş: pul onlayn hesaba, kuryerin balansı −5 (şirkət borcludur)
+        $paid = Order::create(['customer_id' => 1, 'order_no' => 'PS2', 'order_status_id' => 1, 'total' => 55, 'courier_fee' => 5,
+            'payment_status' => 'paid', 'courier_id' => $courier->id]);
+        $payment = \App\Models\Payment\Payment::create(['customer_id' => 1, 'order_id' => $paid->id, 'provider' => 'birbank', 'amount' => 55, 'status' => 'paid']);
+        $f->recordOnlinePayment($payment);
+        $f->recordOnlinePayment($payment);
+        $s->set($paid, 'delivered', 7);
+        $s->set($paid->fresh(), 'sent', 7);
+        $s->set($paid->fresh(), 'delivered', 7); // təkrar təhvil — qazanc ikinci dəfə yazılmır
+
+        $this->assertSame(5500, $f->balances()[$f->system('online')->id]);
+        $this->assertSame('50.00', \App\Models\Finance\MoneyMovement::where('kind', 'customer_payment')->where('order_id', $paid->id)->value('amount'));
+        $this->assertSame(12000 - 500, $f->balances()[$account->id]);
+
+        $day = app(\App\Services\Courier\CourierFees::class)->daily([$courier->id], today(), today())->sole();
+        $this->assertSame(15.0, $day['total']);
+        $this->assertSame(['PS2', 'PS1'], $day['orders']->map(fn ($m) => $m->order->order_no)->all());
+        $this->assertSame([$courier->id => 15.0], app(\App\Services\Courier\CourierFees::class)->todayByCourier()->all());
+    }
+
+    /** Operator əlavə çatdırılmanı dəyişir: yekun fərq qədər dəyişir; ödənilib / təhvil verilib — dəyişmir */
+    public function test_courier_fee_change_updates_total_and_is_blocked_when_paid(): void
+    {
+        (require database_path('migrations/2026_11_14_130000_add_courier_fee_to_orders.php'))->up();
+        Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable()]);
+        Schema::table('orders', fn (Blueprint $t) => $t->unsignedBigInteger('payment_method_id')->nullable());
+        DB::table('payment_methods')->insert(['id' => 1, 'code' => 'cash']);
+        $fees = app(\App\Services\Courier\CourierFees::class);
+        $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'total' => 120, 'payment_status' => 'cod', 'payment_method_id' => 1]);
+
+        $fees->change($order, 10, 7);
+        $this->assertSame(['10.00', '130.00'], [$order->fresh()->courier_fee, $order->fresh()->total]);
+        $fees->change($order->fresh(), 5, 7);
+        $this->assertSame(['5.00', '125.00'], [$order->fresh()->courier_fee, $order->fresh()->total]);
+        $this->assertStringContainsString('10.00 → 5.00', DB::table('order_status_logs')->where('kind', 'courier_fee')->orderByDesc('id')->value('note'));
+
+        $order->forceFill(['payment_status' => 'paid'])->save();
+        $this->assertNotNull($fees->changeBlock($order->fresh()));
+        $this->expectException(ValidationException::class);
+        $fees->change($order->fresh(), 0, 7);
+    }
+
+    /** Kuryerin hesabında "Əlavə çatdırılma qazancı": gün ərzində 5 + 10 = 15 AZN */
+    public function test_courier_sees_daily_extra_delivery_earnings(): void
+    {
+        $courier = $this->courierAppTables();
+        (require database_path('migrations/2026_11_14_130000_add_courier_fee_to_orders.php'))->up();
+        $s = app(OrderStatusService::class);
+        foreach ([5, 10] as $i => $fee) {
+            $order = Order::create(['customer_id' => 1, 'order_no' => 'PS'.($i + 1), 'order_status_id' => 1, 'total' => 100 + $fee,
+                'courier_fee' => $fee, 'payment_status' => 'paid', 'courier_id' => $courier->id]);
+            $s->set($order, 'delivered', 7);
+        }
+
+        $this->actingAs($courier, 'admin')->get(route('kuryer.account'))->assertOk()
+            ->assertSee('Əlavə çatdırılma qazancı')->assertSee('5 + 10 = 15 AZN')->assertSee('15.00 AZN');
+    }
 }

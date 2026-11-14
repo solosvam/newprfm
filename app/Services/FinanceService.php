@@ -271,6 +271,9 @@ class FinanceService
         // Faiz yazılmayıbsa (bank_fee_rate yoxdur) — müqavilə məbləği.
         $net = $credit->netAmount() ?? (float) $credit->total;
         if ($net <= 0) return;
+        // Əlavə çatdırılma kreditə daxildir, amma satış deyil — kuryerin qazancıdır (CourierFees)
+        $net = round($net - app(\App\Services\Courier\CourierFees::class)->recordIncoming($order, $ferrum, $net, $actor), 2);
+        if ($net <= 0) return;
         $rate = $credit->bank_fee_rate !== null ? rtrim(rtrim(number_format((float) $credit->bank_fee_rate, 2, '.', ''), '0'), '.') : null;
         $this->record($this->system('customer'), $ferrum, $net, 'customer_payment', [
             'order_id' => $order->id,
@@ -283,7 +286,13 @@ class FinanceService
     public function recordOnlinePayment(Payment $payment): void
     {
         if (MoneyMovement::where('kind', 'customer_payment')->where('payment_id', $payment->id)->exists()) return;
-        $this->record($this->system('customer'), $this->system('online'), (float) $payment->amount, 'customer_payment', [
+        $amount = (float) $payment->amount;
+        // Əlavə çatdırılma ödənişə daxildir, amma satış deyil — kuryerin qazancıdır (CourierFees)
+        if ($payment->order) {
+            $amount = round($amount - app(\App\Services\Courier\CourierFees::class)->recordIncoming($payment->order, $this->system('online'), $amount), 2);
+        }
+        if ($amount <= 0) return;
+        $this->record($this->system('customer'), $this->system('online'), $amount, 'customer_payment', [
             'order_id' => $payment->order_id, 'payment_id' => $payment->id, 'note' => 'Birbank ödənişi',
         ]);
     }

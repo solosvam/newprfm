@@ -28,6 +28,10 @@
             <div class="courier-summary__label">Aktiv sifariş</div>
             <div class="courier-summary__value">{{ $couriers->sum('active') }}</div>
         </div></div>
+        <div class="card"><div class="card-body">
+            <div class="courier-summary__label">Bu gün əlavə çatdırılma qazancı</div>
+            <div class="courier-summary__value text-success">{{ number_format($couriers->sum('feeToday'), 2) }} AZN</div>
+        </div></div>
     </div>
 
     @forelse($couriers as $row)
@@ -48,6 +52,7 @@
                 <div class="courier-order__meta">
                     <span>Aktiv sifariş: <b>{{ $row['active'] }}</b></span>
                     <span>Bu gün təhvil: <b>{{ $row['deliveredToday'] }}</b></span>
+                    @if($row['feeToday'] > 0)<span>Əlavə qazanc: <b class="text-success">{{ number_format($row['feeToday'], 2) }} AZN</b></span>@endif
                     @if(!$user->telegram_id)<span class="text-muted">Telegram qoşulmayıb</span>@endif
                 </div>
                 <div class="courier-order__meta">@include('backend.courier._location', ['user' => $user])</div>

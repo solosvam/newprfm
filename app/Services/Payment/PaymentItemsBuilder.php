@@ -19,6 +19,8 @@ class PaymentItemsBuilder
     public const ITEM = 'item';
     public const DELIVERY = 'delivery';
     public const GIFT_WRAP = 'gift_wrap';
+    /** Əlavə çatdırılma (orders.courier_fee) — kuryerin qazancı; ləğvdə fee_type ilə eyni ad */
+    public const COURIER_FEE = 'courier_fee';
 
     /** @return array<int, array{order_item_id: ?int, type: string, quantity: int, unit_price: string, amount: string}> */
     public function lines(Order $order, float $amount): array
@@ -34,6 +36,9 @@ class PaymentItemsBuilder
         }
         if ($cents($order->gift_wrap_fee) > 0) {
             $lines[] = $this->line(null, self::GIFT_WRAP, 1, $cents($order->gift_wrap_fee));
+        }
+        if ($cents($order->courier_fee) > 0) {
+            $lines[] = $this->line(null, self::COURIER_FEE, 1, $cents($order->courier_fee));
         }
 
         // Cəm ödəniş məbləğindən fərqlənirsə (köhnə/əl ilə dəyişilmiş sifariş), fərq sonuncu məhsula yazılır

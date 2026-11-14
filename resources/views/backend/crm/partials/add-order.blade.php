@@ -43,6 +43,7 @@
                     <div><dt>Toplam</dt><dd id="crmOrderSubtotal">0.00 ₼</dd></div>
                     <div id="crmOrderDiscountRow" class="crm-order__discount" hidden><dt>Endirim</dt><dd id="crmOrderDiscount">—</dd></div>
                     <div><dt>Çatdırılma</dt><dd id="crmOrderDelivery">—</dd></div>
+                    <div id="crmOrderCourierFeeRow" hidden><dt>Əlavə çatdırılma</dt><dd id="crmOrderCourierFeeSum">—</dd></div>
                     <div id="crmOrderGiftRow" hidden><dt>Hədiyyəlik bükmə</dt><dd id="crmOrderGift">—</dd></div>
                     <div id="crmOrderCreditRow" hidden><dt>Kredit faizi</dt><dd id="crmOrderCreditFee">—</dd></div>
                     <div class="crm-order__grand"><dt>Yekun</dt><dd id="crmOrderTotal">0.00 ₼</dd></div>
@@ -106,6 +107,9 @@
             {{-- Kuryerə qeyd: kuryer təyin olunanda operator gözdən keçirir, kuryerin səhifəsində rəngli görünür --}}
             <label for="crmOrderCourierNote" class="form-label mt-3 mb-1">Kuryer üçün qeyd <span class="text-muted small">(istəyə görə)</span></label>
             <textarea class="form-control" id="crmOrderCourierNote" rows="2" maxlength="1000" placeholder="Məs.: saat 18:00-dan sonra çatdırın, qapıda zəng etməyin…"></textarea>
+            <div class="mt-3">
+                @include('backend.crm.partials.courier-fee-field', ['id' => 'crmOrderCourierFee', 'value' => 0])
+            </div>
         </div>
 
         {{-- 4. Ödəniş --}}

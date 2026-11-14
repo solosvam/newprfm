@@ -56,6 +56,8 @@ class OrderStatusService
             if ($order->loadMissing('paymentMethod')->paymentMethod?->code === 'installment') {
                 app(FinanceService::class)->recordCreditReceivable($order, $actor); // Ferrum-un köçürəcəyi pul — Ferrum hesabına
             }
+            // Əlavə çatdırılma — sifarişi çatdıran kuryerin qazancı (qapıda ödənişdə yuxarıda deliver() pulu artıq yazıb)
+            app(\App\Services\Courier\CourierFees::class)->recordEarning($order, $actor);
         }
 
         return true;
@@ -242,9 +244,14 @@ class OrderStatusService
                 $this->ensure($collected !== null && (int) round($collected * 100) === (int) round($amount * 100),
                     'Alınacaq məbləğ dəyişib — indi '.number_format($amount, 2).' AZN. Səhifəni yeniləyin; fərq varsa "Problem" bildirin.');
                 $finance = app(FinanceService::class);
-                $finance->record($finance->system('customer'), $finance->courierAccount(User::findOrFail($actor)), $amount, 'customer_payment', [
-                    'order_id' => $locked->id, 'note' => 'Qapıda nağd ödəniş',
-                ], $actor);
+                $courier = $finance->courierAccount(User::findOrFail($actor));
+                // Əlavə çatdırılma kuryerin özünündür — təhvil verəcəyi pula (satışa) düşmür (CourierFees)
+                $fee = app(\App\Services\Courier\CourierFees::class)->recordIncoming($locked, $courier, $amount, $actor);
+                if ($amount - $fee > 0) {
+                    $finance->record($finance->system('customer'), $courier, round($amount - $fee, 2), 'customer_payment', [
+                        'order_id' => $locked->id, 'note' => 'Qapıda nağd ödəniş',
+                    ], $actor);
+                }
                 $locked->forceFill(['payment_status' => 'paid'])->save();
             }
             $this->set($locked, 'delivered', $actor);

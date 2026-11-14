@@ -19,6 +19,7 @@ class OrderItemCancellation extends Model
     /** Sifarişin tam ləğvində məhsuldan başqa ləğv olunan haqlar (order_item_id boşdur) */
     public const FEE_LABELS = [
         'delivery' => 'Çatdırılma',
+        'courier_fee' => 'Əlavə çatdırılma',
         'gift_wrap' => 'Hədiyyəlik qablaşdırma',
     ];
 

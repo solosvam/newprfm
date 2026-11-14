@@ -125,7 +125,7 @@ class OrderItemCancellationService
         // Ferrum təsdiqləyibsə kredit toxunulmur — yekundan yalnız məhsulun öz məbləği çıxır
         if ($order->paymentMethod?->code === 'installment' && !$this->ferrumApproved($order)
             && ($application = $order->creditApplication()->with('period')->first())) {
-            $payable = $subtotal - $discount + $cents($order->delivery_fee) + $cents($order->gift_wrap_fee) - $wrap;
+            $payable = $subtotal - $discount + $cents($order->delivery_fee) + $cents($order->courier_fee) + $cents($order->gift_wrap_fee) - $wrap;
             $total = max(0, (int) round($payable * (1 + (float) $application->interest_rate / 100)));
             $amount = max(0, $cents($order->total) - $total - $wrap);
             $months = max(1, (int) ($application->period?->month ?? 1));
@@ -209,7 +209,7 @@ class OrderItemCancellationService
     public function orderPreview(Order $order): array
     {
         $order->loadMissing(['items.allocations', 'paymentMethod']);
-        $fees = round((float) $order->delivery_fee + (float) $order->gift_wrap_fee, 2);
+        $fees = round((float) $order->delivery_fee + (float) $order->courier_fee + (float) $order->gift_wrap_fee, 2);
         $allocations = $order->items->flatMap->allocations;
 
         return [
@@ -255,7 +255,7 @@ class OrderItemCancellationService
             // Ödənilib: çatdırılma / qablaşdırma da qaytarılır (karta — ödənişin həmin sətrinə, bonusla — balansa)
             $refund = $this->refundStatus($order);
             if ($refund !== null) {
-                foreach (['delivery' => 'delivery_fee', 'gift_wrap' => 'gift_wrap_fee'] as $type => $column) {
+                foreach (['delivery' => 'delivery_fee', 'courier_fee' => 'courier_fee', 'gift_wrap' => 'gift_wrap_fee'] as $type => $column) {
                     $amount = min(round((float) $order->{$column}, 2), round((float) $order->total, 2));
                     if ($amount <= 0) {
                         continue;

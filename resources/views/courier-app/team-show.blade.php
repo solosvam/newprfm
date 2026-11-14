@@ -93,6 +93,9 @@
     @endforelse
 
     {{-- Xərclər: baş kuryer yoxlayır, qaydasında deyilsə ləğv edir (pul kuryerin balansına qayıdır) --}}
+    <h2 class="section" id="earnings">Əlavə çatdırılma qazancı</h2>
+    @include('courier-app._earnings', ['earnings' => $earnings, 'self' => false, 'days' => $earningDays])
+
     <h2 class="section" id="expenses">Xərclər</h2>
     @if($minDate)<p class="muted">Son {{ Team::COURIER_DAYS_BACK }} günün xərcləri.</p>@endif
     @include('courier-app._expenses', ['expenses' => $expenses, 'self' => false, 'courier' => $courier, 'cancellable' => $cancellable])

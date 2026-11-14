@@ -542,6 +542,7 @@
     "credit_section_documents": "Şəxsiyyət vəsiqəsi",
     "credit_section_documents_hint": "Əvvəl vəsiqənin ön üzünü yükləyin — ata adı, FİN, seriya və nömrə avtomatik doldurulacaq. Köhnə vəsiqədə (AZE) arxa üzünün şəkli də lazımdır.",
     "orders_delivery": "Çatdırılma",
+    "orders_courier_fee": "Əlavə çatdırılma",
     "orders_payment_failed": "Ödəniş alınmadı",
     "orders_payment_failed_hint": "Sifarişiniz saxlanılıb. Ödənişi yenidən edə bilərsiniz.",
     "orders_payment_retry": "Təkrar cəhd et",

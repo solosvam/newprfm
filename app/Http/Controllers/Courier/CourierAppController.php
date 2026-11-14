@@ -54,6 +54,8 @@ class CourierAppController extends Controller
             'balance' => $finance->balances()[$account->id] ?? 0,
             'history' => $finance->courierHistory($account),
             'expenses' => $expenses->of($user, null, 30),
+            // Əlavə çatdırılma qazancı — son 7 gün, günlər üzrə
+            'earnings' => app(\App\Services\Courier\CourierFees::class)->daily([$user->id], today()->subDays(6), today()),
         ]);
     }
 

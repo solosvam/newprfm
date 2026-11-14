@@ -5,6 +5,9 @@
 @section('content')
     @include('courier-app._money', ['balance' => $balance, 'self' => true])
 
+    <h2 class="section" id="earnings">Əlavə çatdırılma qazancı</h2>
+    @include('courier-app._earnings', ['earnings' => $earnings, 'self' => true, 'days' => 7])
+
     <h2 class="section" id="expenses">Xərclər</h2>
     <details class="more" @if($errors->hasAny(['amount', 'note', 'photo'])) open @endif>
         <summary class="btn btn--primary btn--block">@include('courier-app._icon', ['name' => 'plus']) Xərc yaz</summary>

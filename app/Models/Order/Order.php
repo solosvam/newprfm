@@ -19,6 +19,7 @@ class Order extends Model {
             'referral_discount'=>'decimal:2',
             'bonus_percent'=>'decimal:2',
             'total'=>'decimal:2',
+            'courier_fee'=>'decimal:2',
             'pay_token_expires_at'=>'datetime',
         ];
     }
@@ -167,7 +168,7 @@ class Order extends Model {
 
         return [
             'goods' => $goods,
-            'discount' => max(0.0, round($goods + (float) $this->delivery_fee + (float) $this->gift_wrap_fee - $this->originalTotal(), 2)),
+            'discount' => max(0.0, round($goods + (float) $this->delivery_fee + (float) $this->courier_fee + (float) $this->gift_wrap_fee - $this->originalTotal(), 2)),
             'referral' => 0.0,
             'cancelled' => $cancelled,
             'total' => (float) $this->total,

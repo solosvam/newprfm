@@ -32,7 +32,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('order_statuses', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->boolean('active')->default(true), $t->integer('sort_order')->default(0)]);
         Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->integer('sort_order')->default(0)]);
         DB::table('payment_methods')->insert([['id' => 1, 'code' => 'cash', 'name_az' => 'Qapıda nağd'], ['id' => 2, 'code' => 'card_online', 'name_az' => 'Kartla onlayn'], ['id' => 3, 'code' => 'birbank_installment', 'name_az' => 'Birbank taksit'], ['id' => 4, 'code' => 'installment', 'name_az' => 'Hissə-hissə ödəniş']]);
-        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->string('order_no')->nullable(), $t->string('guest_mobile')->nullable(), $t->string('payment_status')->nullable(), $t->unsignedBigInteger('courier_id')->nullable(), $t->timestamps()]);
+        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('courier_fee', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->string('order_no')->nullable(), $t->string('guest_mobile')->nullable(), $t->string('payment_status')->nullable(), $t->unsignedBigInteger('courier_id')->nullable(), $t->timestamps()]);
         Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->unsignedBigInteger('product_id')->nullable(), $t->integer('quantity')->default(1), $t->integer('cancelled_quantity')->default(0), $t->decimal('total', 12, 2)->default(0)]);
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->unsignedBigInteger('brand_id')->nullable()]);
@@ -111,7 +111,8 @@ class AdminDashboardTest extends TestCase
     public function test_profit_counts_only_delivered_orders_and_payment_split(): void
     {
         $this->order('2026-10-02 10:00', 205, 'delivered', 1, 120, 5);   // mal 200 − alış 120 = 80
-        $this->order('2026-10-02 11:00', 300, 'delivered', 3, 250);       // 300 − 250 = 50
+        $this->order('2026-10-02 11:00', 310, 'delivered', 3, 250);       // 310 − 10 əlavə çatdırılma (kuryerin) = 300 − 250 = 50
+        DB::table('orders')->where('total', 310)->update(['courier_fee' => 10]);
         $this->order('2026-10-02 12:00', 400, 'sent', 3, 300);            // hələ təhvil verilməyib
         $this->order('2026-10-02 13:00', 999, 'cancelled', 2);
         DB::table('order_item_allocations')->insert(['order_item_id' => 1, 'quantity' => 1, 'unit_cost' => 500, 'status' => 'cancelled']);
