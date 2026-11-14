@@ -788,8 +788,8 @@ class CrmController extends Controller
         $fee = (float) $order->refresh()->courier_fee;
 
         return redirect()->route('admin.crm.order', [$customer, $order])->with('success', $fee > 0
-            ? 'Əlavə çatdırılma: '.number_format($fee, 2).' AZN. Yekun: '.number_format((float) $order->total, 2).' AZN.'
-            : 'Əlavə çatdırılma silindi. Yekun: '.number_format((float) $order->total, 2).' AZN.');
+            ? 'Çatdırılma haqqı: '.number_format($fee, 2).' AZN. Yekun: '.number_format((float) $order->total, 2).' AZN.'
+            : 'Çatdırılma haqqı silindi. Yekun: '.number_format((float) $order->total, 2).' AZN.');
     }
 
     /**

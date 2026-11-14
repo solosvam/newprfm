@@ -301,10 +301,9 @@
         els.subtotal.textContent = money(listTotal());
         els.discountRow.hidden = !(off > 0);
         els.discount.textContent = '−' + money(off);
-        els.delivery.textContent = !goods ? '—' : fee ? money(fee) : 'Pulsuz';
-
-        $('crmOrderCourierFeeRow').hidden = !courierFee();
-        $('crmOrderCourierFeeSum').textContent = money(courierFee());
+        // Çatdırılma bir sətirdə: sayt haqqı + uzaq ünvan haqqı (kuryerin qazancı)
+        const shipping = round2(fee + courierFee());
+        els.delivery.textContent = !goods && !courierFee() ? '—' : shipping ? money(shipping) : 'Pulsuz';
 
         els.giftRow.hidden = !giftUnits();
         els.gift.textContent = giftTotal() ? money(giftTotal()) + ' (' + giftUnits() + ' əd.)' : 'Pulsuz';

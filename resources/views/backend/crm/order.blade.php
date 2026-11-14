@@ -34,7 +34,7 @@
     // Kuryer bildirişləri: problem, qapıda imtina, depoya qaytarma, kuryerin ötürməsi (yenisi yuxarıda)
     $noticeLabels = ['delivery_problem' => ['Çatdırılma problemi', 'danger'], 'door_refusal' => ['Qapıda imtina', 'warning'],
         'warehouse_return' => ['Depoya qaytarıldı', 'success'], 'courier_change' => ['Kuryer dəyişdi', 'info'], 'payment_change' => ['Ödəniş üsulu dəyişdi', 'info'],
-        'courier_fee' => ['Əlavə çatdırılma dəyişdi', 'info']];
+        'courier_fee' => ['Çatdırılma haqqı dəyişdi', 'info']];
     $notices = $order->statusLogs->whereIn('kind', array_keys($noticeLabels))->sortByDesc('id')->values();
     $openProblems = $activeParts->where('status', 'problem');
     $pickedTotal = (int) $activeParts->where('status', 'picked')->sum('quantity');
@@ -303,19 +303,17 @@
                         <div><span>Məhsullar</span><span>{{ number_format($sum['goods'], 2) }} AZN</span></div>
                         @if($sum['discount'] > 0)<div><span>Endirim</span><span class="text-success">−{{ number_format($sum['discount'], 2) }} AZN</span></div>@endif
                         @if($sum['referral'] > 0)<div><span>Dəvət endirimi</span><span class="text-success">−{{ number_format($sum['referral'], 2) }} AZN</span></div>@endif
-                        <div><span>Çatdırılma</span><span>{{ (float) $order->delivery_fee > 0 ? number_format((float) $order->delivery_fee, 2).' AZN' : 'Pulsuz' }}</span></div>
-                        {{-- Əlavə çatdırılma (uzaq ünvan) — kuryerin qazancı, satışa daxil deyil (CourierFees) --}}
-                        @if((float) $order->courier_fee > 0 || !$courierFeeBlock)
-                            <div>
-                                <span>Əlavə çatdırılma <i class="text-muted small">(kuryerin)</i></span>
-                                <span>
-                                    {{ (float) $order->courier_fee > 0 ? number_format((float) $order->courier_fee, 2).' AZN' : '—' }}
-                                    @if(!$courierFeeBlock)
-                                        <button type="button" class="btn btn-sm btn-link p-0 ms-1 align-baseline" data-bs-toggle="modal" data-bs-target="#courierFeeModal">{{ (float) $order->courier_fee > 0 ? 'Dəyiş' : 'Əlavə et' }}</button>
-                                    @endif
-                                </span>
-                            </div>
-                        @endif
+                        {{-- Çatdırılma bir sətirdə: sayt haqqı + uzaq ünvan haqqı (courier_fee — kuryerin qazancı, satışa daxil deyil) --}}
+                        @php $shipping = round((float) $order->delivery_fee + (float) $order->courier_fee, 2); @endphp
+                        <div>
+                            <span>Çatdırılma</span>
+                            <span>
+                                {{ $shipping > 0 ? number_format($shipping, 2).' AZN' : 'Pulsuz' }}
+                                @if(!$courierFeeBlock)
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1 align-baseline" data-bs-toggle="modal" data-bs-target="#courierFeeModal">Dəyiş</button>
+                                @endif
+                            </span>
+                        </div>
                         @if($order->gift_wrap)<div><span>Hədiyyəlik qablaşdırma</span><span>{{ (float) $order->gift_wrap_fee > 0 ? number_format((float) $order->gift_wrap_fee, 2).' AZN' : 'Pulsuz' }}</span></div>@endif
                         @if($sum['cancelled'] > 0)<div><span>Ləğv olunan</span><span class="text-danger">−{{ number_format($sum['cancelled'], 2) }} AZN</span></div>@endif
                         <div class="od-summary__grand"><span>Yekun</span><span>{{ number_format((float) $order->total, 2) }} AZN</span></div>
@@ -587,15 +585,15 @@
         </div>
     @endif
 
-    {{-- Əlavə çatdırılma: məbləğ yekuna əlavə olunur, sifarişi çatdıran kuryerin qazancıdır --}}
+    {{-- Çatdırılma haqqı (uzaq ünvan): məbləğ yekuna əlavə olunur, sifarişi çatdıran kuryerin qazancıdır --}}
     @if(!$courierFeeBlock)
         <div class="modal modal-right fade" id="courierFeeModal" tabindex="-1" aria-labelledby="courierFeeTitle" aria-hidden="true">
             <div class="modal-dialog"><form class="modal-content" method="POST" action="{{ route('admin.crm.order.courier-fee', [$customer, $order]) }}">
                 @csrf
-                <div class="modal-header"><h5 class="modal-title" id="courierFeeTitle">Əlavə çatdırılma</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
+                <div class="modal-header"><h5 class="modal-title" id="courierFeeTitle">Çatdırılma haqqı</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button></div>
                 <div class="modal-body">
                     @include('backend.crm.partials.courier-fee-field', ['id' => 'orderCourierFee', 'value' => (float) $order->courier_fee])
-                    <div class="form-text">Yekun: {{ number_format((float) $order->total - (float) $order->courier_fee, 2) }} AZN + əlavə çatdırılma. 0 yazsanız — silinir.</div>
+                    <div class="form-text">Yekun: {{ number_format((float) $order->total - (float) $order->courier_fee, 2) }} AZN + çatdırılma haqqı. 0 yazsanız — çatdırılma pulsuz olur.</div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Bağla</button><button class="btn btn-primary">Yadda saxla</button></div>
             </form></div>

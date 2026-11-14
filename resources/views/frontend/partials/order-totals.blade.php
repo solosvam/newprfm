@@ -1,5 +1,5 @@
 {{--
-  Sifarişin hesabı (sifariş detalı, ödəniş linki): Məhsullar − Endirim + Çatdırılma + Əlavə çatdırılma + Qablaşdırma − Ləğv olunan = Toplam.
+  Sifarişin hesabı (sifariş detalı, ödəniş linki): Məhsullar − Endirim + Çatdırılma (sayt haqqı + uzaq ünvan haqqı) + Qablaşdırma − Ləğv olunan = Toplam.
   Order::totalsBreakdown(); $total — ödəniş linkində kredit faizi ilə yekun (verilməyibsə sifarişin yekunu).
 --}}
 @php
@@ -14,11 +14,9 @@
     @if($sum['referral'] > 0)
         <div class="od-row od-row--discount"><span>{{ __('cart_referral_discount') }}</span><span>−{{ number_format($sum['referral'], 2) }} ₼</span></div>
     @endif
-    @if((float) $order->delivery_fee > 0)
-        <div class="od-row"><span>{{ __('orders_delivery') }}</span><span>{{ number_format((float) $order->delivery_fee, 2) }} ₼</span></div>
-    @endif
-    @if((float) $order->courier_fee > 0)
-        <div class="od-row"><span>{{ __('orders_courier_fee') }}</span><span>{{ number_format((float) $order->courier_fee, 2) }} ₼</span></div>
+    @php $shipping = round((float) $order->delivery_fee + (float) $order->courier_fee, 2); @endphp
+    @if($shipping > 0)
+        <div class="od-row"><span>{{ __('orders_delivery') }}</span><span>{{ number_format($shipping, 2) }} ₼</span></div>
     @endif
     @if((float) $order->gift_wrap_fee > 0)
         <div class="od-row"><span>{{ __('paylink_gift_wrap') }}</span><span>{{ number_format((float) $order->gift_wrap_fee, 2) }} ₼</span></div>

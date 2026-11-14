@@ -64,7 +64,7 @@ class CourierFees
             $locked->forceFill(['courier_fee' => $fee, 'total' => max(0, round((float) $locked->total + $diff, 2))])->save();
             \Illuminate\Support\Facades\DB::table('order_status_logs')->insert([
                 'order_id' => $locked->id, 'status_id' => $locked->order_status_id, 'user_id' => $actor, 'kind' => 'courier_fee',
-                'note' => 'Əlavə çatdırılma: '.number_format($old, 2).' → '.number_format($fee, 2).' AZN (yekun '.number_format((float) $locked->total, 2).' AZN)',
+                'note' => 'Çatdırılma haqqı: '.number_format($old, 2).' → '.number_format($fee, 2).' AZN (yekun '.number_format((float) $locked->total, 2).' AZN)',
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         });
