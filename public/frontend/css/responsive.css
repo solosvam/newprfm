@@ -262,7 +262,9 @@ html, body { overflow-x: clip; }
 }
 
 /* Product page: installment heading + mobile-only credit button */
-.installment-heading { font-size: 20px; font-weight: 700; margin: 0 0 18px; color: var(--text); }
+.installment-heading { font-size: 22px; font-weight: 700; margin: 0 0 18px; color: var(--text); line-height: 1.25; }
+/* "(Bank kartı olmadan)" — Birbank taksitdən ayırmaq üçün başlığın altında nişan */
+.installment-heading__badge { display: table; margin-top: 4px; padding: 3px 12px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 16px; font-weight: 700; }
 .product-mobile-credit { display: none; }
 @media (max-width: 760px) {
     .product-mobile-credit { display: flex; width: 100%; }

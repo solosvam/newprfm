@@ -193,7 +193,7 @@
         </div>
 
         <div class="installment-full" data-installment>
-            <h2 class="installment-heading">{{ __('product_installment_schedule') }}</h2>
+            <h2 class="installment-heading">{{ __('common_installments') }} <span class="installment-heading__badge">{{ __('installment_no_card') }}</span></h2>
             <table class="installment-table">
                 <thead>
                 <tr><th></th><th>{{ __('product_duration') }}</th><th>{{ __('product_monthly') }}</th><th>{{ __('product_price') }}</th></tr>
