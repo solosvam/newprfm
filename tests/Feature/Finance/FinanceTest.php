@@ -347,6 +347,24 @@ class FinanceTest extends TestCase
         $this->assertSame(2, MoneyMovement::count());
     }
 
+    public function test_ferrum_credit_is_recorded_as_net_sale_once(): void
+    {
+        Schema::create('credit_applications', fn (Blueprint $t) => [$t->id(), $t->integer('order_id'), $t->integer('credit_period_id')->nullable(),
+            $t->decimal('total', 12, 2), $t->decimal('bank_fee_rate', 5, 2)->nullable(), $t->timestamps()]);
+        $ferrum = FinanceAccount::create(['type' => 'bank', 'code' => 'ferrum', 'name' => 'Ferrum', 'active' => true]);
+        $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
+        DB::table('credit_applications')->insert(['order_id' => $order->id, 'total' => 900, 'bank_fee_rate' => 14]);
+
+        $this->f()->recordCreditReceivable($order);
+        $this->f()->recordCreditReceivable($order); // təkrar — yazılmır
+
+        // 900 − 14% = 774: yalnız xalis satış, ayrıca komissiya xərci yoxdur
+        $this->assertSame(['customer_payment'], MoneyMovement::pluck('kind')->all());
+        $this->assertSame(77400, $this->f()->balances()[$ferrum->id]);
+        $this->assertStringContainsString('900.00 − 14%', MoneyMovement::first()->note);
+        $this->assertSame('sale', MoneyMovement::first()->category?->code);
+    }
+
     public function test_online_payment_and_refund_are_recorded_once(): void
     {
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);

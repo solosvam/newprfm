@@ -360,6 +360,7 @@ class OrderItemCancellationTest extends TestCase
         Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('size_id')->nullable()]);
         Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('credit_applications', fn (Blueprint $t) => [$t->id(), $t->integer('order_id'), $t->decimal('total', 12, 2), $t->decimal('bank_fee_rate', 5, 2)->nullable(), $t->timestamps()]);
         DB::table('brands')->insert(['id' => 1, 'name' => 'Dior']);
         DB::table('types')->insert(['id' => 1, 'name_az' => 'Eau de Toilette']);
         DB::table('genders')->insert(['id' => 1, 'name_az' => 'Kişi']);
@@ -388,6 +389,13 @@ class OrderItemCancellationTest extends TestCase
         DB::table('orders')->where('id', $order->id)->update(['payment_method_id' => 3]);
         $this->assertSame([0.0, 0.0], $report->rows(today(), today())->pluck('price')->all());
         $this->assertSame(-160.0, $report->totals($report->rows(today(), today()))['profit']);
+
+        // Hissə-hissə: Ferrum-un xalis köçürməsi (269.50 − 14% = 231.77) faizsiz borca nisbətində mallara bölünür
+        DB::table('orders')->where('id', $order->id)->update(['payment_method_id' => 4]);
+        DB::table('credit_applications')->insert(['order_id' => $order->id, 'total' => 269.50, 'bank_fee_rate' => 14]);
+        $o = $order->fresh();
+        $factor = 231.77 / ((float) $o->subtotal - (float) $o->discount + (float) $o->delivery_fee + (float) $o->gift_wrap_fee);
+        $this->assertSame([round(150 * $factor, 2), round(100 * $factor, 2)], $report->rows(today(), today())->pluck('price')->all());
     }
 
     public function test_whole_order_cancel_returns_picked_goods_and_releases_reservations(): void

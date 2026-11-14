@@ -255,8 +255,8 @@ class FinanceService
     }
 
     /**
-     * Hissə-hissə sifariş təhvil veriləndə (bir dəfə): Müştəri → Ferrum (kreditin yekunu, "Satış"),
-     * Ferrum → Kənar (Ferrum-un çıxdığı faiz). Ferrum pulu sonra köçürür — hesabın qalığı onun verəcəyi puldur.
+     * Hissə-hissə sifariş təhvil veriləndə (bir dəfə): Müştəri → Ferrum, xalis satış ("Satış") — kreditin yekunu
+     * − Ferrum-un faizi. Ferrum pulu sonra köçürür — hesabın qalığı onun verəcəyi puldur.
      */
     public function recordCreditReceivable(Order $order, ?int $actor = null): void
     {
@@ -267,17 +267,16 @@ class FinanceService
             return;
         }
         if (MoneyMovement::where('kind', 'customer_payment')->where('order_id', $order->id)->where('to_account_id', $ferrum->id)->exists()) return;
+        // Xalis satış: Ferrum-un faizi çıxılır, yalnız bizə köçürəcəyi yazılır — ayrıca "Ferrum komissiyası" xərci yoxdur.
+        // Faiz yazılmayıbsa (bank_fee_rate yoxdur) — müqavilə məbləği.
+        $net = $credit->netAmount() ?? (float) $credit->total;
+        if ($net <= 0) return;
         $rate = $credit->bank_fee_rate !== null ? rtrim(rtrim(number_format((float) $credit->bank_fee_rate, 2, '.', ''), '0'), '.') : null;
-        DB::transaction(function () use ($order, $credit, $ferrum, $actor, $rate) {
-            $this->record($this->system('customer'), $ferrum, (float) $credit->total, 'customer_payment', [
-                'order_id' => $order->id, 'note' => 'Hissə-hissə ödəniş (Ferrum)'.($credit->period ? ' — '.$credit->period->month.' ay' : ''),
-            ], $actor);
-            if (($fee = $credit->bankFee()) > 0) {
-                $this->record($ferrum, $this->system('external'), $fee, 'credit_fee', [
-                    'order_id' => $order->id, 'note' => 'Ferrum '.$rate.'% çıxır',
-                ], $actor);
-            }
-        });
+        $this->record($this->system('customer'), $ferrum, $net, 'customer_payment', [
+            'order_id' => $order->id,
+            'note' => 'Hissə-hissə ödəniş (Ferrum)'.($credit->period ? ' — '.$credit->period->month.' ay' : '')
+                .($rate !== null ? ' · '.number_format((float) $credit->total, 2, '.', '').' − '.$rate.'%' : ''),
+        ], $actor);
     }
 
     /** Birbank ödənişi təsdiqlənəndə: Müştəri → Onlayn ödənişlər (bir dəfə) */

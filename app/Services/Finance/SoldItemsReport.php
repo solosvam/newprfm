@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
  * Sətir — malın götürüldüyü depo hissəsi (bir məhsul iki depodan götürülübsə iki sətir; mayası, mənbəyi fərqlidir).
  *  - Tarix — sifarişin "Təhvil verildi" vaxtı;
  *  - Mənsəb — ödəniş üsulu; bonusla ödənilibsə satış qiyməti 0 (maya real — bonusla verilən malın xərci);
+ *    hissə-hissə (Ferrum) — xalis: Ferrum-un bizə köçürdüyü məbləğ mallara qiymətləri nisbətində bölünür
+ *    (müştərinin ödədiyi faiz əlavəsi daxil, Ferrum-un faizi çıxılıb — maliyyədəki xalis satışla eyni);
  *  - Miq. — götürülmüş say (ləğv / qapıda imtina — depoya qaytarılan çıxılır);
  *  - Maya — deponun alış qiyməti; depo hissəsi olmayan qalıq (mal depodan götürülməyib) — maya bilinmir.
  */
@@ -45,7 +47,7 @@ class SoldItemsReport
                 $q->whereHas('product', fn ($p) => $p->where('name', 'like', $like)->orWhereHas('brand', fn ($b) => $b->where('name', 'like', $like)));
             })
             ->select('order_items.*', 'd.delivered_at')
-            ->with(['order.paymentMethod', 'product.brand', 'product.type', 'product.genders', 'variant.size', 'allocations.warehouse'])
+            ->with(['order.paymentMethod', 'order.creditApplication', 'product.brand', 'product.type', 'product.genders', 'variant.size', 'allocations.warehouse'])
             ->orderBy('d.delivered_at')->orderBy('order_items.id')
             ->get();
 
@@ -55,7 +57,11 @@ class SoldItemsReport
             if ($active <= 0) {
                 continue;
             }
-            $price = $item->order->paymentMethod?->code === 'bonus_balance' ? 0.0 : (float) $item->unit_price;
+            $price = match ($item->order->paymentMethod?->code) {
+                'bonus_balance' => 0.0,
+                'installment' => round((float) $item->unit_price * self::creditFactor($item->order), 2),
+                default => (float) $item->unit_price,
+            };
             $at = Carbon::parse($item->delivered_at);
             $parts = $item->allocations->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)->sortBy('id');
             $left = $active;
@@ -77,6 +83,21 @@ class SoldItemsReport
         }
 
         return $rows;
+    }
+
+    /**
+     * Hissə-hissə: malın qiymətinin neçə faizi bizə çatır — Ferrum-un xalis köçürməsi / müştərinin faizsiz borcu
+     * (mallar − endirim + çatdırılma + qablaşdırma). Müraciət yoxdursa — 1.
+     */
+    public static function creditFactor(\App\Models\Order\Order $order): float
+    {
+        $credit = $order->creditApplication;
+        $payable = (float) $order->subtotal - (float) $order->discount + (float) $order->delivery_fee + (float) $order->gift_wrap_fee;
+        if (!$credit || $payable <= 0) {
+            return 1.0;
+        }
+
+        return ($credit->netAmount() ?? (float) $credit->total) / $payable;
     }
 
     /** @return array{count: int, sales: float, cost: float, profit: float, unknown: int} */
