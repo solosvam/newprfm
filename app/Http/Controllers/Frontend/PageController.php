@@ -29,7 +29,11 @@ class PageController extends Controller
         $extra = [];
         if ($key === 'delivery') {
             $extra['delivery'] = app(ShopPricing::class)->delivery();
-            $extra['paymentMethods'] = DB::table('payment_methods')->where('active', 1)->orderBy('sort_order')->get();
+            // Bu səhifədə sıra sabitdir (ödəniş səhifəsindəki sort_order-a toxunmur): əvvəl kartsız hissə-hissə, sonra qalanlar
+            $order = array_flip(['installment', 'cash', 'card_online', 'birbank_installment', 'bonus_balance']);
+            $extra['paymentMethods'] = DB::table('payment_methods')->where('active', 1)->orderBy('sort_order')->get()
+                ->sortBy(fn ($m) => $order[$m->code] ?? 100 + $m->sort_order)->values();
+            $extra['creditPeriods'] = CreditPeriod::where('active', 1)->orderBy('month')->get();
         }
 
         return view('frontend.page', ['page' => $page, 'nav' => $this->nav()] + $extra);

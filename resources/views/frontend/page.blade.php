@@ -36,7 +36,27 @@
                             <div class="info-fact__label">{{ __('page_payment_methods') }}</div>
                             <ul class="info-fact__list">
                                 @foreach($paymentMethods as $method)
-                                    <li>{{ $method->{'name_'.app()->getLocale()} ?: $method->name_az }}</li>
+                                    @php $name = $method->{'name_'.app()->getLocale()} ?: $method->name_az; @endphp
+                                    @if($method->code === 'installment')
+                                        {{-- Kartsız hissə-hissə: ayrıca seçilir, altında müddətlər (Ayarlar → Kredit → Faizlər) --}}
+                                        @php
+                                            $free = $creditPeriods->filter(fn ($p) => (float) $p->interest_rate <= 0)->pluck('month');
+                                            $paid = $creditPeriods->filter(fn ($p) => (float) $p->interest_rate > 0)->pluck('month');
+                                            $months = fn ($list) => $list->count() > 1 ? $list->slice(0, -1)->implode(', ').' '.__('page_and').' '.$list->last() : $list->implode('');
+                                            $terms = array_filter([
+                                                $free->isNotEmpty() ? __('page_installment_terms_free', ['months' => $months($free)]) : null,
+                                                $paid->isNotEmpty() ? __('page_installment_terms_paid', ['months' => $months($paid)]) : null,
+                                            ]);
+                                        @endphp
+                                        <li class="info-fact__highlight">
+                                            <strong>{{ __('page_installment_no_card') }}</strong>
+                                            @if($terms)<span class="info-fact__note">{{ implode(', ', $terms) }}</span>@endif
+                                        </li>
+                                    @elseif($method->code === 'birbank_installment')
+                                        <li>{{ $name }} <span class="info-fact__note">{{ __('page_birbank_terms') }}</span></li>
+                                    @else
+                                        <li>{{ $name }}</li>
+                                    @endif
                                 @endforeach
                             </ul>
                         </div>
