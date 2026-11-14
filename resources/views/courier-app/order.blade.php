@@ -232,10 +232,10 @@
                 @if($a)
                     {{-- Naviqasiya: müştəri xəritədə nöqtə seçibsə — dəqiq nöqtə, yoxsa ünvan mətni ilə --}}
                     <div class="row-btns">
-                        <a href="{{ $a->directionsUrl() }}" target="_blank" rel="noopener" class="btn btn--outline">@include('courier-app._icon', ['name' => 'map']) Google Maps</a>
+                        <a href="{{ $a->directionsUrl() }}" target="_blank" rel="noopener" class="btn {{ $a->hasLocation() ? 'btn--primary' : 'btn--outline' }}">@include('courier-app._icon', ['name' => 'map']) Xəritədə aç</a>
                         <a href="{{ $a->wazeUrl() }}" target="_blank" rel="noopener" class="btn btn--outline">Waze</a>
                     </div>
-                    @if($a->hasLocation())<div class="ok small">Müştəri xəritədə dəqiq nöqtə seçib</div>@endif
+                    @if($a->hasLocation())<div class="ok small">Dəqiq lokasiya var — "Xəritədə aç" birbaşa nöqtəyə aparır</div>@else<div class="muted small">Dəqiq lokasiya yoxdur — xəritə ünvan mətni ilə axtarır</div>@endif
                 @endif
             @endif
             @if($order->customer_note)<div class="client__line"><b>Qeyd:</b> {{ $order->customer_note }}</div>@endif

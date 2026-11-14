@@ -354,6 +354,9 @@ Route::prefix('admin')
                 Route::get('/referrals', [ReferralsController::class, 'index'])->name('referrals.index');
             });
 
+            // WhatsApp lokasiyası / Google Maps linki → koordinat (ünvan pəncərələri, public/shared/address-map.js)
+            Route::post('/maps/resolve-link', [\App\Http\Controllers\Backend\MapsLinkController::class, 'resolve'])
+                ->middleware(['can:crm', 'throttle:30,1'])->name('maps.resolve-link');
             Route::prefix('easy-orders')->name('easy-orders.')->controller(EasyOrdersController::class)->middleware('can:crm')->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('/{order}', 'show')->name('show');

@@ -5,6 +5,14 @@
 <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2.min.css') }}"/>
 <link rel="stylesheet" href="{{ asset('backend/css/vendor/select2-bootstrap4.min.css') }}"/>
 <style>
+    /* Ünvan təklifləri (Google Places) — CRM ünvan pəncərəsindəki kimi */
+    .address-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 1060; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--foreground); border: 1px solid var(--separator); border-radius: var(--border-radius-md); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+    .address-suggest[hidden] { display: none; }
+    .address-suggest li { display: flex; flex-direction: column; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+    .address-suggest li small { color: var(--muted); }
+    .address-suggest li:hover, .address-suggest li.is-active { background: rgba(var(--primary-rgb), .08); }
+</style>
+<style>
     /* Tapılmış müştərinin nömrə, ad, soyadı dəyişdirilmir: disabled kimi görünsün (readonly — formla göndərilir) */
     form[data-lookup-url] .form-control[readonly] { background: var(--background); color: var(--muted); cursor: not-allowed; }
 </style>
@@ -122,7 +130,7 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Küçə və ünvan *</label>
-                                    <input class="form-control" name="address" maxlength="500" value="{{ old('address') }}">
+                                    <div class="position-relative"><input class="form-control" name="address" id="easyOrderAddress" maxlength="500" value="{{ old('address') }}" autocomplete="off"></div>
                                 </div>
                                 @php $hasDetails = old('building') || old('entrance') || old('floor') || old('apartment'); @endphp
                                 <div class="col-12">
@@ -142,6 +150,13 @@
                                     <label class="form-label">Əlavə məlumat</label>
                                     <textarea class="form-control" name="address_note" rows="2" maxlength="1000" placeholder="Kuryer üçün qeyd, orientir...">{{ old('address_note') }}</textarea>
                                 </div>
+                                {{-- Lokasiya linki (WhatsApp) və xəritədə nöqtə — kuryer "Xəritədə aç" ilə dəqiq nöqtəyə gedir --}}
+                                @if(config('services.google_maps.key'))
+                                    <div class="col-12">
+                                        @include('backend.crm.partials.address-map', ['id' => 'easyOrder', 'address' => '#easyOrderAddress', 'city' => '#easyOrderCity',
+                                            'lat' => old('latitude'), 'lng' => old('longitude')])
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="col-12">
@@ -184,6 +199,7 @@
 </div>
 @endsection
 @section('js_page')
+@if(config('services.google_maps.key'))<script src="{{ asset_v('shared/address-map.js') }}"></script>@endif
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Ləğv: təsdiq soruş

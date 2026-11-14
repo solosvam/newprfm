@@ -11,6 +11,9 @@
  * - Pin: xəritəyə basmaq, sürükləmək, "Mənim yerim" (brauzer geolokasiyası).
  * - Açılanda yazılmış ünvan (küçə + şəhər) Geocoding ilə tapılır; pin qoyulanda yerin ünvanı statusda göstərilir.
  * - Koordinatlar gizli sahələrə yazılır; boşdursa — nöqtə seçilməyib.
+ * - Lokasiya linki (yalnız admin, data-resolve-url): müştərinin WhatsApp-da göndərdiyi lokasiya / Google Maps linki
+ *   [data-map-link] sahəsinə yapışdırılır — server koordinatı tapır (App\Support\GoogleMapsLink), xəritə açılır, pin qoyulur,
+ *   ünvan boşdursa yerin ünvanı yazılır. Linkdə yalnız məkanın adı varsa — Geocoder ilə axtarılır.
  * - Ünvan sahəsinin altında Google təklifləri (Places API (New) — AutocompleteSuggestion); seçiləndə küçə, şəhər
  *   və nöqtə doldurulur (xəritə açılmasa da). Skript yalnız sahəyə yazmağa başlayanda yüklənir.
  */
@@ -404,6 +407,54 @@
             place(point, { describe: false });
             setStatus(text('selected') + (label ? ': ' + label : ''));
         }
+
+        // Lokasiya linki → nöqtə
+        async function showPoint(point) {
+            if (latInput) latInput.value = point.lat;
+            if (lngInput) lngInput.value = point.lng;
+            if (!map) { panel.hidden = true; await open(); return; }   // açılanda pin qoyulur və ünvan tapılır
+            panel.hidden = false;
+            place(point);
+        }
+        async function showQuery(query) {
+            if (!map) { panel.hidden = true; await open(); }
+            panel.hidden = false;
+            if (!geocoder) return;
+            setStatus('…');
+            geocoder.geocode({ address: query, region: 'az' }).then(({ results }) => {
+                const loc = results[0]?.geometry?.location;
+                if (loc) place({ lat: loc.lat(), lng: loc.lng() });
+                else setStatus(text('approx'));
+            }).catch(() => setStatus(text('approx')));
+        }
+        const linkInput = root.querySelector('[data-map-link]');
+        const linkError = root.querySelector('[data-map-link-error]');
+        async function resolveLink() {
+            const link = linkInput?.value.trim();
+            if (!link || !root.dataset.resolveUrl) return;
+            if (linkError) { linkError.hidden = true; linkError.textContent = ''; }
+            const button = root.querySelector('[data-map-link-apply]');
+            if (button) button.disabled = true;
+            try {
+                const response = await fetch(root.dataset.resolveUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+                    body: JSON.stringify({ link }),
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Link oxunmadı.');
+                if (data.lat !== undefined) await showPoint({ lat: data.lat, lng: data.lng });
+                else if (data.query) await showQuery(data.query);
+            } catch (e) {
+                if (linkError) { linkError.textContent = e.message; linkError.hidden = false; }
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+        root.querySelector('[data-map-link-apply]')?.addEventListener('click', resolveLink);
+        linkInput?.addEventListener('paste', () => setTimeout(resolveLink, 0));
+        linkInput?.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); resolveLink(); } });
 
         openButton?.addEventListener('click', open);
         root.querySelector('[data-map-locate]')?.addEventListener('click', () => { if (map) locate(); });
