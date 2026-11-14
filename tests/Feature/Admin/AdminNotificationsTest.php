@@ -65,4 +65,51 @@ class AdminNotificationsTest extends TestCase
         $this->actingAs(\App\Models\User::find(7), 'admin');
         $this->getJson('/admin/notifications')->assertForbidden();
     }
+
+    public function test_new_site_order_goes_to_operators_telegram_group_once(): void
+    {
+        Schema::table('orders', fn (Blueprint $t) => [$t->string('payment_status')->default('cod'), $t->integer('customer_address_id')->nullable(), $t->text('customer_note')->nullable()]);
+        Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->integer('order_id'), $t->integer('product_id')->nullable(), $t->integer('product_variant_id')->nullable(),
+            $t->integer('quantity')->default(1), $t->decimal('unit_price', 12, 2)->default(0), $t->timestamps()]);
+        Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->integer('brand_id')->nullable()]);
+        Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
+        Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('size_id')->nullable()]);
+        Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('customer_addresses', fn (Blueprint $t) => [$t->id(), $t->boolean('on_call')->default(false)]);
+        Schema::create('sms_templates', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name')->nullable(), $t->text('template')->nullable(), $t->boolean('active')->default(1), $t->timestamps()]);
+        (require database_path('migrations/2026_09_30_100000_create_sms_logs_and_warehouse_sms.php'))->up();
+        (require database_path('migrations/2026_10_10_180000_add_delivery_status_to_sms_logs.php'))->up();
+        (require database_path('migrations/2026_10_15_160000_create_telegram_messages.php'))->up();
+        DB::table('brands')->insert(['id' => 1, 'name' => 'Dior']);
+        DB::table('products')->insert(['id' => 1, 'name' => 'Sauvage', 'brand_id' => 1]);
+        DB::table('sizes')->insert(['id' => 1, 'name_az' => '100 ml']);
+        DB::table('product_variants')->insert(['id' => 1, 'size_id' => 1]);
+
+        \Illuminate\Support\Facades\Http::fake(['api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => ['message_id' => 9]])]);
+        config(['services.telegram.bot_token' => 'x', 'services.telegram.orders_group_id' => '-3762730899']);
+        $order = $this->order(['total' => 189, 'customer_note' => 'Axşam zəng edin']);
+        DB::table('order_items')->insert(['order_id' => $order->id, 'product_id' => 1, 'product_variant_id' => 1, 'quantity' => 1, 'unit_price' => 189]);
+
+        $telegram = app(\App\Services\Telegram\OrderTelegram::class);
+        $log = $telegram->newOrder($order);
+        $this->assertSame('sent', $log->status);
+        $this->assertSame('-3762730899', $log->msisdn);
+        $text = $telegram->text($order->fresh());
+        $this->assertStringContainsString('Yeni sifariş</b> · '.$order->order_no, $text);
+        $this->assertStringContainsString('Aysel Məmmədova · 994501234567', $text);
+        $this->assertStringContainsString('• Dior Sauvage 100 ml × 1 — 189.00 AZN', $text);
+        $this->assertStringContainsString('189.00 AZN</b> · Qapıda ödəniş', $text);
+        $this->assertStringContainsString('Axşam zəng edin', $text);
+        $this->assertNull($telegram->newOrder($order)); // ikinci dəfə getmir
+
+        // Asan sifariş (qonaq)
+        $easy = $this->order(['one_click' => true, 'customer_id' => null, 'guest_mobile' => '994551112233']);
+        $this->assertStringContainsString('Asan sifariş</b>', $telegram->text($easy));
+        $this->assertStringContainsString('Qonaq · 994551112233', $telegram->text($easy));
+        \Illuminate\Support\Facades\Http::assertSentCount(1);
+
+        // Qrup yazılmayıbsa — heç nə
+        config(['services.telegram.orders_group_id' => '']);
+        $this->assertNull($telegram->newOrder($easy));
+    }
 }

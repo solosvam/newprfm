@@ -46,6 +46,10 @@ final class AdminNotifier
             : ($order->one_click ? route('admin.easy-orders.show', $order, false) : null);
 
         $this->notify($type, 'order', $order->id, self::TYPES[$type], $body, $url);
+
+        // Operatorların Telegram qrupuna — cavab müştəriyə getdikdən sonra (sifariş yavaşlamasın)
+        $id = $order->id;
+        dispatch(fn () => rescue(fn () => app(\App\Services\Telegram\OrderTelegram::class)->newOrder(Order::findOrFail($id))))->afterResponse();
     }
 
     /** Depo sorğuya cavab verdi (link və ya Telegram) */

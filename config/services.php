@@ -72,6 +72,8 @@ return [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         // Kuryerlərin ümumi qrupu: sifariş təyin olunanda / ötürüləndə "Filankəs, sizə sifariş təyin olundu" (qrup id-si mənfidir, məs. -407456641)
         'courier_group_id' => env('TELEGRAM_COURIER_GROUP_ID'),
+        // Operatorların qrupu: saytdan yeni sifariş (səbət, asan sifariş, kredit müraciəti) — App\Services\Telegram\OrderTelegram
+        'orders_group_id' => env('TELEGRAM_ORDERS_GROUP_ID'),
     ],
 
     'parfumshop_sms' => [

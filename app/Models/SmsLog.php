@@ -37,6 +37,7 @@ class SmsLog extends Model
         'courier_order' => 'Kuryerə sifariş təhkim olundu (Telegram)',
         'courier_collect' => 'Kuryerin pulu baş kuryerə köçürüldü (Telegram)',
         'courier_give' => 'Baş kuryer kuryerə pul verdi (Telegram)',
+        'orders_group' => 'Saytdan yeni sifariş — operatorların qrupu (Telegram)',
     ];
 
     public $timestamps = false;
