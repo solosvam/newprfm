@@ -29,19 +29,17 @@
                             <thead>
                             <tr>
                                 <th>{{ __('installment_col_period') }}</th>
-                                <th>{{ __('installment_col_rate') }}</th>
                                 <th>{{ __('installment_col_amount') }}</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach($periods as $period)
                                 <tr>
-                                    <td class="info-table__strong">{{ __('installment_months', ['months' => $period->month]) }}</td>
-                                    <td>
+                                    <td class="info-table__strong">
+                                        {{ __('installment_months', ['months' => $period->month]) }}
+                                        {{-- Faiz dərəcələri müştəriyə göstərilmir — yalnız faizsiz müddət qeyd olunur --}}
                                         @if((float) $period->interest_rate <= 0)
                                             <span class="info-badge">{{ __('installment_free') }}</span>
-                                        @else
-                                            {{ $num($period->interest_rate) }}%
                                         @endif
                                     </td>
                                     <td>{{ $period->min_amount !== null ? __('installment_from', ['amount' => $num($period->min_amount)]) : __('installment_any') }}</td>
