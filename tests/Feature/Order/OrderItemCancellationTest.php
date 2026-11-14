@@ -351,6 +351,45 @@ class OrderItemCancellationTest extends TestCase
         $this->assertSame('returned', $parts[0]->fresh()->status);
     }
 
+    public function test_sold_items_report_lists_delivered_goods_with_cost_and_warehouse(): void
+    {
+        Schema::table('products', fn (Blueprint $t) => [$t->integer('brand_id')->nullable(), $t->integer('type_id')->nullable()]);
+        Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
+        Schema::create('types', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('genders', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
+        Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('size_id')->nullable()]);
+        Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        DB::table('brands')->insert(['id' => 1, 'name' => 'Dior']);
+        DB::table('types')->insert(['id' => 1, 'name_az' => 'Eau de Toilette']);
+        DB::table('genders')->insert(['id' => 1, 'name_az' => 'Kişi']);
+        DB::table('product_genders')->insert(['product_id' => 1, 'gender_id' => 1]);
+        DB::table('products')->where('id', 1)->update(['brand_id' => 1, 'type_id' => 1]);
+
+        [$order] = $this->atDoor(); // nağd: 2 × 150 və 1 × 100, hamısı Depo A-dan 80-ə götürülüb
+        app(OrderItemCancellationService::class)->refuseAtDoor($order, $order->items[0], 1, null, 7); // 1 ədəd qaytarılır
+        $this->travelTo(today()->setTime(15, 0));
+        // Təhvil (bonus yazılması bu testə aid deyil — status və tarixçə birbaşa)
+        $delivered = DB::table('order_statuses')->where('code', 'delivered')->value('id');
+        DB::table('orders')->where('id', $order->id)->update(['order_status_id' => $delivered]);
+        DB::table('order_status_logs')->insert(['order_id' => $order->id, 'status_id' => $delivered, 'created_at' => now(), 'updated_at' => now()]);
+
+        $report = app(\App\Services\Finance\SoldItemsReport::class);
+        $rows = $report->rows(today(), today());
+        $this->assertSame([1, 1], $rows->pluck('quantity')->all());
+        $this->assertSame([150.0, 100.0], $rows->pluck('price')->all());
+        $this->assertSame([80.0, 80.0], $rows->pluck('cost')->all());
+        $this->assertSame('Depo A', $rows[0]['warehouse']->name_az);
+        $this->assertSame('Dior · '.DB::table('products')->where('id', 1)->value('name').' · EDT · Kişi', \App\Services\Finance\SoldItemsReport::title($rows[0]['item']));
+        $this->assertSame(['count' => 2, 'sales' => 250.0, 'cost' => 160.0, 'profit' => 90.0, 'unknown' => 0], $report->totals($rows));
+        $this->assertCount(0, $report->rows(today()->subDay(), today()->subDay()));
+
+        // Bonusla ödənilib — satış qiyməti 0, maya qalır
+        DB::table('orders')->where('id', $order->id)->update(['payment_method_id' => 3]);
+        $this->assertSame([0.0, 0.0], $report->rows(today(), today())->pluck('price')->all());
+        $this->assertSame(-160.0, $report->totals($report->rows(today(), today()))['profit']);
+    }
+
     public function test_whole_order_cancel_returns_picked_goods_and_releases_reservations(): void
     {
         [$order, $parts] = $this->atDoor();

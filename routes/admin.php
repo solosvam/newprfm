@@ -202,6 +202,9 @@ Route::prefix('admin')
             Route::get('/main', [MainController::class, 'index'])
                 ->name('main');
 
+            // Satılan mallar: təhvil verilmiş sifarişlərin malları — satış, maya, depo (köhnə hesabat proqramındakı kimi)
+            Route::get('/sold-items', [\App\Http\Controllers\Backend\SoldItemsController::class, 'index'])
+                ->middleware('can:finance')->name('sold-items');
             Route::get('/statistics', [StatisticsController::class, 'index'])
                 ->middleware('can:statistics')
                 ->name('statistics');

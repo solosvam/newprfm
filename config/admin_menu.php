@@ -18,6 +18,7 @@ return [
             ['title' => 'Kuryerlər', 'route' => 'admin.courier.team', 'permission' => 'courier.team'],
             ['title' => 'Price listlər', 'route' => 'admin.price-lists.index', 'permission' => 'crm'],
             ['separator' => true],
+            ['title' => 'Satılan mallar', 'route' => 'admin.sold-items', 'permission' => 'finance'],
             ['title' => 'Statistika', 'route' => 'admin.statistics', 'permission' => 'statistics'],
             ['title' => 'Ana ekran (tətbiq)', 'route' => 'admin.pwa', 'permission' => 'statistics'],
         ],
