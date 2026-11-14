@@ -17,6 +17,12 @@
             .crm-credit-card .credit-trigger { min-height: 68px; cursor: pointer; }
             .crm-credit-card .credit-trigger.disabled { cursor: default; }
             .crm-credit-card .list-item-heading { font-size: 14px; text-decoration: none; }
+            /* Ünvan təklifləri (Google Places) — yeni sifariş və ünvan pəncərəsi */
+            .address-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 1060; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--foreground); border: 1px solid var(--separator); border-radius: var(--border-radius-md); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+            .address-suggest[hidden] { display: none; }
+            .address-suggest li { display: flex; flex-direction: column; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+            .address-suggest li small { color: var(--muted); }
+            .address-suggest li:hover, .address-suggest li.is-active { background: rgba(var(--primary-rgb), .08); }
         </style>
 @endsection
 
@@ -26,6 +32,7 @@
     <script src="{{ asset_v('backend/js/crm-credit-profile.js') }}"></script>
     <script src="{{ asset_v('backend/js/crm.js') }}"></script>
     <script src="{{ asset_v('backend/js/crm-order.js') }}"></script>
+    @if(config('services.google_maps.key'))<script src="{{ asset_v('shared/address-map.js') }}"></script>@endif
 @endsection
 @section('content')
     @include('components.id-card-crop-dialog')

@@ -70,14 +70,14 @@
             {{-- Ünvanın adı yoxdur: controller "Ünvan #N" verir --}}
             <div id="crmOrderNewAddress" class="row g-2 mt-1" @if($orderForm['addresses']->isNotEmpty()) hidden @endif>
                 <div class="col-12">
-                    <select class="form-select crm-city-select" name="city_id" data-placeholder="Şəhər seçin *">
+                    <select class="form-select crm-city-select" name="city_id" id="crmOrderCity" data-placeholder="Şəhər seçin *">
                         <option value=""></option>
                         @foreach($orderForm['cities'] as $city)
                             <option value="{{ $city->id }}">{{ $city->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-12"><input type="text" class="form-control" name="address" maxlength="500" placeholder="Küçə və ünvan *"></div>
+                <div class="col-12"><div class="position-relative"><input type="text" class="form-control" name="address" id="crmOrderAddressText" maxlength="500" placeholder="Küçə və ünvan *" autocomplete="off"></div></div>
                 <div class="col-12">
                     <button type="button" class="btn btn-link p-0 crm-order__details-toggle" id="crmOrderDetailsToggle" aria-expanded="false">
                         + Ətraflı: bina, blok, mərtəbə, mənzil
@@ -92,6 +92,12 @@
                     </div>
                 </div>
                 <div class="col-12"><textarea class="form-control" name="address_note" rows="2" maxlength="1000" placeholder="Əlavə məlumat (kuryer üçün qeyd, orientir...)"></textarea></div>
+                {{-- Lokasiya linki (WhatsApp) və xəritədə nöqtə — latitude / longitude digər sahələrlə birlikdə göndərilir (crm-order.js) --}}
+                @if(config('services.google_maps.key'))
+                    <div class="col-12">
+                        @include('backend.crm.partials.address-map', ['id' => 'crmOrder', 'address' => '#crmOrderAddressText', 'city' => '#crmOrderCity'])
+                    </div>
+                @endif
             </div>
 
             <h6 class="crm-order__step mt-4"><span>3</span> Əlavə seçimlər</h6>

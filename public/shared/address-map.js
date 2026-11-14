@@ -20,6 +20,9 @@
 (function () {
     'use strict';
 
+    // İkinci dəfə yüklənəndə (CRM: səhifə + ünvan tabı) yalnız yeni xəritələri qoş
+    if (window.AddressMap) { window.AddressMap.init(); return; }
+
     const BAKU = { lat: 40.4093, lng: 49.8671 };
 
     // Saytın palitrası: bənövşəyi su, yumşaq fon; qaranlıq temada — tünd (yalnız "Xəritə" növünə aiddir, peykə yox)
