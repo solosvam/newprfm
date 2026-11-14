@@ -110,9 +110,10 @@ class PagesTest extends TestCase
         ]);
         DB::table('credit_term_items')->insert([['content_az' => 'Şəxsiyyət vəsiqəsi <b>lazımdır</b>', 'sort_order' => 1]]);
         $html = $this->get(route('front.installment'))->assertOk()->getContent();
-        foreach (['3 ay', 'Faizsiz', '12 ay', '33.3%', '200 ₼-dan yuxarı', 'Şəxsiyyət vəsiqəsi &lt;b&gt;lazımdır&lt;/b&gt;'] as $text) {
+        foreach (['3 ay', 'Faizsiz', '12 ay', '200 ₼-dan yuxarı', 'Hissə-hissə ödəniş şərtləri', 'Şəxsiyyət vəsiqəsi &lt;b&gt;lazımdır&lt;/b&gt;'] as $text) {
             $this->assertStringContainsString($text, $html);
         }
+        $this->assertStringNotContainsString('33.3%', $html); // faiz dərəcələri müştəriyə göstərilmir
         $this->assertStringNotContainsString('18 ay', $html);
     }
 
