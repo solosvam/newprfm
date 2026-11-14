@@ -365,6 +365,37 @@ class FinanceTest extends TestCase
         $this->assertSame('sale', MoneyMovement::first()->category?->code);
     }
 
+    public function test_old_ferrum_sales_are_converted_to_net(): void
+    {
+        $ferrum = FinanceAccount::create(['type' => 'bank', 'code' => 'ferrum', 'name' => 'Ferrum', 'active' => true]);
+        $f = $this->f();
+        $old = function (float $total, float $fee) use ($f, $ferrum) {
+            $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
+            $f->record($f->system('customer'), $ferrum, $total, 'customer_payment', ['order_id' => $order->id, 'note' => 'Hissə-hissə ödəniş (Ferrum)']);
+            $f->record($ferrum, $f->system('external'), $fee, 'credit_fee', ['order_id' => $order->id, 'note' => 'Ferrum 14% çıxır']);
+
+            return $order;
+        };
+        $a = $old(900, 126);
+        $b = $old(500, 70);
+        $f->reverse(MoneyMovement::where('order_id', $b->id)->where('kind', 'credit_fee')->first(), 7, 'səhv'); // əks olunub — toxunulmur
+        $before = $f->balances()[$ferrum->id];
+
+        $this->artisan('parfumshop:ferrum-net-sales', ['--dry-run' => true])->expectsOutputToContain('Çevriləcək: 1 / 2')->assertSuccessful();
+        $this->assertSame(1, MoneyMovement::where('order_id', $a->id)->where('kind', 'credit_fee')->count()); // dry-run heç nə dəyişmir
+
+        $this->artisan('parfumshop:ferrum-net-sales', ['--apply' => true])->assertSuccessful();
+        $this->assertSame(0, MoneyMovement::where('order_id', $a->id)->where('kind', 'credit_fee')->count());
+        $sale = MoneyMovement::where('order_id', $a->id)->where('kind', 'customer_payment')->first();
+        $this->assertSame('774.00', $sale->amount);
+        $this->assertStringContainsString('xalis: 900.00 − 126.00', $sale->note);
+        $this->assertSame($before, $f->balances()[$ferrum->id]); // Ferrum balansı dəyişmir
+        $this->assertSame('500.00', MoneyMovement::where('order_id', $b->id)->where('kind', 'customer_payment')->value('amount'));
+
+        // Təkrar işlədəndə heç nə dəyişmir (əks olunmuş komissiya qalır, toxunulmur)
+        $this->artisan('parfumshop:ferrum-net-sales', ['--apply' => true])->expectsOutputToContain('Çevrildi: 0 / 1')->assertSuccessful();
+    }
+
     public function test_online_payment_and_refund_are_recorded_once(): void
     {
         $order = Order::create(['customer_id' => 1, 'order_status_id' => 1]);
