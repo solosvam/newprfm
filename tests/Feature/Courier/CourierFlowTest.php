@@ -806,9 +806,17 @@ class CourierFlowTest extends TestCase
 
         $fees->change($order, 10, 7);
         $this->assertSame(['10.00', '130.00'], [$order->fresh()->courier_fee, $order->fresh()->total]);
+        $fees->change($order->fresh(), 50, 7); // hədd — 50 AZN
+        $this->assertSame(['50.00', '170.00'], [$order->fresh()->courier_fee, $order->fresh()->total]);
+        try {
+            $fees->change($order->fresh(), 1000, 7); // həddən çox — rədd olunur, 50-yə kəsilmir
+            $this->fail('Həddən çox qəbul olunmamalı idi');
+        } catch (ValidationException) {
+        }
+        $this->assertSame('50.00', $order->fresh()->courier_fee);
         $fees->change($order->fresh(), 5, 7);
         $this->assertSame(['5.00', '125.00'], [$order->fresh()->courier_fee, $order->fresh()->total]);
-        $this->assertStringContainsString('10.00 → 5.00', DB::table('order_status_logs')->where('kind', 'courier_fee')->orderByDesc('id')->value('note'));
+        $this->assertStringContainsString('50.00 → 5.00', DB::table('order_status_logs')->where('kind', 'courier_fee')->orderByDesc('id')->value('note'));
 
         $order->forceFill(['payment_status' => 'paid'])->save();
         $this->assertNotNull($fees->changeBlock($order->fresh()));

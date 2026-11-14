@@ -22,8 +22,8 @@ use Illuminate\Validation\ValidationException;
  */
 class CourierFees
 {
-    /** Operatorun yaza biləcəyi ən böyük məbləğ */
-    public const MAX = 500;
+    /** Operatorun yaza biləcəyi ən böyük məbləğ (çoxu validasiyada rədd olunur — səssizcə kəsilmir) */
+    public const MAX = 50;
 
     /** Sürətli seçim düymələri */
     public const PRESETS = [5, 10];
@@ -56,6 +56,9 @@ class CourierFees
                 throw ValidationException::withMessages(['courier_fee' => $block]);
             }
             $fee = self::normalize($fee);
+            if ($fee > self::MAX) {
+                throw ValidationException::withMessages(['courier_fee' => 'Çatdırılma haqqı '.number_format(self::MAX).' AZN-dən çox ola bilməz.']);
+            }
             $old = round((float) $locked->courier_fee, 2);
             $diff = round($fee - $old, 2);
             if (abs($diff) < 0.005) {
@@ -72,7 +75,7 @@ class CourierFees
 
     public static function normalize(mixed $fee): float
     {
-        return round(min(self::MAX, max(0, (float) $fee)), 2);
+        return round(max(0, (float) $fee), 2);
     }
 
     /**

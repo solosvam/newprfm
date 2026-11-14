@@ -433,6 +433,7 @@ class CrmController extends Controller
             'city_id.exists' => 'Şəhəri siyahıdan seçin.',
             'address.required_if' => 'Küçə və ünvanı daxil edin.',
             'payment_method_id.required' => 'Ödəniş üsulunu seçin.',
+            'courier_fee.max' => 'Çatdırılma haqqı '.number_format(\App\Services\Courier\CourierFees::MAX).' AZN-dən çox ola bilməz.',
         ]);
 
         $paymentMethod = PaymentMethod::whereKey($data['payment_method_id'])
@@ -783,7 +784,7 @@ class CrmController extends Controller
     {
         abort_unless($order->customer_id === $customer->id, 404);
         $data = $request->validate(['courier_fee' => ['required', 'numeric', 'min:0', 'max:'.\App\Services\Courier\CourierFees::MAX]],
-            ['courier_fee.required' => 'Məbləği yazın (0 — əlavə çatdırılma yoxdur).']);
+            ['courier_fee.required' => 'Məbləği yazın (0 — çatdırılma pulsuz).', 'courier_fee.max' => 'Çatdırılma haqqı '.number_format(\App\Services\Courier\CourierFees::MAX).' AZN-dən çox ola bilməz.']);
         $fees->change($order, (float) $data['courier_fee'], auth('admin')->id());
         $fee = (float) $order->refresh()->courier_fee;
 

@@ -80,6 +80,7 @@ class EasyOrdersController extends Controller
             'city_id.required_if' => 'Şəhəri seçin.',
             'city_id.exists' => 'Şəhəri siyahıdan seçin.',
             'address.required_if' => 'Küçə və ünvanı daxil edin.',
+            'courier_fee.max' => 'Çatdırılma haqqı '.number_format(\App\Services\Courier\CourierFees::MAX).' AZN-dən çox ola bilməz.',
         ]);
         $method = PaymentMethod::whereKey($data['payment_method_id'])
             ->where('active', 1)->whereIn('code', self::PAYMENT_CODES)->firstOrFail();

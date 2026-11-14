@@ -267,9 +267,9 @@
     // Haqq hər bükülən ədədə
     const giftUnits = () => cart.reduce((n, i) => n + (i.gift ? i.qty : 0), 0);
     const giftTotal = () => round2(giftFee * giftUnits());
-    // Əlavə çatdırılma (uzaq ünvan) — kuryerin qazancı, yekuna əlavə olunur (CourierFees: 0..500)
+    // Çatdırılma haqqı (uzaq ünvan) — kuryerin qazancı, yekuna əlavə olunur; həddi server yoxlayır (CourierFees::MAX), burada kəsilmir
     const courierFeeInput = $('crmOrderCourierFee');
-    const courierFee = () => Math.min(500, Math.max(0, round2(Number(courierFeeInput?.value) || 0)));
+    const courierFee = () => Math.max(0, round2(Number(courierFeeInput?.value) || 0));
     // Ödəniləcək məbləğ (kredit faizi olmadan)
     const payable = () => subtotal() + deliveryFee(subtotal()) + giftTotal() + courierFee();
     const selectedPeriod = () => selectedCode() === 'installment'
