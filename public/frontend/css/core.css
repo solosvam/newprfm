@@ -487,6 +487,15 @@ footer .logo--svg { color: var(--on-accent-bg); }
 }
 .advisor-fab:has(.advisor-fab__bubble.is-open) .advisor-fab__label { display: none; }
 @media (hover: none) { .advisor-fab__label { display: none; } }
+/* WhatsApp — robotun düz üstündə (mərkəzləri bir xətdə), FAB-ın gizlənmə qaydaları ona da aiddir */
+.advisor-fab__whatsapp {
+    position: absolute; right: 9px; bottom: calc(100% + 12px); display: flex; align-items: center; justify-content: center;
+    width: 50px; height: 50px; border-radius: 50%; background: #25D366; color: #fff;
+    box-shadow: 0 8px 22px rgba(37, 211, 102, .38); transition: transform .2s ease, box-shadow .2s ease;
+}
+.advisor-fab__whatsapp:hover { transform: translateY(-2px) scale(1.06); box-shadow: 0 12px 28px rgba(37, 211, 102, .5); color: #fff; }
+.advisor-fab__whatsapp:focus-visible { outline: 3px solid #25D366; outline-offset: 3px; }
+@media (max-width: 760px) { .advisor-fab__whatsapp { right: 6px; width: 46px; height: 46px; } }
 .advisor-fab__bubble-close { position: absolute; top: 4px; right: 6px; border: 0; background: none; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 4px; }
 @keyframes advisor-fab-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @media (prefers-reduced-motion: reduce) { .advisor-fab__button { animation: none; } }
