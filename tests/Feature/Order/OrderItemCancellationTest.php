@@ -256,8 +256,14 @@ class OrderItemCancellationTest extends TestCase
         DB::table('credit_applications')->insert(['customer_id' => 1, 'order_id' => $order->id, 'credit_period_id' => 1, 'interest_rate' => 10,
             'total' => 420, 'standard_total' => 434.50, 'total_edited_by' => 7, 'monthly' => 70, 'credit_status_id' => 3]);
 
-        // Ferrum təsdiqləyibsə — ləğv bağlıdır
-        $this->assertStringContainsString('təsdiqlənib', app(OrderItemCancellationService::class)->blockReason($order));
+        // Ferrum təsdiqləyibsə — ləğv açıqdır, amma kredit dəyişmir, yekundan yalnız məhsulun məbləği çıxır
+        $service = app(OrderItemCancellationService::class);
+        $this->assertNull($service->blockReason($order));
+        $this->assertTrue($service->ferrumApproved($order));
+        $preview = $service->preview($order->fresh(), $order->items[1], 1);
+        $this->assertNull($preview['credit']);
+        $this->assertEquals(97.5, $preview['amount']); // 100 − promo payı 2.50
+        $this->assertEquals(322.5, $preview['total']);
         DB::table('credit_applications')->where('order_id', $order->id)->update(['credit_status_id' => 1]);
         $this->assertNull(app(OrderItemCancellationService::class)->blockReason($order));
         $cancellation = $this->cancel($order, 1, 1); // 100-lük məhsul, promo payı 2.50 → qalan 300 − 7.50 + 5 = 297.50 → +10% = 327.25
@@ -271,6 +277,18 @@ class OrderItemCancellationTest extends TestCase
         $this->assertEquals(54.54, $credit->monthly);
         $this->assertNull($credit->total_edited_by); // əl ilə məbləğ standarta qayıdır
         $this->assertNull($cancellation->refund_status);
+
+        // Təsdiqlənmiş müraciət: ləğvdən sonra kredit olduğu kimi qalır
+        DB::table('credit_applications')->where('order_id', $order->id)->update(['credit_status_id' => 3]);
+        $order = $this->order(['payment_method_id' => 4, 'payment_status' => 'pending', 'total' => 420, 'bonus_earned' => 0]);
+        DB::table('credit_applications')->insert(['customer_id' => 1, 'order_id' => $order->id, 'credit_period_id' => 1, 'interest_rate' => 10,
+            'total' => 420, 'standard_total' => 434.50, 'total_edited_by' => 7, 'monthly' => 70, 'credit_status_id' => 3]);
+        $this->cancel($order, 1, 1);
+        $this->assertSame('322.50', $order->fresh()->total);
+        $credit = DB::table('credit_applications')->where('order_id', $order->id)->first();
+        $this->assertEquals(420, $credit->total);
+        $this->assertEquals(70, $credit->monthly);
+        $this->assertEquals(7, $credit->total_edited_by);
     }
 
     public function test_whole_order_cancel_refunds_items_and_delivery_and_reverses_bonus(): void

@@ -69,12 +69,19 @@ class OrderItemCancellationService
 
         return match (true) {
             !in_array($order->status?->code, [...self::EDITABLE_STATUSES, ...self::COURIER_STATUSES], true) => 'Bu mərhələdə məhsul ləğv edilə bilməz.',
-            // Ferrum təsdiq veribsə müqavilə köhnə məbləğlədir — əvvəl Ferrum-da dəyişmək lazımdır
-            $order->paymentMethod?->code === 'installment' && $order->creditApplication()->whereHas('status', fn ($q) => $q->where('code', 'approved'))->exists()
-                => 'Ferrum-da müraciət təsdiqlənib — məhsul ləğv edilə bilməz. Əvvəl Ferrum-da müqaviləni dəyişin.',
             $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
             default => null,
         };
+    }
+
+    /**
+     * Hissə-hissə: Ferrum müraciəti təsdiqləyibmi. Təsdiqlənibsə məhsul yenə ləğv olunur, amma kreditin məbləği
+     * və aylıq ödənişi dəyişmir (müqavilə Ferrum-dakı kimi qalır — fərqi operator əl ilə düzəldir).
+     */
+    public function ferrumApproved(Order $order): bool
+    {
+        return $order->paymentMethod?->code === 'installment'
+            && $order->creditApplication()->whereHas('status', fn ($q) => $q->where('code', 'approved'))->exists();
     }
 
     /** Qapıda imtina mümkün deyilsə səbəbi */
@@ -115,7 +122,9 @@ class OrderItemCancellationService
 
         // Kredit: yeni yekun = qalan məhsullar + çatdırılma + qablaşdırma, üstünə kreditin faizi
         $credit = null;
-        if ($order->paymentMethod?->code === 'installment' && ($application = $order->creditApplication()->with('period')->first())) {
+        // Ferrum təsdiqləyibsə kredit toxunulmur — yekundan yalnız məhsulun öz məbləği çıxır
+        if ($order->paymentMethod?->code === 'installment' && !$this->ferrumApproved($order)
+            && ($application = $order->creditApplication()->with('period')->first())) {
             $payable = $subtotal - $discount + $cents($order->delivery_fee) + $cents($order->gift_wrap_fee) - $wrap;
             $total = max(0, (int) round($payable * (1 + (float) $application->interest_rate / 100)));
             $amount = max(0, $cents($order->total) - $total - $wrap);

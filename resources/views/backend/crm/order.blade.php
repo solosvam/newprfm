@@ -524,7 +524,14 @@
                         <input class="form-check-input" type="checkbox" name="customer_agreed" value="1" required>
                         <span class="form-check-label">Müştəri ilə danışılıb, razıdır</span>
                     </label>
-                    @if($order->paymentMethod?->code === 'installment')
+                    @if($ferrumApproved ?? false)
+                        {{-- Ferrum təsdiqləyib: məhsul ləğv olunur, kredit (müqavilə) dəyişmir --}}
+                        <div class="alert alert-warning mb-3">
+                            <strong>Diqqət:</strong> Ferrum-da müraciət təsdiqlənib. Kreditin məbləği dəyişməyəcək
+                            ({{ number_format((float) $order->creditApplication?->total, 2) }} AZN, aylıq {{ number_format((float) $order->creditApplication?->monthly, 2) }} AZN).
+                            Fərqi Ferrum-da və ya əl ilə düzəldin.
+                        </div>
+                    @elseif($order->paymentMethod?->code === 'installment')
                         {{-- Kredit: Ferrum-da təsdiqlənmiş müraciətin məbləği burada dəyişsə, müqavilə ilə uyğun gəlməz --}}
                         <div class="alert alert-warning mb-3">
                             <strong>Diqqət:</strong> Ferrum-da müraciət təsdiqlənibsə, məhsulu ləğv edə bilməzsiniz.

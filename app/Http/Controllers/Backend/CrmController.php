@@ -351,6 +351,7 @@ class CrmController extends Controller
         return view('backend.crm.order', [
             'settlement' => $settlement,
             'cancelBlock' => $cancelBlock,
+            'ferrumApproved' => $cancellation->ferrumApproved($order),
             'creditStatuses' => $order->paymentMethod?->code === 'installment' && $order->creditApplication
                 ? \App\Models\Credit\CreditStatus::orderBy('sort_order')->get() : collect(),
             'doorBlock' => $cancellation->doorBlockReason($order),
@@ -628,7 +629,7 @@ class CrmController extends Controller
             'note' => ['nullable', 'required_if:reason,other', 'string', 'max:2000'],
             'customer_agreed' => ['accepted'],
             // Kredit: Ferrum-da müraciət təsdiqlənibsə ləğv edilmir — operator yoxladığını təsdiqləyir
-            'ferrum_not_approved' => $order->paymentMethod?->code === 'installment' ? ['required', 'accepted'] : ['exclude'], // 'accepted' boş sahədə də işləyir — kredit deyilsə yoxlanmır
+            'ferrum_not_approved' => $order->paymentMethod?->code === 'installment' && !$service->ferrumApproved($order) ? ['required', 'accepted'] : ['exclude'], // 'accepted' boş sahədə də işləyir — kredit deyilsə yoxlanmır
         ], [
             'reason.required' => 'Səbəbi seçin.',
             'note.required_if' => '"Digər" səbəbdə qeyd yazın.',
@@ -659,7 +660,8 @@ class CrmController extends Controller
             }
         }
         if ($credit = $order->creditApplication()->first()) {
-            $message .= ' Kredit: '.number_format((float) $credit->total, 2).' AZN, aylıq '.number_format((float) $credit->monthly, 2).' AZN.';
+            $message .= ($service->ferrumApproved($order) ? ' Ferrum təsdiqləyib — kredit dəyişmədi: ' : ' Kredit: ')
+                .number_format((float) $credit->total, 2).' AZN, aylıq '.number_format((float) $credit->monthly, 2).' AZN.';
         }
         $message .= match ($cancellation->refund_status) {
             OrderItemCancellation::REFUND_PENDING => ' Məbləğ müştərinin kartına qaytarılmalıdır.',
