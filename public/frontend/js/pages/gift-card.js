@@ -170,7 +170,16 @@
         canvas.height = H;
         const ctx = canvas.getContext('2d');
         const font = getComputedStyle(document.body).fontFamily;
-        const serif = '"Didot", "Bodoni 72", "Playfair Display", Georgia, serif';
+        const serif = '"Playfair Display", Georgia, serif';
+        // Şrift (Ə, ə daxil) lazımi hərflərlə yüklənsin — əks halda kanvas ehtiyat şriftlə çəkir
+        if (document.fonts?.load) {
+            const sample = 'AZN 0123456789 Əə ' + (data.message || '') + ' ' + (data.sender || '');
+            await Promise.all([
+                document.fonts.load(`500 40px "Playfair Display"`, sample),
+                document.fonts.load(`italic 400 40px "Playfair Display"`, sample),
+                document.fonts.load(`400 40px "Playfair Display"`, sample),
+            ]).catch(() => {});
+        }
         const theme = THEMES[card.dataset.design] || THEMES.standard;
         const foil = theme.foil;
         const foilFill = (x0, y0, x1, y1) => {

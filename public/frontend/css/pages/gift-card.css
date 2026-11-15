@@ -1,3 +1,17 @@
+/* Playfair Display (OFL, Google Fonts) — yalnız hədiyyə kartı səhifələri: Azərbaycan hərfləri (Ə ə) daxil; variable — 400–500 bir fayl */
+@font-face { font-family: 'Playfair Display'; font-style: italic; font-weight: 400 500; font-display: swap;
+    src: url('../../fonts/playfair/playfair-italic-cyrillic.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Playfair Display'; font-style: italic; font-weight: 400 500; font-display: swap;
+    src: url('../../fonts/playfair/playfair-italic-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Playfair Display'; font-style: italic; font-weight: 400 500; font-display: swap;
+    src: url('../../fonts/playfair/playfair-italic-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 400 500; font-display: swap;
+    src: url('../../fonts/playfair/playfair-normal-cyrillic.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 400 500; font-display: swap;
+    src: url('../../fonts/playfair/playfair-normal-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 400 500; font-display: swap;
+    src: url('../../fonts/playfair/playfair-normal-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
 /* Virtual hədiyyə kartı: alış səhifəsi və kartın səhifəsi */
 .gc-page { max-width: 1080px; margin: 0 auto; padding: 28px 16px 64px; box-sizing: border-box; }
 .gc-head { max-width: 640px; margin-bottom: 24px; }
@@ -39,7 +53,7 @@
 .gc-card--foil .gc-card__label { color: var(--gc-muted); opacity: 1; letter-spacing: .34em; }
 .gc-card--foil .gc-card__label::after { content: ""; display: block; width: 10cqw; height: 1px; margin-top: 2.2cqw; background: linear-gradient(90deg, var(--gc-line), transparent); }
 .gc-card--foil .gc-card__amount {
-    margin-top: 1.6cqw; font-family: "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-weight: 500; font-size: 18cqw;
+    margin-top: 1.6cqw; font-family: "Playfair Display", Georgia, serif; font-weight: 500; font-size: 18cqw;
     background: var(--gc-foil); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .gc-card--foil .gc-card__amount small { color: var(--gc-line); -webkit-text-fill-color: var(--gc-line); font-family: inherit; font-weight: 500; opacity: 1; letter-spacing: .24em; }
@@ -85,7 +99,7 @@
 .gc-design__swatch {
     display: flex; align-items: center; justify-content: center; aspect-ratio: 85.6 / 54; padding: 4px; box-sizing: border-box;
     border-radius: 10px; border: 2px solid transparent; box-shadow: 0 0 0 1px var(--border-strong);
-    font-family: "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: clamp(12px, 3.6vw, 15px); font-weight: 500;
+    font-family: "Playfair Display", Georgia, serif; font-size: clamp(12px, 3.6vw, 15px); font-weight: 500;
     letter-spacing: .02em; text-align: center; line-height: 1.1;
 }
 .gc-design__swatch--signature { color: #e6c98a; }
@@ -100,7 +114,7 @@
 .gc-design__swatch--celebration { background: radial-gradient(130% 140% at 8% 0%, #fbf3e2 0%, #f1e1bf 50%, #e2c994 100%); outline: 1px solid rgba(184, 137, 59, .7); outline-offset: -6px; }
 .gc-design__swatch--standard { background: radial-gradient(130% 120% at 0% 0%, #3d2d66 0%, #2b1f4a 55%, #1d1533 100%); }
 
-.gc-preview__msg, .gc-show__msg { margin: 0; font-size: 18px; font-style: italic; line-height: 1.45; overflow-wrap: anywhere; }
+.gc-preview__msg, .gc-show__msg { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 20px; font-style: italic; line-height: 1.45; overflow-wrap: anywhere; }
 .gc-preview__from, .gc-show__from { margin: 6px 0 0; color: var(--text-secondary); }
 
 /* Forma */
