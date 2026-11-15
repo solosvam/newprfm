@@ -60,6 +60,14 @@
     --gc-foil: linear-gradient(105deg, #e2a3ab 0%, #fdeeee 42%, #d8959e 68%, #f6d6d9 100%);
 }
 
+/* Bloom — Zərif: krem + adaçayı yaşılı (açıq kart, tünd yaşıl mətn) */
+.gc-card--bloom {
+    background: radial-gradient(130% 140% at 8% 0%, #fffdf7 0%, #f7f1e3 50%, #ece3cd 100%);
+    box-shadow: 0 18px 40px -22px rgba(62, 90, 58, .45), 0 0 0 1px rgba(138, 165, 133, .25);
+    --gc-ink: #2f4a35; --gc-muted: #6f8f6c; --gc-soft: #7f9a7a; --gc-line: #8aa585; --gc-logo: url(#gcSage);
+    --gc-foil: linear-gradient(105deg, #3e5a3a 0%, #7f9f78 42%, #4f6b4a 68%, #6d8e67 100%);
+}
+
 /* Dizayn seçimi */
 .gc-designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 .gc-design { position: relative; display: flex; flex-direction: column; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
@@ -68,6 +76,7 @@
 .gc-design input:checked + .gc-design__swatch { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #d4af5f; }
 .gc-design__swatch--signature { background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%); outline: 1px solid rgba(212, 175, 95, .6); outline-offset: -6px; }
 .gc-design__swatch--love { background: radial-gradient(120% 150% at 8% 0%, #922e46 0%, #6c1a2e 45%, #3d0c19 100%); outline: 1px solid rgba(242, 198, 203, .6); outline-offset: -6px; }
+.gc-design__swatch--bloom { background: radial-gradient(130% 140% at 8% 0%, #fffdf7 0%, #f7f1e3 50%, #ece3cd 100%); outline: 1px solid rgba(138, 165, 133, .7); outline-offset: -6px; }
 .gc-design__swatch--standard { background: radial-gradient(130% 120% at 0% 0%, #3d2d66 0%, #2b1f4a 55%, #1d1533 100%); }
 
 .gc-preview__note { max-width: 440px; margin: 16px 0 0; }

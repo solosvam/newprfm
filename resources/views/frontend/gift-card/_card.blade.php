@@ -1,7 +1,7 @@
 {{--
   Hədiyyə kartının üzü (bank kartı nisbəti 85.6 × 54).
   $amount — AZN; $code — formatlanmış kod və ya null (ödənişdən əvvəl ••••); $expires — "15.11.2027" və ya null;
-  $design — GiftCardService::DESIGNS (signature | love | standard). Bəzək (.gc-card__deco) bütöv SVG-dir — endirilən açıqca
+  $design — GiftCardService::DESIGNS (signature | love | bloom | standard). Bəzək (.gc-card__deco) bütöv SVG-dir — endirilən açıqca
   onu olduğu kimi çəkir (pages/gift-card.js), mətn rəngləri isə CSS dəyişənlərindən (.gc-card--foil) gəlir.
 --}}
 @php $design = $design ?? 'standard'; @endphp
@@ -28,6 +28,8 @@
         </svg>
     @elseif($design === 'love')
         @include('frontend.gift-card._deco-love')
+    @elseif($design === 'bloom')
+        @include('frontend.gift-card._deco-bloom')
     @endif
     <div class="gc-card__logo">@include('frontend.partials.logo')</div>
     <div class="gc-card__label">{{ __('gift_card_title') }}</div>

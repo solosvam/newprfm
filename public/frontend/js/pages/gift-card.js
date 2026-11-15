@@ -105,6 +105,7 @@
      */
     const GOLD = [[0, '#b8893b'], [0.42, '#f6e3a6'], [0.68, '#c99a45'], [1, '#efd38c']];
     const PINK = [[0, '#e2a3ab'], [0.42, '#fdeeee'], [0.68, '#d8959e'], [1, '#f6d6d9']];
+    const SAGE = [[0, '#3e5a3a'], [0.42, '#7f9f78'], [0.68, '#4f6b4a'], [1, '#6d8e67']];
     const THEMES = {
         standard: {
             bg: ['#3d2d66', '#2b1f4a', '#1d1533'], page: '#f6f3fb', ink: '#ffffff', muted: 'rgba(255,255,255,.7)', soft: 'rgba(255,255,255,.65)',
@@ -117,6 +118,10 @@
         love: {
             bg: ['#922e46', '#6c1a2e', '#3d0c19'], page: '#f8e8e6', ink: '#f8e1e1', muted: '#e7b3b9', soft: '#d39aa2',
             line: '#ecbcc2', foil: PINK, msg: '#6c1a2e', from: '#a35368', how: '#a35368',
+        },
+        bloom: {
+            bg: ['#fffdf7', '#f7f1e3', '#ece3cd'], page: '#eef2e8', ink: '#2f4a35', muted: '#6f8f6c', soft: '#7f9a7a',
+            line: '#8aa585', foil: SAGE, msg: '#2f4a35', from: '#6f8f6c', how: '#6f8f6c',
         },
     };
 
