@@ -82,7 +82,7 @@
             <a href="{{ route('front.page.privacy') }}">{{ __('footer_legal_privacy') }}</a>
         </span>
         <div class="payment-icons">
-            <span>VISA</span><span>Mastercard</span><span>M10</span><span>Birbank</span>
+            <span>VISA</span><span>Mastercard</span>
         </div>
     </div>
 </footer>
