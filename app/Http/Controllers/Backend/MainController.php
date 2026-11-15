@@ -28,6 +28,9 @@ class MainController extends Controller
             'carts' => $source['carts'],
             'today' => $source['stats'],
             'recent' => $stats->recentOrders(),
+            // Öz istehsal: qalığı 2 və az qalan məhsullar — qırmızı bildiriş (cədvəllər yoxdursa panel yenə açılır)
+            'ownLow' => $request->user('admin')?->can('production') || $request->user('admin')?->can('crm')
+                ? rescue(fn () => app(\App\Services\Production\OwnProduction::class)->lowStock(), collect(), false) : collect(),
         ];
 
         return view('backend.pages.index', compact('dashboard'));

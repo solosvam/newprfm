@@ -68,20 +68,23 @@ class ProcurementService
      * "Depo seç": operator ətirin hansı depoda neçəyə olduğunu artıq bilir. Sorğu və cavab birdən yazılır
      * (sorğu "direct" — SMS getmir, cavab gözlənilmir), sonra depo tələb olunan miqdarın hamısına seçilir — adi seçim kimi.
      */
-    public function recordDirect(Order $order, int $itemId, int $warehouseId, string $unitCost, int $actor): OrderItemAllocation
+    public function recordDirect(Order $order, int $itemId, int $warehouseId, string $unitCost, int $actor, ?int $available = null): OrderItemAllocation
     {
-        return DB::transaction(function () use ($order, $itemId, $warehouseId, $unitCost, $actor) {
+        return DB::transaction(function () use ($order, $itemId, $warehouseId, $unitCost, $actor, $available) {
             $request = $this->createRequests($order, [$warehouseId], [$itemId], $actor, true)->first();
             $requestItem = $request->items()->firstOrFail();
+            // $available — deponun verə biləcəyi say (öz anbarımızın qalığı — OwnProduction::allocate); yoxdursa tələb olunanın hamısı
+            $quantity = $available === null ? $requestItem->requested_quantity : min($available, $requestItem->requested_quantity);
+            $this->ensure($quantity > 0, 'Depoda bu məhsuldan yoxdur.');
             $offer = $this->recordOffer($order, $requestItem->id, [
-                'available_quantity' => $requestItem->requested_quantity, 'unit_cost' => $unitCost, 'source' => 'direct',
+                'available_quantity' => $quantity, 'unit_cost' => $unitCost, 'source' => 'direct',
             ], $actor);
             // Artıq başqa depodan seçilmiş hissə varsa — yalnız çatışmayan miqdar seçilir
             $item = $order->items()->findOrFail($itemId);
             $missing = $item->activeQuantity() - (int) $item->allocations()->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)->sum('quantity');
             $this->ensure($missing > 0, 'Bu məhsul üçün lazım olan miqdar artıq seçilib.');
 
-            return $this->allocate($order, $offer->id, min($missing, $requestItem->requested_quantity), $actor);
+            return $this->allocate($order, $offer->id, min($missing, $quantity), $actor);
         });
     }
 

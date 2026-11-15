@@ -136,7 +136,8 @@ class WarehouseNotifier
 
     private function reachable(?Warehouse $warehouse): bool
     {
-        return $warehouse && $warehouse->active
+        // Öz anbarımıza (öz istehsal) SMS / Telegram getmir
+        return $warehouse && $warehouse->active && !$warehouse->is_own
             && trim((string) ($this->viaTelegram($warehouse) ? $warehouse->telegram_id : $warehouse->phone)) !== '';
     }
 

@@ -21,6 +21,8 @@ class MoneyMovement extends Model
         // Öz hesablar və şəxslər arasında: gəlir və ya xərc deyil
         'transfer' => ['Köçürmə', ['cash', 'card', 'bank', 'online', 'person'], ['cash', 'card', 'bank', 'person']],
         'warehouse_payment' => ['Depoya ödəniş', ['courier', 'cash', 'card', 'bank', 'person'], ['warehouse']],
+        // Xammal alışının ödənişi (İstehsal → Alışlar / Tədarükçülər) — xərc, kateqoriya "Xammal"; ödənilməyən alış tədarükçüyə borcdur
+        'supplier_payment' => ['Tədarükçüyə ödəniş', ['cash', 'card', 'bank', 'person'], ['supplier']],
         // Mal depoya qaytarılıb (qapıda imtina / sifariş ləğvi) — depo ödənilən pulu geri verdi
         'warehouse_refund' => ['Depo pulu qaytardı', ['warehouse'], ['courier', 'cash', 'card', 'bank', 'person']],
         'courier_handover' => ['Kuryer pulu təhvil verdi', ['courier'], ['cash']], // kuryer yalnız nağd verir
@@ -50,7 +52,7 @@ class MoneyMovement extends Model
     /** Növün öz kateqoriyası (FinanceCategory::code); Mədaxil / Məxaricdə kateqoriyanı istifadəçi seçir */
     public const KIND_CATEGORY = [
         'customer_payment' => 'sale', 'customer_refund' => 'customer_refund', 'credit_fee' => 'credit_fee',
-        'warehouse_payment' => 'warehouse', 'warehouse_refund' => 'warehouse_refund',
+        'warehouse_payment' => 'warehouse', 'warehouse_refund' => 'warehouse_refund', 'supplier_payment' => 'raw_material',
         'courier_expense' => 'courier_expense', 'person_opening' => 'adjustment',
         'courier_fee_in' => 'courier_fee', 'courier_earning' => 'courier_fee',
         'transfer' => 'transfer', 'courier_advance' => 'transfer', 'courier_handover' => 'transfer', 'courier_collect' => 'transfer', 'courier_give' => 'transfer',
@@ -58,7 +60,7 @@ class MoneyMovement extends Model
 
     /** İstiqamət qrupları: şirkətə gələn, şirkətdən çıxan, daxili / şəxslə köçürmə */
     public const IN_KINDS = ['income', 'customer_payment', 'warehouse_refund'];
-    public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment', 'credit_fee', 'courier_expense'];
+    public const OUT_KINDS = ['outgo', 'customer_refund', 'warehouse_payment', 'supplier_payment', 'credit_fee', 'courier_expense'];
     // Əlavə çatdırılma da gəlir / xərc deyil — kuryerin pulu şirkətdən keçir (hesabatda köçürmə kimi, nəticəyə düşmür)
     public const TRANSFER_KINDS = ['transfer', 'courier_advance', 'courier_handover', 'courier_collect', 'courier_give', 'courier_fee_in', 'courier_earning'];
 

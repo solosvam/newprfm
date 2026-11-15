@@ -28,7 +28,7 @@ class PriceListImportTest extends TestCase
         config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'cache.default' => 'array']);
         DB::purge('sqlite');
         Schema::create('users', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('surname')->nullable(), $t->boolean('active')->default(true), $t->timestamps()]);
-        Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az'), $t->string('phone')->nullable(), $t->boolean('active')->default(true), $t->timestamps()]);
+        Schema::create('warehouses', fn (Blueprint $t) => [$t->id(), $t->string('name_az'), $t->string('phone')->nullable(), $t->boolean('active')->default(true), $t->boolean('is_own')->default(false), $t->timestamps()]);
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->string('slug')->nullable(), $t->string('image')->nullable(), $t->boolean('active')->default(true)]);
         Schema::create('types', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);

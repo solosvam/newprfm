@@ -48,6 +48,10 @@
     // Artıq sorğu göndərilmiş "depo + məhsul" cütləri — təkrar sorğu düyməsi göstərilmir
     $requested = $requests->flatMap(fn ($req) => $req->items->map(fn ($ri) => $req->warehouse_id.':'.$ri->order_item_id))->flip();
     $phoneError = fn ($log) => $log && !$log->isSent() && \Illuminate\Support\Str::contains(mb_strtolower((string) $log->error), 'nömrə');
+    // Öz istehsalımız olan məhsullar: "Öz anbardan götür" (OwnProduction::allocate) — qalıq və orta maya
+    $ownProducts = \App\Models\Production\OwnProduct::whereIn('product_variant_id', $order->items->pluck('product_variant_id')->filter()->unique()->all() ?: [0])
+        ->get()->keyBy('product_variant_id');
+    $ownStocks = $ownProducts->isNotEmpty() ? app(\App\Services\Production\OwnProduction::class)->productStocks() : collect();
 @endphp
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -206,6 +210,29 @@
                     @endif
                 </div>
             </div>
+
+            @php $own = $ownProducts[$item->product_variant_id] ?? null; @endphp
+            @if($own && $missing > 0 && ($editable || $order->status?->code === 'new'))
+                @php $ownStock = $ownStocks[$own->id]['stock'] ?? 0; @endphp
+                {{-- Öz istehsalımız: anbarda qalıq varsa sorğusuz götürülür, yoxdursa sifariş yeni partiyanı gözləyir --}}
+                <div class="card-body pt-0 pb-3">
+                    <div class="d-flex flex-wrap align-items-center gap-2 border rounded-md p-2 {{ $ownStock > 0 ? '' : 'border-danger' }}">
+                        <span class="badge bg-outline-primary">Öz istehsal</span>
+                        @if($ownStock > 0)
+                            <span>Öz anbarımızda {{ $ownStock }} ədəd · maya {{ number_format((float) $own->avg_cost, 2) }} AZN</span>
+                            @if($editable)
+                                <form method="POST" action="{{ route('admin.production.allocate', [$order, $item]) }}" class="ms-auto" data-once>@csrf
+                                    <button class="btn btn-sm btn-outline-success">Öz anbardan götür{{ $missing > 1 ? ' ('.min($missing, $ownStock).' ədəd)' : '' }}</button>
+                                </form>
+                            @else
+                                <span class="text-alternate ms-auto">İcraya götürəndən sonra öz anbardan götürmək olar</span>
+                            @endif
+                        @else
+                            <span class="text-danger">Öz anbarımızda qalmayıb — yeni partiya gözlənilir ({{ $missing }} ədəd)</span>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             @if($liveParts->isNotEmpty())
                 <div class="card-body pt-0 pb-3">

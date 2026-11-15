@@ -18,6 +18,7 @@ class FinanceAccount extends Model
         'person' => 'Şəxs',
         'courier' => 'Kuryer',
         'warehouse' => 'Depo',
+        'supplier' => 'Xammal tədarükçüsü',
         'external' => 'Kənar',
         'customer' => 'Müştərilər',
     ];

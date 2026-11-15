@@ -375,7 +375,7 @@ class CrmController extends Controller
                     'cost' => $parts->sum(fn ($p) => $p->quantity * (float) $p->unit_cost)])->values(),
             'requests' => $requests,
             'staff' => $staff,
-            'warehouses' => \App\Models\Procurement\Warehouse::where('active', true)->orderBy('name_az')->get(),
+            'warehouses' => \App\Models\Procurement\Warehouse::where('active', true)->where('is_own', false)->orderBy('name_az')->get(),
             'order' => $order,
             'payLinkUrl' => $payLinkUrl,
             'paymentChangeBlock' => $paymentChangeBlock,

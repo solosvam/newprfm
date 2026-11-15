@@ -63,6 +63,16 @@ return [
                     ['title' => 'Hədiyyə kartları', 'route' => 'admin.stock.cards', 'permission' => 'stock'],
                 ],
             ],
+            [
+                'title'    => 'İstehsal',
+                'id'       => 'productionMenu',
+                'children' => [
+                    ['title' => 'Hazır mallar', 'route' => 'admin.production.products', 'permission' => 'production'],
+                    ['title' => 'Xammal', 'route' => 'admin.production.materials', 'permission' => 'production'],
+                    ['title' => 'Xammal alışları', 'route' => 'admin.production.purchases', 'permission' => 'production'],
+                    ['title' => 'Tədarükçülər', 'route' => 'admin.production.suppliers', 'permission' => 'production'],
+                ],
+            ],
         ],
     ],
     [

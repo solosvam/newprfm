@@ -220,6 +220,32 @@ Route::prefix('admin')
                 Route::post('/gift-cards/{card}/return', 'returnToStock')->whereNumber('card')->name('cards.return');
             });
 
+            // İstehsal: hazır mallar (öz məhsullarımız, resept, partiyalar), xammal, xammal alışları, tədarükçülər
+            Route::prefix('production')->name('production.')->middleware('can:production')->controller(\App\Http\Controllers\Backend\ProductionController::class)->group(function () {
+                Route::get('/products', 'products')->name('products');
+                Route::get('/variants', 'variants')->middleware('throttle:60,1')->name('variants');
+                Route::post('/products', 'storeProduct')->name('products.store');
+                Route::get('/products/{own}', 'product')->whereNumber('own')->name('product');
+                Route::post('/products/{own}/recipe', 'updateRecipe')->whereNumber('own')->name('product.recipe');
+                Route::post('/products/{own}/toggle', 'toggleProduct')->whereNumber('own')->name('product.toggle');
+                Route::post('/products/{own}/produce', 'produce')->whereNumber('own')->name('product.produce');
+                Route::get('/materials', 'materials')->name('materials');
+                Route::post('/materials', 'storeMaterial')->name('materials.store');
+                Route::get('/materials/{material}', 'material')->whereNumber('material')->name('material');
+                Route::post('/materials/{material}', 'updateMaterial')->whereNumber('material')->name('material.update');
+                Route::get('/purchases', 'purchases')->name('purchases');
+                Route::post('/purchases', 'storePurchase')->name('purchases.store');
+                Route::get('/purchases/{purchase}', 'purchase')->whereNumber('purchase')->name('purchase');
+                Route::get('/suppliers', 'suppliers')->name('suppliers');
+                Route::post('/suppliers', 'storeSupplier')->name('suppliers.store');
+                Route::get('/suppliers/{supplier}', 'supplier')->whereNumber('supplier')->name('supplier');
+                Route::post('/suppliers/{supplier}', 'updateSupplier')->whereNumber('supplier')->name('supplier.update');
+                Route::post('/suppliers/{supplier}/pay', 'paySupplier')->whereNumber('supplier')->name('supplier.pay');
+            });
+            // Sifarişin məhsulunu öz anbardan götürmək — depo təminatı icazəsi ilə (CRM / Depo təminatı səhifəsi)
+            Route::post('/production/orders/{order}/items/{item}/allocate', [\App\Http\Controllers\Backend\ProductionController::class, 'allocate'])
+                ->whereNumber(['order', 'item'])->middleware(['can:crm', 'throttle:30,1'])->name('production.allocate');
+
             Route::get('/pwa', [PwaStatsController::class, 'index'])
                 ->middleware('can:statistics')
                 ->name('pwa');

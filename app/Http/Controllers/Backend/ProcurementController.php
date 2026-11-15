@@ -18,7 +18,7 @@ class ProcurementController extends Controller
         // Depoya borc (götürülən mal − ödənilən; mənfi — avans): warehouse_id => qəpik
         $debts = rescue(fn () => app(\App\Services\FinanceService::class)->warehouseDebts(), collect(), false);
 
-        return view('backend.procurement.warehouses', ['warehouses' => Warehouse::orderBy('name_az')->get(), 'debts' => $debts]);
+        return view('backend.procurement.warehouses', ['warehouses' => Warehouse::where('is_own', false)->orderBy('name_az')->get(), 'debts' => $debts]);
     }
 
     public function createLink(Warehouse $warehouse, \App\Services\WarehousePortalService $portal)
@@ -135,7 +135,7 @@ class ProcurementController extends Controller
 
         return view('backend.procurement.order', [
             'order' => $order, 'requests' => $requests,
-            'warehouses' => Warehouse::where('active', true)->orderBy('name_az')->get(),
+            'warehouses' => Warehouse::where('active', true)->where('is_own', false)->orderBy('name_az')->get(),
         ]);
     }
 

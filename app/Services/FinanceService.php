@@ -89,7 +89,7 @@ class FinanceService
     public function syncAccounts(): void
     {
         self::courierUsers()->get()->each(fn ($u) => $this->courierAccount($u));
-        Warehouse::all()->each(fn ($w) => $this->warehouseAccount($w));
+        Warehouse::where('is_own', false)->get()->each(fn ($w) => $this->warehouseAccount($w));
     }
 
     /** Hər hesabın qalığı (qəpiklə): account_id => cents */
@@ -104,7 +104,9 @@ class FinanceService
     /** Depolara borc: götürülmüş hissələrin dəyəri − depo hesabına ödənilən (warehouse_id => cents) */
     public function warehouseDebts(): Collection
     {
+        // Öz anbarımızdan götürülən mal borc yaratmır (OwnStock)
         $owed = OrderItemAllocation::whereIn('status', OrderItemAllocation::DEBT_STATUSES)
+            ->whereNotIn('warehouse_id', Warehouse::where('is_own', true)->select('id'))
             ->selectRaw('warehouse_id, SUM(quantity * unit_cost) as total')->groupBy('warehouse_id')->pluck('total', 'warehouse_id');
         $balances = $this->balances();
 
@@ -114,7 +116,7 @@ class FinanceService
             $this->warehouseAccount(Warehouse::find($warehouseId));
         }
 
-        return FinanceAccount::where('type', 'warehouse')->get()->mapWithKeys(fn ($a) => [
+        return FinanceAccount::where('type', 'warehouse')->whereNotIn('warehouse_id', Warehouse::where('is_own', true)->select('id'))->get()->mapWithKeys(fn ($a) => [
             $a->warehouse_id => (int) round((float) ($owed[$a->warehouse_id] ?? 0) * 100) + (int) round((float) ($opening[$a->warehouse_id] ?? 0) * 100)
                 - ($balances[$a->id] ?? 0),
         ]);

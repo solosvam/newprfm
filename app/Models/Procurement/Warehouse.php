@@ -22,6 +22,12 @@ class Warehouse extends Model
         return $id === '' ? null : (str_starts_with($id, '-') ? $id : '-'.$id);
     }
 
+    /** Öz anbarımız (öz istehsal — OwnStock): SMS / sorğu / depo borcu yoxdur */
+    public static function own(): ?self
+    {
+        return static::where('is_own', true)->first();
+    }
+
     public function requests()
     {
         return $this->hasMany(WarehouseRequest::class);
@@ -29,6 +35,6 @@ class Warehouse extends Model
 
     protected function casts(): array
     {
-        return ['active' => 'boolean'];
+        return ['active' => 'boolean', 'is_own' => 'boolean'];
     }
 }

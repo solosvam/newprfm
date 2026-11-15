@@ -72,6 +72,23 @@
     </div>
 </div>
 
+{{-- Öz istehsal: stokda 2 və az qalan məhsullar (OwnProduction::lowStock) --}}
+@if(($dashboard['ownLow'] ?? collect())->isNotEmpty())
+    @php $canProduction = (bool) $user?->can('production'); @endphp
+    <div class="alert alert-danger mb-4" role="alert">
+        <div class="fw-bold mb-1">Öz istehsal — stok az qalıb</div>
+        <ul class="mb-0 ps-3">
+            @foreach($dashboard['ownLow'] as $row)
+                <li>
+                    @if($canProduction)<a class="alert-link" href="{{ route('admin.production.product', $row['own']) }}">{{ $row['own']->label() }}</a>@else{{ $row['own']->label() }}@endif
+                    — @if($row['stock'] > 0) stokda {{ $row['stock'] }} ədəd qalıb @else stok bitib @endif
+                    @if($row['waiting']) · {{ $row['waiting']['orders'] }} sifariş ({{ $row['waiting']['quantity'] }} ədəd) partiya gözləyir @endif
+                </li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 {{-- Bu gün --}}
 <div class="row g-2 mb-5">
     @foreach($todayCards as $card)
