@@ -91,6 +91,7 @@ return [
             ['title' => 'Kateqoriyalar', 'route' => 'admin.finance.categories', 'permission' => 'finance'],
             ['title' => 'Əməliyyatlar', 'route' => 'admin.finance.operations', 'permission' => 'finance'],
             ['title' => 'Pul axını', 'route' => 'admin.finance.report', 'permission' => 'finance'],
+            ['title' => 'Mənfəət', 'route' => 'admin.finance.profit', 'permission' => 'finance'],
         ],
     ],
     [

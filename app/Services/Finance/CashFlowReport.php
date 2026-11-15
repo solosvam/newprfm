@@ -15,6 +15,7 @@ use Illuminate\Support\Collection;
  *  - Köçürmə: hər iki tərəf baxılan balanslardadırsa — "Köçürmə" (məxaricdə də, mədaxildə də; gizlədilə bilər).
  *    Bir tərəf şəxsdirsə — "Şəxslərlə hesablaşma" (nəticəyə qarışmır).
  *  - Əks əməliyyat əslinin sətrindən çıxılır.
+ * Depoya ödəniş və depodan qaytarılan pul — ayrıca "Mal alışı" bölməsi (satılan malın alışıdır, işin xərci deyil).
  * Baxılan balanslar: hamısı — şirkətin hesabları + kuryerlər (kuryerdəki nağd da şirkətin puludur); və ya seçilən bir hesab.
  */
 class CashFlowReport
@@ -22,9 +23,11 @@ class CashFlowReport
     private const INCOME_KINDS = MoneyMovement::IN_KINDS;
     private const OUTGO_KINDS = MoneyMovement::OUT_KINDS;
     private const TRANSFER_KINDS = MoneyMovement::TRANSFER_KINDS;
+    /** "Mal alışı" bölməsi: növ => işarə */
+    public const PURCHASE_KINDS = ['warehouse_payment' => 1, 'warehouse_refund' => -1];
 
     /**
-     * @return array{months: list<Carbon>, expense: list<array>, income: list<array>, totals: array, persons: array}
+     * @return array{months: list<Carbon>, purchase: list<array>, expense: list<array>, income: list<array>, totals: array, persons: array}
      *   Sətir: ['category' => ?FinanceCategory, 'child' => bool, 'values' => [ym => cents], 'total' => cents]
      */
     public function build(Carbon $from, Carbon $to, ?FinanceAccount $account = null, bool $hideTransfers = true, bool $hideEmpty = false): array
@@ -40,7 +43,7 @@ class CashFlowReport
             ->when($account, fn ($q) => $q->where(fn ($w) => $w->where('from_account_id', $account->id)->orWhere('to_account_id', $account->id)))
             ->get();
 
-        $sum = ['income' => [], 'expense' => []];           // [section][category_id][ym] => cents
+        $sum = ['income' => [], 'expense' => [], 'purchase' => []]; // [section][category_id][ym] => cents
         $persons = ['in' => array_fill_keys($keys, 0), 'out' => array_fill_keys($keys, 0)];
         foreach ($movements as $m) {
             // Əks əməliyyat: əslinin növü və istiqaməti, məbləğ mənfi
@@ -70,26 +73,33 @@ class CashFlowReport
                 }
                 continue;
             }
+            // Mal alışı: depoya ödəniş (+), depo pulu qaytardı (−)
+            if (isset(self::PURCHASE_KINDS[$base->kind])) {
+                $sum['purchase'][$cat][$ym] = ($sum['purchase'][$cat][$ym] ?? 0) + self::PURCHASE_KINDS[$base->kind] * $cents;
+                continue;
+            }
             $section = in_array($base->kind, self::INCOME_KINDS, true) ? 'income' : (in_array($base->kind, self::OUTGO_KINDS, true) ? 'expense' : null);
             if ($section) $sum[$section][$cat][$ym] = ($sum[$section][$cat][$ym] ?? 0) + $cents;
         }
 
         $tree = FinanceCategory::tree();
         $rows = fn (string $section) => $this->rows($tree, $sum[$section], $section, $keys, $hideEmpty, $hideTransfers);
+        $purchase = $rows('purchase');
         $expense = $rows('expense');
         $income = $rows('income');
         $total = fn ($section) => collect($keys)->mapWithKeys(fn ($k) => [$k => collect($sum[$section])->sum(fn ($byMonth) => $byMonth[$k] ?? 0)])->all();
-        $totals = ['expense' => $total('expense'), 'income' => $total('income')];
-        $totals['result'] = collect($keys)->mapWithKeys(fn ($k) => [$k => $totals['income'][$k] - $totals['expense'][$k]])->all();
+        $totals = ['purchase' => $total('purchase'), 'expense' => $total('expense'), 'income' => $total('income')];
+        $totals['result'] = collect($keys)->mapWithKeys(fn ($k) => [$k => $totals['income'][$k] - $totals['expense'][$k] - $totals['purchase'][$k]])->all();
         $persons['net'] = collect($keys)->mapWithKeys(fn ($k) => [$k => $persons['in'][$k] - $persons['out'][$k]])->all();
 
-        return ['months' => $months, 'expense' => $expense, 'income' => $income, 'totals' => $totals, 'persons' => $persons];
+        return ['months' => $months, 'purchase' => $purchase, 'expense' => $expense, 'income' => $income, 'totals' => $totals, 'persons' => $persons];
     }
 
     /** Ağac sırası; üst kateqoriyanın dəyəri — özü + alt kateqoriyaları. Bölməyə uyğun olmayan və dəyəri olmayan sətir çıxmır. */
     private function rows(Collection $tree, array $sum, string $section, array $keys, bool $hideEmpty, bool $hideTransfers): array
     {
-        $fits = fn ($c) => $c->type === 'both' || $c->type === $section;
+        // Mal alışı bölməsində yalnız dəyəri olan sətirlər (depo kateqoriyaları)
+        $fits = fn ($c) => $section !== 'purchase' && ($c->type === 'both' || $c->type === $section);
         $values = fn (array $ids) => collect($keys)->mapWithKeys(fn ($k) => [$k => collect($ids)->sum(fn ($id) => $sum[$id][$k] ?? 0)])->all();
         $rows = [];
         foreach ($tree as $c) {
@@ -97,7 +107,9 @@ class CashFlowReport
             $ids = $c->parent_id ? [$c->id] : array_merge([$c->id], $tree->where('parent_id', $c->id)->pluck('id')->all());
             $v = $values($ids);
             $total = array_sum($v);
-            if (!$total && ($hideEmpty || !$fits($c))) continue;
+            // Depo kateqoriyaları həmişə "Mal alışı"ndadır — məxaric / mədaxildə boş sətir kimi görünməsin
+            $purchaseOnly = $section !== 'purchase' && in_array($c->code, ['warehouse', 'warehouse_refund'], true);
+            if (!$total && ($hideEmpty || !$fits($c) || $purchaseOnly)) continue;
             $rows[] = ['category' => $c, 'child' => (bool) $c->parent_id, 'values' => $v, 'total' => $total];
         }
         if (!empty($sum[0])) {

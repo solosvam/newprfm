@@ -15,7 +15,8 @@
         $tone = $v > 0 ? 'text-success' : ($v < 0 ? 'text-danger' : 'text-muted');
         return '<span class="'.$tone.'">'.($v < 0 ? '−' : '').number_format(abs($v) / 100, 2).' AZN</span>';
     };
-    $sections = [['Məxaric', $expense, 'expense', -1, 'Ümumi məxaric'], ['Mədaxil', $income, 'income', 1, 'Ümumi mədaxil']];
+    // Mal alışı (depolar) — satılan malın alışı, işin xərci deyil; ayrıca göstərilir
+    $sections = [['Mal alışı', $purchase, 'purchase', -1, 'Ümumi mal alışı (depolar)'], ['Məxaric', $expense, 'expense', -1, 'Ümumi xərc'], ['Mədaxil', $income, 'income', 1, 'Ümumi mədaxil']];
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
@@ -53,7 +54,7 @@
             </div>
             <div class="col-12 col-md-6 col-xl-2"><button class="btn btn-primary w-100">Filter</button></div>
         </div>
-        <div class="form-text mt-2">Ən çox 24 ay. Bütün balanslar: şirkətin hesabları və kuryerlər; şəxs öz cibindən ödədiyi xərc də xərcdir.</div>
+        <div class="form-text mt-2">Ən çox 24 ay. Depoya ödəniş "Mal alışı"nda ayrıcadır — xərclərə qarışmır (mənfəət — Maliyyə → Mənfəət). Bütün balanslar: şirkətin hesabları və kuryerlər; şəxs öz cibindən ödədiyi xərc də xərcdir.</div>
     </div></form>
 
     <div class="card mb-5"><div class="card-body">
@@ -72,6 +73,7 @@
                         @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell($row['total'], $sign) !!}</td>@endif
                     </tr>
                 @endforeach
+                @continue($key === 'purchase' && !$rows)
                 <tr class="finance-report__total">
                     <td class="fw-bold">{{ $totalLabel }}</td>
                     @foreach($keys as $k)<td class="text-end text-nowrap fw-bold">{!! $cell($totals[$key][$k], $sign) !!}</td>@endforeach

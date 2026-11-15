@@ -308,6 +308,18 @@ class FinanceController extends Controller
         return view('backend.finance.report', $data + compact('accounts', 'account', 'from', 'to', 'hideTransfers', 'hideEmpty'));
     }
 
+    /** Mənfəət: aylar sütunda — satış, malın mayası, xərclər, xalis mənfəət (ProfitReport) */
+    public function profit(Request $request, \App\Services\Finance\ProfitReport $report): View
+    {
+        $month = fn ($value, $default) => rescue(fn () => $value ? \Illuminate\Support\Carbon::createFromFormat('!Y-m', $value) : $default, $default, false);
+        $to = $month($request->query('to'), now()->startOfMonth());
+        $from = $month($request->query('from'), $to->copy()->subMonths(5));
+        if ($from > $to) [$from, $to] = [$to, $from];
+        if ($from->diffInMonths($to) > 23) $from = $to->copy()->subMonths(23);
+
+        return view('backend.finance.profit', $report->build($from, $to->copy()->endOfMonth()) + compact('from', 'to'));
+    }
+
     public function categories(): View
     {
         $categories = FinanceCategory::withCount(['movements', 'children'])->get();

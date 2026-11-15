@@ -200,6 +200,47 @@ class OwnProductionTest extends TestCase
         $this->assertSame(3, $p->stockOf($own));
     }
 
+    public function test_profit_report_does_not_count_own_production_cost_twice(): void
+    {
+        Schema::create('payment_methods', function (Blueprint $t) { $t->id(); $t->string('code'); });
+        Schema::create('credit_applications', function (Blueprint $t) { $t->id(); $t->unsignedBigInteger('order_id'); $t->decimal('total', 12, 2)->default(0); $t->decimal('bank_fee_rate', 6, 2)->nullable(); $t->timestamps(); });
+        DB::table('payment_methods')->insert(['id' => 1, 'code' => 'cash']);
+        $wh = \App\Models\Procurement\Warehouse::create(['name_az' => 'Depo A']);
+        $ownProduct = OwnProduct::create(['product_id' => 5, 'product_variant_id' => 9]);
+        app(OwnProduction::class)->produce($ownProduct, 1, today()->toDateString(), [], 20, null, 7);
+        $deliver = function (float $total, float $courierFee, ?int $warehouse) {
+            $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'payment_method_id' => 1, 'total' => $total, 'courier_fee' => $courierFee]);
+            $item = $order->items()->create(['product_id' => 5, 'product_variant_id' => 9, 'quantity' => 1]);
+            $warehouse
+                ? app(\App\Services\ProcurementService::class)->recordDirect($order, $item->id, $warehouse, '50', 7)
+                : app(OwnProduction::class)->allocate($order, $item, 7);
+            $order->forceFill(['order_status_id' => 17])->save();
+            DB::table('order_status_logs')->insert(['order_id' => $order->id, 'status_id' => 17, 'created_at' => now(), 'updated_at' => now()]);
+        };
+        $deliver(100, 10, $wh->id); // depodan: satış 90 (10 — kuryerin), maya 50
+        $deliver(60, 0, null);      // öz istehsal (maya 20): xammal kimi xərclərdədir — burada sayılmır
+        $f = app(FinanceService::class);
+        $cash = $f->system('cash');
+        $expenseCat = \App\Models\Finance\FinanceCategory::where('type', 'expense')->value('id');
+        $raw = \App\Models\Finance\FinanceCategory::where('code', 'raw_material')->value('id');
+        foreach ([['outgo', 30, $expenseCat], ['supplier_payment', 40, $raw], ['warehouse_payment', 50, null]] as [$kind, $amount, $cat]) {
+            MoneyMovement::create(['from_account_id' => $cash->id, 'to_account_id' => $cash->id, 'amount' => $amount, 'kind' => $kind, 'category_id' => $cat, 'occurred_at' => now()]);
+        }
+
+        $r = app(\App\Services\Finance\ProfitReport::class)->build(now()->startOfMonth(), now()->endOfMonth());
+        $k = now()->format('Y-m');
+        $this->assertSame(15000, $r['sales'][$k]);
+        $this->assertSame(2, $r['orders'][$k]);
+        $this->assertSame(5000, $r['cost'][$k]);
+        $this->assertSame(7000, $r['expense'][$k]); // depoya ödəniş xərc deyil
+        $this->assertSame(3000, $r['net'][$k]);
+
+        // Pul axınında depoya ödəniş "Mal alışı"ndadır, xərclərdə yox
+        $flow = app(\App\Services\Finance\CashFlowReport::class)->build(now()->startOfMonth(), now()->endOfMonth(), $cash, false);
+        $this->assertSame(5000, $flow['totals']['purchase'][$k]);
+        $this->assertSame(7000, $flow['totals']['expense'][$k]);
+    }
+
     public function test_menu_and_permission_exist(): void
     {
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.production.products'));
