@@ -93,7 +93,13 @@
         form.querySelectorAll('[data-gc-step]').forEach(b => b.addEventListener('click', () => {
             setAmount(Number(input.value) + Number(b.dataset.gcStep) * step);
         }));
-        form.querySelectorAll('[data-gc-design]').forEach(radio => radio.addEventListener('change', redraw));
+        // Dizayna uyğun nümunə mətn (placeholder) — yalnız boş sahədə görünür, yazılmış mətnə toxunulmur
+        let placeholders = {};
+        try { placeholders = JSON.parse(message.dataset.placeholders || '{}'); } catch (e) {}
+        form.querySelectorAll('[data-gc-design]').forEach(radio => radio.addEventListener('change', () => {
+            if (placeholders[radio.value]) message.placeholder = placeholders[radio.value];
+            redraw();
+        }));
         const syncText = () => {
             count.textContent = message.value.length;
             redraw();

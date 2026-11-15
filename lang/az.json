@@ -927,5 +927,9 @@
     "gift_card_design_bloom": "Bloom",
     "gift_card_design_celebration": "Celebration",
     "gift_card_how_title": "Necə işləyir?",
-    "gift_card_preview_hint": "Göndəriləcək şəkil belə görünəcək. Kod ödənişdən sonra əlavə olunur."
+    "gift_card_preview_hint": "Göndəriləcək şəkil belə görünəcək. Kod ödənişdən sonra əlavə olunur.",
+    "gift_card_placeholder_signature": "Hər şey üçün təşəkkür edirəm. Ən sevdiyin ətri özün seç.",
+    "gift_card_placeholder_love": "Birlikdə keçən hər gün üçün. Səni sevirəm!",
+    "gift_card_placeholder_bloom": "Ən gözəl anaya! Bu dəfə ətrini özün seç.",
+    "gift_card_placeholder_celebration": "Ad günün mübarək! Yeni yaşın sənin qədər gözəl ətirli olsun."
 }

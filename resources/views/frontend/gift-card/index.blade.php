@@ -71,7 +71,8 @@
 
                     <label class="gc-label" for="gcMessage">{{ __('gift_card_message_label') }}</label>
                     <textarea id="gcMessage" name="message" rows="3" maxlength="{{ $messageMax }}" class="gc-input"
-                              placeholder="{{ __('gift_card_message_placeholder') }}" data-gc-message>{{ old('message') }}</textarea>
+                              placeholder="{{ __('gift_card_placeholder_'.$selectedDesign) }}" data-gc-message
+                              data-placeholders="{{ json_encode(collect($designs)->mapWithKeys(fn ($d) => [$d => __('gift_card_placeholder_'.$d)]), JSON_UNESCAPED_UNICODE) }}">{{ old('message') }}</textarea>
                     <p class="gc-hint gc-hint--right"><span data-gc-count>0</span> / {{ $messageMax }}</p>
 
                     <label class="gc-label" for="gcSender">{{ __('gift_card_sender_label') }}</label>
