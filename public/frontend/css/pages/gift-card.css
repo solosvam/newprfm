@@ -68,8 +68,18 @@
     --gc-foil: linear-gradient(105deg, #3e5a3a 0%, #7f9f78 42%, #4f6b4a 68%, #6d8e67 100%);
 }
 
+/* Celebration — Özəl gün: şampan + qızılı (açıq kart, tünd qəhvəyi-qızılı mətn) */
+.gc-card--celebration {
+    background: radial-gradient(130% 140% at 8% 0%, #fbf3e2 0%, #f1e1bf 50%, #e2c994 100%);
+    box-shadow: 0 18px 40px -22px rgba(107, 76, 26, .5), 0 0 0 1px rgba(184, 137, 59, .25);
+    --gc-ink: #4a3517; --gc-muted: #8a6b33; --gc-soft: #957641; --gc-line: #b8893b; --gc-logo: url(#gcChamp);
+    --gc-foil: linear-gradient(105deg, #6b4c1a 0%, #b8893b 42%, #5e4219 68%, #9a722c 100%);
+}
+
 /* Dizayn seçimi */
-.gc-designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.gc-designs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 420px) { .gc-designs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.gc-design > span:last-child { font-size: 12px; line-height: 1.3; }
 .gc-design { position: relative; display: flex; flex-direction: column; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
 .gc-design input { position: absolute; opacity: 0; pointer-events: none; }
 .gc-design__swatch { aspect-ratio: 85.6 / 54; border-radius: 10px; border: 2px solid transparent; box-shadow: 0 0 0 1px var(--border-strong); }
@@ -77,6 +87,7 @@
 .gc-design__swatch--signature { background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%); outline: 1px solid rgba(212, 175, 95, .6); outline-offset: -6px; }
 .gc-design__swatch--love { background: radial-gradient(120% 150% at 8% 0%, #922e46 0%, #6c1a2e 45%, #3d0c19 100%); outline: 1px solid rgba(242, 198, 203, .6); outline-offset: -6px; }
 .gc-design__swatch--bloom { background: radial-gradient(130% 140% at 8% 0%, #fffdf7 0%, #f7f1e3 50%, #ece3cd 100%); outline: 1px solid rgba(138, 165, 133, .7); outline-offset: -6px; }
+.gc-design__swatch--celebration { background: radial-gradient(130% 140% at 8% 0%, #fbf3e2 0%, #f1e1bf 50%, #e2c994 100%); outline: 1px solid rgba(184, 137, 59, .7); outline-offset: -6px; }
 .gc-design__swatch--standard { background: radial-gradient(130% 120% at 0% 0%, #3d2d66 0%, #2b1f4a 55%, #1d1533 100%); }
 
 .gc-preview__note { max-width: 440px; margin: 16px 0 0; }
