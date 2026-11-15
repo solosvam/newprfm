@@ -19,6 +19,7 @@ class Payment extends Model
     protected $fillable = [
         'customer_id',
         'order_id',
+        'virtual_gift_card_id',
         'provider',
         'provider_order_id',
         'amount',
@@ -81,6 +82,12 @@ class Payment extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /** Virtual hədiyyə kartının alışı (sifariş yoxdur) */
+    public function giftCard(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\GiftCard\GiftCard::class, 'virtual_gift_card_id');
     }
 
     public function order(): BelongsTo

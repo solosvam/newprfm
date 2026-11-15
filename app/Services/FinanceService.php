@@ -295,7 +295,8 @@ class FinanceService
         }
         if ($amount <= 0) return;
         $this->record($this->system('customer'), $this->system('online'), $amount, 'customer_payment', [
-            'order_id' => $payment->order_id, 'payment_id' => $payment->id, 'note' => 'Birbank ödənişi',
+            'order_id' => $payment->order_id, 'payment_id' => $payment->id,
+            'note' => $payment->virtual_gift_card_id ? 'Hədiyyə kartının satışı (HK'.$payment->virtual_gift_card_id.')' : 'Birbank ödənişi',
         ]);
     }
 

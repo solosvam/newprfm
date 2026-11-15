@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Frontend;
 
+use App\Exceptions\GiftCardException;
 use App\Exceptions\PromoCodeException;
 use App\Http\Controllers\Controller;
 use App\Mail\OrderCreatedMail;
@@ -15,6 +16,7 @@ use App\Models\Payment\PaymentMethod;
 use App\Models\Product\ProductVariant;
 use App\Services\BonusService;
 use App\Services\CartService;
+use App\Services\GiftCard\GiftCardService;
 use App\Services\Payment\Birbank;
 use App\Services\PromoCodeService;
 use App\Services\Referral\ReferralService;
@@ -104,6 +106,12 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'Birbank taksit müddətini seçin.'], 422);
         }
 
+        // Hədiyyə kartı: qalıq yalnız qapıda / onlayn / Birbank taksitlə (hissə-hissə və bonus — yox)
+        $giftCode = session('gift_card_code');
+        if ($giftCode && !in_array($paymentMethod->code, GiftCardService::REMAINDER_METHODS, true)) {
+            return response()->json(['message' => __('gift_card_method_not_allowed')], 422);
+        }
+
         $customer = $request->user();
         if ($paymentMethod->code === 'installment') {
             if (!$customer->creditProfile?->isComplete()) {
@@ -114,7 +122,7 @@ class CheckoutController extends Controller
             }
         }
 
-        return DB ::transaction(function() use ($data, $customer, $paymentMethod) {
+        return DB ::transaction(function() use ($data, $customer, $paymentMethod, $giftCode) {
             DB::table('customers')->where('id', $customer->id)->lockForUpdate()->first();
 
             // İlkin sifariş statusu
@@ -232,6 +240,25 @@ class CheckoutController extends Controller
             }
             $creditTotal = $period ? round($payable * (1 + (float) $period->interest_rate / 100), 2) : $payable;
 
+            // Hədiyyə kartı ödənişin bir hissəsidir (endirim deyil): yekun — qalan, kart sifarişdən böyükdürsə artığı yanır.
+            // Kart hamısını örtürsə ödəniş üsulu "Hədiyyə kartı" olur, sifariş ödənilmiş sayılır.
+            $giftCard = null;
+            $giftAmount = 0.0;
+            if ($giftCode) {
+                try {
+                    $giftCard = app(GiftCardService::class)->find($giftCode, true);
+                } catch (GiftCardException $e) {
+                    session()->forget('gift_card_code');
+                    abort(422, $e->getMessage());
+                }
+                $giftAmount = round(min((float) $giftCard->amount, $creditTotal), 2);
+                $creditTotal = round($creditTotal - $giftAmount, 2);
+                if ($creditTotal <= 0) {
+                    $creditTotal = 0.0;
+                    $paymentMethod = PaymentMethod::where('code', 'gift_card')->firstOrFail();
+                }
+            }
+
             $orderNo = 'TMP'.Str::random(20);
 
             // Sifarişin yaradılması
@@ -240,10 +267,10 @@ class CheckoutController extends Controller
                 'order_no' => $orderNo,
                 'customer_id' => $customer -> id,
                 'customer_address_id' => $address -> id,
-                'payment_method_id' => $data['payment_method_id'],
+                'payment_method_id' => $paymentMethod->id,
                 'birbank_installment_months' => $paymentMethod->code === 'birbank_installment'
                     ? (int) $data['birbank_installment_months'] : null,
-                'payment_status' => in_array($paymentMethod->code, ['bonus_balance'], true) ? 'paid' : ($paymentMethod->code === 'cash' ? 'cod' : 'pending'),
+                'payment_status' => in_array($paymentMethod->code, ['bonus_balance', 'gift_card'], true) ? 'paid' : ($paymentMethod->code === 'cash' ? 'cod' : 'pending'),
                 'source' => 'customer',
                 'order_status_id' => $initialStatus -> id,
                 'gift_wrap' => $wrapUnits > 0,
@@ -255,7 +282,10 @@ class CheckoutController extends Controller
                 'gift_wrap_fee' => $giftWrapFee,
                 'promo_code_id' => $promo?->id,
                 'total' => $creditTotal,
-            ]);
+            ] + ($giftCard ? ['gift_card_id' => $giftCard->id, 'gift_card_amount' => $giftAmount] : []));
+            if ($giftCard) {
+                app(GiftCardService::class)->redeem($order, $giftCard, $giftAmount);
+            }
 
             $order->update(['order_no' => 'PS'.now()->format('ymd').str_pad((string) $order->id, 6, '0', STR_PAD_LEFT)]);
 
@@ -287,7 +317,7 @@ class CheckoutController extends Controller
             if ($promo && !in_array($paymentMethod->code, ['card_online', 'birbank_installment'], true)) {
                 $promo->increment('used_count');
             }
-            session()->forget('promo_code');
+            session()->forget(['promo_code', 'gift_card_code']);
 
             // Status tarixçəsi
             DB ::table('order_status_logs') -> insert([

@@ -199,8 +199,8 @@
         });
 
         const selected = periodRadios.find(r => r.checked);
-        // Sağdakı "Yekun": hissə-hissədə seçilmiş müddətin ümumi məbləği (faizlə), qalan hallarda adi yekun
-        const shown = selectedCode() === INSTALLMENT && selected && state.total > 0 ? creditFor(selected).sum : state.total;
+        // Sağdakı "Yekun": hissə-hissədə seçilmiş müddətin ümumi məbləği (faizlə), qalan hallarda adi yekun (hədiyyə kartı çıxılmaqla)
+        const shown = selectedCode() === INSTALLMENT && selected && state.total > 0 ? creditFor(selected).sum : round2(state.total - (state.giftUsed || 0));
         if (els.total) els.total.textContent = money(shown);
         if (els.mobileTotal) els.mobileTotal.textContent = money(shown);
 
@@ -294,9 +294,18 @@
         els.delivery.textContent = fee > 0 ? money(fee) : (t.free || '0.00 ₼');
         els.delivery.classList.toggle('is-free', fee === 0);
         els.delivery.style.color = fee === 0 ? '#16803c' : '';
-        els.total.textContent = money(state.total);
+        // Hədiyyə kartı — ödənişin bir hissəsi: ödəniləcək = yekun − kartdan çıxılan (server də belə hesablayır)
+        const giftCard = window.ParfumGiftCard;
+        state.giftUsed = giftCard && giftCard.applyTo ? giftCard.applyTo(state.total) : 0;
+        const payable = round2(state.total - state.giftUsed);
+        const giftRow = document.getElementById('checkoutGiftCardRow');
+        if (giftRow) {
+            giftRow.hidden = state.giftUsed <= 0;
+            document.getElementById('checkoutGiftCard').textContent = '−' + money(state.giftUsed);
+        }
+        els.total.textContent = money(payable);
 
-        if (els.mobileTotal) els.mobileTotal.textContent = money(state.total);
+        if (els.mobileTotal) els.mobileTotal.textContent = money(payable);
         // Bonus is earned on paid/cash orders, not when paying with existing bonus
         // or submitting an internal credit application.
         if (els.earnedBonus && els.earnedBonusText) {
@@ -308,14 +317,48 @@
 
         // Birbank taksit faizsizdir: aylıq = yekun / ay
         document.querySelectorAll('[data-birbank-monthly]').forEach(el => {
-            el.textContent = state.total > 0 ? money(state.total / Number(el.dataset.months)) + (t.perMonth || '') : '—';
+            el.textContent = payable > 0 ? money(payable / Number(el.dataset.months)) + (t.perMonth || '') : '—';
         });
 
         syncBonus();
+        syncGiftCard(payable);
         updateCredit();
     }
 
+    /**
+     * Hədiyyə kartı tətbiq olunub: hissə-hissə və bonusla ödəniş bağlıdır (qalıq — qapıda / onlayn / Birbank taksit).
+     * Kart hamısını örtürsə ödəniş üsulu seçilmir — server sifarişi "Hədiyyə kartı" ilə ödənilmiş yazır.
+     */
+    function syncGiftCard(payable) {
+        const active = Boolean(window.ParfumGiftCard?.code);
+        paymentRadios.forEach(radio => {
+            if (![BONUS, INSTALLMENT].includes(radio.dataset.code)) return;
+            if (active) radio.disabled = true;
+            else if (radio !== bonusRadio) radio.disabled = false;
+            radio.closest('.pay-option')?.classList.toggle('is-disabled', radio.disabled);
+        });
+        const covers = active && payable <= 0 && state.total > 0;
+        const covered = document.getElementById('checkoutGiftCardCovers');
+        const methodsNote = document.getElementById('checkoutGiftCardMethods');
+        const list = page.querySelector('.checkout-payment');
+        if (covered) covered.hidden = !covers;
+        if (methodsNote) methodsNote.hidden = !active || covers;
+        if (list) list.hidden = covers;
+        if (covers) {
+            // Seçim göndərilir, amma istifadə olunmur; taksit müddəti kimi əlavə şərt tələb etməyən üsul seçilir
+            const simple = paymentRadios.find(r => r.dataset.code === 'cash' && !r.disabled)
+                || paymentRadios.find(r => r.dataset.code === 'card_online' && !r.disabled);
+            if (simple && !simple.checked) {
+                simple.checked = true;
+                syncPayment();
+            }
+        } else if (active && paymentRadios.find(r => r.checked)?.disabled) {
+            selectFirstEnabled();
+        }
+    }
+
     window.addEventListener('parfumshop:promo-updated', updateTotals);
+    window.addEventListener('parfumshop:giftcard-updated', updateTotals);
     els.items?.addEventListener('change', event => {
         const box = event.target.closest('[data-gift-variant]');
         if (!box) return;
@@ -427,6 +470,8 @@
         const code = selectedCode();
 
         if (!code) return t.errPayment || messages.error;
+        // Hədiyyə kartı hamısını örtür — ödəniş üsulu lazım deyil
+        if (window.ParfumGiftCard?.code && round2(state.total - (state.giftUsed || 0)) <= 0) return null;
 
         if (code === BONUS && bonusBalance < state.total) {
             return String(t.bonusInsufficient || '').replace(':amount', money(state.total - bonusBalance));

@@ -53,6 +53,9 @@ class OrderItemCancellationService
     /** Qapıda imtina — kuryer yoldadır / ünvandadır */
     public const DOOR_STATUSES = ['sent'];
 
+    /** Hədiyyə kartı ilə ödənilmiş sifariş: qismən ləğv yoxdur (qərar, 15 noyabr 2026) */
+    public const GIFT_CARD_BLOCK = 'Hədiyyə kartı ilə ödənilmiş sifarişdə məhsul ayrıca ləğv edilmir — bütün sifarişi ləğv edin və lazımsa yenisini yaradın.';
+
     public function __construct(
         private PaymentItemsBuilder $shares,
         private BonusService $bonus,
@@ -69,6 +72,7 @@ class OrderItemCancellationService
 
         return match (true) {
             !in_array($order->status?->code, [...self::EDITABLE_STATUSES, ...self::COURIER_STATUSES], true) => 'Bu mərhələdə məhsul ləğv edilə bilməz.',
+            (float) $order->gift_card_amount > 0 => self::GIFT_CARD_BLOCK,
             $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
             default => null,
         };
@@ -92,6 +96,7 @@ class OrderItemCancellationService
         return match (true) {
             !in_array($order->status?->code, self::DOOR_STATUSES, true) => 'Qapıda imtina yalnız kuryer yolda və ya ünvanda olanda qeyd olunur.',
             $order->paymentMethod?->code === 'installment' => 'Hissə-hissə (kredit) sifarişində qapıda imtina hələ dəstəklənmir.',
+            (float) $order->gift_card_amount > 0 => self::GIFT_CARD_BLOCK,
             $order->hasPendingPayment() => 'Bankda nəticəsi bəlli olmayan ödəniş var — nəticəni gözləyin.',
             default => null,
         };
@@ -246,10 +251,19 @@ class OrderItemCancellationService
 
             $cancellations = [];
             $notify = [];
+            $giftCard = (float) $order->gift_card_amount > 0;
+            $paidPart = round((float) $order->total, 2); // kartla ödənilən hissə daxil deyil
             foreach ($order->items as $item) {
                 if ($item->activeQuantity() > 0) {
                     $cancellations[] = $this->applyLocked($order, $item, $item->activeQuantity(), $reason, $note, $actor, 'order', $notify);
                 }
+            }
+
+            if ($giftCard) {
+                $cancellations = $this->cancelGiftCardFees($order, $cancellations, $paidPart, $reason, $note, $actor);
+                app(\App\Services\GiftCard\GiftCardService::class)->release($order, $actor);
+
+                return ['cancellations' => $cancellations, 'notify' => $notify];
             }
 
             // Ödənilib: çatdırılma / qablaşdırma da qaytarılır (karta — ödənişin həmin sətrinə, bonusla — balansa)
@@ -274,6 +288,63 @@ class OrderItemCancellationService
 
             return ['cancellations' => $cancellations, 'notify' => $notify];
         });
+    }
+
+    /**
+     * Hədiyyə kartı ilə ödənilmiş sifarişin tam ləğvi: məhsul ləğvləri tam dəyərlə yazılıb, amma müştəridən alınan
+     * (və ya alınacaq) yalnız qalıqdır ($paidPart). Haqlar da ləğv olunur, sonra ləğvlərin məbləği qalığa uyğunlaşdırılır:
+     * onlayn ödənilibsə — hər sətir ödənişin həmin sətri qədər (PaymentItemsBuilder qalığı mütənasib paylayıb),
+     * ödənilməyibsə — mütənasib. Kartla ödənilən hissə karta qayıdır (GiftCardService::release), yekun 0 olur.
+     *
+     * @param  list<OrderItemCancellation>  $cancellations
+     * @return list<OrderItemCancellation>
+     */
+    private function cancelGiftCardFees(Order $order, array $cancellations, float $paidPart, string $reason, ?string $note, ?int $actor): array
+    {
+        $refund = $this->refundStatus($order);
+        foreach (['delivery' => 'delivery_fee', 'courier_fee' => 'courier_fee', 'gift_wrap' => 'gift_wrap_fee'] as $type => $column) {
+            $amount = round((float) $order->{$column}, 2);
+            if ($amount > 0) {
+                $cancellations[] = OrderItemCancellation::create([
+                    'order_id' => $order->id, 'order_item_id' => null, 'fee_type' => $type, 'quantity' => 1,
+                    'amount' => $amount, 'reason' => $reason, 'note' => $note, 'customer_agreed' => true,
+                    'refund_status' => $refund, 'created_by' => $actor,
+                ]);
+            }
+        }
+
+        $cents = fn ($v) => (int) round((float) $v * 100);
+        $target = $cents($paidPart);
+        $lines = null;
+        if ($refund === OrderItemCancellation::REFUND_PENDING) {
+            $payment = \App\Models\Payment\Payment::where('order_id', $order->id)->where('provider', 'birbank')
+                ->where('status', \App\Models\Payment\Payment::PAID)->latest('id')->first();
+            $lines = $payment ? \App\Models\Payment\PaymentItem::where('payment_id', $payment->id)->get() : null;
+        }
+
+        $sum = array_sum(array_map(fn ($c) => $cents($c->amount), $cancellations));
+        $given = 0;
+        $last = array_key_last($cancellations);
+        foreach ($cancellations as $k => $cancellation) {
+            if ($lines) {
+                $line = $cancellation->fee_type
+                    ? $lines->firstWhere('type', $cancellation->fee_type)
+                    : $lines->first(fn ($l) => $l->type === 'item' && (int) $l->order_item_id === (int) $cancellation->order_item_id);
+                $part = $line ? $cents($line->amount) - $cents($line->refundedAmount()) : 0;
+            } else {
+                $part = $k === $last ? $target - $given : ($sum > 0 ? intdiv($cents($cancellation->amount) * $target, $sum) : 0);
+            }
+            $part = max(0, $part);
+            $given += $part;
+            $cancellation->update(['amount' => $part / 100]);
+            // Bu sətir üzrə qalıqdan heç nə ödənilməyib — qaytarılacaq pul yoxdur
+            if ($part === 0 && $cancellation->refund_status === OrderItemCancellation::REFUND_PENDING) {
+                $cancellation->update(['refund_status' => null]);
+            }
+        }
+        $order->update(['total' => 0]);
+
+        return $cancellations;
     }
 
     /** @param  list<int>  $notify  kuryer mərhələsində: depoya "rezerv lazım deyil" SMS-i göndəriləcək seçimlər */

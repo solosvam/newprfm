@@ -65,6 +65,7 @@
                     <h2 class="cart-summary__title">{{ __('cart_order_summary') }}</h2>
 
                     @include('frontend.partials.promo-code')
+                    @include('frontend.partials.gift-card-code')
 
                     <div class="cart-summary__rows">
                         <div class="cart-summary__row">
@@ -83,6 +84,11 @@
                             <span>{{ __('cart_delivery') }}</span>
                             <strong id="cartDelivery"></strong>
                         </div>
+                    </div>
+
+                    <div id="cartGiftCardRow" class="cart-summary__row cart-summary__row--discount cart-summary__row--giftcard" hidden>
+                        <span>{{ __('gift_card_row') }}</span>
+                        <strong id="cartGiftCard"></strong>
                     </div>
 
                     <div class="cart-summary__total">
@@ -146,5 +152,6 @@
 
 @section('page-scripts')
     <script src="{{ asset_v('frontend/js/promo.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/giftcard.js') }}" defer></script>
     <script src="{{ asset_v('frontend/js/cart.js') }}" defer></script>
 @endsection

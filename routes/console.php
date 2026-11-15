@@ -20,3 +20,6 @@ Schedule::call(fn () => \App\Models\Courier\CourierNotification::where('created_
 
 // Telegram-da cavabsız qalan depo sorğularına xatırlatma (15 dəq sonra, sonra 30 dəq sonra; iş saatlarında)
 Schedule::command('telegram:remind')->everyFiveMinutes()->withoutOverlapping();
+
+// Hədiyyə kartları: müddəti bitənlər bağlanır, bitməsinə 30 gün qalanların alıcısına SMS (GiftCardService) — gündə bir dəfə, səhər
+Schedule::command('gift-cards:maintain')->dailyAt('11:30')->timezone('Asia/Baku')->withoutOverlapping();

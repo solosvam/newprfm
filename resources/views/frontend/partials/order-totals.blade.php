@@ -21,6 +21,9 @@
     @if((float) $order->gift_wrap_fee > 0)
         <div class="od-row"><span>{{ __('paylink_gift_wrap') }}</span><span>{{ number_format((float) $order->gift_wrap_fee, 2) }} ₼</span></div>
     @endif
+    @if(($sum['gift_card'] ?? 0) > 0)
+        <div class="od-row od-row--discount"><span>{{ __('gift_card_paid_line') }}</span><span>−{{ number_format($sum['gift_card'], 2) }} ₼</span></div>
+    @endif
     @if($sum['cancelled'] > 0)
         <div class="od-row od-row--cancelled"><span>{{ __('orders_cancelled_amount') }}</span><span>−{{ number_format($sum['cancelled'], 2) }} ₼</span></div>
     @endif

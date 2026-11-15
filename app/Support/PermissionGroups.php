@@ -21,7 +21,7 @@ class PermissionGroups
 
     public const PREFIXES = [
         'admin' => 'admin', 'user' => 'admin', 'role' => 'admin', 'permission' => 'admin', 'system' => 'admin',
-        'crm' => 'sales', 'credit' => 'sales', 'promo' => 'sales', 'refund' => 'sales',
+        'crm' => 'sales', 'credit' => 'sales', 'promo' => 'sales', 'refund' => 'sales', 'giftcard' => 'sales',
         'finance' => 'finance', 'ferrum' => 'finance',
         'products' => 'catalog', 'product' => 'catalog', 'size' => 'catalog', 'category' => 'catalog',
         'brands' => 'catalog', 'ingredient' => 'catalog', 'type' => 'catalog', 'gender' => 'catalog',

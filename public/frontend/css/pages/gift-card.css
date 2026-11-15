@@ -1,0 +1,87 @@
+/* Virtual hədiyyə kartı: alış səhifəsi və kartın səhifəsi */
+.gc-page { max-width: 1080px; margin: 0 auto; padding: 28px 16px 64px; box-sizing: border-box; }
+.gc-head { max-width: 640px; margin-bottom: 24px; }
+.gc-head h1 { margin: 0 0 8px; font-size: 28px; }
+.gc-head p { margin: 0; color: var(--text-secondary); line-height: 1.6; }
+
+.gc-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 40px; align-items: start; }
+@media (max-width: 860px) { .gc-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+
+/* Kartın üzü — bank kartı nisbəti */
+.gc-card {
+    position: relative; width: 100%; max-width: 440px; aspect-ratio: 85.6 / 54; box-sizing: border-box;
+    padding: 7% 7.5%; border-radius: 18px; overflow: hidden; container-type: inline-size;
+    background: radial-gradient(130% 120% at 0% 0%, #3d2d66 0%, #2b1f4a 55%, #1d1533 100%);
+    color: #ffffff; box-shadow: 0 18px 40px -20px rgba(29, 21, 51, .6);
+}
+.gc-card::after {
+    content: ""; position: absolute; right: -18%; bottom: -40%; width: 70%; aspect-ratio: 1;
+    border-radius: 50%; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 0 0 18px rgba(255, 255, 255, .03);
+    pointer-events: none;
+}
+.gc-card__logo { color: #ffffff; }
+.gc-card__logo .logo-svg { width: 38cqw !important; max-width: none !important; height: auto; }
+.gc-card__label { margin-top: 7cqw; font-size: 2.8cqw; letter-spacing: .28em; text-transform: uppercase; opacity: .7; }
+.gc-card__amount { margin-top: 1cqw; font-size: 13cqw; font-weight: 600; line-height: 1; letter-spacing: -.01em; }
+.gc-card__amount small { margin-left: 2cqw; font-size: 3.6cqw; font-weight: 600; letter-spacing: .18em; opacity: .8; vertical-align: .9em; }
+.gc-card__bottom { position: absolute; left: 7.5%; right: 7.5%; bottom: 7%; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.gc-card__code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 3.9cqw; letter-spacing: .14em; }
+.gc-card__exp { text-align: right; font-size: 2.3cqw; letter-spacing: .14em; text-transform: uppercase; line-height: 1.5; }
+.gc-card__exp span { display: block; opacity: .65; }
+.gc-card__exp b { font-size: 3cqw; letter-spacing: .08em; }
+
+.gc-preview__note { max-width: 440px; margin: 16px 0 0; }
+.gc-preview__msg, .gc-show__msg { margin: 0; font-size: 18px; font-style: italic; line-height: 1.45; overflow-wrap: anywhere; }
+.gc-preview__from, .gc-show__from { margin: 6px 0 0; color: var(--text-secondary); }
+.gc-rules { max-width: 440px; margin: 20px 0 0; padding-left: 18px; color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+
+/* Forma */
+.gc-form-wrap { min-width: 0; }
+.gc-form { display: flex; flex-direction: column; }
+.gc-label { margin: 18px 0 8px; font-size: 14px; font-weight: 600; }
+.gc-label:first-of-type { margin-top: 0; }
+.gc-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.gc-quick__btn, .gc-stepper__btn {
+    height: 44px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--bg); color: var(--text);
+    font: inherit; font-weight: 600; cursor: pointer;
+}
+.gc-quick__btn.is-active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.gc-stepper { display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; gap: 8px; margin-top: 8px; align-items: center; }
+.gc-stepper__btn { font-size: 22px; }
+.gc-stepper__btn:disabled { opacity: .4; cursor: default; }
+.gc-stepper__value { text-align: center; font-size: 26px; font-weight: 700; }
+.gc-hint { margin: 6px 0 0; color: var(--text-secondary); font-size: 13px; }
+.gc-hint--right { text-align: right; }
+.gc-input {
+    width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: 12px;
+    background: var(--bg); color: var(--text); font: inherit; resize: vertical;
+}
+.gc-terms { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0 14px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.gc-terms input { margin-top: 3px; flex: none; }
+.gc-submit { margin-top: 4px; }
+
+.form-alert { padding: 12px 16px; border-radius: 12px; font-size: 14px; margin-bottom: 16px; border: 1px solid var(--border); background: var(--surface-2); }
+.form-alert-error { color: var(--danger); }
+.form-alert-success { color: var(--success); }
+
+/* Aldığınız kartlar */
+.gc-my__title { margin: 32px 0 10px; font-size: 18px; }
+.gc-my { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 12px; }
+.gc-my li + li { border-top: 1px solid var(--border); }
+.gc-my a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; color: inherit; text-decoration: none; }
+.gc-my span { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; }
+.gc-status { font-style: normal; font-size: 12px; font-weight: 600; }
+.gc-status--active { color: var(--success); }
+.gc-status--used, .gc-status--expired, .gc-status--refunded { color: var(--text-secondary); }
+.gc-status--pending { color: var(--warning); }
+
+/* Kartın səhifəsi */
+.gc-page--show { max-width: 520px; }
+.gc-show { display: flex; flex-direction: column; align-items: stretch; }
+.gc-show .gc-card { margin: 0 auto; }
+.gc-show__note { margin: 20px 0 0; text-align: center; }
+.gc-show__state, .gc-show__how { margin: 20px 0 12px; text-align: center; color: var(--text-secondary); line-height: 1.5; }
+.gc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.gc-actions .btn { margin: 0; }
+.gc-copy { grid-column: 1 / -1; height: 40px; border: 0; background: none; color: var(--text-secondary); font: inherit; text-decoration: underline; cursor: pointer; }
+.gc-show__more { margin-top: 16px; text-align: center; color: var(--text-secondary); }

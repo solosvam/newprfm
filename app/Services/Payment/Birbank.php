@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Models\GiftCard\GiftCard;
 use App\Models\Order\Order;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentOperation;
@@ -110,6 +111,49 @@ class Birbank
         } catch (\Throwable $exception) {
             // An HTTP timeout is ambiguous: the bank might have created an order.
             // Do not mark it as failed if its outcome cannot be established.
+            $payment->update(['response_text' => 'Birbank order creation requires reconciliation.']);
+            throw $exception;
+        }
+    }
+
+    /**
+     * Virtual hədiyyə kartının alışı (Order_SMS) — sifariş yoxdur, ödəniş karta bağlanır (payments.virtual_gift_card_id).
+     * Bankdan qayıdış adi callback-dən keçir; nəticə GiftCardService::applyPayment-də yazılır.
+     */
+    public function createGiftCardOrder(GiftCard $card, string $language = 'az'): array
+    {
+        $amount = $this->money($card->amount);
+        if ($card->status !== GiftCard::PENDING) {
+            throw ValidationException::withMessages(['payment' => 'This gift card is not awaiting payment.']);
+        }
+
+        $payment = Payment::create([
+            'customer_id' => $card->customer_id,
+            'order_id' => null,
+            'virtual_gift_card_id' => $card->id,
+            'provider' => 'birbank',
+            'amount' => $amount,
+            'status' => Payment::PENDING,
+        ]);
+
+        try {
+            $bankOrder = $this->createBankOrder([
+                'typeRid' => 'Order_SMS',
+                'amount' => $amount,
+                'currency' => 'AZN',
+                'language' => in_array($language, ['az', 'en', 'ru'], true) ? $language : 'az',
+                'title' => 'Parfumshop',
+                'description' => 'HK'.$card->id,
+                'hppRedirectUrl' => route('payment.birbank.return', ['payment' => $payment->id]),
+            ]);
+            $payment->update([
+                'provider_order_id' => (string) $bankOrder['id'],
+                'session_id' => (string) $bankOrder['password'],
+                'hpp_url' => $this->hppBase($bankOrder['hppUrl'] ?? null),
+            ]);
+
+            return ['payment_id' => $payment->id, 'url' => $this->hppUrl($bankOrder)];
+        } catch (\Throwable $exception) {
             $payment->update(['response_text' => 'Birbank order creation requires reconciliation.']);
             throw $exception;
         }

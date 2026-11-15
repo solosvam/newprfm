@@ -31,6 +31,9 @@
                     <span class="text-nowrap">{{ number_format((float) $item->total, 2) }} ₼</span>
                 </div>
             @endforeach
+            @if((float) $order->gift_card_amount > 0)
+                <div class="d-flex justify-content-between p-2 border-bottom"><span>Hədiyyə kartı ilə ödənilib</span><span class="text-nowrap text-success">−{{ number_format((float) $order->gift_card_amount, 2) }} ₼</span></div>
+            @endif
             <div class="d-flex justify-content-between p-2 fw-bold"><span>Yekun</span><span>{{ number_format((float) $order->total, 2) }} ₼</span></div>
         </div>
     </div>

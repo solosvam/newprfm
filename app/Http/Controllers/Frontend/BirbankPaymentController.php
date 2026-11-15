@@ -54,6 +54,16 @@ class BirbankPaymentController extends Controller
         // Eyni yol payments:check-birbank əmrində də işləyir (müştəri bura qayıtmasa).
         $payment = $sync->sync($payment, app()->getLocale());
 
+        // Hədiyyə kartının alışı: kartın səhifəsinə (kod orada görünür)
+        if ($payment->virtual_gift_card_id) {
+            $card = $payment->giftCard;
+            abort_unless($card, 404);
+
+            return redirect()->route('gift-card.show', $card->share_token)
+                ->with($payment->status === Payment::PAID ? 'success' : 'error',
+                    __($payment->status === Payment::PAID ? 'gift_card_paid' : 'gift_card_payment_failed'));
+        }
+
         // SMS linkindən ödəyib: login istəmədən həmin səhifəyə qayıdır, nəticəni orada görür
         if ((int) $request->session()->pull(PayLinkController::SESSION_KEY) === (int) $payment->order_id) {
             $token = Order::whereKey($payment->order_id)->value('pay_token');

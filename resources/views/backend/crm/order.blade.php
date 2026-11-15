@@ -315,6 +315,8 @@
                             </span>
                         </div>
                         @if($order->gift_wrap)<div><span>Hədiyyəlik qablaşdırma</span><span>{{ (float) $order->gift_wrap_fee > 0 ? number_format((float) $order->gift_wrap_fee, 2).' AZN' : 'Pulsuz' }}</span></div>@endif
+                        {{-- Hədiyyə kartı — ödənişdir (endirim deyil): yekun kartdan sonra qalan, seçilən üsulla ödənilən məbləğdir --}}
+                        @if($sum['gift_card'] > 0)<div><span>Hədiyyə kartı ilə ödənilib @if($order->giftCard)<a href="{{ route('admin.gift-cards.show', $order->giftCard) }}" class="small">{{ $order->giftCard->formattedCode() }}</a>@endif</span><span class="text-success">−{{ number_format($sum['gift_card'], 2) }} AZN</span></div>@endif
                         @if($sum['cancelled'] > 0)<div><span>Ləğv olunan</span><span class="text-danger">−{{ number_format($sum['cancelled'], 2) }} AZN</span></div>@endif
                         <div class="od-summary__grand"><span>Yekun</span><span>{{ number_format((float) $order->total, 2) }} AZN</span></div>
                         @if((float) $order->bonus_earned > 0)<div><span>Qazandığı bonus</span><span class="text-success">+{{ number_format((float) $order->bonus_earned, 2) }} AZN</span></div>

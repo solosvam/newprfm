@@ -231,8 +231,16 @@
         els.delivery.textContent = delivery > 0 ? money(delivery) : t.free;
         els.delivery.classList.toggle('is-free', delivery === 0);
 
-        els.total.textContent = money(total);
-        els.mobileTotal.textContent = money(total);
+        // Hədiyyə kartı — ödənişin bir hissəsi (endirim deyil): ödəniləcək = yekun − kartdan çıxılan
+        const giftCard = window.ParfumGiftCard;
+        const giftUsed = giftCard && giftCard.applyTo ? giftCard.applyTo(total) : 0;
+        const giftRow = document.getElementById('cartGiftCardRow');
+        if (giftRow) {
+            giftRow.hidden = giftUsed <= 0;
+            document.getElementById('cartGiftCard').textContent = '−' + money(giftUsed);
+        }
+        els.total.textContent = money(round2(total - giftUsed));
+        els.mobileTotal.textContent = money(round2(total - giftUsed));
 
         // Pulsuz çatdırılma proqresi
         const showFreeship = config.freeFrom > 0 && config.deliveryFee > 0 && state.count > 0;
@@ -255,7 +263,8 @@
         // Hissəli ödəniş
         // hissə-hissə ödənişə məhsul endirimi tətbiq olunmur — təklif adi qiymətlərlə
         const creditTotal = round2((state.regularSubtotal || state.subtotal) + delivery);
-        const canInstall = config.installmentMonths > 0 && creditTotal > 0 && creditTotal >= config.installmentMin;
+        // Hədiyyə kartı tətbiq olunubsa hissə-hissə ödəniş bağlıdır — təklif göstərilmir
+        const canInstall = !window.ParfumGiftCard?.code && config.installmentMonths > 0 && creditTotal > 0 && creditTotal >= config.installmentMin;
         els.installment.hidden = !canInstall;
         if (canInstall) {
             const monthly = Math.ceil((creditTotal * (1 + config.installmentMarkup / 100) / config.installmentMonths) * 100) / 100;
@@ -392,6 +401,7 @@
     });
 
     window.addEventListener('parfumshop:promo-updated', updateTotals);
+    window.addEventListener('parfumshop:giftcard-updated', updateTotals);
     window.addEventListener('parfumshop:cart-updated', () => {
         window.parfumshopCart.ready.then(renderCart).catch(cartError);
     });

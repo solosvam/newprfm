@@ -147,6 +147,17 @@ Route::get('/recommendations', [\App\Http\Controllers\Frontend\RecommendationCon
 Route::post('/cart/promo', [PromoCodeController::class, 'apply'])->middleware('throttle:10,1')->name('promo.apply');
 Route::delete('/cart/promo', [PromoCodeController::class, 'remove'])->name('promo.remove');
 
+// Virtual hədiyyə kartı: alış səhifəsi və kartın paylaşılan səhifəsi açıqdır; alış və ödəniş — giriş tələb edir
+Route::controller(\App\Http\Controllers\Frontend\GiftCardController::class)->group(function () {
+    Route::get('/gift-card', 'index')->name('gift-card.index');
+    Route::post('/gift-card', 'store')->middleware(['auth', 'throttle:10,1'])->name('gift-card.store');
+    Route::get('/gift-card/{token}', 'show')->where('token', '[A-Za-z0-9]{40}')->name('gift-card.show');
+    Route::post('/gift-card/{token}/pay', 'pay')->where('token', '[A-Za-z0-9]{40}')->middleware(['auth', 'throttle:5,1'])->name('gift-card.pay');
+    // Kodu təxmin etməyə cəhd — dəqiqədə 5
+    Route::post('/cart/gift-card', 'apply')->middleware('throttle:5,1')->name('gift-card.apply');
+    Route::delete('/cart/gift-card', 'remove')->name('gift-card.remove');
+});
+
 Route::controller(FavoriteController::class)->group(function () {
     Route::get('/wishlist', 'guest')->name('wishlist');
 });

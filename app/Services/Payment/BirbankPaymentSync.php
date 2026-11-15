@@ -104,6 +104,12 @@ class BirbankPaymentSync
 
     public function applyToOrder(Payment $payment, string $locale = 'az'): void
     {
+        // Virtual hədiyyə kartının alışı — sifariş yoxdur
+        if ($payment->virtual_gift_card_id) {
+            app(\App\Services\GiftCard\GiftCardService::class)->applyPayment($payment);
+
+            return;
+        }
         DB::transaction(function () use ($payment, $locale) {
             $order = Order::whereKey($payment->order_id)->lockForUpdate()->firstOrFail();
 

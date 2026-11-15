@@ -41,6 +41,12 @@ class PaymentItemsBuilder
             $lines[] = $this->line(null, self::COURIER_FEE, 1, $cents($order->courier_fee));
         }
 
+        // Hədiyyə kartı ilə qismən ödənilib: bankdan ödənilən qalıq bütün sətirlərə mütənasib paylanır
+        // (sifarişin tam ləğvində hər sətir öz payı qədər qaytarılır — OrderItemCancellationService::cancelOrder)
+        if ((float) ($order->gift_card_amount ?? 0) > 0) {
+            $lines = $this->scale($lines, $cents($amount));
+        }
+
         // Cəm ödəniş məbləğindən fərqlənirsə (köhnə/əl ilə dəyişilmiş sifariş), fərq sonuncu məhsula yazılır
         $diff = $cents($amount) - array_sum(array_column($lines, 'cents'));
         if ($diff !== 0) {
@@ -98,6 +104,24 @@ class PaymentItemsBuilder
         }
 
         return $rows;
+    }
+
+    /** Sətirləri cəmi $target qəpik olacaq şəkildə mütənasib kiçildir; qalıq sonuncu sətrə */
+    private function scale(array $lines, int $target): array
+    {
+        $sum = array_sum(array_column($lines, 'cents'));
+        if ($sum <= 0 || $lines === []) {
+            return $lines;
+        }
+        $given = 0;
+        $last = array_key_last($lines);
+        foreach ($lines as $k => $line) {
+            $part = $k === $last ? $target - $given : intdiv($line['cents'] * $target, $sum);
+            $given += $part;
+            $lines[$k] = $this->line($line['order_item_id'], $line['type'], $line['quantity'], $part);
+        }
+
+        return $lines;
     }
 
     private function line(?int $orderItemId, string $type, int $quantity, int $cents): array

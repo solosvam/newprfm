@@ -359,3 +359,7 @@
 .checkout-item__gift input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
 .checkout-item__gift:has(input:checked) { color: var(--accent); font-weight: 600; }
 .checkout-gift-hint { margin: 0 0 12px; font-size: 13px; color: var(--text-secondary); }
+
+/* Hədiyyə kartı: sifarişi tam örtür / qalıq üçün icazəli üsullar */
+.checkout-giftcard-covers { margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); font-size: 14px; font-weight: 600; color: var(--success); }
+.checkout-giftcard-covers--muted { font-weight: 400; color: var(--text-secondary); }

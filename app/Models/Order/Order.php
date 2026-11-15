@@ -19,6 +19,7 @@ class Order extends Model {
             'referral_discount'=>'decimal:2',
             'bonus_percent'=>'decimal:2',
             'total'=>'decimal:2',
+            'gift_card_amount'=>'decimal:2',
             'courier_fee'=>'decimal:2',
             'pay_token_expires_at'=>'datetime',
         ];
@@ -150,17 +151,21 @@ class Order extends Model {
      * Ləğv varsa — məhsullar bütün sifariş olunan miqdarla, endirim ilkin (promo, referal, operator birlikdə; ləğvdən sonra
      * hissələri ayırmaq olmur), "Ləğv olunan" — ləğvlərin cəmi, yekun — indiki (tam ləğvdə 0).
      *
-     * @return array{goods: float, discount: float, referral: float, cancelled: float, total: float}
+     * Hədiyyə kartı endirim deyil, ödənişdir: "gift_card" — kartla ödənilən, "total" — qalan (seçilən üsulla).
+     *
+     * @return array{goods: float, discount: float, referral: float, cancelled: float, gift_card: float, total: float}
      */
     public function totalsBreakdown(): array
     {
         $cancelled = $this->cancelledAmount();
+        $giftCard = round((float) $this->gift_card_amount, 2);
         if ($cancelled <= 0) {
             return [
                 'goods' => (float) $this->subtotal,
                 'discount' => max(0.0, round((float) $this->discount - (float) $this->referral_discount, 2)),
                 'referral' => (float) $this->referral_discount,
                 'cancelled' => 0.0,
+                'gift_card' => $giftCard,
                 'total' => (float) $this->total,
             ];
         }
@@ -168,11 +173,18 @@ class Order extends Model {
 
         return [
             'goods' => $goods,
-            'discount' => max(0.0, round($goods + (float) $this->delivery_fee + (float) $this->courier_fee + (float) $this->gift_wrap_fee - $this->originalTotal(), 2)),
+            'discount' => max(0.0, round($goods + (float) $this->delivery_fee + (float) $this->courier_fee + (float) $this->gift_wrap_fee - $this->originalTotal() - $giftCard, 2)),
             'referral' => 0.0,
             'cancelled' => $cancelled,
+            'gift_card' => $giftCard,
             'total' => (float) $this->total,
         ];
+    }
+
+    /** Bu sifarişdə istifadə olunan virtual hədiyyə kartı */
+    public function giftCard()
+    {
+        return $this->belongsTo(\App\Models\GiftCard\GiftCard::class, 'gift_card_id');
     }
 
     public function itemCancellations()

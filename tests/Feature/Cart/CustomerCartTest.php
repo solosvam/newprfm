@@ -219,4 +219,73 @@ class CustomerCartTest extends TestCase
         $this->assertSame(0, (int) $order->gift_wrap);
         $this->assertEquals(20.0, (float) $order->total);
     }
+
+    /** Hədiyyə kartı üçün əlavə cədvəllər və aktiv 100 AZN-lik kart (kod TEST7KQ3X9MD) */
+    private function giftCardSchema(float $amount = 100): void
+    {
+        Schema::table('orders', function (Blueprint $t) { $t->unsignedBigInteger('gift_card_id')->nullable(); $t->decimal('gift_card_amount', 10, 2)->default(0); });
+        Schema::create('virtual_gift_cards', function (Blueprint $t) {
+            $t->id(); $t->string('code', 20)->nullable()->unique(); $t->decimal('amount', 10, 2); $t->string('design', 20)->default('standard');
+            $t->string('message', 150)->nullable(); $t->string('sender_name', 60)->nullable(); $t->integer('customer_id');
+            $t->string('status', 15)->default('pending'); $t->string('share_token', 48)->unique();
+            foreach (['paid_at', 'expires_at', 'used_at', 'refunded_at', 'reminded_at'] as $c) $t->timestamp($c)->nullable();
+            $t->unsignedBigInteger('used_order_id')->nullable(); $t->timestamps();
+        });
+        Schema::create('virtual_gift_card_events', function (Blueprint $t) {
+            $t->id(); $t->unsignedBigInteger('virtual_gift_card_id'); $t->string('event', 20); $t->unsignedBigInteger('order_id')->nullable();
+            $t->string('note')->nullable(); $t->unsignedBigInteger('user_id')->nullable(); $t->timestamp('created_at');
+        });
+        DB::table('payment_methods')->insert([['id' => 2, 'code' => 'installment', 'active' => 1], ['id' => 3, 'code' => 'gift_card', 'active' => 0]]);
+        DB::table('virtual_gift_cards')->insert(['id' => 1, 'code' => 'TEST7KQ3X9MD', 'amount' => $amount, 'customer_id' => 2, 'status' => 'active',
+            'share_token' => str_repeat('a', 40), 'paid_at' => now(), 'expires_at' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]);
+    }
+
+    public function test_gift_card_covering_whole_order_pays_it_and_burns_the_rest(): void
+    {
+        $this->checkoutSchema();
+        $this->giftCardSchema(100);
+        $service = app(CartService::class);
+        $service->change($this->customer(), 1, 'add', 2); // 20 ₼
+        $body = ['cart' => $service->items($this->customer()), 'address_mode' => 'existing', 'address_id' => 1, 'payment_method_id' => 1];
+
+        // kod istənilən yazılışla qəbul olunur
+        $this->actingAs($this->customer())->postJson('/cart/gift-card', ['code' => 'test-7kq3 x9md'])
+            ->assertOk()->assertJsonPath('code', 'TEST-7KQ3-X9MD')->assertJsonPath('amount', 100);
+        $this->postJson('/checkout', $body)->assertOk();
+
+        $order = DB::table('orders')->first();
+        $this->assertEquals([20.0, 0.0], [(float) $order->gift_card_amount, (float) $order->total]);
+        $this->assertSame(3, (int) $order->payment_method_id, 'üsul "Hədiyyə kartı"');
+        $this->assertSame('paid', $order->payment_status);
+        $card = DB::table('virtual_gift_cards')->first();
+        $this->assertSame('used', $card->status);
+        $this->assertSame((int) $order->id, (int) $card->used_order_id);
+        $this->assertNull(session('gift_card_code'));
+
+        // istifadə olunmuş kart yenidən tətbiq olunmur
+        $this->postJson('/cart/gift-card', ['code' => 'TEST7KQ3X9MD'])->assertUnprocessable()
+            ->assertJsonPath('message', __('gift_card_already_used'));
+    }
+
+    public function test_gift_card_remainder_is_paid_by_chosen_method_and_installment_is_refused(): void
+    {
+        $this->checkoutSchema();
+        $this->giftCardSchema(100);
+        DB::table('product_variants')->where('id', 1)->update(['price' => 150]);
+        $service = app(CartService::class);
+        $service->change($this->customer(), 1, 'add', 1);
+        $body = ['cart' => $service->items($this->customer()), 'address_mode' => 'existing', 'address_id' => 1];
+
+        $this->actingAs($this->customer())->postJson('/cart/gift-card', ['code' => 'TEST7KQ3X9MD'])->assertOk();
+        // hissə-hissə ödəniş kartla bağlıdır
+        $this->postJson('/checkout', $body + ['payment_method_id' => 2])->assertUnprocessable()
+            ->assertJsonPath('message', __('gift_card_method_not_allowed'));
+        $this->assertSame(0, DB::table('orders')->count());
+
+        $this->postJson('/checkout', $body + ['payment_method_id' => 1])->assertOk();
+        $order = DB::table('orders')->first();
+        // 150 − kart 100 = 50 qapıda; endirim deyil (discount 0)
+        $this->assertEquals([150.0, 0.0, 100.0, 50.0], [(float) $order->subtotal, (float) $order->discount, (float) $order->gift_card_amount, (float) $order->total]);
+        $this->assertSame('cod', $order->payment_status);
+    }
 }

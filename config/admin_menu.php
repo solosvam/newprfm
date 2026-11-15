@@ -73,6 +73,7 @@ return [
         'id'       => 'marketingMenu',
         'children' => [
             ['title' => 'Promo kodlar', 'route' => 'admin.promo-codes.index', 'permission' => 'promo.list'],
+            ['title' => 'Hədiyyə kartları', 'route' => 'admin.gift-cards.index', 'permission' => 'giftcard.list'],
             ['title' => 'Bannerlər', 'route' => 'admin.banner.list', 'permission' => 'site.banners'],
             ['title' => 'Popup-lar', 'route' => 'admin.popups.index', 'permission' => 'site.popups'],
             ['title' => 'Vitrin (Populyar)', 'route' => 'admin.featured.index', 'permission' => 'site.featured'],

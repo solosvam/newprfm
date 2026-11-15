@@ -61,6 +61,8 @@
                             <h2 class="checkout-step__title">{{ __('checkout_payment_method') }}</h2>
                         </div>
 
+                        <p id="checkoutGiftCardCovers" class="checkout-giftcard-covers" hidden>{{ __('gift_card_covers_all') }}</p>
+                        <p id="checkoutGiftCardMethods" class="checkout-giftcard-covers checkout-giftcard-covers--muted" hidden>{{ __('gift_card_method_not_allowed') }}</p>
                         <div class="checkout-payment" role="radiogroup">
                             @foreach($paymentMethods as $m)
                                 @php
@@ -187,6 +189,7 @@
                     <div id="checkoutItems" class="checkout-items"></div>
 
                     @include('frontend.partials.promo-code')
+                    @include('frontend.partials.gift-card-code')
 
                     <div class="cart-summary__rows">
                         <div id="checkoutDiscountRow" class="cart-summary__row cart-summary__row--discount" hidden>
@@ -205,6 +208,10 @@
                         <div id="checkoutGiftWrapRow" class="cart-summary__row" hidden>
                             <span>{{ __('checkout_gift_wrap_label') }}</span>
                             <strong id="checkoutGiftWrapFee"></strong>
+                        </div>
+                        <div id="checkoutGiftCardRow" class="cart-summary__row cart-summary__row--discount" hidden>
+                            <span>{{ __('gift_card_row') }}</span>
+                            <strong id="checkoutGiftCard"></strong>
                         </div>
                     </div>
 
@@ -272,5 +279,6 @@
     @endphp
     <script type="application/json" id="checkout-config">@json($checkoutConfig)</script>
     <script src="{{ asset_v('frontend/js/promo.js') }}" defer></script>
+    <script src="{{ asset_v('frontend/js/giftcard.js') }}" defer></script>
     <script src="{{ asset_v('frontend/js/checkout.js') }}" defer></script>
 @endsection

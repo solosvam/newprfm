@@ -341,6 +341,14 @@ Route::prefix('admin')
                 Route::get('/{promo}/history', 'history')->middleware('can:promo.list')->name('history');
             });
 
+            Route::prefix('gift-cards')->name('gift-cards.')->controller(\App\Http\Controllers\Backend\GiftCardsController::class)->group(function () {
+                Route::get('/', 'index')->middleware('can:giftcard.list')->name('index');
+                Route::post('/banned-words', 'bannedWords')->middleware('can:giftcard.manage')->name('banned-words');
+                Route::get('/{card}', 'show')->whereNumber('card')->middleware('can:giftcard.list')->name('show');
+                Route::post('/{card}/extend', 'extend')->whereNumber('card')->middleware('can:giftcard.manage')->name('extend');
+                Route::post('/{card}/refund', 'refund')->whereNumber('card')->middleware('can:giftcard.manage')->name('refund');
+            });
+
             Route::controller(SettingsController::class)
                 ->middleware('can:system.settings')
                 ->prefix('settings')
