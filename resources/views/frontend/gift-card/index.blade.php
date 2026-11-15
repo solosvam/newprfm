@@ -51,10 +51,9 @@
                     <label class="gc-label">{{ __('gift_card_design_label') }}</label>
                     <div class="gc-designs" role="radiogroup">
                         @foreach($designs as $d)
-                            <label class="gc-design">
+                            <label class="gc-design" title="{{ __('gift_card_design_'.$d) }}">
                                 <input type="radio" name="design" value="{{ $d }}" data-gc-design @checked($d === $selectedDesign)>
-                                <span class="gc-design__swatch gc-design__swatch--{{ $d }}"></span>
-                                <span>{{ __('gift_card_design_'.$d) }}</span>
+                                <span class="gc-design__swatch gc-design__swatch--{{ $d }}">{{ __('gift_card_design_'.$d) }}</span>
                             </label>
                         @endforeach
                     </div>

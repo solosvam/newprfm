@@ -79,10 +79,20 @@
 /* Dizayn seçimi */
 .gc-designs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 420px) { .gc-designs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.gc-design > span:last-child { font-size: 12px; line-height: 1.3; }
-.gc-design { position: relative; display: flex; flex-direction: column; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.gc-design { position: relative; display: block; cursor: pointer; }
 .gc-design input { position: absolute; opacity: 0; pointer-events: none; }
-.gc-design__swatch { aspect-ratio: 85.6 / 54; border-radius: 10px; border: 2px solid transparent; box-shadow: 0 0 0 1px var(--border-strong); }
+/* Seçim kartı — dizaynın kiçik nümunəsi: ad içində, dizaynın öz serif şriftində və rəngində */
+.gc-design__swatch {
+    display: flex; align-items: center; justify-content: center; aspect-ratio: 85.6 / 54; padding: 4px; box-sizing: border-box;
+    border-radius: 10px; border: 2px solid transparent; box-shadow: 0 0 0 1px var(--border-strong);
+    font-family: "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: clamp(12px, 3.6vw, 15px); font-weight: 500;
+    letter-spacing: .02em; text-align: center; line-height: 1.1;
+}
+.gc-design__swatch--signature { color: #e6c98a; }
+.gc-design__swatch--love { color: #f6d3d6; }
+.gc-design__swatch--bloom { color: #3e5a3a; }
+.gc-design__swatch--celebration { color: #6b4c1a; }
+.gc-design__swatch--standard { color: #ffffff; }
 .gc-design input:checked + .gc-design__swatch { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #d4af5f; }
 .gc-design__swatch--signature { background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%); outline: 1px solid rgba(212, 175, 95, .6); outline-offset: -6px; }
 .gc-design__swatch--love { background: radial-gradient(120% 150% at 8% 0%, #922e46 0%, #6c1a2e 45%, #3d0c19 100%); outline: 1px solid rgba(242, 198, 203, .6); outline-offset: -6px; }
