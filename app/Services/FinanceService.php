@@ -190,7 +190,8 @@ class FinanceService
             $this->ensure($category !== null, 'Kateqoriyanı seçin.');
             $this->ensure($category->fits($kind), '"'.$category->name.'" kateqoriyası '.($kind === 'income' ? 'mədaxil' : 'məxaric').' üçün deyil.');
         } elseif (isset(MoneyMovement::KIND_CATEGORY[$kind])) {
-            $attrs['category_id'] = FinanceCategory::byCode(MoneyMovement::KIND_CATEGORY[$kind])?->id;
+            // Sistem növünün kateqoriyası; çağıran öz sistem kateqoriyasını verə bilər (məs. hədiyyə kartının satışı)
+            $attrs['category_id'] ??= FinanceCategory::byCode(MoneyMovement::KIND_CATEGORY[$kind])?->id;
         }
 
         return DB::transaction(function () use ($from, $to, $cents, $kind, $attrs, $actor) {
@@ -297,7 +298,9 @@ class FinanceService
         $this->record($this->system('customer'), $this->system('online'), $amount, 'customer_payment', [
             'order_id' => $payment->order_id, 'payment_id' => $payment->id,
             'note' => $payment->virtual_gift_card_id ? 'Hədiyyə kartının satışı (HK'.$payment->virtual_gift_card_id.')' : 'Birbank ödənişi',
-        ]);
+        ] + ($payment->virtual_gift_card_id
+            // Kartın alışı satış deyil (alıcıya borcdur) — Pul axınında ayrıca kateqoriya; satış kartla mal veriləndə (ProfitReport)
+            ? array_filter(['category_id' => FinanceCategory::byCode('gift_card_sale')?->id]) : []));
     }
 
     /** Karta qaytarma uğurlu olanda: Onlayn ödənişlər → Müştəri (bir dəfə) */

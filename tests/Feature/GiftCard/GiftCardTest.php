@@ -184,6 +184,15 @@ class GiftCardTest extends TestCase
         $this->service()->applyPayment($paid);
         $this->assertSame($code, $card->fresh()->code);
         $this->assertSame(1, $card->events()->where('event', 'paid')->count());
+
+        // Maliyyə: kartın alışı "Satış" deyil — Pul axınında "Hədiyyə kartı satışı" (satış kartla mal veriləndə yaranır)
+        foreach (['2026_09_29_200000_create_finance_tables.php', '2026_10_16_100000_create_finance_categories.php', '2026_11_16_130000_gift_card_sale_category.php'] as $file) {
+            (require database_path('migrations/'.$file))->up();
+        }
+        app(\App\Services\FinanceService::class)->recordOnlinePayment($paid);
+        $movement = \App\Models\Finance\MoneyMovement::where('payment_id', $paid->id)->sole();
+        $this->assertSame('gift_card_sale', $movement->category->code);
+        $this->assertSame('300.00', $movement->amount);
     }
 
     public function test_code_is_found_regardless_of_case_dashes_and_spaces(): void

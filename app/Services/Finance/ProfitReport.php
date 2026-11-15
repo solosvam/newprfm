@@ -12,8 +12,11 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Aylıq mənfəət: Satış − malın mayası (depolar) = ümumi mənfəət; − xərclər = xalis mənfəət.
- *  - Satış — həmin ay təhvil verilmiş sifarişlər (təhvil günü): yekun məbləğ − əlavə çatdırılma (kuryerin qazancıdır);
+ *  - Satış — həmin ay təhvil verilmiş sifarişlər (təhvil günü): yekun məbləğ + hədiyyə kartı ilə ödənilən − əlavə çatdırılma (kuryerin qazancıdır);
+ *    hədiyyə kartının alışı satış deyil (alıcıya borcdur) — satış kartla mal veriləndə yaranır;
  *    hissə-hissə — Ferrum-un bizə köçürdüyü xalis məbləğ; bonusla ödənilən — 0 (Satılan mallar hesabatı ilə eyni).
+ *  - Hədiyyə kartı qalığı — istifadə olunmayan pul gəlirdir: müddəti bitən kartın məbləği (bitmə günü) və sifarişdən
+ *    artıq qalıb yanan hissə (istifadə günü). Müddəti uzadılan / pulu qaytarılan kart sayılmır.
  *  - Malın mayası — bu sifarişlər üçün depolardan götürülən malın alış qiyməti. Öz istehsalımız burada sayılmır:
  *    xammal və istehsal xərcləri ödəniləndə Xərclərə düşür (ikiqat çıxılmasın deyə).
  *  - Xərclər — Məxaric, kuryer xərcləri, tədarükçüyə ödəniş (xammal); ödəniş günü, kateqoriya üzrə. Depoya ödəniş
@@ -24,7 +27,7 @@ class ProfitReport
     public const EXPENSE_KINDS = ['outgo', 'courier_expense', 'supplier_payment'];
 
     /**
-     * @return array{months: list<Carbon>, sales: array, orders: array, cost: array, gross: array, expenses: list<array>, expense: array, net: array}
+     * @return array{months: list<Carbon>, sales: array, orders: array, breakage: array, cost: array, gross: array, expenses: list<array>, expense: array, net: array}
      *   Məbləğlər qəpiklə, [Y-m => cents]
      */
     public function build(Carbon $from, Carbon $to): array
@@ -62,7 +65,8 @@ class ProfitReport
                 $orders[$ym]++;
             }
         }
-        $gross = collect($keys)->mapWithKeys(fn ($k) => [$k => $sales[$k] - $cost[$k]])->all();
+        $breakage = $this->giftCardBreakage($start, $end, $zero);
+        $gross = collect($keys)->mapWithKeys(fn ($k) => [$k => $sales[$k] + $breakage[$k] - $cost[$k]])->all();
 
         // Xərclər: əks əməliyyat əslinin kateqoriyasından çıxılır
         $byCategory = [];
@@ -84,7 +88,7 @@ class ProfitReport
         $expense = collect($keys)->mapWithKeys(fn ($k) => [$k => collect($expenses)->sum(fn ($row) => $row['values'][$k])])->all();
         $net = collect($keys)->mapWithKeys(fn ($k) => [$k => $gross[$k] - $expense[$k]])->all();
 
-        return compact('months', 'sales', 'orders', 'cost', 'gross', 'expenses', 'expense', 'net');
+        return compact('months', 'sales', 'orders', 'breakage', 'cost', 'gross', 'expenses', 'expense', 'net');
     }
 
     /** Sifarişdən şirkətə qalan gəlir (AZN) */
@@ -97,7 +101,36 @@ class ProfitReport
             'installment' => max(0.0, ($order->creditApplication
                 ? ($order->creditApplication->netAmount() ?? (float) $order->creditApplication->total)
                 : (float) $order->total) - $courierFee),
-            default => max(0.0, (float) $order->total - $courierFee),
+            default => max(0.0, (float) $order->total + (float) $order->gift_card_amount - $courierFee),
         };
+    }
+
+    /** İstifadə olunmayan hədiyyə kartı pulu: [Y-m => cents] */
+    private function giftCardBreakage(Carbon $start, Carbon $end, array $zero): array
+    {
+        $result = $zero;
+        if (!\Illuminate\Support\Facades\Schema::hasTable('virtual_gift_cards')) {
+            return $result;
+        }
+        $add = function (Carbon $at, float $amount) use (&$result) {
+            $ym = $at->format('Y-m');
+            if (isset($result[$ym]) && $amount > 0) $result[$ym] += (int) round($amount * 100);
+        };
+        // Müddəti bitən: bitmə qeydinin günü (sonuncu "expired")
+        $expired = \App\Models\GiftCard\GiftCard::where('status', \App\Models\GiftCard\GiftCard::EXPIRED)->get(['id', 'amount', 'expires_at']);
+        $expiredAt = \App\Models\GiftCard\GiftCardEvent::whereIn('virtual_gift_card_id', $expired->pluck('id')->all() ?: [0])->where('event', 'expired')
+            ->selectRaw('virtual_gift_card_id, MAX(created_at) as at')->groupBy('virtual_gift_card_id')->pluck('at', 'virtual_gift_card_id');
+        foreach ($expired as $card) {
+            $at = isset($expiredAt[$card->id]) ? Carbon::parse($expiredAt[$card->id]) : $card->expires_at;
+            if ($at && $at->between($start, $end)) $add($at, (float) $card->amount);
+        }
+        // Sifarişdən artıq qalıb yanan hissə
+        $used = \App\Models\GiftCard\GiftCard::with('usedOrder:id,gift_card_amount')->where('status', \App\Models\GiftCard\GiftCard::USED)
+            ->whereBetween('used_at', [$start, $end])->get(['id', 'amount', 'used_at', 'used_order_id']);
+        foreach ($used as $card) {
+            $add($card->used_at, round((float) $card->amount - (float) $card->usedOrder?->gift_card_amount, 2));
+        }
+
+        return $result;
     }
 }

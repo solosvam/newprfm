@@ -42,7 +42,8 @@
             <div class="col-12 col-md-4 col-xl-2"><button class="btn btn-primary w-100">Filter</button></div>
         </div>
         <div class="form-text mt-2">
-            Satış — həmin ay təhvil verilmiş sifarişlər (əlavə çatdırılma — kuryerin qazancı çıxılıb; hissə-hissədə Ferrum-un köçürdüyü xalis məbləğ; bonusla ödənilən — 0).
+            Satış — həmin ay təhvil verilmiş sifarişlər, hədiyyə kartı ilə ödənilən hissə daxil (əlavə çatdırılma — kuryerin qazancı çıxılıb; hissə-hissədə Ferrum-un köçürdüyü xalis məbləğ; bonusla ödənilən — 0).
+            Hədiyyə kartının alışı satış deyil — satış kartla mal veriləndə yaranır; müddəti bitən kart və sifarişdən artıq qalıb yanan hissə "Hədiyyə kartı qalığı"dır.
             Malın mayası — bu sifarişlər üçün depolardan alınan mal. Öz istehsalımızın xammalı və xərcləri ödəniləndə "Xərclər"dədir.
             Xərclər — Məxaric, kuryer xərcləri, xammal (ödəniş günü). Ən çox 24 ay.
         </div>
@@ -61,6 +62,13 @@
                 @foreach($keys as $k)<td class="text-end text-nowrap">{!! $cell($sales[$k]) !!}<div class="text-muted text-small">{{ $orders[$k] }} sifariş</div></td>@endforeach
                 @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($sales)) !!}<div class="text-muted text-small fw-normal">{{ array_sum($orders) }} sifariş</div></td>@endif
             </tr>
+            @if(array_filter($breakage))
+                <tr>
+                    <td>Hədiyyə kartı qalığı <span class="text-muted text-small">· istifadə olunmayan</span></td>
+                    @foreach($keys as $k)<td class="text-end text-nowrap">{!! $cell($breakage[$k]) !!}</td>@endforeach
+                    @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($breakage)) !!}</td>@endif
+                </tr>
+            @endif
             <tr>
                 <td>Malın mayası <span class="text-muted text-small">· depolardan</span></td>
                 @foreach($keys as $k)<td class="text-end text-nowrap">{!! $cell($cost[$k], -1) !!}</td>@endforeach

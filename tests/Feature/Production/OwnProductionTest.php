@@ -33,7 +33,7 @@ class OwnProductionTest extends TestCase
         Schema::create('orders', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->string('order_no')->default('PS1'); $t->unsignedBigInteger('order_status_id');
             $t->string('payment_status')->default('cod'); $t->unsignedBigInteger('courier_id')->nullable(); $t->unsignedBigInteger('payment_method_id')->nullable();
-            foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'courier_fee', 'total'] as $c) $t->decimal($c, 12, 2)->default(0);
+            foreach (['subtotal', 'discount', 'referral_discount', 'delivery_fee', 'gift_wrap_fee', 'courier_fee', 'gift_card_amount', 'total'] as $c) $t->decimal($c, 12, 2)->default(0);
             $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
@@ -239,6 +239,39 @@ class OwnProductionTest extends TestCase
         $flow = app(\App\Services\Finance\CashFlowReport::class)->build(now()->startOfMonth(), now()->endOfMonth(), $cash, false);
         $this->assertSame(5000, $flow['totals']['purchase'][$k]);
         $this->assertSame(7000, $flow['totals']['expense'][$k]);
+    }
+
+    public function test_profit_counts_gift_card_payment_as_sale_and_unused_cards_as_income(): void
+    {
+        Schema::create('payment_methods', function (Blueprint $t) { $t->id(); $t->string('code'); });
+        Schema::create('credit_applications', function (Blueprint $t) { $t->id(); $t->unsignedBigInteger('order_id'); $t->decimal('total', 12, 2)->default(0); $t->decimal('bank_fee_rate', 6, 2)->nullable(); $t->timestamps(); });
+        Schema::create('virtual_gift_cards', function (Blueprint $t) {
+            $t->id(); $t->decimal('amount', 10, 2); $t->integer('customer_id')->default(1); $t->string('status', 15); $t->string('share_token', 48)->nullable();
+            $t->timestamp('expires_at')->nullable(); $t->unsignedBigInteger('used_order_id')->nullable(); $t->timestamp('used_at')->nullable(); $t->timestamps();
+        });
+        Schema::create('virtual_gift_card_events', function (Blueprint $t) { $t->id(); $t->unsignedBigInteger('virtual_gift_card_id'); $t->string('event', 20); $t->timestamp('created_at'); });
+        DB::table('payment_methods')->insert(['id' => 1, 'code' => 'cash']);
+        $wh = \App\Models\Procurement\Warehouse::create(['name_az' => 'Depo A']);
+
+        // 260-lıq sifariş: 200 kartla (bu kart 250 idi — 50 yanır), 60 nağd; alış 50
+        $order = Order::create(['customer_id' => 1, 'order_status_id' => 1, 'payment_method_id' => 1, 'total' => 60, 'gift_card_amount' => 200]);
+        $item = $order->items()->create(['product_id' => 5, 'product_variant_id' => 9, 'quantity' => 1]);
+        app(\App\Services\ProcurementService::class)->recordDirect($order, $item->id, $wh->id, '50', 7);
+        $order->forceFill(['order_status_id' => 17])->save();
+        DB::table('order_status_logs')->insert(['order_id' => $order->id, 'status_id' => 17, 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('virtual_gift_cards')->insert([
+            ['amount' => 250, 'status' => 'used', 'used_order_id' => $order->id, 'used_at' => now()],
+            ['amount' => 100, 'status' => 'expired', 'used_order_id' => null, 'used_at' => null], // müddəti bitdi — gəlir
+            ['amount' => 300, 'status' => 'active', 'used_order_id' => null, 'used_at' => null],  // hələ borcdur
+        ]);
+        DB::table('virtual_gift_card_events')->insert(['virtual_gift_card_id' => 2, 'event' => 'expired', 'created_at' => now()]);
+
+        $r = app(\App\Services\Finance\ProfitReport::class)->build(now()->startOfMonth(), now()->endOfMonth());
+        $k = now()->format('Y-m');
+        $this->assertSame(26000, $r['sales'][$k]);    // kartla ödənilən də satışdır
+        $this->assertSame(15000, $r['breakage'][$k]); // 50 yanan + 100 müddəti bitən
+        $this->assertSame(5000, $r['cost'][$k]);
+        $this->assertSame(36000, $r['gross'][$k]);
     }
 
     public function test_menu_and_permission_exist(): void

@@ -32,7 +32,7 @@ class AdminDashboardTest extends TestCase
         Schema::create('order_statuses', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->boolean('active')->default(true), $t->integer('sort_order')->default(0)]);
         Schema::create('payment_methods', fn (Blueprint $t) => [$t->id(), $t->string('code'), $t->string('name_az')->nullable(), $t->integer('sort_order')->default(0)]);
         DB::table('payment_methods')->insert([['id' => 1, 'code' => 'cash', 'name_az' => 'Qapıda nağd'], ['id' => 2, 'code' => 'card_online', 'name_az' => 'Kartla onlayn'], ['id' => 3, 'code' => 'birbank_installment', 'name_az' => 'Birbank taksit'], ['id' => 4, 'code' => 'installment', 'name_az' => 'Hissə-hissə ödəniş']]);
-        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('courier_fee', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->string('order_no')->nullable(), $t->string('guest_mobile')->nullable(), $t->string('payment_status')->nullable(), $t->unsignedBigInteger('courier_id')->nullable(), $t->timestamps()]);
+        Schema::create('orders', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id')->nullable(), $t->unsignedBigInteger('order_status_id')->nullable(), $t->unsignedBigInteger('payment_method_id')->default(1), $t->decimal('total', 12, 2)->default(0), $t->decimal('delivery_fee', 12, 2)->default(0), $t->decimal('courier_fee', 12, 2)->default(0), $t->decimal('gift_card_amount', 12, 2)->default(0), $t->decimal('gift_wrap_fee', 12, 2)->default(0), $t->boolean('one_click')->default(false), $t->string('source', 20)->default('website'), $t->string('order_no')->nullable(), $t->string('guest_mobile')->nullable(), $t->string('payment_status')->nullable(), $t->unsignedBigInteger('courier_id')->nullable(), $t->timestamps()]);
         Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->unsignedBigInteger('product_id')->nullable(), $t->integer('quantity')->default(1), $t->integer('cancelled_quantity')->default(0), $t->decimal('total', 12, 2)->default(0)]);
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->unsignedBigInteger('brand_id')->nullable()]);
@@ -106,6 +106,17 @@ class AdminDashboardTest extends TestCase
         $this->assertSame(200.0, $stats['average']['value']);
         $this->assertSame(1, $stats['customers']['value']);
         $this->assertNull($stats['customers']['change']);
+    }
+
+    public function test_gift_card_part_of_the_order_is_revenue(): void
+    {
+        // 260 AZN-lik sifariş: 200-ü hədiyyə kartı ilə (total — qalan 60), alış 180 → mənfəət 80, zərər yox
+        $order = $this->order('2026-10-02 10:00', 60, 'delivered', 1, 180);
+        DB::table('orders')->where('id', $order->id)->update(['gift_card_amount' => 200]);
+
+        $stats = app(AdminDashboard::class)->stats('today');
+        $this->assertSame(80.0, $stats['profit']['value']);
+        $this->assertSame(260.0, $stats['revenue']['value']);
     }
 
     public function test_profit_counts_only_delivered_orders_and_payment_split(): void

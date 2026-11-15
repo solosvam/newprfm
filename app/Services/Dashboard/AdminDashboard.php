@@ -132,7 +132,7 @@ class AdminDashboard
             $start = CarbonImmutable::today()->subDays($days - 1);
             $rows = $this->validOrders()
                 ->where('created_at', '>=', $start)
-                ->selectRaw('DATE(created_at) as day, COUNT(*) as orders, SUM(total - COALESCE(courier_fee, 0)) as revenue')
+                ->selectRaw('DATE(created_at) as day, COUNT(*) as orders, SUM(total + COALESCE(gift_card_amount, 0) - COALESCE(courier_fee, 0)) as revenue')
                 ->groupBy('day')
                 ->get()
                 ->keyBy('day');
@@ -354,7 +354,7 @@ class AdminDashboard
             $rows = $this->validOrders()->whereBetween('created_at', [$from, $to])
                 ->selectRaw("CASE WHEN one_click = 1 THEN 'one_click'
                     WHEN source IN ('customer', 'operator') THEN source ELSE 'other' END as src,
-                    COUNT(*) as total, SUM(total - COALESCE(courier_fee, 0)) as total_sum")
+                    COUNT(*) as total, SUM(total + COALESCE(gift_card_amount, 0) - COALESCE(courier_fee, 0)) as total_sum")
                 ->groupBy('src')->get()->keyBy('src');
             $all = (int) $rows->sum('total');
 
@@ -586,7 +586,7 @@ class AdminDashboard
     {
         $row = $this->validOrders()
             ->whereBetween('created_at', [$from, $to])
-            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total - COALESCE(courier_fee, 0)), 0) as revenue')
+            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total + COALESCE(gift_card_amount, 0) - COALESCE(courier_fee, 0)), 0) as revenue')
             ->first();
 
         return ['count' => (int) $row->orders, 'sum' => round((float) $row->revenue, 2)];
@@ -608,7 +608,7 @@ class AdminDashboard
         $orders = Order::where('order_status_id', $delivered)->whereBetween('created_at', [$from, $to]);
 
         $sales = (clone $orders)
-            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total - COALESCE(delivery_fee, 0) - COALESCE(courier_fee, 0) - COALESCE(gift_wrap_fee, 0)), 0) as sales')
+            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total + COALESCE(gift_card_amount, 0) - COALESCE(delivery_fee, 0) - COALESCE(courier_fee, 0) - COALESCE(gift_wrap_fee, 0)), 0) as sales')
             ->first();
         $cost = (float) DB::table('order_item_allocations')
             ->join('order_items', 'order_items.id', '=', 'order_item_allocations.order_item_id')
