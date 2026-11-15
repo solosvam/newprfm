@@ -960,5 +960,6 @@
     "gift_card_open": "Открыть карту",
     "gift_card_design_label": "Дизайн",
     "gift_card_design_signature": "Signature — Premium",
-    "gift_card_design_standard": "Стандарт"
+    "gift_card_design_standard": "Стандарт",
+    "gift_card_code_label": "Код карты"
 }

@@ -14,19 +14,20 @@
                     <stop offset=".68" stop-color="#c99a45"/><stop offset="1" stop-color="#efd38c"/>
                 </linearGradient>
             </defs>
-            <g fill="none" stroke="#d4af5f" stroke-width="1" opacity=".2">
+            <g fill="none" stroke="#d4af5f" stroke-width="1" opacity=".14">
                 @for($i = 0; $i < 36; $i++)
-                    <ellipse cx="760" cy="470" rx="230" ry="80" transform="rotate({{ $i * 5 }} 760 470)"/>
+                    <ellipse cx="672" cy="232" rx="190" ry="66" transform="rotate({{ $i * 5 }} 672 232)"/>
                 @endfor
             </g>
             <rect x="22" y="22" width="812" height="496" rx="16" fill="none" stroke="#d4af5f" stroke-width="1.2" opacity=".55"/>
         </svg>
+        @include('frontend.gift-card._icon')
     @endif
     <div class="gc-card__logo">@include('frontend.partials.logo')</div>
     <div class="gc-card__label">{{ __('gift_card_title') }}</div>
     <div class="gc-card__amount"><span data-gc-amount>{{ (int) $amount }}</span><small>AZN</small></div>
     <div class="gc-card__bottom">
-        <div class="gc-card__code" data-gc-code>{{ $code ?? '••••-••••-••••' }}</div>
+        <div class="gc-card__code"><span>{{ __('gift_card_code_label') }}</span><b data-gc-code>{{ $code ?? '••••-••••-••••' }}</b></div>
         @if(!empty($expires))
             <div class="gc-card__exp"><span>{{ __('gift_card_valid_until') }}</span><b>{{ $expires }}</b></div>
         @endif

@@ -25,7 +25,8 @@
 .gc-card__amount { margin-top: 1cqw; font-size: 13cqw; font-weight: 600; line-height: 1; letter-spacing: -.01em; }
 .gc-card__amount small { margin-left: 2cqw; font-size: 3.6cqw; font-weight: 600; letter-spacing: .18em; opacity: .8; vertical-align: .9em; }
 .gc-card__bottom { position: absolute; left: 7.5%; right: 7.5%; bottom: 7%; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
-.gc-card__code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 3.9cqw; letter-spacing: .14em; }
+.gc-card__code span { display: block; margin-bottom: .6cqw; font-family: inherit; font-size: 2.3cqw; letter-spacing: .14em; text-transform: uppercase; opacity: .65; }
+.gc-card__code b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 3.9cqw; font-weight: 500; letter-spacing: .14em; }
 .gc-card__exp { text-align: right; font-size: 2.3cqw; letter-spacing: .14em; text-transform: uppercase; line-height: 1.5; }
 .gc-card__exp span { display: block; opacity: .65; }
 .gc-card__exp b { font-size: 3cqw; letter-spacing: .08em; }
@@ -38,11 +39,14 @@
 .gc-card--signature .gc-card__label { color: #cfb676; opacity: 1; letter-spacing: .34em; }
 .gc-card--signature .gc-card__label::after { content: ""; display: block; width: 10cqw; height: 1px; margin-top: 2.2cqw; background: linear-gradient(90deg, #d4af5f, transparent); }
 .gc-card--signature .gc-card__amount {
-    margin-top: 1.6cqw; font-family: "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-weight: 500; font-size: 14.5cqw;
+    margin-top: 1.6cqw; font-family: "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-weight: 500; font-size: 18cqw;
     background: linear-gradient(105deg, #b8893b 0%, #f6e3a6 40%, #c99a45 66%, #efd38c 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .gc-card--signature .gc-card__amount small { color: #d4af5f; -webkit-text-fill-color: #d4af5f; font-family: inherit; font-weight: 500; opacity: 1; letter-spacing: .24em; }
-.gc-card--signature .gc-card__code { color: #ecd8a0; }
+.gc-card--signature .gc-card__code b { color: #ecd8a0; }
+.gc-card--signature .gc-card__code span { color: #b79d62; opacity: 1; }
+.gc-card__icon { position: absolute; top: 5.5cqw; right: 8cqw; height: 40cqw; width: auto; aspect-ratio: 480 / 760; pointer-events: none; }
+.gc-card__icon path { fill: url(#gcGold); }
 .gc-card--signature .gc-card__exp span { color: #b79d62; opacity: 1; }
 .gc-card--signature .gc-card__exp b { color: #ecd8a0; }
 

@@ -145,12 +145,13 @@
         ctx.clip();
         if (theme.gold) {
             // Gilyoş naxışı (sağ aşağı) və nazik qızılı çərçivə
-            ctx.strokeStyle = 'rgba(212,175,95,.13)';
+            // Gilyoş — ikonun arxasında (CSS-dəki kimi)
+            ctx.strokeStyle = 'rgba(212,175,95,.11)';
             ctx.lineWidth = 0.9;
-            const gx = cx + cw * 0.888, gy = cy + ch * 0.87;
+            const gx = cx + cw * 0.785, gy = cy + ch * 0.43;
             for (let i = 0; i < 36; i++) {
                 ctx.beginPath();
-                ctx.ellipse(gx, gy, cw * 0.27, ch * 0.148, (i * 5) * Math.PI / 180, 0, Math.PI * 2);
+                ctx.ellipse(gx, gy, cw * 0.222, ch * 0.122, (i * 5) * Math.PI / 180, 0, Math.PI * 2);
                 ctx.stroke();
             }
             ctx.strokeStyle = 'rgba(212,175,95,.55)';
@@ -167,6 +168,12 @@
         ctx.restore();
 
         const pad = cw * 0.075;
+        const icon = card.querySelector('[data-gc-icon]');
+        if (icon) {
+            const ih = cw * 0.40, iw = ih * 480 / 760;
+            const img = await svgImage(icon, true, 480, 760);
+            if (img) ctx.drawImage(img, cx + cw * 0.92 - iw, cy + cw * 0.055, iw, ih);
+        }
         const logo = await logoImage(card.querySelector('.gc-card__logo svg'), theme.gold);
         if (logo) {
             const lw = cw * 0.38;
@@ -184,8 +191,8 @@
         }
 
         const amount = card.querySelector('[data-gc-amount]').textContent.trim();
-        const amountY = cy + ch * (theme.gold ? 0.63 : 0.6);
-        ctx.font = theme.serif ? `500 ${Math.round(cw * 0.145)}px ${serif}` : `600 ${Math.round(cw * 0.13)}px ${font}`;
+        const amountY = cy + ch * (theme.gold ? 0.7 : 0.6);
+        ctx.font = theme.serif ? `500 ${Math.round(cw * 0.18)}px ${serif}` : `600 ${Math.round(cw * 0.13)}px ${font}`;
         const amountW = ctx.measureText(amount).width;
         ctx.fillStyle = theme.gold ? gold(cx + pad, amountY - cw * 0.12, cx + pad + amountW, amountY) : theme.ink;
         ctx.fillText(amount, cx + pad, amountY);
@@ -193,6 +200,12 @@
         ctx.fillStyle = theme.gold ? '#d4af5f' : 'rgba(255,255,255,.8)';
         letterSpaced(ctx, 'AZN', cx + pad + amountW + cw * 0.02, amountY - cw * 0.05, theme.gold ? cw * 0.008 : 0);
 
+        const codeLabel = card.querySelector('.gc-card__code span');
+        if (codeLabel) {
+            ctx.fillStyle = theme.gold ? '#b79d62' : 'rgba(255,255,255,.65)';
+            ctx.font = `500 ${Math.round(cw * 0.023)}px ${font}`;
+            letterSpaced(ctx, codeLabel.textContent.trim().toUpperCase(), cx + pad, cy + ch * 0.84, cw * 0.003);
+        }
         ctx.fillStyle = theme.ink;
         ctx.font = `500 ${Math.round(cw * 0.039)}px ui-monospace, Menlo, monospace`;
         letterSpaced(ctx, card.querySelector('[data-gc-code]').textContent.trim(), cx + pad, cy + ch * 0.9, cw * 0.005);
@@ -237,12 +250,17 @@
         return new Promise((resolve, reject) => canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png'));
     }
 
-    function logoImage(svg, goldFill) {
+    const logoImage = (svg, goldFill) => svgImage(svg, goldFill, 1024, 176);
+
+    /** Səhifədəki SVG-ni (loqo, ikon) şəkilə çevirir; qızılı — gradientlə, yoxsa ağ */
+    function svgImage(svg, goldFill, width, height) {
         if (!svg) return Promise.resolve(null);
         const clone = svg.cloneNode(true);
         clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        clone.setAttribute('width', '1024');
-        clone.setAttribute('height', '176');
+        clone.setAttribute('width', String(width));
+        clone.setAttribute('height', String(height));
+        clone.removeAttribute('class');
+        clone.querySelectorAll('path').forEach(p => { if (!p.getAttribute('fill')) p.setAttribute('fill', 'currentColor'); });
         let markup = new XMLSerializer().serializeToString(clone);
         if (goldFill) {
             const defs = '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
