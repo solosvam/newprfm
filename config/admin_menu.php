@@ -56,14 +56,6 @@ return [
             ],
             ['separator' => true],
             [
-                'title'    => 'Stok',
-                'id'       => 'stockMenu',
-                'children' => [
-                    ['title' => 'Alışlar', 'route' => 'admin.stock.purchases', 'permission' => 'stock'],
-                    ['title' => 'Hədiyyə kartları', 'route' => 'admin.stock.cards', 'permission' => 'stock'],
-                ],
-            ],
-            [
                 'title'    => 'İstehsal',
                 'id'       => 'productionMenu',
                 'children' => [
