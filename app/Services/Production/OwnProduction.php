@@ -116,7 +116,7 @@ class OwnProduction
 
     /**
      * Xammal alışı. $data: purchased_at, payment (paid | debt | opening), supplier_account_id, account_id (paid), note.
-     * $lines: [['raw_material_id', 'quantity', 'amount' — sətrin məbləği]]
+     * $lines: [['raw_material_id', 'quantity', 'unit_cost' — 1 vahidin qiyməti]]; sətrin məbləği = miqdar × qiymət
      */
     public function purchase(array $data, array $lines, int $actor): MaterialPurchase
     {
@@ -129,7 +129,8 @@ class OwnProduction
         return DB::transaction(function () use ($data, $lines, $actor, $payment, $supplier, $from) {
             $date = Carbon::parse($data['purchased_at']);
             $at = $date->isToday() ? now() : $date->copy()->setTimeFrom(now());
-            $total = round(array_sum(array_map(fn ($l) => (float) $l['amount'], $lines)), 2);
+            $lines = array_map(fn ($l) => $l + ['amount' => round((float) $l['quantity'] * (float) $l['unit_cost'], 2)], $lines);
+            $total = round(array_sum(array_column($lines, 'amount')), 2);
             $this->ensure($total > 0, 'Alışın məbləği 0 ola bilməz.', 'lines');
             $purchase = MaterialPurchase::create([
                 'purchased_at' => $date->toDateString(), 'supplier_account_id' => $supplier?->id, 'payment' => $payment,
@@ -140,7 +141,7 @@ class OwnProduction
                 $material = RawMaterial::lockForUpdate()->findOrFail($line['raw_material_id']);
                 $qty = round((float) $line['quantity'], 3);
                 $this->ensure($qty > 0, 'Miqdar 0-dan böyük olmalıdır.', 'lines');
-                $unit = round((float) $line['amount'] / $qty, 4);
+                $unit = round((float) $line['unit_cost'], 4);
                 $before = (float) ($stocks[$material->id] ?? 0);
                 // Orta maya: qalıq varsa çəkili orta, yoxdursa (və ya mənfidirsə) yeni qiymət
                 $avg = $before > 0 ? (($before * (float) $material->avg_cost) + (float) $line['amount']) / ($before + $qty) : $unit;

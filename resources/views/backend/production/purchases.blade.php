@@ -4,7 +4,7 @@
 @php
     $title = 'Xammal alışları';
     $breadcrumbs = ['/admin' => 'ParfumShop', '' => 'İstehsal', '#' => $title];
-    $oldLines = old('lines', [['raw_material_id' => '', 'quantity' => '', 'amount' => '']]);
+    $oldLines = old('lines', [['raw_material_id' => '', 'quantity' => '', 'unit_cost' => '']]);
     $payment = old('payment', 'paid');
 @endphp
 @extends('backend.layout', ['title' => $title])
@@ -102,8 +102,8 @@
                             </select></div>
                         <div class="col-md-3"><label class="form-label">Miqdar</label>
                             <input type="number" step="0.001" min="0.001" name="lines[{{ $i }}][quantity]" class="form-control" value="{{ $line['quantity'] ?? '' }}" required data-qty></div>
-                        <div class="col-md-3"><label class="form-label">Məbləğ, ₼</label>
-                            <input type="number" step="0.01" min="0" name="lines[{{ $i }}][amount]" class="form-control" value="{{ $line['amount'] ?? '' }}" required data-amount></div>
+                        <div class="col-md-3"><label class="form-label" data-price-label>1 vahidin qiyməti, ₼</label>
+                            <input type="number" step="0.0001" min="0" name="lines[{{ $i }}][unit_cost]" class="form-control" value="{{ $line['unit_cost'] ?? '' }}" required data-price></div>
                         <div class="col-md-1 text-end pb-2"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove aria-label="Sətri sil">✕</button></div>
                         <div class="col-12 text-muted text-small" data-unit-price></div>
                     </div>
@@ -133,10 +133,12 @@
             let total = 0;
             box.querySelectorAll('[data-line]').forEach((line, i) => {
                 line.querySelectorAll('[name]').forEach((el) => { el.name = el.name.replace(/lines\[\d+]/, 'lines[' + i + ']'); });
-                const q = Number(line.querySelector('[data-qty]').value) || 0, a = Number(line.querySelector('[data-amount]').value) || 0;
+                const q = Number(line.querySelector('[data-qty]').value) || 0, price = Number(line.querySelector('[data-price]').value) || 0;
                 const unit = line.querySelector('[data-material]').selectedOptions[0]?.dataset.unit;
+                const a = Math.round(q * price * 100) / 100;
                 total += a;
-                line.querySelector('[data-unit-price]').textContent = q > 0 && a > 0 && unit ? '1 ' + unit + ' = ' + (a / q).toFixed(4) + ' ₼' : '';
+                line.querySelector('[data-price-label]').textContent = '1 ' + (unit || 'vahidin') + ' qiyməti, ₼';
+                line.querySelector('[data-unit-price]').textContent = q > 0 && price > 0 ? q + ' × ' + price + ' = ' + a.toFixed(2) + ' ₼' : '';
                 line.querySelector('[data-remove]').hidden = box.children.length < 2;
             });
             document.getElementById('purchaseTotal').textContent = 'Cəmi: ' + total.toFixed(2) + ' ₼';

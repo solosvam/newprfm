@@ -211,12 +211,12 @@ class ProductionController extends Controller
             'lines' => ['required', 'array', 'min:1', 'max:30'],
             'lines.*.raw_material_id' => ['required', 'integer', 'exists:raw_materials,id'],
             'lines.*.quantity' => ['required', 'numeric', 'gt:0', 'max:10000000'],
-            'lines.*.amount' => ['required', 'numeric', 'min:0', 'max:10000000'],
+            'lines.*.unit_cost' => ['required', 'numeric', 'min:0', 'max:1000000'],
         ], [
             'supplier_account_id.required_unless' => 'Tədarükçünü seçin.',
             'account_id.required_if' => 'Pulun çıxdığı hesabı seçin.',
             'purchased_at.before_or_equal' => 'Gələcək tarix yazılmaz.',
-        ], ['purchased_at' => 'tarix', 'lines.*.quantity' => 'miqdar', 'lines.*.amount' => 'məbləğ', 'lines.*.raw_material_id' => 'xammal']);
+        ], ['purchased_at' => 'tarix', 'lines.*.quantity' => 'miqdar', 'lines.*.unit_cost' => '1 vahidin qiyməti', 'lines.*.raw_material_id' => 'xammal']);
 
         $purchase = $this->production->purchase($data, $data['lines'], (int) auth('admin')->id());
 

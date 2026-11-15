@@ -77,8 +77,8 @@ class OwnProductionTest extends TestCase
         $essence = RawMaterial::create(['name' => 'Əsans', 'unit' => 'ml']);
         $bottle = RawMaterial::create(['name' => 'Flakon 50 ml', 'unit' => 'pcs']);
         app(OwnProduction::class)->purchase(['purchased_at' => today()->toDateString(), 'payment' => 'opening'], [
-            ['raw_material_id' => $essence->id, 'quantity' => 100, 'amount' => 200],
-            ['raw_material_id' => $bottle->id, 'quantity' => 10, 'amount' => 30],
+            ['raw_material_id' => $essence->id, 'quantity' => 100, 'unit_cost' => 2],
+            ['raw_material_id' => $bottle->id, 'quantity' => 10, 'unit_cost' => 3],
         ], 7);
 
         return [$essence, $bottle];
@@ -101,7 +101,7 @@ class OwnProductionTest extends TestCase
         $alcohol = RawMaterial::create(['name' => 'Spirt', 'unit' => 'ml']);
 
         $p->purchase(['purchased_at' => today()->toDateString(), 'payment' => 'paid', 'supplier_account_id' => $supplier->id, 'account_id' => $cash->id],
-            [['raw_material_id' => $alcohol->id, 'quantity' => 1000, 'amount' => 50]], 7);
+            [['raw_material_id' => $alcohol->id, 'quantity' => 1000, 'unit_cost' => 0.05]], 7);
         $this->assertSame(-5000, $f->balances()[$cash->id]); // kassadan çıxdı
         $payment = MoneyMovement::where('kind', 'supplier_payment')->first();
         $this->assertSame('raw_material', $payment->category->code); // xərc kateqoriyası "Xammal"
@@ -110,7 +110,7 @@ class OwnProductionTest extends TestCase
 
         // Borca: pul çıxmır, tədarükçüyə borc
         $p->purchase(['purchased_at' => today()->toDateString(), 'payment' => 'debt', 'supplier_account_id' => $supplier->id],
-            [['raw_material_id' => $alcohol->id, 'quantity' => 1000, 'amount' => 70]], 7);
+            [['raw_material_id' => $alcohol->id, 'quantity' => 1000, 'unit_cost' => 0.07]], 7);
         $this->assertSame(-5000, $f->balances()[$cash->id]);
         $this->assertSame(7000, $p->supplierDebts()[$supplier->id]);
         // Qalıq 2000 ml, orta maya (50 + 70) / 2000 = 0.06
