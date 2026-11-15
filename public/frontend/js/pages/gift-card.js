@@ -148,7 +148,7 @@
             // Gilyoş — ikonun arxasında (CSS-dəki kimi)
             ctx.strokeStyle = 'rgba(212,175,95,.11)';
             ctx.lineWidth = 0.9;
-            const gx = cx + cw * 0.785, gy = cy + ch * 0.43;
+            const gx = cx + cw * 672 / 856, gy = cy + ch * 236 / 540;
             for (let i = 0; i < 36; i++) {
                 ctx.beginPath();
                 ctx.ellipse(gx, gy, cw * 0.222, ch * 0.122, (i * 5) * Math.PI / 180, 0, Math.PI * 2);
@@ -168,11 +168,15 @@
         ctx.restore();
 
         const pad = cw * 0.075;
+        // İkon gilyoşun mərkəzində (kartdakı SVG ilə eyni: mərkəz 672×236, hündürlük 300 — 856×540 koordinatında)
         const icon = card.querySelector('[data-gc-icon]');
         if (icon) {
-            const ih = cw * 0.40, iw = ih * 480 / 760;
-            const img = await svgImage(icon, true, 480, 760);
-            if (img) ctx.drawImage(img, cx + cw * 0.92 - iw, cy + cw * 0.055, iw, ih);
+            const ih = ch * 300 / 540, iw = ih * 480 / 760;
+            const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            wrapper.setAttribute('viewBox', '0 0 480 760');
+            icon.querySelectorAll('path').forEach(p => wrapper.appendChild(p.cloneNode(true)));
+            const img = await svgImage(wrapper, true, 480, 760);
+            if (img) ctx.drawImage(img, cx + cw * 672 / 856 - iw / 2, cy + ch * 236 / 540 - ih / 2, iw, ih);
         }
         const logo = await logoImage(card.querySelector('.gc-card__logo svg'), theme.gold);
         if (logo) {

@@ -45,8 +45,7 @@
 .gc-card--signature .gc-card__amount small { color: #d4af5f; -webkit-text-fill-color: #d4af5f; font-family: inherit; font-weight: 500; opacity: 1; letter-spacing: .24em; }
 .gc-card--signature .gc-card__code b { color: #ecd8a0; }
 .gc-card--signature .gc-card__code span { color: #b79d62; opacity: 1; }
-.gc-card__icon { position: absolute; top: 5.5cqw; right: 8cqw; height: 40cqw; width: auto; aspect-ratio: 480 / 760; pointer-events: none; }
-.gc-card__icon path { fill: url(#gcGold); }
+
 .gc-card--signature .gc-card__exp span { color: #b79d62; opacity: 1; }
 .gc-card--signature .gc-card__exp b { color: #ecd8a0; }
 
