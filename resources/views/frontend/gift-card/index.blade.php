@@ -6,6 +6,10 @@
     <link rel="stylesheet" href="{{ asset_v('frontend/css/pages/gift-card.css') }}">
 @endsection
 
+@section('subnav')
+    @include('frontend.partials.subnav')
+@endsection
+
 @section('content')
     @php
         $quick = [100, 200, 300, 500];

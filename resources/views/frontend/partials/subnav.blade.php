@@ -6,6 +6,8 @@
             <a href="{{ route('category', ['slug' => $category->slug]) }}"
                class="{{ ((isset($selectedCategory) && $selectedCategory?->id === $category->id) || (request()->routeIs('category') && request()->route('slug') === $category->slug)) ? 'active' : '' }}">{{ $name }}</a>
         @endforeach
+        {{-- Virtual hədiyyə kartı — kateqoriya deyil, öz səhifəsidir; həmişə sonda --}}
+        <a href="{{ route('gift-card.index') }}" class="{{ request()->routeIs('gift-card.*') ? 'active' : '' }}">{{ __('gift_card_title') }}</a>
     </nav>
     {{-- Sağda davamı olduğunu göstərən ox (main.js idarə edir) --}}
     <button type="button" class="cats-hint" data-cats-hint hidden aria-label="{{ __('common_categories') }} →" tabindex="-1">
