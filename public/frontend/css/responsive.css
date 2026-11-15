@@ -115,6 +115,14 @@ html, body { overflow-x: clip; }
     }
 }
 
+@media (max-width: 1024px) {
+    /* Tək şəkil: kiçik şəkillərin sütunu yoxdur */
+    .product-top--one-image {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "header" "main" "buy" "installment";
+    }
+}
+
 @media (max-width: 760px) {
     .product-top {
         grid-template-columns: 1fr;

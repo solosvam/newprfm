@@ -60,7 +60,9 @@
         {{ $product->name }}
     </p>
 
-    <div class="product-top">
+    {{-- Bir şəkil varsa kiçik şəkillər göstərilmir; çoxdursa — kompüterdə böyük şəklin altında yan-yana --}}
+    @php $manyImages = $product->images->count() > 1; @endphp
+    <div class="product-top {{ $manyImages ? '' : 'product-top--one-image' }}">
         <div class="product-header">
             <h1 class="title">
                 @if($product->brand)
@@ -74,6 +76,7 @@
             @endif
         </div>
 
+        @if($manyImages)
         <div class="thumbs">
             @foreach ($product->images as $image)
                 <div class="t {{ $loop->first ? 'active' : '' }}" data-thumb data-full="{{ asset('frontend/uploads/products/' . $image->image) }}">
@@ -81,6 +84,7 @@
                 </div>
             @endforeach
         </div>
+        @endif
 
         <div class="main-image main-image--ribbon">
             @include('frontend.partials.tester-ribbon', ['product' => $product])
