@@ -1,107 +1,124 @@
 {{--
-  Mənfəət: aylar sütunda (ProfitReport). Satış (təhvil verilmiş sifarişlər) − malın mayası (depolar) = ümumi mənfəət;
-  − xərclər (Məxaric, kuryer xərcləri, xammal) = xalis mənfəət.
+  Mənfəət (ProfitReport::summary): seçilən günlər (açılanda — bu gün) — təhvil verilmiş sifarişlər, dövriyyə, maya, xərclər, mənfəət.
 --}}
 @php
     $html_tag_data = [];
     $title = 'Mənfəət';
     $breadcrumbs = ['/' => 'ParfumShop', route('admin.finance.index') => 'Maliyyə', '' => 'Mənfəət'];
-    $monthNames = ['', 'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'İyun', 'İyul', 'Avqust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
-    $keys = array_map(fn ($m) => $m->format('Y-m'), $months);
-    $multi = count($keys) > 1;
-    $cols = count($keys) + ($multi ? 2 : 1);
-    $cell = function (int $cents, int $sign = 1) {
-        $v = $sign * $cents;
-        $tone = $v > 0 ? 'text-success' : ($v < 0 ? 'text-danger' : 'text-muted');
-        return '<span class="'.$tone.'">'.($v < 0 ? '−' : '').number_format(abs($v) / 100, 2).' AZN</span>';
-    };
+    $money = fn (int $cents) => number_format($cents / 100, 2, '.', ' ').' ₼';
+    $months = ['', 'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avqust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr'];
+    $date = fn ($d) => $d->day.' '.$months[$d->month].' '.$d->year;
+    $period = $from->isSameDay($to) ? $date($from) : $date($from).' — '.$date($to);
+    // Tez seçim: [ad, başlanğıc, son]
+    $presets = [
+        ['Dünən', today()->subDay(), today()->subDay()],
+        ['Bu gün', today(), today()],
+        ['Bu həftə', today()->startOfWeek(), today()],
+        ['Bu ay', today()->startOfMonth(), today()],
+        ['Keçən ay', today()->subMonthNoOverflow()->startOfMonth(), today()->subMonthNoOverflow()->endOfMonth()->startOfDay()],
+    ];
+    $cards = array_values(array_filter([
+        ['Sifariş', (string) $orders, 'text-primary', 'Təhvil verilmiş'],
+        ['Dövriyyə', $money($sales), 'text-primary', 'Satış qiyməti ilə'],
+        $breakage ? ['Hədiyyə kartı qalığı', $money($breakage), 'text-primary', 'İstifadə olunmayan'] : null,
+        ['Maya', $money($cost), 'text-danger', 'Depolardan alış'],
+        ['Xərclər', $money($expense), 'text-danger', 'Məxaric, kuryer, xammal'],
+        ['Mənfəət', $money($net), $net >= 0 ? 'text-success' : 'text-danger', 'Dövriyyə − maya − xərclər'],
+    ]));
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
-@section('css')
-    <link rel="stylesheet" href="{{ asset_v('backend/css/finance.css') }}"/>
-@endsection
-
 @section('content')
-<div class="container finance-page">
+<div class="container">
     <div class="page-title-container">
-        <div class="row">
-            <div class="col-12 col-sm-6">
-                <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
-                @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
-            </div>
-        </div>
+        <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
+        @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
     </div>
 
     <form method="GET" class="card mb-3"><div class="card-body">
-        <div class="row g-2 align-items-end">
-            <div class="col-6 col-md-4 col-xl-2"><label class="form-label" for="pFrom">Ay (başlanğıc)</label>
-                <input id="pFrom" type="month" name="from" class="form-control" value="{{ $from->format('Y-m') }}"></div>
-            <div class="col-6 col-md-4 col-xl-2"><label class="form-label" for="pTo">Ay (son)</label>
-                <input id="pTo" type="month" name="to" class="form-control" value="{{ $to->format('Y-m') }}"></div>
-            <div class="col-12 col-md-4 col-xl-2"><button class="btn btn-primary w-100">Filter</button></div>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            @foreach($presets as [$label, $pFrom, $pTo])
+                @php $active = $from->isSameDay($pFrom) && $to->isSameDay($pTo); @endphp
+                <a href="{{ route('admin.finance.profit', ['from' => $pFrom->toDateString(), 'to' => $pTo->toDateString()]) }}"
+                   class="btn btn-sm {{ $active ? 'btn-primary' : 'btn-outline-primary' }}">{{ $label }}</a>
+            @endforeach
         </div>
-        <div class="form-text mt-2">
-            Satış — həmin ay təhvil verilmiş sifarişlər, hədiyyə kartı ilə ödənilən hissə daxil (əlavə çatdırılma — kuryerin qazancı çıxılıb; hissə-hissədə Ferrum-un köçürdüyü xalis məbləğ; bonusla ödənilən — 0).
-            Hədiyyə kartının alışı satış deyil — satış kartla mal veriləndə yaranır; müddəti bitən kart və sifarişdən artıq qalıb yanan hissə "Hədiyyə kartı qalığı"dır.
-            Malın mayası — bu sifarişlər üçün depolardan alınan mal. Öz istehsalımızın xammalı və xərcləri ödəniləndə "Xərclər"dədir.
-            Xərclər — Məxaric, kuryer xərcləri, xammal (ödəniş günü). Ən çox 24 ay.
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-4 col-xl-2"><label class="form-label" for="pFrom">Başlanğıc</label>
+                <input id="pFrom" type="date" name="from" class="form-control" value="{{ $from->toDateString() }}" max="{{ today()->toDateString() }}"></div>
+            <div class="col-6 col-md-4 col-xl-2"><label class="form-label" for="pTo">Son</label>
+                <input id="pTo" type="date" name="to" class="form-control" value="{{ $to->toDateString() }}" max="{{ today()->toDateString() }}"></div>
+            <div class="col-12 col-md-4 col-xl-2"><button class="btn btn-primary w-100">Filter</button></div>
         </div>
     </div></form>
 
-    <div class="card mb-5"><div class="card-body">
-        <div class="table-responsive"><table class="table align-middle mb-0 finance-report">
-            <thead><tr>
-                <th class="text-muted text-small text-uppercase"></th>
-                @foreach($months as $m)<th class="text-muted text-small text-uppercase text-end">{{ $monthNames[$m->month] }} {{ $m->year }}</th>@endforeach
-                @if($multi)<th class="text-muted text-small text-uppercase text-end">Cəmi</th>@endif
-            </tr></thead>
-            <tbody>
-            <tr>
-                <td>Satış <span class="text-muted text-small">· təhvil verilmiş sifariş</span></td>
-                @foreach($keys as $k)<td class="text-end text-nowrap">{!! $cell($sales[$k]) !!}<div class="text-muted text-small">{{ $orders[$k] }} sifariş</div></td>@endforeach
-                @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($sales)) !!}<div class="text-muted text-small fw-normal">{{ array_sum($orders) }} sifariş</div></td>@endif
-            </tr>
-            @if(array_filter($breakage))
-                <tr>
-                    <td>Hədiyyə kartı qalığı <span class="text-muted text-small">· istifadə olunmayan</span></td>
-                    @foreach($keys as $k)<td class="text-end text-nowrap">{!! $cell($breakage[$k]) !!}</td>@endforeach
-                    @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($breakage)) !!}</td>@endif
-                </tr>
-            @endif
-            <tr>
-                <td>Malın mayası <span class="text-muted text-small">· depolardan</span></td>
-                @foreach($keys as $k)<td class="text-end text-nowrap">{!! $cell($cost[$k], -1) !!}</td>@endforeach
-                @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($cost), -1) !!}</td>@endif
-            </tr>
-            <tr class="finance-report__total">
-                <td class="fw-bold">Ümumi mənfəət</td>
-                @foreach($keys as $k)<td class="text-end text-nowrap fw-bold">{!! $cell($gross[$k]) !!}</td>@endforeach
-                @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($gross)) !!}</td>@endif
-            </tr>
-            <tr><td colspan="{{ $cols }}" class="finance-report__gap"></td></tr>
-            @forelse($expenses as $row)
-                <tr>
-                    <td>{{ $row['category']?->name ?? 'Kateqoriyasız' }}</td>
-                    @foreach($keys as $k)<td class="text-end text-nowrap">{!! $cell($row['values'][$k], -1) !!}</td>@endforeach
-                    @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell($row['total'], -1) !!}</td>@endif
-                </tr>
-            @empty
-                <tr><td colspan="{{ $cols }}" class="text-muted">Bu dövrdə xərc yoxdur.</td></tr>
-            @endforelse
-            <tr class="finance-report__total">
-                <td class="fw-bold">Xərclər</td>
-                @foreach($keys as $k)<td class="text-end text-nowrap fw-bold">{!! $cell($expense[$k], -1) !!}</td>@endforeach
-                @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($expense), -1) !!}</td>@endif
-            </tr>
-            <tr><td colspan="{{ $cols }}" class="finance-report__gap"></td></tr>
-            <tr class="finance-report__total">
-                <td class="fw-bold">Xalis mənfəət</td>
-                @foreach($keys as $k)<td class="text-end text-nowrap fw-bold">{!! $cell($net[$k]) !!}</td>@endforeach
-                @if($multi)<td class="text-end text-nowrap fw-bold">{!! $cell(array_sum($net)) !!}</td>@endif
-            </tr>
-            </tbody>
-        </table></div>
-    </div></div>
+    <h2 class="small-title">{{ $period }}</h2>
+    <div class="row g-2 mb-4">
+        @foreach($cards as [$label, $value, $tone, $hint])
+            <div class="col-6 col-md-4 col-xl">
+                <div class="card h-100"><div class="card-body py-3 px-4">
+                    <div class="text-muted text-small mb-1">{{ $label }}</div>
+                    <div class="cta-2 {{ $tone }} lh-1 mb-1">{{ $value }}</div>
+                    <div class="text-muted text-small">{{ $hint }}</div>
+                </div></div>
+            </div>
+        @endforeach
+    </div>
+
+    <div class="row g-3 mb-5">
+        <div class="col-lg-7">
+            <h2 class="small-title">Sifarişlər</h2>
+            <div class="card"><div class="card-body">
+                @if($list->isEmpty())
+                    <div class="text-muted text-center py-4">Bu dövrdə təhvil verilmiş sifariş yoxdur.</div>
+                @else
+                    <div class="table-responsive"><table class="table mb-0">
+                        <thead><tr>
+                            <th class="text-muted text-small text-uppercase">Sifariş</th>
+                            <th class="text-muted text-small text-uppercase text-end">Dövriyyə</th>
+                            <th class="text-muted text-small text-uppercase text-end">Maya</th>
+                            <th class="text-muted text-small text-uppercase text-end">Fərq</th>
+                        </tr></thead>
+                        <tbody>
+                        @foreach($list->sortByDesc(fn ($r) => $r['order']->delivered_at) as $row)
+                            @php $o = $row['order']; $diff = $row['sale'] - $row['cost']; @endphp
+                            <tr>
+                                <td>
+                                    @if($o->customer_id)<a href="{{ route('admin.crm.order', [$o->customer_id, $o->id]) }}">{{ $o->order_no }}</a>@else{{ $o->order_no }}@endif
+                                    <div class="text-alternate text-small">{{ \Illuminate\Support\Carbon::parse($o->delivered_at)->format($from->isSameDay($to) ? 'H:i' : 'd.m H:i') }}@if($o->paymentMethod) · {{ $o->paymentMethod->name_az ?? $o->paymentMethod->code }}@endif</div>
+                                </td>
+                                <td class="text-end text-nowrap">{{ $money($row['sale']) }}</td>
+                                <td class="text-end text-nowrap">{{ $row['cost'] ? $money($row['cost']) : '—' }}</td>
+                                <td class="text-end text-nowrap {{ $diff >= 0 ? 'text-success' : 'text-danger' }}">{{ $money($diff) }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table></div>
+                @endif
+            </div></div>
+        </div>
+        <div class="col-lg-5">
+            <h2 class="small-title">Xərclər</h2>
+            <div class="card"><div class="card-body">
+                @if(!$expenses)
+                    <div class="text-muted text-center py-4">Bu dövrdə xərc yazılmayıb.</div>
+                @else
+                    <table class="table mb-0">
+                        <tbody>
+                        @foreach($expenses as $row)
+                            <tr><td>{{ $row['category']?->name ?? 'Kateqoriyasız' }}</td><td class="text-end text-nowrap">{{ $money($row['total']) }}</td></tr>
+                        @endforeach
+                        <tr><td class="fw-bold">Cəmi</td><td class="text-end text-nowrap fw-bold">{{ $money($expense) }}</td></tr>
+                        </tbody>
+                    </table>
+                @endif
+            </div></div>
+            <div class="form-text mt-3">
+                Dövriyyə — seçilən günlərdə təhvil verilmiş sifarişlər, hədiyyə kartı ilə ödənilən hissə daxil (əlavə çatdırılma — kuryerin qazancı çıxılıb; hissə-hissədə Ferrum-un köçürdüyü xalis məbləğ; bonusla ödənilən — 0).
+                Maya — bu sifarişlər üçün depolardan alınan mal (öz istehsalımızın xammalı ödəniləndə Xərclərdədir).
+                Xərclər — seçilən günlərdə ödənilən Məxaric, kuryer xərcləri, xammal. Hədiyyə kartının alışı satış deyil — satış kartla mal veriləndə yaranır; müddəti bitən kart və sifarişdən artıq qalıb yanan hissə "Hədiyyə kartı qalığı"dır.
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

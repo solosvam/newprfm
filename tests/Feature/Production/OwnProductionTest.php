@@ -227,13 +227,13 @@ class OwnProductionTest extends TestCase
             MoneyMovement::create(['from_account_id' => $cash->id, 'to_account_id' => $cash->id, 'amount' => $amount, 'kind' => $kind, 'category_id' => $cat, 'occurred_at' => now()]);
         }
 
-        $r = app(\App\Services\Finance\ProfitReport::class)->build(now()->startOfMonth(), now()->endOfMonth());
+        $r = app(\App\Services\Finance\ProfitReport::class)->summary(today(), today());
         $k = now()->format('Y-m');
-        $this->assertSame(15000, $r['sales'][$k]);
-        $this->assertSame(2, $r['orders'][$k]);
-        $this->assertSame(5000, $r['cost'][$k]);
-        $this->assertSame(7000, $r['expense'][$k]); // depoya ödəniş xərc deyil
-        $this->assertSame(3000, $r['net'][$k]);
+        $this->assertSame(15000, $r['sales']);
+        $this->assertSame(2, $r['orders']);
+        $this->assertSame(5000, $r['cost']);
+        $this->assertSame(7000, $r['expense']); // depoya ödəniş xərc deyil
+        $this->assertSame(3000, $r['net']);
 
         // Pul axınında depoya ödəniş "Mal alışı"ndadır, xərclərdə yox
         $flow = app(\App\Services\Finance\CashFlowReport::class)->build(now()->startOfMonth(), now()->endOfMonth(), $cash, false);
@@ -266,12 +266,12 @@ class OwnProductionTest extends TestCase
         ]);
         DB::table('virtual_gift_card_events')->insert(['virtual_gift_card_id' => 2, 'event' => 'expired', 'created_at' => now()]);
 
-        $r = app(\App\Services\Finance\ProfitReport::class)->build(now()->startOfMonth(), now()->endOfMonth());
+        $r = app(\App\Services\Finance\ProfitReport::class)->summary(today(), today());
         $k = now()->format('Y-m');
-        $this->assertSame(26000, $r['sales'][$k]);    // kartla ödənilən də satışdır
-        $this->assertSame(15000, $r['breakage'][$k]); // 50 yanan + 100 müddəti bitən
-        $this->assertSame(5000, $r['cost'][$k]);
-        $this->assertSame(36000, $r['gross'][$k]);
+        $this->assertSame(26000, $r['sales']);    // kartla ödənilən də satışdır
+        $this->assertSame(15000, $r['breakage']); // 50 yanan + 100 müddəti bitən
+        $this->assertSame(5000, $r['cost']);
+        $this->assertSame(36000, $r['gross']);
     }
 
     public function test_menu_and_permission_exist(): void

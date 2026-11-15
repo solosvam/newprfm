@@ -11,8 +11,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Aylıq mənfəət: Satış − malın mayası (depolar) = ümumi mənfəət; − xərclər = xalis mənfəət.
- *  - Satış — həmin ay təhvil verilmiş sifarişlər (təhvil günü): yekun məbləğ + hədiyyə kartı ilə ödənilən − əlavə çatdırılma (kuryerin qazancıdır);
+ * Mənfəət (seçilən günlər): Satış − malın mayası (depolar) = ümumi mənfəət; − xərclər = xalis mənfəət.
+ *  - Satış — seçilən günlərdə təhvil verilmiş sifarişlər (təhvil günü): yekun məbləğ + hədiyyə kartı ilə ödənilən − əlavə çatdırılma (kuryerin qazancıdır);
  *    hədiyyə kartının alışı satış deyil (alıcıya borcdur) — satış kartla mal veriləndə yaranır;
  *    hissə-hissə — Ferrum-un bizə köçürdüyü xalis məbləğ; bonusla ödənilən — 0 (Satılan mallar hesabatı ilə eyni).
  *  - Hədiyyə kartı qalığı — istifadə olunmayan pul gəlirdir: müddəti bitən kartın məbləği (bitmə günü) və sifarişdən
@@ -27,17 +27,31 @@ class ProfitReport
     public const EXPENSE_KINDS = ['outgo', 'courier_expense', 'supplier_payment'];
 
     /**
-     * @return array{months: list<Carbon>, sales: array, orders: array, breakage: array, cost: array, gross: array, expenses: list<array>, expense: array, net: array}
-     *   Məbləğlər qəpiklə, [Y-m => cents]
+     * Seçilən dövr (gün və ya günlər) üzrə cəmlər, qəpiklə, + dövrün sifarişləri və xərclər kateqoriya üzrə
+     *
+     * @return array{orders: int, sales: int, breakage: int, cost: int, gross: int, expense: int, net: int,
+     *   expenses: list<array{category: ?FinanceCategory, total: int}>, list: \Illuminate\Support\Collection<int, array{order: Order, sale: int, cost: int}>}
      */
-    public function build(Carbon $from, Carbon $to): array
+    public function summary(Carbon $from, Carbon $to): array
     {
-        $months = [];
-        for ($m = $from->copy()->startOfMonth(); $m <= $to; $m->addMonth()) $months[] = $m->copy();
-        $keys = array_map(fn ($m) => $m->format('Y-m'), $months);
+        $r = $this->compute($from->copy()->startOfDay(), $to->copy()->endOfDay());
+        $one = fn ($values) => $values[self::ALL];
+
+        return [
+            'orders' => $one($r['orders']), 'sales' => $one($r['sales']), 'breakage' => $one($r['breakage']), 'cost' => $one($r['cost']),
+            'gross' => $one($r['gross']), 'expense' => $one($r['expense']), 'net' => $one($r['net']),
+            'expenses' => array_map(fn ($row) => ['category' => $row['category'], 'total' => $row['total']], $r['expenses']),
+            'list' => $r['list'],
+        ];
+    }
+
+    private const ALL = 'all';
+
+    private function compute(Carbon $start, Carbon $end): array
+    {
+        $keys = [self::ALL];
         $zero = array_fill_keys($keys, 0);
-        $start = $months[0]->copy()->startOfMonth();
-        $end = $to->copy()->endOfMonth();
+        $list = collect();
 
         $sales = $orders = $cost = $zero;
         $delivered = OrderStatus::where('code', 'delivered')->value('id');
@@ -46,7 +60,7 @@ class ProfitReport
                 ->selectRaw('order_id, MAX(created_at) as delivered_at')->groupBy('order_id');
             $rows = Order::query()->joinSub($deliveredAt, 'd', 'd.order_id', '=', 'orders.id')
                 ->where('orders.order_status_id', $delivered)->whereBetween('d.delivered_at', [$start, $end])
-                ->select('orders.*', 'd.delivered_at')->with(['paymentMethod:id,code', 'creditApplication'])->get();
+                ->select('orders.*', 'd.delivered_at')->with(['paymentMethod:id,code,name_az', 'creditApplication'])->get();
 
             $costs = DB::table('order_item_allocations')
                 ->join('order_items', 'order_items.id', '=', 'order_item_allocations.order_item_id')
@@ -58,11 +72,14 @@ class ProfitReport
                 ->groupBy('order_items.order_id')->pluck('c', 'id');
 
             foreach ($rows as $order) {
-                $ym = Carbon::parse($order->delivered_at)->format('Y-m');
+                $ym = self::ALL;
                 if (!isset($sales[$ym])) continue;
-                $sales[$ym] += (int) round(self::revenue($order) * 100);
-                $cost[$ym] += (int) round((float) ($costs[$order->id] ?? 0) * 100);
+                $sale = (int) round(self::revenue($order) * 100);
+                $orderCost = (int) round((float) ($costs[$order->id] ?? 0) * 100);
+                $sales[$ym] += $sale;
+                $cost[$ym] += $orderCost;
                 $orders[$ym]++;
+                $list->push(['order' => $order, 'sale' => $sale, 'cost' => $orderCost]);
             }
         }
         $breakage = $this->giftCardBreakage($start, $end, $zero);
@@ -77,7 +94,7 @@ class ProfitReport
         foreach ($movements as $m) {
             $base = $m->kind === 'reversal' ? $m->reversalOf : $m;
             $cat = (int) ($base->category_id ?? 0);
-            $ym = $m->occurred_at->format('Y-m');
+            $ym = self::ALL;
             $byCategory[$cat] ??= $zero;
             $byCategory[$cat][$ym] += ($m->kind === 'reversal' ? -1 : 1) * (int) round((float) $m->amount * 100);
         }
@@ -88,7 +105,7 @@ class ProfitReport
         $expense = collect($keys)->mapWithKeys(fn ($k) => [$k => collect($expenses)->sum(fn ($row) => $row['values'][$k])])->all();
         $net = collect($keys)->mapWithKeys(fn ($k) => [$k => $gross[$k] - $expense[$k]])->all();
 
-        return compact('months', 'sales', 'orders', 'breakage', 'cost', 'gross', 'expenses', 'expense', 'net');
+        return compact('sales', 'orders', 'breakage', 'cost', 'gross', 'expenses', 'expense', 'net', 'list');
     }
 
     /** Sifarişdən şirkətə qalan gəlir (AZN) */
@@ -113,7 +130,7 @@ class ProfitReport
             return $result;
         }
         $add = function (Carbon $at, float $amount) use (&$result) {
-            $ym = $at->format('Y-m');
+            $ym = self::ALL;
             if (isset($result[$ym]) && $amount > 0) $result[$ym] += (int) round($amount * 100);
         };
         // Müddəti bitən: bitmə qeydinin günü (sonuncu "expired")
