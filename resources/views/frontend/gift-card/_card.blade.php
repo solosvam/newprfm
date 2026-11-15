@@ -1,10 +1,11 @@
 {{--
   Hədiyyə kartının üzü (bank kartı nisbəti 85.6 × 54).
   $amount — AZN; $code — formatlanmış kod və ya null (ödənişdən əvvəl ••••); $expires — "15.11.2027" və ya null;
-  $design — GiftCardService::DESIGNS (standard | signature). Endirilən açıqca eyni dizaynla çəkilir (pages/gift-card.js).
+  $design — GiftCardService::DESIGNS (signature | love | standard). Bəzək (.gc-card__deco) bütöv SVG-dir — endirilən açıqca
+  onu olduğu kimi çəkir (pages/gift-card.js), mətn rəngləri isə CSS dəyişənlərindən (.gc-card--foil) gəlir.
 --}}
 @php $design = $design ?? 'standard'; @endphp
-<div class="gc-card gc-card--{{ $design }}" data-gc-card data-design="{{ $design }}">
+<div class="gc-card gc-card--{{ $design }} @if($design !== 'standard') gc-card--foil @endif" data-gc-card data-design="{{ $design }}">
     @if($design === 'signature')
         {{-- Signature — Premium: bənövşəyi fon, qızılı loqo / məbləğ, nazik çərçivə və gilyoş naxışı --}}
         <svg class="gc-card__deco" viewBox="0 0 856 540" preserveAspectRatio="none" aria-hidden="true">
@@ -25,6 +26,8 @@
             </g>
             <rect x="22" y="22" width="812" height="496" rx="16" fill="none" stroke="#d4af5f" stroke-width="1.2" opacity=".55"/>
         </svg>
+    @elseif($design === 'love')
+        @include('frontend.gift-card._deco-love')
     @endif
     <div class="gc-card__logo">@include('frontend.partials.logo')</div>
     <div class="gc-card__label">{{ __('gift_card_title') }}</div>

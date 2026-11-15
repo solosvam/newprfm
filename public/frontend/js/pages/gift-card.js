@@ -99,18 +99,26 @@
         }
     });
 
-    /** Dizaynlar: kartın və açıqcanın rəngləri (CSS-dəki .gc-card--* ilə eyni) */
+    /**
+     * Dizaynlar: kartın və açıqcanın rəngləri (CSS-dəki .gc-card--* dəyişənləri ilə eyni).
+     * foil — loqo və məbləğin metal gradienti; page/msg/from/how — açıqcanın fonu və mətni.
+     */
+    const GOLD = [[0, '#b8893b'], [0.42, '#f6e3a6'], [0.68, '#c99a45'], [1, '#efd38c']];
+    const PINK = [[0, '#e2a3ab'], [0.42, '#fdeeee'], [0.68, '#d8959e'], [1, '#f6d6d9']];
     const THEMES = {
         standard: {
-            bg: ['#3d2d66', '#2b1f4a', '#1d1533'], page: '#f6f3fb', ink: '#ffffff', muted: 'rgba(255,255,255,.7)',
-            msg: '#1a1520', from: '#6b6575', how: '#6b6575', serif: false, gold: false,
+            bg: ['#3d2d66', '#2b1f4a', '#1d1533'], page: '#f6f3fb', ink: '#ffffff', muted: 'rgba(255,255,255,.7)', soft: 'rgba(255,255,255,.65)',
+            line: null, foil: null, msg: '#1a1520', from: '#6b6575', how: '#6b6575',
         },
         signature: {
-            bg: ['#3d2c68', '#2b1f4a', '#150e28'], page: '#1d1435', ink: '#ecd8a0', muted: '#cfb676',
-            msg: '#f1dfaa', from: '#cfb676', how: '#a38d5c', serif: true, gold: true,
+            bg: ['#3d2c68', '#2b1f4a', '#150e28'], page: '#1d1435', ink: '#ecd8a0', muted: '#cfb676', soft: '#b79d62',
+            line: '#d4af5f', foil: GOLD, msg: '#f1dfaa', from: '#cfb676', how: '#a38d5c',
+        },
+        love: {
+            bg: ['#922e46', '#6c1a2e', '#3d0c19'], page: '#f8e8e6', ink: '#f8e1e1', muted: '#e7b3b9', soft: '#d39aa2',
+            line: '#ecbcc2', foil: PINK, msg: '#6c1a2e', from: '#a35368', how: '#a35368',
         },
     };
-    const GOLD = [[0, '#b8893b'], [0.42, '#f6e3a6'], [0.68, '#c99a45'], [1, '#efd38c']];
 
     /** Endirilən şəkil: şaquli 4:5 açıqca (1080 × 1350) — kart, mətn, kimdən, istifadə qaydası */
     async function renderPostcard() {
@@ -123,9 +131,10 @@
         const serif = '"Didot", "Bodoni 72", "Playfair Display", Georgia, serif';
         const card = show.querySelector('[data-gc-card]');
         const theme = THEMES[card.dataset.design] || THEMES.standard;
-        const gold = (x0, y0, x1, y1) => {
+        const foil = theme.foil;
+        const foilFill = (x0, y0, x1, y1) => {
             const g = ctx.createLinearGradient(x0, y0, x1, y1);
-            GOLD.forEach(([o, c]) => g.addColorStop(o, c));
+            foil.forEach(([o, c]) => g.addColorStop(o, c));
             return g;
         };
 
@@ -140,24 +149,14 @@
         ctx.fillStyle = grad;
         ctx.fill();
 
+        // Bəzək: kartdakı SVG olduğu kimi (naxış, ikon / güllər, çərçivə)
         ctx.save();
         roundRect(ctx, cx, cy, cw, ch, 40);
         ctx.clip();
-        if (theme.gold) {
-            // Gilyoş naxışı (sağ aşağı) və nazik qızılı çərçivə
-            // Gilyoş — ikonun arxasında (CSS-dəki kimi)
-            ctx.strokeStyle = 'rgba(212,175,95,.11)';
-            ctx.lineWidth = 0.9;
-            const gx = cx + cw * 672 / 856, gy = cy + ch * 236 / 540;
-            for (let i = 0; i < 36; i++) {
-                ctx.beginPath();
-                ctx.ellipse(gx, gy, cw * 0.222, ch * 0.122, (i * 5) * Math.PI / 180, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-            ctx.strokeStyle = 'rgba(212,175,95,.55)';
-            ctx.lineWidth = 1.6;
-            roundRect(ctx, cx + cw * 0.026, cy + ch * 0.041, cw * 0.948, ch * 0.918, 22);
-            ctx.stroke();
+        const deco = card.querySelector('.gc-card__deco');
+        if (deco) {
+            const img = await decoImage(deco, Math.round(cw), Math.round(ch));
+            if (img) ctx.drawImage(img, cx, cy, cw, ch);
         } else {
             ctx.strokeStyle = 'rgba(255,255,255,.12)';
             ctx.lineWidth = 2;
@@ -168,45 +167,35 @@
         ctx.restore();
 
         const pad = cw * 0.075;
-        // İkon gilyoşun mərkəzində (kartdakı SVG ilə eyni: mərkəz 672×236, hündürlük 300 — 856×540 koordinatında)
-        const icon = card.querySelector('[data-gc-icon]');
-        if (icon) {
-            const ih = ch * 300 / 540, iw = ih * 480 / 760;
-            const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            wrapper.setAttribute('viewBox', '0 0 480 760');
-            icon.querySelectorAll('path').forEach(p => wrapper.appendChild(p.cloneNode(true)));
-            const img = await svgImage(wrapper, true, 480, 760);
-            if (img) ctx.drawImage(img, cx + cw * 672 / 856 - iw / 2, cy + ch * 236 / 540 - ih / 2, iw, ih);
-        }
-        const logo = await logoImage(card.querySelector('.gc-card__logo svg'), theme.gold);
+        const logo = await svgImage(card.querySelector('.gc-card__logo svg'), foil, 1024, 176);
         if (logo) {
             const lw = cw * 0.38;
             ctx.drawImage(logo, cx + pad, cy + ch * 0.07, lw, lw * 88 / 512);
         }
         ctx.fillStyle = theme.muted;
         ctx.font = `500 ${Math.round(cw * 0.028)}px ${font}`;
-        letterSpaced(ctx, card.querySelector('.gc-card__label').textContent.trim().toUpperCase(), cx + pad, cy + ch * 0.36, cw * (theme.gold ? 0.009 : 0.007));
-        if (theme.gold) {
+        letterSpaced(ctx, card.querySelector('.gc-card__label').textContent.trim().toUpperCase(), cx + pad, cy + ch * 0.36, cw * (foil ? 0.009 : 0.007));
+        if (theme.line) {
             const lg = ctx.createLinearGradient(cx + pad, 0, cx + pad + cw * 0.1, 0);
-            lg.addColorStop(0, '#d4af5f');
-            lg.addColorStop(1, 'rgba(212,175,95,0)');
+            lg.addColorStop(0, theme.line);
+            lg.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = lg;
             ctx.fillRect(cx + pad, cy + ch * 0.395, cw * 0.1, 2);
         }
 
         const amount = card.querySelector('[data-gc-amount]').textContent.trim();
-        const amountY = cy + ch * (theme.gold ? 0.7 : 0.6);
-        ctx.font = theme.serif ? `500 ${Math.round(cw * 0.18)}px ${serif}` : `600 ${Math.round(cw * 0.13)}px ${font}`;
+        const amountY = cy + ch * (foil ? 0.7 : 0.6);
+        ctx.font = foil ? `500 ${Math.round(cw * 0.18)}px ${serif}` : `600 ${Math.round(cw * 0.13)}px ${font}`;
         const amountW = ctx.measureText(amount).width;
-        ctx.fillStyle = theme.gold ? gold(cx + pad, amountY - cw * 0.12, cx + pad + amountW, amountY) : theme.ink;
+        ctx.fillStyle = foil ? foilFill(cx + pad, amountY - cw * 0.12, cx + pad + amountW, amountY) : theme.ink;
         ctx.fillText(amount, cx + pad, amountY);
-        ctx.font = `500 ${Math.round(cw * 0.036)}px ${theme.serif ? serif : font}`;
-        ctx.fillStyle = theme.gold ? '#d4af5f' : 'rgba(255,255,255,.8)';
-        letterSpaced(ctx, 'AZN', cx + pad + amountW + cw * 0.02, amountY - cw * 0.05, theme.gold ? cw * 0.008 : 0);
+        ctx.font = `500 ${Math.round(cw * 0.036)}px ${foil ? serif : font}`;
+        ctx.fillStyle = theme.line || 'rgba(255,255,255,.8)';
+        letterSpaced(ctx, 'AZN', cx + pad + amountW + cw * 0.02, amountY - cw * 0.05, foil ? cw * 0.008 : 0);
 
         const codeLabel = card.querySelector('.gc-card__code span');
         if (codeLabel) {
-            ctx.fillStyle = theme.gold ? '#b79d62' : 'rgba(255,255,255,.65)';
+            ctx.fillStyle = theme.soft;
             ctx.font = `500 ${Math.round(cw * 0.023)}px ${font}`;
             letterSpaced(ctx, codeLabel.textContent.trim().toUpperCase(), cx + pad, cy + ch * 0.84, cw * 0.003);
         }
@@ -216,7 +205,7 @@
         const exp = card.querySelector('.gc-card__exp');
         if (exp) {
             ctx.textAlign = 'right';
-            ctx.fillStyle = theme.gold ? '#b79d62' : 'rgba(255,255,255,.65)';
+            ctx.fillStyle = theme.soft;
             ctx.font = `500 ${Math.round(cw * 0.023)}px ${font}`;
             ctx.fillText(exp.querySelector('span').textContent.trim().toUpperCase(), cx + cw - pad, cy + ch * 0.84);
             ctx.fillStyle = theme.ink;
@@ -230,7 +219,7 @@
         ctx.textAlign = 'center';
         if (d.message) {
             ctx.fillStyle = theme.msg;
-            ctx.font = theme.serif ? `italic 400 50px ${serif}` : `italic 400 46px ${font}`;
+            ctx.font = foil ? `italic 400 50px ${serif}` : `italic 400 46px ${font}`;
             for (const line of wrap(ctx, '“' + d.message + '”', W - 200).slice(0, 5)) {
                 ctx.fillText(line, W / 2, y);
                 y += 64;
@@ -239,11 +228,11 @@
         if (d.sender) {
             y += 10;
             ctx.fillStyle = theme.from;
-            ctx.font = `400 38px ${theme.serif ? serif : font}`;
+            ctx.font = `400 38px ${foil ? serif : font}`;
             ctx.fillText('— ' + d.sender, W / 2, y);
         }
-        if (theme.gold) {
-            ctx.fillStyle = gold(W / 2 - 60, 0, W / 2 + 60, 0);
+        if (foil) {
+            ctx.fillStyle = theme.from;
             ctx.fillRect(W / 2 - 60, H - 150, 120, 2);
         }
         ctx.fillStyle = theme.how;
@@ -254,31 +243,42 @@
         return new Promise((resolve, reject) => canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png'));
     }
 
-    const logoImage = (svg, goldFill) => svgImage(svg, goldFill, 1024, 176);
+    /** Kartın bəzək SVG-si (öz gradientləri içindədir) — olduğu kimi şəkilə */
+    function decoImage(svg, width, height) {
+        const clone = svg.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('width', String(width * 2));
+        clone.setAttribute('height', String(height * 2));
+        clone.removeAttribute('class');
+        return loadSvg(new XMLSerializer().serializeToString(clone));
+    }
 
-    /** Səhifədəki SVG-ni (loqo, ikon) şəkilə çevirir; qızılı — gradientlə, yoxsa ağ */
-    function svgImage(svg, goldFill, width, height) {
+    /** Loqo: metal gradientlə (foil) və ya ağ */
+    function svgImage(svg, foilStops, width, height) {
         if (!svg) return Promise.resolve(null);
         const clone = svg.cloneNode(true);
         clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         clone.setAttribute('width', String(width));
         clone.setAttribute('height', String(height));
         clone.removeAttribute('class');
-        clone.querySelectorAll('path').forEach(p => { if (!p.getAttribute('fill')) p.setAttribute('fill', 'currentColor'); });
+        clone.querySelectorAll('path').forEach(p => { p.setAttribute('fill', 'currentColor'); p.setAttribute('stroke', 'currentColor'); });
         let markup = new XMLSerializer().serializeToString(clone);
-        if (goldFill) {
+        if (foilStops) {
             const defs = '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
-                + GOLD.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('') + '</linearGradient></defs>';
+                + foilStops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('') + '</linearGradient></defs>';
             markup = markup.replace(/currentColor/g, 'url(#g)').replace(/(<svg[^>]*>)/, '$1' + defs);
         } else {
             markup = markup.replace(/currentColor/g, '#ffffff');
         }
-        const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markup);
+        return loadSvg(markup);
+    }
+
+    function loadSvg(markup) {
         return new Promise(resolve => {
             const img = new Image();
             img.onload = () => resolve(img);
             img.onerror = () => resolve(null);
-            img.src = src;
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markup);
         });
     }
 

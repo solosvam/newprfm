@@ -31,23 +31,34 @@
 .gc-card__exp span { display: block; opacity: .65; }
 .gc-card__exp b { font-size: 3cqw; letter-spacing: .08em; }
 
-/* Signature — Premium: saytın bənövşəyisi + qızılı */
-.gc-card--signature { background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%); color: #f1dfaa; }
-.gc-card--signature::after { display: none; }
+/* Folqa dizaynları (Signature, Love): serif məbləğ, metal effektli loqo / rəqəmlər; rənglər — dəyişənlərlə */
+.gc-card--foil { color: var(--gc-ink); }
+.gc-card--foil::after { display: none; }
 .gc-card__deco { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.gc-card--signature .gc-card__logo .logo-svg path { fill: url(#gcGold); stroke: url(#gcGold); }
-.gc-card--signature .gc-card__label { color: #cfb676; opacity: 1; letter-spacing: .34em; }
-.gc-card--signature .gc-card__label::after { content: ""; display: block; width: 10cqw; height: 1px; margin-top: 2.2cqw; background: linear-gradient(90deg, #d4af5f, transparent); }
-.gc-card--signature .gc-card__amount {
+.gc-card--foil .gc-card__logo .logo-svg path { fill: var(--gc-logo); stroke: var(--gc-logo); }
+.gc-card--foil .gc-card__label { color: var(--gc-muted); opacity: 1; letter-spacing: .34em; }
+.gc-card--foil .gc-card__label::after { content: ""; display: block; width: 10cqw; height: 1px; margin-top: 2.2cqw; background: linear-gradient(90deg, var(--gc-line), transparent); }
+.gc-card--foil .gc-card__amount {
     margin-top: 1.6cqw; font-family: "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-weight: 500; font-size: 18cqw;
-    background: linear-gradient(105deg, #b8893b 0%, #f6e3a6 40%, #c99a45 66%, #efd38c 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+    background: var(--gc-foil); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.gc-card--signature .gc-card__amount small { color: #d4af5f; -webkit-text-fill-color: #d4af5f; font-family: inherit; font-weight: 500; opacity: 1; letter-spacing: .24em; }
-.gc-card--signature .gc-card__code b { color: #ecd8a0; }
-.gc-card--signature .gc-card__code span { color: #b79d62; opacity: 1; }
+.gc-card--foil .gc-card__amount small { color: var(--gc-line); -webkit-text-fill-color: var(--gc-line); font-family: inherit; font-weight: 500; opacity: 1; letter-spacing: .24em; }
+.gc-card--foil .gc-card__code b, .gc-card--foil .gc-card__exp b { color: var(--gc-ink); }
+.gc-card--foil .gc-card__code span, .gc-card--foil .gc-card__exp span { color: var(--gc-soft); opacity: 1; }
 
-.gc-card--signature .gc-card__exp span { color: #b79d62; opacity: 1; }
-.gc-card--signature .gc-card__exp b { color: #ecd8a0; }
+/* Signature — Premium: saytın bənövşəyisi + qızılı */
+.gc-card--signature {
+    background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%);
+    --gc-ink: #ecd8a0; --gc-muted: #cfb676; --gc-soft: #b79d62; --gc-line: #d4af5f; --gc-logo: url(#gcGold);
+    --gc-foil: linear-gradient(105deg, #b8893b 0%, #f6e3a6 40%, #c99a45 66%, #efd38c 100%);
+}
+
+/* Love — Romantik: bordo + pudra çəhrayısı */
+.gc-card--love {
+    background: radial-gradient(120% 150% at 8% 0%, #922e46 0%, #6c1a2e 45%, #3d0c19 100%);
+    --gc-ink: #f8e1e1; --gc-muted: #e7b3b9; --gc-soft: #d39aa2; --gc-line: #ecbcc2; --gc-logo: url(#gcPink);
+    --gc-foil: linear-gradient(105deg, #e2a3ab 0%, #fdeeee 42%, #d8959e 68%, #f6d6d9 100%);
+}
 
 /* Dizayn seçimi */
 .gc-designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
@@ -56,6 +67,7 @@
 .gc-design__swatch { aspect-ratio: 85.6 / 54; border-radius: 10px; border: 2px solid transparent; box-shadow: 0 0 0 1px var(--border-strong); }
 .gc-design input:checked + .gc-design__swatch { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #d4af5f; }
 .gc-design__swatch--signature { background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%); outline: 1px solid rgba(212, 175, 95, .6); outline-offset: -6px; }
+.gc-design__swatch--love { background: radial-gradient(120% 150% at 8% 0%, #922e46 0%, #6c1a2e 45%, #3d0c19 100%); outline: 1px solid rgba(242, 198, 203, .6); outline-offset: -6px; }
 .gc-design__swatch--standard { background: radial-gradient(130% 120% at 0% 0%, #3d2d66 0%, #2b1f4a 55%, #1d1533 100%); }
 
 .gc-preview__note { max-width: 440px; margin: 16px 0 0; }

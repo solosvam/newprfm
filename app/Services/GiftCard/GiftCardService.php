@@ -39,9 +39,9 @@ class GiftCardService
     public const MESSAGE_MAX = 150;
     public const SENDER_MAX = 60;
     /** Kartın dizaynları (keçərli dəyərlər); "standard" — ilk satılan kartlar üçün saxlanır */
-    public const DESIGNS = ['signature', 'standard'];
-    /** Alış səhifəsində təklif olunanlar (4 konsept: Signature hazırdır; Love, Bloom, Celebration — sonra) */
-    public const OFFERED_DESIGNS = ['signature'];
+    public const DESIGNS = ['signature', 'love', 'standard'];
+    /** Alış səhifəsində təklif olunanlar (4 konsept: Signature, Love hazırdır; Bloom, Celebration — sonra) */
+    public const OFFERED_DESIGNS = ['signature', 'love'];
     public const DEFAULT_DESIGN = 'signature';
 
     /** Qalığı ödəmək olan üsullar (kart tətbiq olunanda) */
