@@ -964,5 +964,7 @@
     "gift_card_code_label": "Card code",
     "gift_card_design_love": "Love",
     "gift_card_design_bloom": "Bloom",
-    "gift_card_design_celebration": "Celebration"
+    "gift_card_design_celebration": "Celebration",
+    "gift_card_how_title": "How it works",
+    "gift_card_preview_hint": "This is the image that will be sent. The code is added after payment."
 }

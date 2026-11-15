@@ -20,21 +20,18 @@
         <div class="gc-layout">
             <section class="gc-preview" aria-label="{{ __('gift_card_preview') }}">
                 @php $selectedDesign = old('design', $defaultDesign); @endphp
-                @foreach($designs as $d)
-                    <div data-gc-design-preview="{{ $d }}" @if($d !== $selectedDesign) hidden @endif>
-                        @include('frontend.gift-card._card', ['amount' => $default, 'code' => null, 'expires' => null, 'design' => $d])
-                    </div>
-                @endforeach
-                <div class="gc-preview__note">
-                    <p class="gc-preview__msg" data-gc-preview-message hidden></p>
-                    <p class="gc-preview__from" data-gc-preview-from hidden></p>
+                {{-- Göndəriləcək açıqcanın özü (canlı): kartın səhifəsindəki "Endir" ilə eyni çəkiliş (pages/gift-card.js) --}}
+                <canvas class="gc-postcard" width="1080" height="1350" data-gc-postcard data-how="{{ __('gift_card_how_to_use') }}"
+                        role="img" aria-label="{{ __('gift_card_preview') }}"></canvas>
+                <p class="gc-hint gc-preview__hint">{{ __('gift_card_preview_hint') }}</p>
+                {{-- Açıqca bu kartlardan çəkilir (dizayn, məbləğ); özləri görünmür --}}
+                <div hidden>
+                    @foreach($designs as $d)
+                        <div data-gc-design-preview="{{ $d }}">
+                            @include('frontend.gift-card._card', ['amount' => $default, 'code' => null, 'expires' => null, 'design' => $d])
+                        </div>
+                    @endforeach
                 </div>
-                <ul class="gc-rules">
-                    <li>{{ __('gift_card_rule_code') }}</li>
-                    <li>{{ __('gift_card_rule_valid', ['months' => $validMonths]) }}</li>
-                    <li>{{ __('gift_card_rule_use') }}</li>
-                    <li>{{ __('gift_card_rule_burn') }}</li>
-                </ul>
             </section>
 
             <section class="gc-form-wrap">
@@ -109,6 +106,17 @@
                 @endif
             </section>
         </div>
+
+        {{-- Necə işləyir? --}}
+        <section class="gc-how" aria-labelledby="gcHowTitle">
+            <h2 id="gcHowTitle">{{ __('gift_card_how_title') }}</h2>
+            <ol class="gc-how__list">
+                <li><span>1</span><p>{{ __('gift_card_rule_code') }}</p></li>
+                <li><span>2</span><p>{{ __('gift_card_rule_valid', ['months' => $validMonths]) }}</p></li>
+                <li><span>3</span><p>{{ __('gift_card_rule_use') }}</p></li>
+                <li><span>4</span><p>{{ __('gift_card_rule_burn') }}</p></li>
+            </ol>
+        </section>
     </main>
 @endsection
 

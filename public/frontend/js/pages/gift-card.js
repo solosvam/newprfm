@@ -1,103 +1,7 @@
-/* Virtual hədiyyə kartı: məbləğ seçimi və önizləmə (alış səhifəsi); Göndər / Endir / Kodu kopyala (kartın səhifəsi) */
+/* Virtual hədiyyə kartı: alış səhifəsi (məbləğ, dizayn, canlı açıqca önizləməsi); kartın səhifəsi (Göndər / Endir / Kodu kopyala).
+   Önizləmə və "Endir" eyni funksiyadan (renderPostcard) çəkilir — müştəri ödənişdən əvvəl göndəriləcək şəklin özünü görür. */
 (() => {
     'use strict';
-
-    /* ---------- Alış səhifəsi ---------- */
-    const form = document.querySelector('[data-gc-form]');
-    if (form) {
-        const min = Number(form.dataset.min) || 100;
-        const max = Number(form.dataset.max) || 1500;
-        const step = Number(form.dataset.step) || 50;
-        const input = form.querySelector('[data-gc-amount-input]');
-        const valueEl = form.querySelector('[data-gc-value]');
-        const payEl = form.querySelector('[data-gc-pay]');
-        const cardAmounts = [...document.querySelectorAll('[data-gc-card] [data-gc-amount]')];
-        const quick = [...form.querySelectorAll('[data-gc-quick]')];
-        const less = form.querySelector('[data-gc-step="-1"]');
-        const more = form.querySelector('[data-gc-step="1"]');
-
-        const setAmount = value => {
-            const v = Math.min(max, Math.max(min, Math.round(value / step) * step));
-            input.value = v;
-            valueEl.textContent = v;
-            if (payEl) payEl.textContent = v;
-            cardAmounts.forEach(el => { el.textContent = v; });
-            quick.forEach(b => b.classList.toggle('is-active', Number(b.dataset.gcQuick) === v));
-            less.disabled = v <= min;
-            more.disabled = v >= max;
-        };
-        quick.forEach(b => b.addEventListener('click', () => setAmount(Number(b.dataset.gcQuick))));
-        form.querySelectorAll('[data-gc-step]').forEach(b => b.addEventListener('click', () => {
-            setAmount(Number(input.value) + Number(b.dataset.gcStep) * step);
-        }));
-        setAmount(Number(input.value) || 200);
-
-        // Dizayn: seçilən dizaynın önizləməsi göstərilir
-        form.querySelectorAll('[data-gc-design]').forEach(radio => radio.addEventListener('change', () => {
-            document.querySelectorAll('[data-gc-design-preview]').forEach(el => { el.hidden = el.dataset.gcDesignPreview !== radio.value; });
-        }));
-
-        const message = form.querySelector('[data-gc-message]');
-        const sender = form.querySelector('[data-gc-sender]');
-        const count = form.querySelector('[data-gc-count]');
-        const previewMsg = document.querySelector('[data-gc-preview-message]');
-        const previewFrom = document.querySelector('[data-gc-preview-from]');
-        const syncText = () => {
-            const m = message.value.trim();
-            const s = sender.value.trim();
-            count.textContent = message.value.length;
-            previewMsg.textContent = m ? '“' + m + '”' : '';
-            previewMsg.hidden = !m;
-            previewFrom.textContent = s ? '— ' + s : '';
-            previewFrom.hidden = !s;
-        };
-        message.addEventListener('input', syncText);
-        sender.addEventListener('input', syncText);
-        syncText();
-    }
-
-    /* ---------- Kartın səhifəsi ---------- */
-    const show = document.querySelector('[data-gc-show]');
-    if (!show) return;
-    const d = show.dataset;
-
-    const copyBtn = show.querySelector('[data-gc-copy]');
-    copyBtn?.addEventListener('click', async () => {
-        try {
-            await navigator.clipboard.writeText(copyBtn.dataset.gcCopy);
-            const label = copyBtn.textContent;
-            copyBtn.textContent = d.copied;
-            setTimeout(() => { copyBtn.textContent = label; }, 1800);
-        } catch (e) { /* köhnə brauzer — kod kartın üzərində görünür */ }
-    });
-
-    show.querySelector('[data-gc-share]')?.addEventListener('click', async () => {
-        if (navigator.share) {
-            try {
-                await navigator.share({ title: d.shareTitle, text: d.shareTitle, url: d.shareUrl });
-                return;
-            } catch (e) {
-                if (e && e.name === 'AbortError') return;
-            }
-        }
-        window.open('https://wa.me/?text=' + encodeURIComponent(d.shareTitle + ': ' + d.shareUrl), '_blank', 'noopener');
-    });
-
-    show.querySelector('[data-gc-download]')?.addEventListener('click', async () => {
-        try {
-            const blob = await renderPostcard();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = d.fileName || 'parfumshop-gift-card.png';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 4000);
-        } catch (e) {
-            console.error(e);
-        }
-    });
 
     /**
      * Dizaynlar: kartın və açıqcanın rəngləri (CSS-dəki .gc-card--* dəyişənləri ilə eyni).
@@ -130,8 +34,130 @@
         },
     };
 
-    /** Endirilən şəkil: şaquli 4:5 açıqca (1080 × 1350) — kart, mətn, kimdən, istifadə qaydası */
-    async function renderPostcard() {
+    /* ---------- Alış səhifəsi ---------- */
+    const form = document.querySelector('[data-gc-form]');
+    if (form) {
+        const min = Number(form.dataset.min) || 100;
+        const max = Number(form.dataset.max) || 1500;
+        const step = Number(form.dataset.step) || 50;
+        const input = form.querySelector('[data-gc-amount-input]');
+        const valueEl = form.querySelector('[data-gc-value]');
+        const payEl = form.querySelector('[data-gc-pay]');
+        const cardAmounts = [...document.querySelectorAll('[data-gc-card] [data-gc-amount]')];
+        const quick = [...form.querySelectorAll('[data-gc-quick]')];
+        const less = form.querySelector('[data-gc-step="-1"]');
+        const more = form.querySelector('[data-gc-step="1"]');
+        const message = form.querySelector('[data-gc-message]');
+        const sender = form.querySelector('[data-gc-sender]');
+        const count = form.querySelector('[data-gc-count]');
+        const preview = document.querySelector('[data-gc-postcard]');
+
+        // Canlı önizləmə: hər dəyişiklikdən sonra açıqca yenidən çəkilir (son sorğu qalib gəlir)
+        let version = 0;
+        let timer = null;
+        const redraw = () => {
+            clearTimeout(timer);
+            timer = setTimeout(async () => {
+                const current = ++version;
+                const design = form.querySelector('[data-gc-design]:checked')?.value;
+                const card = document.querySelector(`[data-gc-design-preview="${design}"] [data-gc-card]`)
+                    || document.querySelector('[data-gc-card]');
+                if (!card || !preview) return;
+                try {
+                    const canvas = await renderPostcard(card, {
+                        message: message.value.trim(), sender: sender.value.trim(), how: preview.dataset.how,
+                    });
+                    if (current !== version) return;
+                    const ctx = preview.getContext('2d');
+                    ctx.clearRect(0, 0, preview.width, preview.height);
+                    ctx.drawImage(canvas, 0, 0);
+                    preview.classList.add('is-ready');
+                } catch (e) {
+                    console.error(e);
+                }
+            }, 80);
+        };
+
+        const setAmount = value => {
+            const v = Math.min(max, Math.max(min, Math.round(value / step) * step));
+            input.value = v;
+            valueEl.textContent = v;
+            if (payEl) payEl.textContent = v;
+            cardAmounts.forEach(el => { el.textContent = v; });
+            quick.forEach(b => b.classList.toggle('is-active', Number(b.dataset.gcQuick) === v));
+            less.disabled = v <= min;
+            more.disabled = v >= max;
+            redraw();
+        };
+        quick.forEach(b => b.addEventListener('click', () => setAmount(Number(b.dataset.gcQuick))));
+        form.querySelectorAll('[data-gc-step]').forEach(b => b.addEventListener('click', () => {
+            setAmount(Number(input.value) + Number(b.dataset.gcStep) * step);
+        }));
+        form.querySelectorAll('[data-gc-design]').forEach(radio => radio.addEventListener('change', redraw));
+        const syncText = () => {
+            count.textContent = message.value.length;
+            redraw();
+        };
+        message.addEventListener('input', syncText);
+        sender.addEventListener('input', syncText);
+        count.textContent = message.value.length;
+        setAmount(Number(input.value) || 200);
+        // Serif şrift yüklənəndən sonra yenidən (əks halda ilk çəkiliş ehtiyat şriftlə ola bilər)
+        document.fonts?.ready.then(redraw);
+    }
+
+    /* ---------- Kartın səhifəsi ---------- */
+    const show = document.querySelector('[data-gc-show]');
+    const d = show?.dataset || {};
+    if (show) {
+
+    const copyBtn = show.querySelector('[data-gc-copy]');
+    copyBtn?.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(copyBtn.dataset.gcCopy);
+            const label = copyBtn.textContent;
+            copyBtn.textContent = d.copied;
+            setTimeout(() => { copyBtn.textContent = label; }, 1800);
+        } catch (e) { /* köhnə brauzer — kod kartın üzərində görünür */ }
+    });
+
+    show.querySelector('[data-gc-share]')?.addEventListener('click', async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: d.shareTitle, text: d.shareTitle, url: d.shareUrl });
+                return;
+            } catch (e) {
+                if (e && e.name === 'AbortError') return;
+            }
+        }
+        window.open('https://wa.me/?text=' + encodeURIComponent(d.shareTitle + ': ' + d.shareUrl), '_blank', 'noopener');
+    });
+
+    show.querySelector('[data-gc-download]')?.addEventListener('click', async () => {
+        try {
+            const canvas = await renderPostcard(show.querySelector('[data-gc-card]'), { message: d.message, sender: d.sender, how: d.how });
+            const blob = await new Promise((resolve, reject) => canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png'));
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = d.fileName || 'parfumshop-gift-card.png';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+        } catch (e) {
+            console.error(e);
+        }
+    });
+    }
+
+    /**
+     * Açıqca: şaquli 4:5 (1080 × 1350) — kart (səhifədəki .gc-card-dan), mətn, kimdən, istifadə qaydası.
+     * @param {Element} card  .gc-card (dizayn, məbləğ, kod, tarix ondan oxunur)
+     * @param {{message?: string, sender?: string, how?: string}} data
+     * @returns {Promise<HTMLCanvasElement>}
+     */
+    async function renderPostcard(card, data) {
         const W = 1080, H = 1350;
         const canvas = document.createElement('canvas');
         canvas.width = W;
@@ -139,7 +165,6 @@
         const ctx = canvas.getContext('2d');
         const font = getComputedStyle(document.body).fontFamily;
         const serif = '"Didot", "Bodoni 72", "Playfair Display", Georgia, serif';
-        const card = show.querySelector('[data-gc-card]');
         const theme = THEMES[card.dataset.design] || THEMES.standard;
         const foil = theme.foil;
         const foilFill = (x0, y0, x1, y1) => {
@@ -227,19 +252,19 @@
         // Mətn və kimdən
         let y = cy + ch + 130;
         ctx.textAlign = 'center';
-        if (d.message) {
+        if (data.message) {
             ctx.fillStyle = theme.msg;
             ctx.font = foil ? `italic 400 50px ${serif}` : `italic 400 46px ${font}`;
-            for (const line of wrap(ctx, '“' + d.message + '”', W - 200).slice(0, 5)) {
+            for (const line of wrap(ctx, '“' + data.message + '”', W - 200).slice(0, 5)) {
                 ctx.fillText(line, W / 2, y);
                 y += 64;
             }
         }
-        if (d.sender) {
+        if (data.sender) {
             y += 10;
             ctx.fillStyle = theme.from;
             ctx.font = `400 38px ${foil ? serif : font}`;
-            ctx.fillText('— ' + d.sender, W / 2, y);
+            ctx.fillText('— ' + data.sender, W / 2, y);
         }
         if (foil) {
             ctx.fillStyle = theme.from;
@@ -247,10 +272,10 @@
         }
         ctx.fillStyle = theme.how;
         ctx.font = `400 28px ${font}`;
-        const how = wrap(ctx, d.how, W - 200);
+        const how = wrap(ctx, data.how, W - 200);
         how.forEach((line, i) => ctx.fillText(line, W / 2, H - 80 - (how.length - 1 - i) * 40));
 
-        return new Promise((resolve, reject) => canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png'));
+        return canvas;
     }
 
     /** Kartın bəzək SVG-si (öz gradientləri içindədir) — olduğu kimi şəkilə */
