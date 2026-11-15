@@ -957,5 +957,8 @@
     "gift_card_burn_note": "Остаток карты :amount не возвращается.",
     "gift_card_paid_line": "Оплачено подарочной картой",
     "gift_card_buy_another": "Купить новую карту",
-    "gift_card_open": "Открыть карту"
+    "gift_card_open": "Открыть карту",
+    "gift_card_design_label": "Дизайн",
+    "gift_card_design_signature": "Signature — Premium",
+    "gift_card_design_standard": "Стандарт"
 }

@@ -957,5 +957,8 @@
     "gift_card_burn_note": "The card's remaining :amount is not refunded.",
     "gift_card_paid_line": "Paid with gift card",
     "gift_card_buy_another": "Buy another card",
-    "gift_card_open": "Open card"
+    "gift_card_open": "Open card",
+    "gift_card_design_label": "Design",
+    "gift_card_design_signature": "Signature — Premium",
+    "gift_card_design_standard": "Standard"
 }

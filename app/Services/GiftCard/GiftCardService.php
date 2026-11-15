@@ -38,7 +38,11 @@ class GiftCardService
     public const REMIND_DAYS = 30;
     public const MESSAGE_MAX = 150;
     public const SENDER_MAX = 60;
-    public const DESIGNS = ['standard'];
+    /** Kartın dizaynları (keçərli dəyərlər); "standard" — ilk satılan kartlar üçün saxlanır */
+    public const DESIGNS = ['signature', 'standard'];
+    /** Alış səhifəsində təklif olunanlar (4 konsept: Signature hazırdır; Love, Bloom, Celebration — sonra) */
+    public const OFFERED_DESIGNS = ['signature'];
+    public const DEFAULT_DESIGN = 'signature';
 
     /** Qalığı ödəmək olan üsullar (kart tətbiq olunanda) */
     public const REMAINDER_METHODS = ['cash', 'card_online', 'birbank_installment'];
@@ -116,13 +120,13 @@ class GiftCardService
     {
         $message = $this->clean($data['message'] ?? null, self::MESSAGE_MAX);
         $sender = $this->clean($data['sender_name'] ?? null, self::SENDER_MAX);
-        $design = $data['design'] ?? 'standard';
+        $design = $data['design'] ?? self::DEFAULT_DESIGN;
 
         $errors = [];
         if (!$this->isValidAmount($data['amount'] ?? null)) {
             $errors['amount'] = __('gift_card_amount_invalid', ['min' => self::MIN, 'max' => self::MAX, 'step' => self::STEP]);
         }
-        if (!in_array($design, self::DESIGNS, true)) {
+        if (!in_array($design, self::OFFERED_DESIGNS, true)) {
             $errors['design'] = __('gift_card_design_invalid');
         }
         if ($this->containsBannedWord($message)) {

@@ -30,6 +30,8 @@ class GiftCardController extends Controller
             'min' => GiftCardService::MIN, 'max' => GiftCardService::MAX, 'step' => GiftCardService::STEP,
             'messageMax' => GiftCardService::MESSAGE_MAX, 'senderMax' => GiftCardService::SENDER_MAX,
             'validMonths' => GiftCardService::VALID_MONTHS,
+            'designs' => GiftCardService::OFFERED_DESIGNS,
+            'defaultDesign' => GiftCardService::DEFAULT_DESIGN,
             'myCards' => $myCards,
         ]);
     }
@@ -38,6 +40,7 @@ class GiftCardController extends Controller
     {
         $data = $request->validate([
             'amount' => ['required', 'integer'],
+            'design' => ['nullable', 'string', 'max:20'],
             'message' => ['nullable', 'string', 'max:'.GiftCardService::MESSAGE_MAX],
             'sender_name' => ['nullable', 'string', 'max:'.GiftCardService::SENDER_MAX],
             'accept_terms' => ['accepted'],
@@ -46,7 +49,7 @@ class GiftCardController extends Controller
             'message.max' => __('gift_card_message_too_long', ['max' => GiftCardService::MESSAGE_MAX]),
         ]);
 
-        $card = $this->cards->purchase($request->user(), $data + ['design' => 'standard']);
+        $card = $this->cards->purchase($request->user(), $data);
 
         return $this->redirectToPayment($card);
     }

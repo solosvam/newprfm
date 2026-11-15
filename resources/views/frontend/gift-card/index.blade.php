@@ -19,7 +19,12 @@
 
         <div class="gc-layout">
             <section class="gc-preview" aria-label="{{ __('gift_card_preview') }}">
-                @include('frontend.gift-card._card', ['amount' => $default, 'code' => null, 'expires' => null])
+                @php $selectedDesign = old('design', $defaultDesign); @endphp
+                @foreach($designs as $d)
+                    <div data-gc-design-preview="{{ $d }}" @if($d !== $selectedDesign) hidden @endif>
+                        @include('frontend.gift-card._card', ['amount' => $default, 'code' => null, 'expires' => null, 'design' => $d])
+                    </div>
+                @endforeach
                 <div class="gc-preview__note">
                     <p class="gc-preview__msg" data-gc-preview-message hidden></p>
                     <p class="gc-preview__from" data-gc-preview-from hidden></p>
@@ -43,6 +48,17 @@
                 <form method="POST" action="{{ route('gift-card.store') }}" class="gc-form" data-gc-form
                       data-min="{{ $min }}" data-max="{{ $max }}" data-step="{{ $step }}">
                     @csrf
+                    <label class="gc-label">{{ __('gift_card_design_label') }}</label>
+                    <div class="gc-designs" role="radiogroup">
+                        @foreach($designs as $d)
+                            <label class="gc-design">
+                                <input type="radio" name="design" value="{{ $d }}" data-gc-design @checked($d === $selectedDesign)>
+                                <span class="gc-design__swatch gc-design__swatch--{{ $d }}"></span>
+                                <span>{{ __('gift_card_design_'.$d) }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+
                     <label class="gc-label">{{ __('gift_card_amount_label') }}</label>
                     <div class="gc-quick" role="group">
                         @foreach($quick as $q)

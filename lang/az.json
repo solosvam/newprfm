@@ -918,5 +918,8 @@
     "gift_card_burn_note": "Kartın :amount qalığı geri qaytarılmır.",
     "gift_card_paid_line": "Hədiyyə kartı ilə ödənilib",
     "gift_card_buy_another": "Yeni kart al",
-    "gift_card_open": "Kartı aç"
+    "gift_card_open": "Kartı aç",
+    "gift_card_design_label": "Dizayn",
+    "gift_card_design_signature": "Signature — Premium",
+    "gift_card_design_standard": "Standart"
 }

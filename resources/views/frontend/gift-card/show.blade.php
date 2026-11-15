@@ -34,6 +34,7 @@
                 'amount' => $card->amount,
                 'code' => $paid ? $card->formattedCode() : null,
                 'expires' => $card->expires_at?->format('d.m.Y'),
+                'design' => $card->design,
             ])
 
             @if($card->message || $card->sender_name)

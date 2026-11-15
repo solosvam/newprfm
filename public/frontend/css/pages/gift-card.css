@@ -30,6 +30,31 @@
 .gc-card__exp span { display: block; opacity: .65; }
 .gc-card__exp b { font-size: 3cqw; letter-spacing: .08em; }
 
+/* Signature — Premium: saytın bənövşəyisi + qızılı */
+.gc-card--signature { background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%); color: #f1dfaa; }
+.gc-card--signature::after { display: none; }
+.gc-card__deco { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.gc-card--signature .gc-card__logo .logo-svg path { fill: url(#gcGold); stroke: url(#gcGold); }
+.gc-card--signature .gc-card__label { color: #cfb676; opacity: 1; letter-spacing: .34em; }
+.gc-card--signature .gc-card__label::after { content: ""; display: block; width: 10cqw; height: 1px; margin-top: 2.2cqw; background: linear-gradient(90deg, #d4af5f, transparent); }
+.gc-card--signature .gc-card__amount {
+    margin-top: 1.6cqw; font-family: "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-weight: 500; font-size: 14.5cqw;
+    background: linear-gradient(105deg, #b8893b 0%, #f6e3a6 40%, #c99a45 66%, #efd38c 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.gc-card--signature .gc-card__amount small { color: #d4af5f; -webkit-text-fill-color: #d4af5f; font-family: inherit; font-weight: 500; opacity: 1; letter-spacing: .24em; }
+.gc-card--signature .gc-card__code { color: #ecd8a0; }
+.gc-card--signature .gc-card__exp span { color: #b79d62; opacity: 1; }
+.gc-card--signature .gc-card__exp b { color: #ecd8a0; }
+
+/* Dizayn seçimi */
+.gc-designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.gc-design { position: relative; display: flex; flex-direction: column; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.gc-design input { position: absolute; opacity: 0; pointer-events: none; }
+.gc-design__swatch { aspect-ratio: 85.6 / 54; border-radius: 10px; border: 2px solid transparent; box-shadow: 0 0 0 1px var(--border-strong); }
+.gc-design input:checked + .gc-design__swatch { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #d4af5f; }
+.gc-design__swatch--signature { background: radial-gradient(120% 150% at 8% 0%, #3d2c68 0%, #2b1f4a 45%, #150e28 100%); outline: 1px solid rgba(212, 175, 95, .6); outline-offset: -6px; }
+.gc-design__swatch--standard { background: radial-gradient(130% 120% at 0% 0%, #3d2d66 0%, #2b1f4a 55%, #1d1533 100%); }
+
 .gc-preview__note { max-width: 440px; margin: 16px 0 0; }
 .gc-preview__msg, .gc-show__msg { margin: 0; font-size: 18px; font-style: italic; line-height: 1.45; overflow-wrap: anywhere; }
 .gc-preview__from, .gc-show__from { margin: 6px 0 0; color: var(--text-secondary); }
