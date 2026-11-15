@@ -141,22 +141,6 @@ class GiftCardTest extends TestCase
         $this->service()->purchase(Customer::find(1), ['amount' => 119]);
     }
 
-    public function test_message_with_banned_word_is_rejected(): void
-    {
-        $this->assertTrue($this->service()->containsBannedWord('Sən bir SİKdirsən'));
-        $this->assertTrue($this->service()->containsBannedWord('SIKDIR'));
-        $this->assertTrue($this->service()->containsBannedWord('ну ты и сука'));
-        $this->assertFalse($this->service()->containsBannedWord('Ad günün mübarək, əzizim! Musiqi və ətir.'));
-
-        try {
-            $this->service()->purchase(Customer::find(1), ['amount' => 200, 'message' => 'what the fuck']);
-            $this->fail('Qadağan söz qəbul olundu');
-        } catch (ValidationException $e) {
-            $this->assertArrayHasKey('message', $e->errors());
-        }
-        $this->assertSame(0, GiftCard::count());
-    }
-
     public function test_code_is_given_only_after_payment_and_card_is_valid_for_12_months(): void
     {
         $card = $this->service()->purchase(Customer::find(1), ['amount' => 300, 'message' => '  Ad günün   mübarək ', 'sender_name' => 'Aysel']);

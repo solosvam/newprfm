@@ -870,7 +870,6 @@
     "gift_card_message_placeholder": "Ad günün mübarək! Ətrini özün seç.",
     "gift_card_sender_label": "Kimdən (istəyə görə)",
     "gift_card_sender_placeholder": "Adınız",
-    "gift_card_message_banned": "Mətndə qadağan olunmuş söz var. Zəhmət olmasa, dəyişin.",
     "gift_card_message_too_long": "Mətn ən çox :max simvol ola bilər.",
     "gift_card_accept_terms": "Kartın :months ay keçərli olduğu, nağd pula dəyişdirilmədiyi və sifarişdən artıq qalan məbləğin geri qaytarılmadığı ilə razıyam.",
     "gift_card_accept_terms_required": "Şərtlərlə razılığınızı təsdiqləyin.",

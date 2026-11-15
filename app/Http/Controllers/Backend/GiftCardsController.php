@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\GiftCard\GiftCard;
-use App\Models\Setting;
 use App\Services\GiftCard\GiftCardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +42,6 @@ class GiftCardsController extends Controller
         $soldTotal = (float) GiftCard::whereNotNull('paid_at')->sum('amount');
 
         return view('backend.gift-cards.index', compact('cards', 'status', 'q', 'outstanding', 'outstandingCount', 'soldTotal') + [
-            'bannedWords' => implode("\n", $this->cards->bannedWords()),
         ]);
     }
 
@@ -69,13 +67,5 @@ class GiftCardsController extends Controller
         $this->cards->refund($card, (int) auth()->id());
 
         return back()->with('success', 'Kartın pulu karta qaytarıldı, kart bağlandı.');
-    }
-
-    public function bannedWords(Request $request): RedirectResponse
-    {
-        $data = $request->validate(['banned_words' => ['nullable', 'string', 'max:5000']]);
-        Setting::set('gift_card_banned_words', trim((string) ($data['banned_words'] ?? '')));
-
-        return back()->with('success', 'Qadağan sözlər yadda saxlandı.');
     }
 }

@@ -81,16 +81,5 @@
         {{ $cards->links() }}
     </div></div>
 
-    @can('giftcard.manage')
-        <div class="card mb-5"><div class="card-body">
-            <h5>Kartın mətnində qadağan sözlər</h5>
-            <p class="small text-muted">Hər sətirdə bir söz. Sonu <code>*</code> olan söz — kök: o hərflərlə başlayan bütün sözlər tutulur (məs. <code>sik*</code>). Qalanları yalnız tam söz kimi. Boş saxlasanız standart siyahı işləyir.</p>
-            <form method="POST" action="{{ route('admin.gift-cards.banned-words') }}">
-                @csrf
-                <textarea name="banned_words" rows="6" class="form-control mb-2">{{ $bannedWords }}</textarea>
-                <button class="btn btn-outline-primary">Yadda saxla</button>
-            </form>
-        </div></div>
-    @endcan
 </div>
 @endsection

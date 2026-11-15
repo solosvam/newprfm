@@ -909,7 +909,6 @@
     "gift_card_message_placeholder": "Happy birthday! Pick your own scent.",
     "gift_card_sender_label": "From (optional)",
     "gift_card_sender_placeholder": "Your name",
-    "gift_card_message_banned": "The text contains a prohibited word. Please change it.",
     "gift_card_message_too_long": "The text may be at most :max characters.",
     "gift_card_accept_terms": "I agree that the card is valid for :months months, cannot be exchanged for cash, and any amount above the order total is not refunded.",
     "gift_card_accept_terms_required": "Please accept the terms.",

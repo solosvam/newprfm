@@ -909,7 +909,6 @@
     "gift_card_message_placeholder": "С днём рождения! Выбери аромат сам(а).",
     "gift_card_sender_label": "От кого (необязательно)",
     "gift_card_sender_placeholder": "Ваше имя",
-    "gift_card_message_banned": "В тексте есть запрещённое слово. Пожалуйста, измените его.",
     "gift_card_message_too_long": "Текст может содержать не более :max символов.",
     "gift_card_accept_terms": "Я согласен(на), что карта действует :months месяцев, не обменивается на наличные, а остаток сверх суммы заказа не возвращается.",
     "gift_card_accept_terms_required": "Подтвердите согласие с условиями.",

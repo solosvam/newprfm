@@ -9,7 +9,6 @@ use App\Models\GiftCard\GiftCardEvent;
 use App\Models\Order\Order;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentOperation;
-use App\Models\Setting;
 use App\Services\FinanceService;
 use App\Services\Payment\Birbank;
 use App\Services\Payment\BirbankPaymentSync;
@@ -51,16 +50,6 @@ class GiftCardService
     private const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     private const CODE_LENGTH = 12;
 
-    /**
-     * Mətndə qadağan sözlər (Setting "gift_card_banned_words" ilə dəyişdirilir, sətir və ya vergüllə).
-     * Sonu "*" olan söz — kök: o hərflərlə başlayan hər söz tutulur; qalanları — tam söz.
-     */
-    public const DEFAULT_BANNED_WORDS = [
-        'sik*', 'sikdir*', 'göt*', 'qəhbə*', 'qehbe*', 'gijdılla*', 'gijdilla*', 'peysər*', 'peyser*', 'amcıq*', 'amciq*', 'dalbayob*', 'orospu*', 'çındır*',
-        'хуй*', 'хуе*', 'пизд*', 'ебат*', 'ебан*', 'ёб*', 'бляд*', 'блят*', 'сука', 'суки', 'мудак*', 'пидор*', 'пидар*', 'гандон*',
-        'fuck*', 'shit*', 'bitch*', 'cunt*', 'asshole*', 'dick', 'whore*',
-    ];
-
     /** @return list<int> */
     public function amounts(): array
     {
@@ -70,45 +59,6 @@ class GiftCardService
     public function isValidAmount(mixed $amount): bool
     {
         return is_numeric($amount) && in_array((int) $amount, $this->amounts(), true) && (float) $amount == (int) $amount;
-    }
-
-    /** @return list<string> */
-    public function bannedWords(): array
-    {
-        $custom = (string) Setting::valueOf('gift_card_banned_words', '');
-        $words = trim($custom) !== '' ? preg_split('/[\r\n,]+/u', $custom) : self::DEFAULT_BANNED_WORDS;
-
-        return array_values(array_filter(array_map(fn ($w) => $this->fold(trim((string) $w)), $words)));
-    }
-
-    /** Kiçik hərf; İ/I/ı fərqi və əlavə nöqtələr silinir (SİK, SIK, sık — eyni söz) */
-    private function fold(string $text): string
-    {
-        $text = mb_strtolower(str_replace(['İ', 'I'], 'i', $text));
-
-        return str_replace('ı', 'i', preg_replace('/\p{Mn}+/u', '', $text) ?? $text);
-    }
-
-    public function containsBannedWord(?string $text): bool
-    {
-        if ($text === null || trim($text) === '') {
-            return false;
-        }
-        $tokens = preg_split('/[^\p{L}\p{N}]+/u', $this->fold($text), -1, PREG_SPLIT_NO_EMPTY);
-        foreach ($this->bannedWords() as $word) {
-            $prefix = str_ends_with($word, '*');
-            $stem = rtrim($word, '*');
-            if ($stem === '') {
-                continue;
-            }
-            foreach ($tokens as $token) {
-                if ($prefix ? str_starts_with($token, $stem) : $token === $stem) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -128,12 +78,6 @@ class GiftCardService
         }
         if (!in_array($design, self::OFFERED_DESIGNS, true)) {
             $errors['design'] = __('gift_card_design_invalid');
-        }
-        if ($this->containsBannedWord($message)) {
-            $errors['message'] = __('gift_card_message_banned');
-        }
-        if ($this->containsBannedWord($sender)) {
-            $errors['sender_name'] = __('gift_card_message_banned');
         }
         if ($errors) {
             throw ValidationException::withMessages($errors);
