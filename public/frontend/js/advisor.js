@@ -3,6 +3,7 @@
  *  - İlk iki mesaj səhifədədir (#advisorStart). Müştəri cavab yazır və ya hazır cavaba basır →
  *    bütün söhbət POST /advisor-a gedir → AI növbəti sualı + hazır cavabları qaytarır.
  *  - Söhbət bitəndə (AI qərar verir; server ən çox MAX_ANSWERS cavabdan sonra bitirir) — seçilən ətirlərin kartları.
+ *  - Təhqir: server xəbərdarlıq yazır, təkrarda söhbəti dayandırır (stopped) — yazı sahəsi gizlənir, "Yenidən başla" qalır.
  *  - Söhbət localStorage-də saxlanır (7 gün), səhifə yenilənəndə davam edir; nəticə 24 saat (qiymətlər dəyişə bilər).
  */
 (function () {
@@ -68,8 +69,7 @@
         log.replaceChildren();
         state.messages.forEach(bubble);
         renderReplies();
-        const finished = state.done;
-        form.hidden = finished;
+        form.hidden = state.done || state.stopped;
         restartBtn.hidden = answers() < 1;
         if (state.result) showResult(state.result, false);
         else results.hidden = true;
@@ -77,7 +77,7 @@
 
     function renderReplies() {
         repliesBox.replaceChildren();
-        if (state.done || busy) return;
+        if (state.done || state.stopped || busy) return;
         (state.replies || []).forEach((label) => {
             const b = document.createElement('button');
             b.type = 'button';
@@ -120,6 +120,7 @@
             if (data.reply) state.messages.push({ role: 'assistant', text: data.reply });
             state.replies = data.quick_replies || [];
             state.done = !!data.done;
+            state.stopped = !!data.stopped;   // təhqir — söhbət dayandırıldı, yalnız "Yenidən başla"
             if (data.done) state.result = { at: Date.now(), intro: data.intro || '', html: data.html || '', empty: data.empty || '' };
             save();
             setBusy(false);
@@ -136,7 +137,7 @@
 
     function send(text) {
         text = (text || '').trim().slice(0, 300);
-        if (!text || busy || state.done) return;
+        if (!text || busy || state.done || state.stopped) return;
         state.messages.push({ role: 'user', text });
         state.replies = [];
         input.value = '';
@@ -156,5 +157,5 @@
     render();
     // Son cavab AI-yə çatmayıbsa (səhifə bağlanıb) — yenidən soruşulur
     const last = state.messages[state.messages.length - 1];
-    if (!state.done && last && last.role === 'user') ask();
+    if (!state.done && !state.stopped && last && last.role === 'user') ask();
 })();

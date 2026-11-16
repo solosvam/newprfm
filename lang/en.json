@@ -973,5 +973,7 @@
     "advisor_input_placeholder": "Type your answer…",
     "advisor_send": "Send",
     "advisor_restart": "Start over",
-    "advisor_typing": "Typing…"
+    "advisor_typing": "Typing…",
+    "advisor_abuse_warning": "I can only help you choose a fragrance!",
+    "advisor_abuse_stopped": "The chat has been stopped for you!"
 }

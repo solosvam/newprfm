@@ -10,6 +10,7 @@ use Throwable;
 /**
  * Saytdan yeni sifariş → operatorların Telegram qrupuna (TELEGRAM_ORDERS_GROUP_ID): səbətdən sifariş, asan (bir kliklə)
  * sifariş, kredit müraciəti. Yalnız mətn — düymə / link yoxdur. Göndəriş jurnala yazılır (SmsLog, context orders_group).
+ * Həmçinin: ətir seçicidə (AI chat) söhbəti dayandırılandan sonra yenə təhqir yazan müştəri (advisorAbuse, context advisor_abuse).
  */
 class OrderTelegram
 {
@@ -39,6 +40,34 @@ class OrderTelegram
                 report($e);
             }
             $log += ['message' => $log['message'] ?? $order->order_no, 'status' => SmsLog::FAILED, 'error' => Str::limit($e->getMessage(), 250)];
+        }
+
+        return SmsLog::create($log);
+    }
+
+    /** Ətir seçicidə təkrar təhqir: müştəri (ad, telefon, ID) və yazdığı mesaj */
+    public function advisorAbuse(\App\Models\Customer\Customer $customer, string $message, int $count): ?SmsLog
+    {
+        $chat = trim((string) config('services.telegram.orders_group_id'));
+        if ($chat === '' || !$this->api->configured()) {
+            return null;
+        }
+        $name = trim($customer->name.' '.$customer->surname) ?: 'Adsız';
+        $text = implode("\n", [
+            '🚫 <b>Ətir seçicidə təhqir</b> · təhqir sayı: '.$count,
+            '👤 '.e($name).($customer->mobile ? ' · '.e($customer->mobile) : '').' · müştəri #'.$customer->id,
+            '💬 «'.e(Str::limit($message, 300)).'»',
+        ]);
+        $log = ['context' => 'advisor_abuse', 'channel' => 'telegram', 'subject_type' => $customer->getMorphClass(), 'subject_id' => $customer->id,
+            'msisdn' => $chat, 'message' => Str::limit(strip_tags($text), 1000), 'created_at' => now()];
+        try {
+            $sent = $this->api->call('sendMessage', ['chat_id' => $chat, 'text' => $text, 'parse_mode' => 'HTML', 'disable_web_page_preview' => true]);
+            $log += ['status' => SmsLog::SENT, 'provider_id' => (string) ($sent['message_id'] ?? '')];
+        } catch (Throwable $e) {
+            if (!app()->runningUnitTests()) {
+                report($e);
+            }
+            $log += ['status' => SmsLog::FAILED, 'error' => Str::limit($e->getMessage(), 250)];
         }
 
         return SmsLog::create($log);

@@ -934,5 +934,7 @@
     "advisor_input_placeholder": "Cavabınızı yazın…",
     "advisor_send": "Göndər",
     "advisor_restart": "Yenidən başla",
-    "advisor_typing": "Yazır…"
+    "advisor_typing": "Yazır…",
+    "advisor_abuse_warning": "Mən yalnız ətir seçməkdə kömək edirəm!",
+    "advisor_abuse_stopped": "Sizin üçün söhbət dayandırıldı!"
 }

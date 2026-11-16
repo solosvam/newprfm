@@ -42,12 +42,15 @@ class AdvisorTest extends TestCase
         ]);
         DB::table('product_genders')->insert([['product_id' => 1, 'gender_id' => 2], ['product_id' => 2, 'gender_id' => 1], ['product_id' => 3, 'gender_id' => 2]]);
         DB::table('product_variants')->insert([['product_id' => 1, 'price' => 150], ['product_id' => 2, 'price' => 160], ['product_id' => 3, 'price' => 900]]);
+        // Ətir seçici yalnız daxil olmuş müştəriyə
+        $this->actingAs((new \App\Models\Customer\Customer())->forceFill(['id' => 5, 'name' => 'Test', 'surname' => 'Müştəri', 'mobile' => '994501112233']));
     }
 
     /** AI-nin söhbət cavabı (chat sxemi) */
-    private function turn(bool $done, array $profile = []): array
+    private function turn(bool $done, array $profile = [], bool $abusive = false): array
     {
         return [
+            'abusive' => $abusive,
             'reply' => $done ? 'Gözəl, seçirəm.' : 'Hansı mövsüm üçün?',
             'quick_replies' => $done ? [] : ['Yay', 'Bütün il', 'Payız-qış'],
             'done' => $done,
@@ -132,5 +135,31 @@ class AdvisorTest extends TestCase
         $this->app->instance(OpenAiPerfumeService::class, $openAi);
         $this->postJson(route('front.advisor.recommend'), ['messages' => $this->messages(1)])
             ->assertStatus(503)->assertJson(['message' => __('advisor_error')]);
+    }
+
+    public function test_guest_cannot_use_advisor(): void
+    {
+        auth()->logout();
+        $this->postJson(route('front.advisor.recommend'), ['messages' => $this->messages(1)])->assertUnauthorized();
+    }
+
+    public function test_abuse_warns_then_stops_then_notifies_telegram(): void
+    {
+        $openAi = Mockery::mock(OpenAiPerfumeService::class);
+        $openAi->shouldReceive('json')->times(3)->andReturn($this->turn(false, [], true));
+        $this->app->instance(OpenAiPerfumeService::class, $openAi);
+        $telegram = Mockery::mock(\App\Services\Telegram\OrderTelegram::class);
+        $telegram->shouldReceive('advisorAbuse')->once()->withArgs(fn ($customer, $message, $count) => $customer->id === 5 && $message === 'Qadın' && $count === 3);
+        $this->app->instance(\App\Services\Telegram\OrderTelegram::class, $telegram);
+
+        // 1-ci — xəbərdarlıq, söhbət davam edir (hazır cavablar qalır)
+        $this->postJson(route('front.advisor.recommend'), ['messages' => $this->messages(1)])->assertOk()
+            ->assertExactJson(['reply' => __('advisor_abuse_warning'), 'quick_replies' => ['Yay', 'Bütün il', 'Payız-qış'], 'done' => false]);
+        // 2-ci — dayandırılır, Telegram yox
+        $this->postJson(route('front.advisor.recommend'), ['messages' => $this->messages(2)])->assertOk()
+            ->assertJson(['reply' => __('advisor_abuse_stopped'), 'stopped' => true, 'done' => false]);
+        // "Yenidən başla" — yeni söhbət, yenə təhqir: dayandırılır + Telegram
+        $this->postJson(route('front.advisor.recommend'), ['messages' => $this->messages(1)])->assertOk()
+            ->assertJson(['reply' => __('advisor_abuse_stopped'), 'stopped' => true]);
     }
 }

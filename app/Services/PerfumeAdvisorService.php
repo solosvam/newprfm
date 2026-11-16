@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
  *  - recommend(): profilə görə kataloqdan namizədlər (cins, büdcə — kod süzür; ən çox satılanlar öndə),
  *    AI onlardan ən uyğun 6-nı seçib qısa izah yazır. Eyni profil keşdə saxlanılır.
  * Söhbət serverdə saxlanmır: brauzer (localStorage) hər addımda bütün söhbəti göndərir.
+ * Təhqir: AI son mesajın təhqir olduğunu bildirir (abusive) — cavabı AdvisorController verir (xəbərdarlıq / dayandırma / Telegram).
  * Notlar kataloqda azdır — model ətirləri brend+ad ilə öz biliyindən tanıyır.
  */
 class PerfumeAdvisorService
@@ -41,7 +42,7 @@ class PerfumeAdvisorService
      * Söhbətin növbəti addımı.
      *
      * @param  list<array{role: string, text: string}>  $messages
-     * @return array{reply: string, quick_replies: list<string>, done: bool, profile: array}
+     * @return array{reply: string, quick_replies: list<string>, done: bool, abusive: bool, profile: array}
      */
     public function chat(array $messages, string $locale): array
     {
@@ -59,6 +60,9 @@ class PerfumeAdvisorService
             ."Before finishing always learn the budget and ask about scents they like (or a perfume they already love), unless the customer refuses or already said it.\n"
             ."Do not recommend specific perfumes yourself — the search does that. The closing sentence must not promise any time (no \"minutes\").\n"
             ."If the customer writes about something unrelated, gently bring the conversation back to choosing a perfume.\n"
+            ."abusive: true ONLY if the customer's LAST message insults, swears or is obscene (any language, including Azerbaijani, Russian and Turkish slang "
+            ."and misspellings — e.g. siktir, sik-, gijdıllaq/gicdıllaq, qəhbə, oğraş, peysər, blyat, nahuy, amk). Earlier messages do not count. "
+            ."Never apologize to insults and never answer them with \"I understand\".\n"
             ."quick_replies: 2–5 short answer suggestions (max 30 characters each) the customer can tap for YOUR question; empty when done.\n"
             ."profile: everything known so far (for = women|men|any|unknown; budget_min / budget_max in AZN or null; strength = any|light|medium|strong; "
             ."other fields as short English text, families as a list of English scent words; notes = any other useful detail in English).\n"
@@ -75,7 +79,8 @@ class PerfumeAdvisorService
             'reply' => trim((string) ($data['reply'] ?? '')),
             'quick_replies' => $mustFinish ? [] : collect($data['quick_replies'] ?? [])
                 ->map(fn ($r) => mb_substr(trim((string) $r), 0, 40))->filter()->unique()->take(5)->values()->all(),
-            'done' => $mustFinish || (bool) ($data['done'] ?? false),
+            'done' => !($data['abusive'] ?? false) && ($mustFinish || (bool) ($data['done'] ?? false)),
+            'abusive' => (bool) ($data['abusive'] ?? false),
             'profile' => $profile,
         ];
     }
@@ -197,9 +202,10 @@ class PerfumeAdvisorService
     private const CHAT_SCHEMA = [
         'type' => 'object',
         'additionalProperties' => false,
-        'required' => ['reply', 'quick_replies', 'done', 'profile'],
+        'required' => ['reply', 'quick_replies', 'done', 'abusive', 'profile'],
         'properties' => [
             'reply' => ['type' => 'string'],
+            'abusive' => ['type' => 'boolean'],
             'quick_replies' => ['type' => 'array', 'items' => ['type' => 'string']],
             'done' => ['type' => 'boolean'],
             'profile' => [

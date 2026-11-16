@@ -973,5 +973,7 @@
     "advisor_input_placeholder": "Напишите ответ…",
     "advisor_send": "Отправить",
     "advisor_restart": "Начать заново",
-    "advisor_typing": "Печатает…"
+    "advisor_typing": "Печатает…",
+    "advisor_abuse_warning": "Я помогаю только с выбором аромата!",
+    "advisor_abuse_stopped": "Чат для вас остановлен!"
 }
