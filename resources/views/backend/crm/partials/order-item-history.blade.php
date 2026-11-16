@@ -3,7 +3,7 @@
     $staff = $staff ?? collect();
     $who = fn ($id) => $id ? ($staff[$id] ?? 'Əməkdaş #'.$id) : null;
     $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Depo - Telegram', 'manual' => 'Operator - Digər', 'direct' => 'Operator - Birbaşa (sorğusuz)', 'link' => 'Depo - link'];
-    $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul').($item?->variant?->size?->name_az ? ' · '.$item->variant->size->name_az : '');
+    $itemName = fn ($item) => \App\Support\ProductTitle::item($item);
     $events = collect();
     foreach ($requests as $req) {
         $events->push(['at' => $req->created_at, 'item' => null, 'tone' => 'warn', 'icon' => 'send',

@@ -22,7 +22,7 @@ class FeaturedProductsController extends Controller
     public function index(): View
     {
         $featured = FeaturedProduct::query()
-            ->with(['product.brand', 'product.images' => fn ($images) => $images->limit(1),
+            ->with(['product.brand', 'product.type', 'product.genders', 'product.images' => fn ($images) => $images->limit(1),
                 'product.variants' => fn ($variants) => $variants->where('active', 1)->orderBy('price')])
             ->orderBy('position')
             ->get();
@@ -47,7 +47,7 @@ class FeaturedProductsController extends Controller
         $featured = FeaturedProduct::pluck('product_id')->all();
 
         $results = Product::query()
-            ->with(['brand', 'images' => fn ($images) => $images->limit(1),
+            ->with(['brand', 'type', 'genders', 'images' => fn ($images) => $images->limit(1),
                 'variants' => fn ($variants) => $variants->where('active', 1)->orderBy('price')])
             ->whereIn('id', array_diff($ids, $featured))
             ->get()
@@ -57,7 +57,7 @@ class FeaturedProductsController extends Controller
 
         return response()->json(['results' => $results->map(fn (Product $product) => [
             'id' => $product->id,
-            'name' => trim($product->brand?->name.' '.$product->name),
+            'name' => \App\Support\ProductTitle::of($product),
             'price' => $product->variants->first() ? number_format((float) $product->variants->first()->price, 2) : null,
             'image' => ($image = $product->images->first()) ? asset('frontend/uploads/products/'.$image->image) : null,
         ])]);

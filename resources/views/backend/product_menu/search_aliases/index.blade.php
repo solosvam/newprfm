@@ -93,7 +93,7 @@
             <div class="col-12 col-md-6 col-xl-4"><div class="card h-100"><div class="card-body">
                 <h2 class="h5 mb-3">Ən çox kliklənən məhsullar</h2>
                 @forelse($popularProducts as $item)
-                    <div class="d-flex justify-content-between border-bottom py-2 gap-2"><span class="text-truncate">{{ $item->product?->brand?->name }} {{ $item->product?->name ?? 'Silinmiş məhsul' }}</span><span class="badge bg-success">{{ $item->click_count }}</span></div>
+                    <div class="d-flex justify-content-between border-bottom py-2 gap-2"><span class="text-truncate">{{ \App\Support\ProductTitle::of($item->product) }}</span><span class="badge bg-success">{{ $item->click_count }}</span></div>
                 @empty
                     <div class="text-muted">Hələ klik məlumatı yoxdur.</div>
                 @endforelse

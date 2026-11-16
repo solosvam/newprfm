@@ -28,9 +28,6 @@ class OwnProduct extends Model
     /** "Brend Ad · 50 ml" */
     public function label(): string
     {
-        $brand = html_entity_decode((string) $this->product?->brand?->name);
-
-        return trim(($brand !== '' ? $brand.' ' : '').($this->product?->name ?? 'Silinmiş məhsul'))
-            .($this->variant?->size?->name_az ? ' · '.$this->variant->size->name_az : '');
+        return \App\Support\ProductTitle::of($this->product, $this->variant?->size?->name_az);
     }
 }

@@ -10,12 +10,12 @@ class ReviewsController extends Controller
 {
     public function index()
     {
-        $pending = ProductReview::with(['product.brand', 'customer'])
+        $pending = ProductReview::with(['product.brand', 'product.type', 'product.genders', 'customer'])
             ->where('active', false)
             ->latest()
             ->paginate(20, ['*'], 'pending_page');
 
-        $approved = ProductReview::with(['product.brand', 'customer'])
+        $approved = ProductReview::with(['product.brand', 'product.type', 'product.genders', 'customer'])
             ->where('active', true)
             ->latest()
             ->paginate(20, ['*'], 'approved_page');

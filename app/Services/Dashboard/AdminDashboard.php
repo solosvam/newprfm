@@ -191,7 +191,7 @@ class AdminDashboard
     {
         $period = self::period($period);
 
-        return Cache::remember("admin-dashboard:top-products:$period:$limit", self::TTL, function () use ($period, $limit) {
+        return Cache::remember("admin-dashboard:top-products:v2:$period:$limit", self::TTL, function () use ($period, $limit) {
             [$from, $to] = $this->range($period);
             $rows = DB::table('order_items')
                 ->joinSub($this->validOrders()->whereBetween('created_at', [$from, $to])->select('id'), 'o', 'o.id', '=', 'order_items.order_id')
@@ -205,6 +205,7 @@ class AdminDashboard
                 ->orderByDesc('qty')->orderByDesc('total_sum')
                 ->limit($limit)
                 ->get();
+            \App\Support\ProductTitle::fill($rows, 'id');
 
             $images = DB::table('product_images')->whereIn('product_id', $rows->pluck('id'))
                 ->orderBy('sort_order')->orderBy('id')->get(['product_id', 'image'])
@@ -214,6 +215,7 @@ class AdminDashboard
                 'id' => (int) $r->id,
                 'name' => $r->name,
                 'brand' => $r->brand,
+                'title' => $r->title,
                 'image' => $images[$r->id] ?? null,
                 'quantity' => (int) $r->qty,
                 'sum' => round((float) $r->total_sum, 2),
@@ -444,7 +446,7 @@ class AdminDashboard
      */
     public function carts(): array
     {
-        return Cache::remember('admin-dashboard:carts', 60, function () {
+        return Cache::remember('admin-dashboard:carts:v2', 60, function () {
             $items = fn () => DB::table('customer_cart_items')
                 ->join('product_variants', 'product_variants.id', '=', 'customer_cart_items.product_variant_id');
             $totals = $items()->selectRaw('COUNT(DISTINCT customer_cart_items.customer_id) as customers,
@@ -461,9 +463,10 @@ class AdminDashboard
                 ->groupBy('product_variants.id', 'products.id', 'products.name', 'brands.name', 'sizes.name_az', 'product_variants.price')
                 ->selectRaw('products.id, products.name, brands.name as brand, sizes.name_az as size, product_variants.price,
                     SUM(customer_cart_items.quantity) as qty, COUNT(DISTINCT customer_cart_items.customer_id) as customers')
-                ->orderByDesc('customers')->orderByDesc('qty')->limit(5)->get()
-                ->map(fn ($r) => [
-                    'id' => (int) $r->id, 'name' => $r->name, 'brand' => $r->brand, 'size' => $r->size,
+                ->orderByDesc('customers')->orderByDesc('qty')->limit(5)->get();
+            \App\Support\ProductTitle::fill($top, 'id');
+            $top = $top->map(fn ($r) => [
+                    'id' => (int) $r->id, 'name' => $r->name, 'brand' => $r->brand, 'size' => $r->size, 'title' => $r->title,
                     'price' => round((float) $r->price, 2), 'quantity' => (int) $r->qty, 'customers' => (int) $r->customers,
                 ])->all();
 
@@ -536,7 +539,7 @@ class AdminDashboard
                 'count' => $count,
             ], array_keys(self::ACTIVE_STATUSES), self::ACTIVE_STATUSES, [3, 2, 4, 1, 2, 2]),
             'top' => array_map(fn ($p, $i) => [
-                'id' => 0, 'name' => $p[1], 'brand' => $p[0], 'image' => null,
+                'id' => 0, 'name' => $p[1], 'brand' => $p[0], 'title' => $p[0].' '.$p[1], 'image' => null,
                 'quantity' => (int) round($p[2] * $scale / 5), 'sum' => round($p[2] * $p[3] * $scale / 5, 2),
             ], [['Dior', 'Sauvage Eau de Parfum', 42, 285], ['Chanel', 'Bleu de Chanel', 35, 310], ['Creed', 'Aventus', 28, 520],
                 ['Tom Ford', 'Lost Cherry', 21, 465], ['Mancera', 'Cedrat Boise', 17, 226]], [0, 1, 2, 3, 4]),
@@ -561,11 +564,11 @@ class AdminDashboard
                 'warehouses_debt' => 3480.0, 'warehouses' => 4, 'bonus' => 9215.4,
             ],
             'carts' => ['customers' => 37, 'quantity' => 52, 'value' => 14380.0, 'stale' => 21, 'top' => [
-                ['id' => 0, 'name' => 'Aventus', 'brand' => 'Creed', 'size' => '100 ml', 'price' => 520.0, 'quantity' => 6, 'customers' => 6],
-                ['id' => 0, 'name' => 'Sauvage Eau de Parfum', 'brand' => 'Dior', 'size' => '100 ml', 'price' => 285.0, 'quantity' => 6, 'customers' => 5],
-                ['id' => 0, 'name' => 'Lost Cherry', 'brand' => 'Tom Ford', 'size' => '50 ml', 'price' => 465.0, 'quantity' => 4, 'customers' => 4],
-                ['id' => 0, 'name' => 'Baccarat Rouge 540', 'brand' => 'Maison Francis Kurkdjian', 'size' => '70 ml', 'price' => 610.0, 'quantity' => 3, 'customers' => 3],
-                ['id' => 0, 'name' => 'Cedrat Boise', 'brand' => 'Mancera', 'size' => '120 ml', 'price' => 226.0, 'quantity' => 3, 'customers' => 2],
+                ['id' => 0, 'name' => 'Aventus', 'brand' => 'Creed', 'size' => '100 ml', 'title' => 'Creed Aventus 100ml', 'price' => 520.0, 'quantity' => 6, 'customers' => 6],
+                ['id' => 0, 'name' => 'Sauvage Eau de Parfum', 'brand' => 'Dior', 'size' => '100 ml', 'title' => 'Dior Sauvage Eau de Parfum 100ml', 'price' => 285.0, 'quantity' => 6, 'customers' => 5],
+                ['id' => 0, 'name' => 'Lost Cherry', 'brand' => 'Tom Ford', 'size' => '50 ml', 'title' => 'Tom Ford Lost Cherry 50ml', 'price' => 465.0, 'quantity' => 4, 'customers' => 4],
+                ['id' => 0, 'name' => 'Baccarat Rouge 540', 'brand' => 'Maison Francis Kurkdjian', 'size' => '70 ml', 'title' => 'Maison Francis Kurkdjian Baccarat Rouge 540 70ml', 'price' => 610.0, 'quantity' => 3, 'customers' => 3],
+                ['id' => 0, 'name' => 'Cedrat Boise', 'brand' => 'Mancera', 'size' => '120 ml', 'title' => 'Mancera Cedrat Boise 120ml', 'price' => 226.0, 'quantity' => 3, 'customers' => 2],
             ]],
             'attention' => ['warehouse' => 3, 'easy_orders' => 2, 'credit' => 4, 'reviews' => 0, 'refunds' => 1, 'courier' => 0, 'price_alerts' => 14, 'carts' => 21],
         ];

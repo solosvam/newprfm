@@ -88,7 +88,7 @@ final class AdminNotifier
             ? 'var: '.$offer->available_quantity.' ədəd × '.number_format((float) $offer->unit_cost, 2).' ₼'
             : 'yoxdur';
         $this->notify('wh_answer', 'warehouse_offer', $offer->id, self::TYPES['wh_answer'],
-            $this->line($request->order, [$request->warehouse?->name_az, $offer->requestItem->orderItem?->product?->name, $answer]),
+            $this->line($request->order, [$request->warehouse?->name_az, \App\Support\ProductTitle::item($offer->requestItem->orderItem, ''), $answer]),
             $this->orderUrl($request->order));
     }
 
@@ -99,7 +99,7 @@ final class AdminNotifier
         if (!$order) {
             return;
         }
-        $parts = [$allocation->warehouse?->name_az, $allocation->orderItem->product?->name.' × '.$allocation->quantity];
+        $parts = [$allocation->warehouse?->name_az, \App\Support\ProductTitle::item($allocation->orderItem, 'Məhsul').' × '.$allocation->quantity];
         if ($type === 'courier_picked') {
             array_unshift($parts, User::find($actor)?->full_name);
         }

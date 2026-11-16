@@ -37,7 +37,7 @@ class PriceAlertsController extends Controller
                 ->orderByDesc('customers')->orderBy('since')
                 ->paginate(50)->withQueryString();
 
-            $variants = ProductVariant::with(['product.brand', 'product.activeDiscount', 'product.images' => fn ($images) => $images->limit(1), 'size'])
+            $variants = ProductVariant::with(['product.brand', 'product.type', 'product.genders', 'product.activeDiscount', 'product.images' => fn ($images) => $images->limit(1), 'size'])
                 ->whereIn('id', collect($rows->items())->pluck('product_variant_id'))
                 ->get()->keyBy('id');
 
@@ -52,7 +52,7 @@ class PriceAlertsController extends Controller
             ->paginate(30)->withQueryString();
 
         $alerts = $scope(PriceAlert::query())
-            ->with(['variant.product.brand', 'variant.product.activeDiscount', 'variant.size'])
+            ->with(['variant.product.brand', 'variant.product.type', 'variant.product.genders', 'variant.product.activeDiscount', 'variant.size'])
             ->whereIn('customer_id', collect($rows->items())->pluck('id'))
             ->latest()
             ->get()->groupBy('customer_id');

@@ -123,7 +123,7 @@ class OrderProcessSummary
     {
         $status = $order->status?->code;
         $names = fn (string $group) => $order->items->whereIn('id', array_keys(array_filter($items, fn ($i) => $i['group'] === $group)))
-            ->map(fn (OrderItem $item) => $item->product?->name ?? 'Silinmiş məhsul')->implode(', ');
+            ->map(fn (OrderItem $item) => \App\Support\ProductTitle::item($item))->implode(', ');
         $problems = count(array_filter($items, fn ($i) => $i['problem']));
         $smsFailed = count(array_filter($items, fn ($i) => $i['sms_failed']));
         $side = collect([

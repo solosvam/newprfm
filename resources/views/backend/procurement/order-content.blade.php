@@ -15,14 +15,10 @@
     // Mənbə: cavabı kim daxil edib — operator (hansı yolla) və ya depo özü (link ilə).
     // WhatsApp / Telegram artıq seçilmir (ləğv olunub) — adları yalnız köhnə cavabların tarixçəsi üçün qalır
     $sources = ['phone' => 'Operator - Telefon', 'whatsapp' => 'Operator - WhatsApp', 'telegram' => 'Depo - Telegram', 'manual' => 'Operator - Digər', 'direct' => 'Operator - Birbaşa (sorğusuz)', 'link' => 'Depo - link'];
-    $itemName = fn ($item) => ($item?->product?->name ?? 'Silinmiş məhsul');
-    $itemSize = fn ($item) => $item?->variant?->size?->name_az;
-    // Tam ad: brend, ad, ölçü, növ, cins — "Antonio Banderas The Secret Absolu 100 ml Eau De Parfum Kişi üçün"
+    // Məhsulun adı: Brend Model Cins Növ Ölçü — "Narciso Rodriguez Pure Musc For Her L EDP 50ml" (App\Support\ProductTitle)
     $order->loadMissing(['items.product.brand', 'items.product.type', 'items.product.genders', 'items.variant.size']);
-    $productLabel = fn ($product, $size) => $product
-        ? collect([html_entity_decode((string) $product->brand?->name), $product->name, $size, $product->type?->name_az, $product->genders->pluck('name_az')->implode(', ')])->filter()->implode(' ')
-        : 'Silinmiş məhsul';
-    $itemLabel = fn ($item) => $productLabel($item?->product, $itemSize($item));
+    $itemName = fn ($item) => \App\Support\ProductTitle::item($item);
+    $itemLabel = $itemName;
     // order_item_id => [sorğu sətri + onun sorğusu]
     $requestRows = $requests->flatMap(fn ($req) => $req->items->map(fn ($ri) => ['req' => $req, 'ri' => $ri]))->groupBy(fn ($row) => $row['ri']->order_item_id);
 @endphp
@@ -112,7 +108,7 @@
             $alert = $state['problem'] || $state['sms_failed'];
             $cancelledParts = $item->allocations->where('status', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
             $liveParts = $item->allocations->where('status', '!=', \App\Models\Procurement\OrderItemAllocation::CANCELLED);
-            $itemTitle = $itemName($item).($itemSize($item) ? ' · '.$itemSize($item) : '');
+            $itemTitle = $itemName($item);
             // Xalis satış (promo payı çıxılmış) və qazanc — OrderProcessSummary
             $saleUnit = $state['sale_unit'];
             $margin = $state['margin'];
@@ -464,7 +460,7 @@
                         @php $missing = max(0, $item->activeQuantity() - (int) $item->allocations->whereNotIn('status', \App\Models\Procurement\OrderItemAllocation::SUPPLY_INACTIVE)->sum('quantity')); @endphp
                         <label class="form-check">
                             <input class="form-check-input" type="checkbox" name="item_ids[]" value="{{ $item->id }}" @checked($missing > 0)>
-                            <span class="form-check-label">{{ $itemName($item) }}@if($itemSize($item)) · {{ $itemSize($item) }}@endif × {{ $item->activeQuantity() }}
+                            <span class="form-check-label">{{ $itemName($item) }} × {{ $item->activeQuantity() }}
                                 @unless($missing)<span class="text-success small"> · təmin edilib</span>@endunless</span>
                         </label>
                     @endforeach

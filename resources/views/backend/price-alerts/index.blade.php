@@ -6,7 +6,8 @@
     $date = fn ($v) => \Illuminate\Support\Carbon::parse($v)->format('d.m.Y');
     $link = fn (array $params) => route('admin.price-alerts.index', array_filter($params + ['view' => $view === 'customers' ? 'customers' : null, 'notified' => $notified ? 1 : null]));
     $canDiscount = auth('admin')->user()?->can('product.discount');
-    $variantName = fn ($variant) => trim(($variant?->product?->brand?->name ?? '').' '.($variant?->product?->name ?? '—'));
+    // Brend Model Cins Növ Ölçü (App\Support\ProductTitle)
+    $variantName = fn ($variant) => \App\Support\ProductTitle::variant($variant);
 @endphp
 @extends('backend.layout', ['html_tag_data' => $html_tag_data, 'title' => $title])
 
@@ -61,7 +62,6 @@
                             <thead>
                             <tr>
                                 <th class="text-muted text-small text-uppercase">Məhsul</th>
-                                <th class="text-muted text-small text-uppercase">Ölçü</th>
                                 <th class="text-muted text-small text-uppercase text-end">Müştəri</th>
                                 <th class="text-muted text-small text-uppercase text-end">Abunə qiyməti</th>
                                 <th class="text-muted text-small text-uppercase text-end">İndiki qiymət</th>
@@ -82,12 +82,10 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="alert-thumb" @if($image) style="background-image: url('{{ asset('frontend/uploads/products/'.$image->image) }}')" @endif></span>
                                             <div>
-                                                <div class="fw-bold">{{ $product?->name ?? 'Silinmiş məhsul' }}</div>
-                                                <div class="text-muted">{{ $product?->brand?->name }}</div>
+                                                <div class="fw-bold">{{ $variantName($variant) }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-alternate">{{ $variant?->size?->name_az ?? '—' }}</td>
                                     <td class="text-end fw-bold">{{ $row->customers }}</td>
                                     <td class="text-end text-nowrap">
                                         {{ $money($row->min_price) }}@if((float) $row->max_price !== (float) $row->min_price) – {{ $money($row->max_price) }}@endif ₼
@@ -113,7 +111,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="text-center text-muted py-5">{{ $notified ? 'Hələ heç kimə xəbər verilməyib' : 'Endirim gözləyən müştəri yoxdur' }}</td></tr>
+                                <tr><td colspan="6" class="text-center text-muted py-5">{{ $notified ? 'Hələ heç kimə xəbər verilməyib' : 'Endirim gözləyən müştəri yoxdur' }}</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -136,7 +134,7 @@
                             @php $variant = $alert->variant; $current = $variant?->salePrice(); @endphp
                             <div class="d-flex justify-content-between py-1 {{ $loop->first ? 'border-top border-separator-light pt-2' : '' }}">
                                 <div class="text-truncate pe-3">
-                                    {{ $variantName($variant) }}{{ $variant?->size ? ' · '.$variant->size->name_az : '' }}
+                                    {{ $variantName($variant) }}
                                     <span class="text-muted ms-1">{{ $alert->created_at->format('d.m.Y') }}</span>
                                 </div>
                                 <div class="text-nowrap text-alternate">

@@ -24,17 +24,6 @@
         <div class="col-lg-5">
             <div class="card"><div class="card-body">
                 <h5>Məhsullar</h5>
-                @php
-                    // Ətir növü qısa: "Eau De Parfum" → EDP (tanınmırsa — adın özü)
-                    $kindShort = fn (?string $type) => match (true) {
-                        $type === null || $type === '' => null,
-                        (bool) preg_match('/toilette/i', $type) => 'EDT',
-                        (bool) preg_match('/cologne/i', $type) => 'EDC',
-                        (bool) preg_match('/eau\s*de\s*parfum/i', $type) => 'EDP',
-                        (bool) preg_match('/extrait/i', $type) => 'Extrait',
-                        default => $type,
-                    };
-                @endphp
                 @foreach($order->items as $item)
                     @php
                         $product = $item->product;
@@ -51,16 +40,13 @@
                             @endif
                         </a>
                         <div class="flex-grow-1 min-width-0">
-                            @if($product?->brand)<div class="text-muted small">{{ html_entity_decode($product->brand->name) }}</div>@endif
                             <div class="d-flex flex-wrap align-items-center gap-1">
+                                {{-- Brend Model Cins Növ Ölçü (App\Support\ProductTitle) --}}
                                 @if($url)
-                                    <a href="{{ $url }}" target="_blank" rel="noopener" class="fw-bold body-link me-1">{{ $product->name }}</a>
+                                    <a href="{{ $url }}" target="_blank" rel="noopener" class="fw-bold body-link me-1">{{ \App\Support\ProductTitle::item($item) }}</a>
                                 @else
-                                    <span class="fw-bold me-1">{{ $product?->name ?? 'Məhsul' }}</span>
+                                    <span class="fw-bold me-1">{{ \App\Support\ProductTitle::item($item, 'Məhsul') }}</span>
                                 @endif
-                                @foreach($product?->genders ?? [] as $gender)<span class="badge {{ match (mb_strtolower($gender->name_az)) { 'qadın' => 'bg-outline-danger', 'kişi' => 'bg-outline-primary', default => 'bg-outline-muted' } }}">{{ $gender->name_az }}</span>@endforeach
-                                @if($kind = $kindShort($product?->type?->name_az))<span class="badge bg-outline-info">{{ $kind }}</span>@endif
-                                @if($item->variant?->size)<span class="badge bg-outline-muted">{{ $item->variant->size->name_az }}</span>@endif
                                 <span class="text-muted small ms-1">×{{ $item->quantity }}</span>
                             </div>
                         </div>

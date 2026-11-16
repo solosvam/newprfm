@@ -174,7 +174,7 @@ class ProcurementService
             DB::table('order_status_logs')->insert([
                 'order_id' => $order->id, 'status_id' => $order->fresh()->order_status_id, 'user_id' => $actor, 'kind' => 'warehouse_return',
                 'note' => 'Depoya qaytarıldı: '.($allocation->warehouse?->name_az ?? 'depo').' — '
-                    .($allocation->orderItem?->product?->name ?? 'Məhsul').' ×'.$allocation->quantity,
+                    .\App\Support\ProductTitle::item($allocation->orderItem, 'Məhsul').' ×'.$allocation->quantity,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
 

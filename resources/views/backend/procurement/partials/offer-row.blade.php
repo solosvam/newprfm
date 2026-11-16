@@ -3,7 +3,7 @@
     $offer = $row['offer'];
     $canTake = $offer ? min($offer->available_quantity - $row['taken'], $missing) : 0;
     $offerUrl = route('admin.procurement.offers.store', [$order, $row['ri']]);
-    $offerTitle = $itemName($item).($itemSize($item) ? ' · '.$itemSize($item) : '').' — '.$row['req']->warehouse->name_az;
+    $offerTitle = $itemName($item).' — '.$row['req']->warehouse->name_az;
     $requested = (int) $row['ri']->requested_quantity;
     // Cavabın nişanı: 1 ədəd soruşulubsa say yazılmır ("Var"), çox soruşulubsa neçə ədəd olduğu da göstərilir
     $answerBadge = fn ($o) => !$o->available_quantity ? ['bg-outline-danger', 'Yoxdur']

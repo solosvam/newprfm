@@ -38,7 +38,7 @@
                 $left = $back ? -$paid : $cost($a) - $paid;
             @endphp
             <tr>
-                <td>{{ $item->product?->name ?? 'Məhsul' }}<span class="od-sub">{{ $item->variant?->size?->name_az }}</span></td>
+                <td>{{ \App\Support\ProductTitle::item($item) }}</td>
                 <td>{{ $a->warehouse->name_az }}</td>
                 <td class="od-num">{{ $a->quantity }} × {{ number_format((float) $a->unit_cost, 2) }}</td>
                 <td>{{ $a->label() }}@if($a->status === 'returned')<span class="od-sub">depoya qaytarılıb{{ $paid > 0 ? '' : ' — borc yoxdur' }}</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true) && $a->status !== 'cancelled')<span class="od-sub">borc götürüləndə yaranır</span>@endif</td>
@@ -51,11 +51,11 @@
                     @if($back && $left < 0)
                         <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#warehouseRefundModal"
                                 data-allocation="{{ $a->id }}" data-left="{{ number_format(-$left / 100, 2, '.', '') }}"
-                                data-title="{{ $a->warehouse->name_az }} · {{ $item->product?->name }} × {{ $a->quantity }} — geri alınacaq {{ $money(-$left) }}">Geri aldım</button>
+                                data-title="{{ $a->warehouse->name_az }} · {{ \App\Support\ProductTitle::item($item) }} × {{ $a->quantity }} — geri alınacaq {{ $money(-$left) }}">Geri aldım</button>
                     @elseif(!$back && $left > 0)
                         <button type="button" class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#warehousePayModal"
                                 data-allocation="{{ $a->id }}" data-left="{{ number_format($left / 100, 2, '.', '') }}"
-                                data-title="{{ $a->warehouse->name_az }} · {{ $item->product?->name }} × {{ $a->quantity }} — qalıq {{ $money($left) }}">Ödəniş</button>
+                                data-title="{{ $a->warehouse->name_az }} · {{ \App\Support\ProductTitle::item($item) }} × {{ $a->quantity }} — qalıq {{ $money($left) }}">Ödəniş</button>
                     @endif
                 </td>
             </tr>

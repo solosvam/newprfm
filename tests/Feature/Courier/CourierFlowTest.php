@@ -631,7 +631,10 @@ class CourierFlowTest extends TestCase
         $page = $this->get(route('kuryer.order', $order))->assertOk()->getContent();
         $this->assertStringNotContainsString('backend/', $page);
         $this->assertStringContainsString('data-zoom="'.asset('frontend/uploads/products/sauvage.jpg').'"', $page);
-        $this->assertStringContainsString('<div class="product__kind">Eau De Toilette · Kişi üçün</div>', $page); // növ və cins
+        // Məhsulun adı: Model Cins Növ Ölçü (brend yoxdur) — bütün mərhələlərdə "Məhsullar" bölməsində və siyahıdakı kartda
+        $this->assertMatchesRegularExpression('/<div class="product__name">Sauvage M EDT( \d+ml)?/', $page);
+        $this->assertStringContainsString('Məhsullar <span class="muted">', $page);
+        $this->assertMatchesRegularExpression('/<ul class="order__items">\s*<li><span>Sauvage M EDT/', $home);
         $this->assertStringContainsString(route('kuryer.pick', [$order, $order->items()->first()->allocations()->first()->id]), $page);
 
         $this->get(route('kuryer.account'))->assertOk()->assertSee('Haqq-hesab tarixçəsi')->assertSee(route('admin.logout'), false);

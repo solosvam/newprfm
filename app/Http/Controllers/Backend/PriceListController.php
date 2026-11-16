@@ -142,7 +142,7 @@ class PriceListController extends Controller
             ->when($tab === 'matched', fn ($q) => $q->whereNotNull('product_variant_id'))
             ->when($request->filled('q'), fn ($q) => $this->whereName($q, (string) $request->query('q')))
             ->when($request->filled('brand'), fn ($q) => $q->where('brand_raw', $request->query('brand')))
-            ->with(['variant.product.brand', 'variant.size'])
+            ->with(['variant.product.brand', 'variant.product.type', 'variant.product.genders', 'variant.size'])
             ->orderBy('row_no')->paginate(50)->withQueryString();
 
         // Bağlanmamış sətirlərin neçə namizədi var (pəncərəni açmadan görünsün): [hamısı, eyni ad və ölçü, eyni ölçü]

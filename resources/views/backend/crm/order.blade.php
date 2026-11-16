@@ -121,7 +121,7 @@
             @foreach($returningParts as ['item' => $item, 'a' => $part])
                 <div class="od-notice is-warning">
                     <span class="badge bg-warning">Depoya qaytarılır</span>
-                    <span>{{ $item->product?->name }} ×{{ $part->quantity }} → {{ $part->warehouse?->name_az }} (kuryer "Qaytardım" seçəndə bağlanır)</span>
+                    <span>{{ \App\Support\ProductTitle::item($item) }} ×{{ $part->quantity }} → {{ $part->warehouse?->name_az }} (kuryer "Qaytardım" seçəndə bağlanır)</span>
                 </div>
             @endforeach
             @foreach($notices as $log)
@@ -214,7 +214,7 @@
                     <div class="card"><div class="card-body py-3">
                         @foreach($cancelledItems as $item)
                             <div class="{{ $loop->last ? '' : 'border-bottom pb-2 mb-2' }}">
-                                <span class="text-muted text-decoration-line-through">{{ collect([$item->product?->brand?->name, $item->product?->name ?? 'Silinmiş məhsul', $item->variant?->size?->name_az])->filter()->implode(' · ') }}</span>
+                                <span class="text-muted text-decoration-line-through">{{ \App\Support\ProductTitle::item($item) }}</span>
                                 @foreach($cancellations[$item->id] ?? [] as $c)
                                     <div class="text-danger text-small">{{ $c->quantity }} ədəd ləğv edildi · {{ $c->reasonLabel() }}@if($c->note) — {{ $c->note }}@endif · {{ $c->created_at->format('d.m H:i') }}@if($c->user) · {{ $c->user->full_name }}@endif</div>
                                 @endforeach
@@ -358,7 +358,7 @@
                             </dd></div>
                             <div><dt>Qablaşdırma</dt><dd>@if($order->gift_wrap)<span class="badge bg-outline-primary">Hədiyyəlik</span>
                                 @php $wrappedItems = $order->items->filter(fn ($i) => $i->gift_wrap && $i->activeQuantity() > 0); @endphp
-                                @if($wrappedItems->isNotEmpty())<span class="d-block small text-muted">{{ $wrappedItems->map(fn ($i) => ($i->product?->name ?? 'Məhsul').' × '.$i->activeQuantity())->implode(', ') }}</span>@endif
+                                @if($wrappedItems->isNotEmpty())<span class="d-block small text-muted">{{ $wrappedItems->map(fn ($i) => \App\Support\ProductTitle::item($i).' × '.$i->activeQuantity())->implode(', ') }}</span>@endif
                             @else Standart @endif</dd></div>
                             <div><dt>Kuryer</dt><dd>
                                 @if($order->courier)

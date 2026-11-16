@@ -18,9 +18,10 @@
     $phone = $order->customer?->mobile;
     $phone2 = $order->customer?->mobile_2; // ehtiyat nömrə
     $cancelled = $code === 'cancelled';
-    $variant = fn ($item) => collect([$item->product?->brand?->name, $item->variant?->size?->name_az])->filter()->implode(' · ');
-    // Ətrin növü (Eau De Parfum / Eau De Toilette...) və cinsi (Kişi / Qadın üçün, Unisex) — kuryer düzgün malı götürsün
-    $kind = fn ($item) => collect([$item->product?->type?->name_az, $item->product?->genders->pluck('name_az')->implode(', ')])->filter()->implode(' · ');
+    // Məhsulun adı: Brend Model Cins Növ Ölçü — "Narciso Rodriguez Pure Musc For Her L EDP 50ml" (App\Support\ProductTitle)
+    $title = fn ($item) => \App\Support\ProductTitle::item($item);
+    // Sifarişdəki məhsullar — bütün mərhələlərdə (toplama, yol, təhvil) görünür; ləğv olunan hissə sayılmır
+    $orderItems = $order->items->filter(fn ($i) => $i->activeQuantity() > 0);
 @endphp
 @extends('courier-app.layout', ['tab' => 'orders'])
 @section('title', $order->order_no)
@@ -46,6 +47,21 @@
                 <li class="{{ $reached !== false && $loop->index <= $reached ? 'is-done' : '' }} {{ $stepCode === $code ? 'is-current' : '' }}">{{ $label }}</li>
             @endforeach
         </ol>
+    @endif
+
+    @if($orderItems->isNotEmpty())
+        <h2 class="section">Məhsullar <span class="muted">· {{ $orderItems->sum(fn ($i) => $i->activeQuantity()) }} ədəd</span></h2>
+        <div class="card">
+            @foreach($orderItems as $item)
+                <div class="product {{ $loop->last ? '' : 'product--sep' }}">
+                    @include('courier-app._thumb', ['product' => $item->product])
+                    <div class="product__text">
+                        <div class="product__name">{{ $title($item) }}@if($item->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
+                    </div>
+                    <div class="product__qty">× {{ $item->activeQuantity() }}</div>
+                </div>
+            @endforeach
+        </div>
     @endif
 
     {{-- 1. Depolardan götürmə — yola çıxandan sonra gizlənir --}}
@@ -81,9 +97,7 @@
                         <div class="product">
                             @include('courier-app._thumb', ['product' => $item->product])
                             <div class="product__text">
-                                <div class="product__name">{{ $item->product?->name }}@if($item->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
-                                <div class="muted">{{ $variant($item) }}</div>
-                                @if($k = $kind($item))<div class="product__kind">{{ $k }}</div>@endif
+                                <div class="product__name">{{ $title($item) }}@if($item->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
                             </div>
                             <div class="product__qty">× {{ $part->quantity }}</div>
                         </div>
@@ -166,9 +180,7 @@
                         <div class="product">
                             @include('courier-app._thumb', ['product' => $item->product])
                             <div class="product__text">
-                                <div class="product__name">{{ $item->product?->name }}@if($item->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
-                                <div class="muted">{{ $variant($item) }}</div>
-                                @if($k = $kind($item))<div class="product__kind">{{ $k }}</div>@endif
+                                <div class="product__name">{{ $title($item) }}@if($item->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
                             </div>
                             <div class="product__qty">× {{ $part->quantity }}</div>
                         </div>
@@ -192,7 +204,7 @@
             @php $wrapped = $order->items->filter(fn ($i) => $i->gift_wrap && $i->activeQuantity() > 0); @endphp
             <div class="note note--info">@include('courier-app._icon', ['name' => 'gift']) <span><b>Hədiyyəlik qablaşdırma:</b>
                 @if($wrapped->isNotEmpty())
-                    {{ $wrapped->map(fn ($i) => ($i->product?->name ?? 'Məhsul').' × '.$i->activeQuantity())->implode(', ') }} — bükün və loqolu çantaya qoyun.
+                    {{ $wrapped->map(fn ($i) => $title($i).' × '.$i->activeQuantity())->implode(', ') }} — bükün və loqolu çantaya qoyun.
                 @else
                     məhsulları bükün və loqolu çantaya qoyun.
                 @endif
@@ -285,9 +297,8 @@
                                     <div class="product">
                                         @include('courier-app._thumb', ['product' => $ri->product])
                                         <div class="product__text">
-                                            <div class="product__name">{{ $ri->product?->name }}@if($ri->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
-                                            <div class="muted">{{ $variant($ri) }} · {{ number_format((float) $ri->unit_price, 2) }} AZN</div>
-                                            @if($k = $kind($ri))<div class="product__kind">{{ $k }}</div>@endif
+                                            <div class="product__name">{{ $title($ri) }}@if($ri->gift_wrap) <span class="badge badge--outline">Hədiyyəlik</span>@endif</div>
+                                            <div class="muted">{{ number_format((float) $ri->unit_price, 2) }} AZN</div>
                                         </div>
                                     </div>
                                     <select name="quantity" class="field" aria-label="Neçə ədəd götürmədi">

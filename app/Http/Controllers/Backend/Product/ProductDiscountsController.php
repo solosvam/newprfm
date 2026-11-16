@@ -23,7 +23,7 @@ class ProductDiscountsController extends Controller
         $status = in_array($request->query('status'), ['active', 'scheduled', 'ended'], true) ? $request->query('status') : 'active';
 
         $discounts = ProductDiscount::query()
-            ->with(['product.brand', 'product.images' => fn ($images) => $images->limit(1),
+            ->with(['product.brand', 'product.type', 'product.genders', 'product.images' => fn ($images) => $images->limit(1),
                 'product.variants' => fn ($variants) => $variants->where('active', 1)->orderBy('price')])
             ->when($status === 'active', fn ($q) => $q->active()->orderBy('ends_at'))
             ->when($status === 'scheduled', fn ($q) => $q->where('starts_at', '>', now())->orderBy('starts_at'))

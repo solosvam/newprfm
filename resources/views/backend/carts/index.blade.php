@@ -47,7 +47,6 @@
                             <thead>
                             <tr>
                                 <th class="text-muted text-small text-uppercase">Məhsul</th>
-                                <th class="text-muted text-small text-uppercase">Ölçü</th>
                                 <th class="text-muted text-small text-uppercase text-end">Qiymət</th>
                                 <th class="text-muted text-small text-uppercase text-end">Müştəri</th>
                                 <th class="text-muted text-small text-uppercase text-end">Ədəd</th>
@@ -59,20 +58,18 @@
                                 <tr>
                                     <td>
                                         @if($canProducts)
-                                            <a href="{{ route('admin.product.edit', $row->product_id) }}" class="body-link">{{ $row->name }}</a>
+                                            <a href="{{ route('admin.product.edit', $row->product_id) }}" class="body-link">{{ $row->title }}</a>
                                         @else
-                                            {{ $row->name }}
+                                            {{ $row->title }}
                                         @endif
-                                        <div class="text-small text-muted">{{ $row->brand }}</div>
                                     </td>
-                                    <td class="text-alternate">{{ $row->size }}</td>
                                     <td class="text-end text-nowrap">{{ $money($row->price) }} ₼</td>
                                     <td class="text-end fw-bold">{{ $row->customers }}</td>
                                     <td class="text-end">{{ $row->qty }}</td>
                                     <td class="text-end text-alternate text-nowrap">{{ $days($row->since) }} gün əvvəl</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="text-center text-muted py-5">Səbətlərdə məhsul yoxdur</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-5">Səbətlərdə məhsul yoxdur</td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -104,7 +101,7 @@
                         @foreach($lines[$customer->id] ?? [] as $line)
                             <div class="d-flex justify-content-between text-small py-1 {{ $loop->first ? 'border-top border-separator-light pt-2' : '' }}">
                                 <div class="text-truncate pe-3">
-                                    {{ $line->brand }} — {{ $line->name }}{{ $line->size ? ' · '.$line->size : '' }}
+                                    {{ $line->title }}
                                     <span class="text-muted ms-1">{{ \Illuminate\Support\Carbon::parse($line->created_at)->format('d.m.Y') }}</span>
                                 </div>
                                 <div class="text-nowrap text-alternate">{{ $line->quantity }} × {{ $money($line->price) }} ₼</div>

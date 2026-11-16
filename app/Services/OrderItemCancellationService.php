@@ -434,7 +434,7 @@ class OrderItemCancellationService
             ]);
         }
 
-        $productName = ($item->product?->name ?? 'Məhsul').' ×'.$quantity;
+        $productName = ($item->product?->name ?? 'Məhsul').' ×'.$quantity; // müştərinin bonus tarixçəsində (saytda) görünür — sayt adı
 
         // Qazanılmış bonusun fərqi geri alınır
         if ($result['bonus'] > 0 && $order->customer) {

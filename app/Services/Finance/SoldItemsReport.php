@@ -116,26 +116,9 @@ class SoldItemsReport
         ];
     }
 
-    /** Mal: brend, model, ətir növü (EDP / EDT...), cinsi, həcmi */
+    /** Mal: Brend Model Cins Növ Ölçü (App\Support\ProductTitle) */
     public static function title(OrderItem $item): string
     {
-        $product = $item->product;
-        $type = $product?->type?->name_az;
-        $kind = match (true) {
-            $type === null || $type === '' => null,
-            (bool) preg_match('/toilette/i', $type) => 'EDT',
-            (bool) preg_match('/cologne/i', $type) => 'EDC',
-            (bool) preg_match('/eau\s*de\s*parfum/i', $type) => 'EDP',
-            (bool) preg_match('/extrait/i', $type) => 'Extrait',
-            default => $type,
-        };
-
-        return collect([
-            $product?->brand?->name,
-            $product?->name ?? 'Silinmiş məhsul',
-            $kind,
-            $product?->genders?->pluck('name_az')->implode(' / ') ?: null,
-            $item->variant?->size?->name_az,
-        ])->filter()->implode(' · ');
+        return \App\Support\ProductTitle::item($item);
     }
 }

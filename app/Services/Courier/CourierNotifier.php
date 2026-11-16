@@ -44,7 +44,7 @@ class CourierNotifier
     {
         return $this->notify($courier, 'item_cancelled',
             'Sifarişdən məhsul ləğv edildi: '.$order->order_no,
-            ($item->product?->name ?? 'Məhsul').' ×'.$cancellation->quantity.' · yeni məbləğ '.number_format((float) $order->total, 2).' AZN',
+            \App\Support\ProductTitle::item($item, 'Məhsul').' ×'.$cancellation->quantity.' · yeni məbləğ '.number_format((float) $order->total, 2).' AZN',
             $order);
     }
 

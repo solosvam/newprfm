@@ -91,7 +91,7 @@
                         <div class="courier-part__name">{{ $rows->first()['a']->warehouse?->name_az ?? 'Depo' }}</div>
                         @foreach($rows as $row)
                             <div class="courier-part__info">
-                                <span>{{ $row['item']->product?->name ?? 'Məhsul' }} × {{ $row['a']->quantity }}</span>
+                                <span>{{ \App\Support\ProductTitle::item($row['item']) }} × {{ $row['a']->quantity }}</span>
                                 <span class="{{ $partClass[$row['a']->status] ?? 'text-muted' }}">{{ $row['a']->label() }}</span>
                             </div>
                         @endforeach

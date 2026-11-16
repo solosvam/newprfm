@@ -14,7 +14,7 @@
                         <td>{{ $order->order_no }}</td>
                         <td>{{ $order->created_at?->format('d.m.Y H:i') }}</td>
                         <td>{{ $order->guest_mobile }}</td>
-                        <td>@foreach($order->items as $item){{ $item->product?->name ?? 'Məhsul' }} ×{{ $item->quantity }}@if(!$loop->last), @endif @endforeach</td>
+                        <td>@foreach($order->items as $item){{ \App\Support\ProductTitle::item($item, 'Məhsul') }} ×{{ $item->quantity }}@if(!$loop->last), @endif @endforeach</td>
                         <td>{{ number_format((float)$order->total, 2) }} ₼</td>
                         <td><a class="btn btn-primary btn-sm" href="{{ route('admin.easy-orders.show', $order) }}">Əlaqə saxla / Tamamla</a></td>
                     </tr>

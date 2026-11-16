@@ -27,7 +27,7 @@
         <div class="border rounded">
             @foreach($order->items as $item)
                 <div class="d-flex justify-content-between gap-3 p-2 border-bottom">
-                    <span>{{ $item->product?->name ?? 'Silinmiş məhsul' }} ×{{ $item->quantity }}</span>
+                    <span>{{ \App\Support\ProductTitle::item($item) }} ×{{ $item->quantity }}</span>
                     <span class="text-nowrap">{{ number_format((float) $item->total, 2) }} ₼</span>
                 </div>
             @endforeach

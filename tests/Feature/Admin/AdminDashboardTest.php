@@ -36,6 +36,8 @@ class AdminDashboardTest extends TestCase
         Schema::create('order_items', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('order_id'), $t->unsignedBigInteger('product_id')->nullable(), $t->integer('quantity')->default(1), $t->integer('cancelled_quantity')->default(0), $t->decimal('total', 12, 2)->default(0)]);
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->unsignedBigInteger('brand_id')->nullable()]);
+        Schema::create('genders', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
         Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('product_id'), $t->unsignedBigInteger('size_id')->nullable(), $t->decimal('price', 12, 2)]);
         Schema::create('customer_cart_items', fn (Blueprint $t) => [$t->id(), $t->integer('customer_id'), $t->unsignedBigInteger('product_variant_id'), $t->unsignedInteger('quantity'), $t->timestamps()]);

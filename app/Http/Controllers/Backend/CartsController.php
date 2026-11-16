@@ -35,6 +35,7 @@ class CartsController extends Controller
                     MIN(customer_cart_items.created_at) as since')
                 ->orderByDesc('customers')->orderByDesc('qty')
                 ->paginate(50)->withQueryString();
+            \App\Support\ProductTitle::fill($rows->items());
 
             return view('backend.carts.index', compact('view', 'stale', 'sort', 'rows'));
         }
@@ -57,7 +58,9 @@ class CartsController extends Controller
             ->select('customer_cart_items.customer_id', 'customer_cart_items.quantity', 'customer_cart_items.created_at',
                 'products.id as product_id', 'products.name', 'brands.name as brand', 'sizes.name_az as size', 'product_variants.price')
             ->orderBy('customer_cart_items.created_at')
-            ->get()->groupBy('customer_id');
+            ->get();
+        \App\Support\ProductTitle::fill($lines);
+        $lines = $lines->groupBy('customer_id');
 
         return view('backend.carts.index', ['view' => $view, 'stale' => $stale, 'sort' => $sort, 'rows' => $customers, 'lines' => $lines]);
     }

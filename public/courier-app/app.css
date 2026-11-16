@@ -342,6 +342,11 @@ textarea.field { min-height: 80px; resize: vertical; }
 .product__text { flex: 1; min-width: 0; }
 .product__name { font-weight: 650; overflow-wrap: anywhere; }
 .product__kind { margin-top: 2px; color: var(--brand-2); font-size: 13px; font-weight: 600; }
+.product--sep { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+/* Sifariş kartında məhsulların siyahısı */
+.order__items { margin: 6px 0 0; padding: 0; list-style: none; font-size: 14px; }
+.order__items li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.order__items b { white-space: nowrap; }
 .product__qty { font-size: 18px; font-weight: 750; white-space: nowrap; }
 
 /* Məhsulun şəkli: kiçik, basanda tam ekranda (app.js) */

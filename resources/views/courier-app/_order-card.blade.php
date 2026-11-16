@@ -18,6 +18,12 @@
     </div>
     <div class="order__who">{{ trim($order->customer?->name.' '.$order->customer?->surname) }}</div>
     <div class="order__where">{{ $order->address?->shortLine() }}@if($order->meeting_place) · <b>{{ $order->meeting_place }}</b>@endif</div>
+    {{-- Məhsullar: Brend Model Cins Növ Ölçü × say (ləğv olunan hissə sayılmır) --}}
+    <ul class="order__items">
+        @foreach($order->items->filter(fn ($i) => $i->activeQuantity() > 0) as $item)
+            <li><span>{{ \App\Support\ProductTitle::item($item) }}</span><b>× {{ $item->activeQuantity() }}</b></li>
+        @endforeach
+    </ul>
     <div class="order__meta">
         <span>Götürülüb: <b>{{ $picked }} / {{ $need }}</b></span>
         @if($collect > 0)<span>Alınacaq: <b>{{ number_format($collect, 2) }} AZN</b></span>@else<span class="ok">Ödənilib</span>@endif

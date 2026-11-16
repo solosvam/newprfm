@@ -48,6 +48,9 @@ class OrderItemCancellationTest extends TestCase
             $t->boolean('gift_wrap')->default(false); $t->decimal('gift_wrap_fee', 10, 2)->default(0); $t->timestamps();
         });
         Schema::create('products', function (Blueprint $t) { $t->id(); $t->string('name'); });
+        // Məhsulun adı (App\Support\ProductTitle) cinsi oxuyur
+        Schema::create('genders', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
+        Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
         Schema::create('payments', function (Blueprint $t) {
             $t->id(); $t->integer('customer_id'); $t->unsignedBigInteger('order_id'); $t->string('provider');
             $t->string('provider_order_id')->nullable(); $t->decimal('amount', 12, 2); $t->string('status'); $t->timestamps();
@@ -357,8 +360,6 @@ class OrderItemCancellationTest extends TestCase
         Schema::table('products', fn (Blueprint $t) => [$t->integer('brand_id')->nullable(), $t->integer('type_id')->nullable()]);
         Schema::create('brands', fn (Blueprint $t) => [$t->id(), $t->string('name')]);
         Schema::create('types', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
-        Schema::create('genders', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
-        Schema::create('product_genders', fn (Blueprint $t) => [$t->integer('product_id'), $t->integer('gender_id')]);
         Schema::create('product_variants', fn (Blueprint $t) => [$t->id(), $t->integer('size_id')->nullable()]);
         Schema::create('sizes', fn (Blueprint $t) => [$t->id(), $t->string('name_az')]);
         Schema::create('credit_applications', fn (Blueprint $t) => [$t->id(), $t->integer('order_id'), $t->decimal('total', 12, 2), $t->decimal('bank_fee_rate', 5, 2)->nullable(), $t->timestamps()]);
@@ -382,7 +383,7 @@ class OrderItemCancellationTest extends TestCase
         $this->assertSame([150.0, 100.0], $rows->pluck('price')->all());
         $this->assertSame([80.0, 80.0], $rows->pluck('cost')->all());
         $this->assertSame('Depo A', $rows[0]['warehouse']->name_az);
-        $this->assertSame('Dior · '.DB::table('products')->where('id', 1)->value('name').' · EDT · Kişi', \App\Services\Finance\SoldItemsReport::title($rows[0]['item']));
+        $this->assertSame('Dior '.DB::table('products')->where('id', 1)->value('name').' M EDT', \App\Services\Finance\SoldItemsReport::title($rows[0]['item']));
         $this->assertSame(['count' => 2, 'sales' => 250.0, 'cost' => 160.0, 'profit' => 90.0, 'unknown' => 0], $report->totals($rows));
         $this->assertCount(0, $report->rows(today()->subDay(), today()->subDay()));
 

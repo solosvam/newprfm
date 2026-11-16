@@ -50,7 +50,7 @@ class SearchAliasController extends Controller
         $popularProducts = ProductSearchClick::query()
             ->where('clicked_at', '>=', $from)
             ->select('product_id', DB::raw('COUNT(*) as click_count'))
-            ->with('product.brand')
+            ->with(['product.brand', 'product.type', 'product.genders'])
             ->groupBy('product_id')
             ->orderByDesc('click_count')
             ->limit(8)

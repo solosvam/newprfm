@@ -71,8 +71,7 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="discount-thumb" @if($image($product)) style="background-image: url('{{ $image($product) }}')" @endif></span>
                                         <div>
-                                            <a href="{{ route('admin.product.edit', $discount->product_id) }}#product-discount" class="body-link fw-bold">{{ $product?->name }}</a>
-                                            <div class="text-muted">{{ $product?->brand?->name }}</div>
+                                            <a href="{{ route('admin.product.edit', $discount->product_id) }}#product-discount" class="body-link fw-bold">{{ \App\Support\ProductTitle::of($product) }}</a>
                                         </div>
                                     </div>
                                 </td>

@@ -132,7 +132,7 @@ class CourierTeamController extends Controller
             'history' => $historyPage,
             'historyTotals' => ['in' => $history->where('delta', '>', 0)->sum('delta'), 'out' => -$history->where('delta', '<', 0)->sum('delta')],
             'kinds' => $kinds,
-            'active' => $this->activeOrders($courier)->with(['status', 'customer', 'address', 'items.product', 'items.allocations.warehouse'])->orderBy('id')->get(),
+            'active' => $this->activeOrders($courier)->with(['status', 'customer', 'address', ...\App\Support\ProductTitle::itemRelations('items.'), 'items.allocations.warehouse'])->orderBy('id')->get(),
             'archive' => (clone $archive)->with(['status', 'customer'])->orderByDesc('updated_at')->orderByDesc('id')->paginate(20)->withQueryString()->fragment('archive'),
             'archiveTotals' => ['count' => (clone $archive)->count(), 'sum' => (float) (clone $archive)->sum('total')],
             'archiveStatuses' => $archiveStatuses,

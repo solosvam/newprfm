@@ -27,7 +27,7 @@ class CourierAppController extends Controller
     public function home(FinanceService $finance, OrderStatusService $statuses): View
     {
         $user = auth('admin')->user();
-        $orders = Order::with(['status', 'address', 'customer', 'items.allocations', 'items.product'])
+        $orders = Order::with(['status', 'address', 'customer', 'items.allocations', ...\App\Support\ProductTitle::itemRelations('items.')])
             ->where('courier_id', $user->id)
             ->where(fn ($q) => $q->whereHas('status', fn ($s) => $s->whereIn('code', ['courier_assigned', 'sent']))
                 // təhvil verilib, amma qapıda imtina edilən məhsul hələ depoya qaytarılmayıb

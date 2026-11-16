@@ -264,11 +264,11 @@
                     <div class="d-flex align-items-center justify-content-between py-2 {{ $loop->last ? '' : 'border-bottom border-separator-light' }}">
                         <div class="min-w-0 pe-3">
                             @if($item['id'] && $user?->can('products.menu'))
-                                <a href="{{ route('admin.product.edit', $item['id']) }}" class="body-link d-block text-truncate">{{ $item['name'] }}</a>
+                                <a href="{{ route('admin.product.edit', $item['id']) }}" class="body-link d-block text-truncate">{{ $item['title'] }}</a>
                             @else
-                                <div class="text-truncate">{{ $item['name'] }}</div>
+                                <div class="text-truncate">{{ $item['title'] }}</div>
                             @endif
-                            <div class="text-muted dash-label text-truncate">{{ $item['brand'] }}{{ $item['size'] ? ' · '.$item['size'] : '' }} · {{ $money($item['price'], 2) }} ₼</div>
+                            <div class="text-muted dash-label text-truncate">{{ $money($item['price'], 2) }} ₼</div>
                         </div>
                         <div class="text-end flex-shrink-0">
                             <div class="fw-bold text-primary text-nowrap">{{ $item['customers'] }} müştəri</div>

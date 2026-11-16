@@ -191,12 +191,11 @@
                             <span class="stat-thumb" @if($product['image']) style="background-image: url('{{ asset('frontend/uploads/products/'.$product['image']) }}')" @endif></span>
                             <div class="min-w-0 flex-grow-1">
                                 @if($product['id'] && $canProducts)
-                                    <a href="{{ route('admin.product.edit', $product['id']) }}" class="body-link d-block text-truncate fw-bold">{{ $product['name'] }}</a>
+                                    <a href="{{ route('admin.product.edit', $product['id']) }}" class="body-link d-block text-truncate fw-bold">{{ $product['title'] }}</a>
                                 @else
-                                    <div class="text-truncate fw-bold">{{ $product['name'] }}</div>
+                                    <div class="text-truncate fw-bold">{{ $product['title'] }}</div>
                                 @endif
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="text-muted dash-label text-truncate">{{ $product['brand'] }}</span>
                                     <div class="progress dash-progress flex-grow-1 d-none d-sm-flex" style="max-width: 160px;">
                                         <div class="progress-bar bg-primary" style="width: {{ round($product['quantity'] / $topMax * 100) }}%"></div>
                                     </div>

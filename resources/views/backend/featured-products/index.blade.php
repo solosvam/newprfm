@@ -176,7 +176,7 @@
                                         <span class="featured-item__pos" data-pos>{{ $loop->iteration }}</span>
                                         <span class="featured-thumb" @if($image($product)) style="background-image: url('{{ $image($product) }}')" @endif></span>
                                         <div class="featured-item__info">
-                                            <div class="fw-bold text-truncate">{{ $product?->brand?->name }} {{ $product?->name }}</div>
+                                            <div class="fw-bold text-truncate">{{ \App\Support\ProductTitle::of($product) }}</div>
                                             <div class="text-muted">
                                                 @if($product?->variants->isNotEmpty())
                                                     {{ number_format((float) $product->variants->first()->price, 2) }} ₼-dən

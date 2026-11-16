@@ -42,9 +42,8 @@
                                         <td>
                                             @if($review->product)
                                                 <a href="{{ route('admin.product.edit', $review->product->id) }}">
-                                                    {{ $review->product->name }}
+                                                    {{ \App\Support\ProductTitle::of($review->product) }}
                                                 </a>
-                                                <div class="text-muted">{{ $review->product->brand?->name }}</div>
                                             @else
                                                 —
                                             @endif

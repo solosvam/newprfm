@@ -130,10 +130,10 @@ class OrderStatusService
             return 'Bu mərhələdə kuryer dəyişdirilmir.';
         }
         // Hansı məhsulda nə qədər depoya seçilməyib
-        $order->loadMissing('items.product');
+        $order->loadMissing(\App\Support\ProductTitle::itemRelations('items.'));
         $missing = $order->items->map(function ($item) {
             $left = $item->activeQuantity() - (int) $item->allocations->where('status', '!=', OrderItemAllocation::CANCELLED)->sum('quantity');
-            return $left > 0 ? ($item->product?->name ?? 'Məhsul').': '.$left.' ədəd' : null;
+            return $left > 0 ? \App\Support\ProductTitle::item($item, 'Məhsul').': '.$left.' ədəd' : null;
         })->filter();
 
         return 'Kuryer bütün məhsullar depolara seçiləndən sonra təyin olunur'
@@ -196,13 +196,13 @@ class OrderStatusService
     /** "Çatdırılmaya başladım"a mane olan səbəb: bütün miqdar götürülməlidir, problem olmamalıdır */
     public function deliveryBlock(Order $order): ?string
     {
-        $order->loadMissing(['status', 'items.allocations', 'items.product']);
+        $order->loadMissing(['status', 'items.allocations', ...\App\Support\ProductTitle::itemRelations('items.')]);
         if ($order->status?->code !== 'courier_assigned') {
             return null; // artıq yoldadır və ya hələ kuryer mərhələsi deyil
         }
         foreach ($order->items as $item) {
             $parts = $item->allocations->where('status', '!=', OrderItemAllocation::CANCELLED);
-            $name = $item->product?->name ?? 'Məhsul';
+            $name = \App\Support\ProductTitle::item($item, 'Məhsul');
             if ($parts->contains('status', OrderItemAllocation::PROBLEM)) {
                 return $name.': problem həll olunmayıb.';
             }

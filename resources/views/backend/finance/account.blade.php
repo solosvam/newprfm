@@ -132,7 +132,7 @@
                         @php $order = $a->orderItem?->order; $left = $cost - $paid; @endphp
                         <tr>
                             <td>@if($order)<a href="{{ route('admin.crm.order', [$order->customer_id, $order->id]) }}#settlements">{{ $order->order_no }}</a>@else — @endif</td>
-                            <td>{{ $a->orderItem?->product?->name }}<span class="d-block small text-muted">{{ $a->orderItem?->variant?->size?->name_az }}</span></td>
+                            <td>{{ \App\Support\ProductTitle::item($a->orderItem) }}</td>
                             <td class="text-nowrap">{{ $a->quantity }} × {{ number_format((float) $a->unit_cost, 2) }}</td>
                             <td>{{ $a->label() }}@if($a->status === 'returned')<span class="d-block small text-muted">depoya qaytarılıb — borc yoxdur</span>@elseif(!in_array($a->status, \App\Models\Procurement\OrderItemAllocation::DEBT_STATUSES, true))<span class="d-block small text-muted">borc götürüləndə yaranır</span>@endif</td>
                             <td class="text-nowrap">{{ $money($cost) }}</td>
@@ -141,7 +141,7 @@
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#warehousePayModal"
                                         data-allocation="{{ $a->id }}" data-left="{{ number_format($left / 100, 2, '.', '') }}"
-                                        data-title="{{ $order?->order_no }} · {{ $a->orderItem?->product?->name }} × {{ $a->quantity }} — qalıq {{ $money($left) }}">Ödə</button>
+                                        data-title="{{ $order?->order_no }} · {{ \App\Support\ProductTitle::item($a->orderItem) }} × {{ $a->quantity }} — qalıq {{ $money($left) }}">Ödə</button>
                             </td>
                         </tr>
                     @endforeach

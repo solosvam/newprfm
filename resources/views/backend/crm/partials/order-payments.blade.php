@@ -20,7 +20,7 @@
                                     <span>
                                         @if($line->type === 'delivery') Çatdırılma
                                         @elseif($line->type === 'gift_wrap') Hədiyyəlik qablaşdırma
-                                        @else {{ $orderItem?->product?->name ?? 'Silinmiş məhsul' }}@if($orderItem?->variant?->size) · {{ $orderItem->variant->size->name_az }}@endif × {{ $line->quantity }}
+                                        @else {{ \App\Support\ProductTitle::item($orderItem) }} × {{ $line->quantity }}
                                         @endif
                                     </span>
                                     @php $lineRefunded = (float) $line->refundItems->filter(fn ($r) => in_array($r->operation?->status, ['pending', 'succeeded'], true))->sum('amount'); @endphp

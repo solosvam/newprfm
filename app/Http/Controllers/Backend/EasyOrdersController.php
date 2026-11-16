@@ -25,7 +25,7 @@ class EasyOrdersController extends Controller
     public function index()
     {
         return view('backend.easy-orders.index', [
-            'orders' => Order::with(['items.product', 'items.variant.size', 'status'])
+            'orders' => Order::with([...\App\Support\ProductTitle::itemRelations('items.'), 'status'])
                 ->where('one_click', true)->whereNull('customer_id')->latest()->paginate(20),
         ]);
     }

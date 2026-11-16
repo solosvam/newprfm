@@ -114,7 +114,7 @@
 
         @if($tab === 'diff' && $diffRows)
             @php
-                $variantName = fn ($v) => $v ? trim(html_entity_decode($v->product?->brand?->name ?? '').' '.($v->product?->name ?? 'Silinmiş məhsul')).' · '.$v->size?->name_az : null;
+                $variantName = fn ($v) => $v ? \App\Support\ProductTitle::variant($v) : null;
             @endphp
             <div class="card mb-3"><div class="card-body">
                 <div class="table-responsive"><table class="table align-middle mb-0">
@@ -202,7 +202,7 @@
                         <td class="text-end text-nowrap">{{ number_format((float) $item->price, 2) }} AZN</td>
                         <td>
                             @if($item->variant)
-                                {{ html_entity_decode($item->variant->product?->brand?->name ?? '') }} {{ $item->variant->product?->name ?? 'Silinmiş məhsul' }} · {{ $item->variant->size?->name_az }}
+                                {{ \App\Support\ProductTitle::variant($item->variant) }}
                                 <div class="text-muted text-small">{{ $matchLabels[$item->matched_by] ?? '' }} · satış {{ number_format((float) $item->variant->price, 2) }} AZN</div>
                             @elseif($item->product_variant_id)
                                 <span class="text-danger">Bağlandığı variant silinib</span>
