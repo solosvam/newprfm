@@ -969,5 +969,10 @@
     "gift_card_placeholder_signature": "Thank you for everything. Choose your favourite scent yourself.",
     "gift_card_placeholder_love": "For every day we've spent together. I love you!",
     "gift_card_placeholder_bloom": "To the most wonderful mum! This time, choose your scent yourself.",
-    "gift_card_placeholder_celebration": "Happy birthday! May your new year be as beautifully scented as you are."
+    "gift_card_placeholder_celebration": "Happy birthday! May your new year be as beautifully scented as you are.",
+    "advisor_input_placeholder": "Type your answer…",
+    "advisor_send": "Send",
+    "advisor_show_now": "Pick now — show results",
+    "advisor_restart": "Start over",
+    "advisor_typing": "Typing…"
 }

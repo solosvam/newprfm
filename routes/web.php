@@ -353,7 +353,7 @@ Route::get('/bonus', [\App\Http\Controllers\Frontend\PageController::class, 'bon
 // AI ətir məsləhətçisi
 Route::get('/advisor', [\App\Http\Controllers\Frontend\AdvisorController::class, 'show'])->name('front.advisor');
 Route::post('/advisor', [\App\Http\Controllers\Frontend\AdvisorController::class, 'recommend'])
-    ->middleware('throttle:8,1')->name('front.advisor.recommend');
+    ->middleware('throttle:30,1')->name('front.advisor.recommend');
 Route::get('/referral', [\App\Http\Controllers\Frontend\PageController::class, 'referral'])->name('front.referral');
 Route::get('/installment', [\App\Http\Controllers\Frontend\PageController::class, 'installment'])->name('front.installment');
 

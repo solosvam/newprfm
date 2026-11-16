@@ -930,5 +930,10 @@
     "gift_card_placeholder_signature": "Hər şey üçün təşəkkür edirəm. Ən sevdiyin ətri özün seç.",
     "gift_card_placeholder_love": "Birlikdə keçən hər gün üçün. Səni sevirəm!",
     "gift_card_placeholder_bloom": "Ən gözəl anaya! Bu dəfə ətrini özün seç.",
-    "gift_card_placeholder_celebration": "Ad günün mübarək! Yeni yaşın sənin qədər gözəl ətirli olsun."
+    "gift_card_placeholder_celebration": "Ad günün mübarək! Yeni yaşın sənin qədər gözəl ətirli olsun.",
+    "advisor_input_placeholder": "Cavabınızı yazın…",
+    "advisor_send": "Göndər",
+    "advisor_show_now": "İndi seç — nəticəni göstər",
+    "advisor_restart": "Yenidən başla",
+    "advisor_typing": "Yazır…"
 }

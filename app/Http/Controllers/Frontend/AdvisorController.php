@@ -7,49 +7,52 @@ use App\Services\PerfumeAdvisorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Throwable;
 
-/** AI ətir məsləhətçisi: /advisor — suallar, POST — AI seçimi (JSON: intro + kartların HTML-i) */
+/**
+ * AI ətir məsləhətçisi: /advisor — chat (frontend/js/advisor.js, söhbət brauzerin localStorage-indədir).
+ * POST /advisor — söhbətin növbəti addımı: AI-nin sualı + hazır cavablar; söhbət bitəndə — seçilən ətirlərin kartları.
+ */
 class AdvisorController extends Controller
 {
     public function show(): View
     {
-        return view('frontend.advisor', ['options' => PerfumeAdvisorService::OPTIONS]);
+        return view('frontend.advisor');
     }
 
     public function recommend(Request $request, PerfumeAdvisorService $advisor): JsonResponse
     {
-        $o = PerfumeAdvisorService::OPTIONS;
-        $answers = $request->validate([
-            'for' => ['required', Rule::in($o['for'])],
-            'occasion' => ['required', Rule::in($o['occasion'])],
-            'season' => ['required', Rule::in($o['season'])],
-            'families' => ['nullable', 'array', 'max:3'],
-            'families.*' => [Rule::in($o['families'])],
-            'strength' => ['required', Rule::in($o['strength'])],
-            'budget' => ['required', Rule::in($o['budget'])],
-            'liked' => ['nullable', 'string', 'max:120'],
+        $data = $request->validate([
+            'messages' => ['required', 'array', 'min:1', 'max:30'],
+            'messages.*.role' => ['required', 'in:assistant,user'],
+            'messages.*.text' => ['required', 'string', 'max:400'],
+            'finish' => ['nullable', 'boolean'],
         ]);
-        $answers['families'] = array_values($answers['families'] ?? []);
-        $answers['liked'] = trim(strip_tags((string) ($answers['liked'] ?? '')));
+        $messages = array_map(fn ($m) => ['role' => $m['role'], 'text' => trim(strip_tags($m['text']))], $data['messages']);
+        if (!collect($messages)->contains('role', 'user')) {
+            return response()->json(['message' => __('advisor_error')], 422);
+        }
 
         try {
-            $result = $advisor->recommend($answers, app()->getLocale());
+            $turn = $advisor->chat($messages, app()->getLocale(), (bool) ($data['finish'] ?? false));
+            if (!$turn['done']) {
+                return response()->json(['reply' => $turn['reply'], 'quick_replies' => $turn['quick_replies'], 'done' => false]);
+            }
+            $result = $advisor->recommend($turn['profile'], app()->getLocale());
         } catch (Throwable $e) {
             Log::warning('AI advisor failed: '.$e->getMessage());
 
             return response()->json(['message' => __('advisor_error')], 503);
         }
 
-        if ($result['items']->isEmpty()) {
-            return response()->json(['intro' => '', 'html' => '', 'empty' => __('advisor_empty')]);
-        }
-
         return response()->json([
+            'reply' => $turn['reply'],
+            'quick_replies' => [],
+            'done' => true,
             'intro' => $result['intro'],
-            'html' => view('frontend.partials.advisor-results', ['items' => $result['items']])->render(),
+            'html' => $result['items']->isEmpty() ? '' : view('frontend.partials.advisor-results', ['items' => $result['items']])->render(),
+            'empty' => $result['items']->isEmpty() ? __('advisor_empty') : null,
         ]);
     }
 }

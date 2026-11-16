@@ -1,17 +1,16 @@
-{{-- AI ətir məsləhətçisi (AdvisorController, PerfumeAdvisorService): suallar → POST /advisor → kartlar + izah (frontend/js/advisor.js) --}}
+{{--
+  AI ətir məsləhətçisi — chat (AdvisorController, PerfumeAdvisorService, frontend/js/advisor.js).
+  İlk iki mesaj (salam + "kimin üçündür?") burada hazırdır; sonrakı sualları AI cavaba görə yazır.
+  Söhbət brauzerin localStorage-ində saxlanır (serverdə yox).
+--}}
 @extends('frontend.layouts.app')
 
 @php
-    // sual => [tip, standart]
-    $questions = [
-        'for' => ['radio', 'women'],
-        'occasion' => ['radio', 'daily'],
-        'season' => ['radio', 'any'],
-        'families' => ['checkbox', null],
-        'strength' => ['radio', 'any'],
-        'budget' => ['radio', 'any'],
+    $start = [
+        ['role' => 'assistant', 'text' => __('advisor_speech')],
+        ['role' => 'assistant', 'text' => __('advisor_q_for'), 'replies' => [__('advisor_for_women'), __('advisor_for_men'), __('advisor_for_any')]],
     ];
-    $labelKey = ['for' => 'advisor_for_', 'occasion' => 'advisor_occasion_', 'season' => 'advisor_season_', 'families' => 'advisor_family_', 'strength' => 'advisor_strength_', 'budget' => 'advisor_budget_'];
+    $bot = asset_v('frontend/images/advisor-bot-lg.webp');
 @endphp
 
 @section('page-css')
@@ -23,70 +22,46 @@
 @section('og_title', __('advisor_title').' | Parfumshop.az')
 
 @section('content')
-    <main class="advisor">
-        <header class="advisor-hero">
-            <div class="advisor-hero__bot">
-                <img src="{{ asset_v('frontend/images/advisor-bot-lg.webp') }}" alt="" width="180" height="180" decoding="async" fetchpriority="high">
-                {{-- dairənin içində — robotla birgə üzür --}}
-                <span class="advisor-hero__badge">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
-                    AI
-                </span>
+    <main class="advisor advisor--chat">
+        <header class="advisor-head">
+            <div class="advisor-head__bot">
+                <img src="{{ $bot }}" alt="" width="64" height="64" decoding="async" fetchpriority="high">
+                <span class="advisor-head__badge">AI</span>
             </div>
-            {{-- robot müştəriyə özü müraciət edir (nitq balonu) --}}
-            <h1 class="advisor-hero__title">{{ __('advisor_greeting') }}</h1>
-            <p class="advisor-hero__speech">{{ __('advisor_speech') }}</p>
+            <div class="advisor-head__text">
+                <h1 class="advisor-head__title">{{ __('advisor_greeting') }}</h1>
+                <span class="advisor-head__status">{{ __('advisor_title') }}</span>
+            </div>
+            <button type="button" class="advisor-restart" id="advisorRestart" hidden>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                {{ __('advisor_restart') }}
+            </button>
         </header>
 
-        <form class="advisor-form" id="advisorForm" action="{{ route('front.advisor.recommend') }}" method="POST" novalidate
-              data-loading="{{ __('advisor_loading') }}" data-error="{{ __('advisor_error') }}">
-            @csrf
-            @foreach($questions as $name => [$type, $default])
-                <fieldset class="advisor-q">
-                    <legend class="advisor-q__title">
-                        <span class="advisor-q__num">{{ $loop->iteration }}</span>
-                        {{ __('advisor_q_'.$name) }}
-                        @if($name === 'families')<small>{{ __('advisor_families_hint') }}</small>@endif
-                    </legend>
-                    <div class="advisor-q__options" @if($name === 'families') data-max="3" @endif>
-                        @foreach($options[$name] as $value)
-                            <label class="advisor-chip">
-                                <input type="{{ $type }}" name="{{ $type === 'checkbox' ? $name.'[]' : $name }}" value="{{ $value }}" @checked($value === $default)>
-                                <span>{{ __($labelKey[$name].$value) }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </fieldset>
-            @endforeach
-
-            <fieldset class="advisor-q">
-                <legend class="advisor-q__title">
-                    <span class="advisor-q__num">{{ count($questions) + 1 }}</span>
-                    {{ __('advisor_q_liked') }} <small>{{ __('advisor_optional') }}</small>
-                </legend>
-                <input type="text" name="liked" maxlength="120" class="advisor-input" placeholder="{{ __('advisor_liked_placeholder') }}" autocomplete="off">
-            </fieldset>
-
-            <button type="submit" class="btn btn-dark advisor-submit">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
-                {{ __('advisor_submit') }}
-            </button>
-        </form>
-
-        {{-- AI işləyərkən (5–15 san): "düşünən" robot --}}
-        <div class="advisor-thinking" id="advisorThinking" hidden aria-live="polite">
-            <div class="advisor-thinking__bot">
-                <img src="{{ asset_v('frontend/images/advisor-bot-lg.webp') }}" alt="" width="140" height="140">
+        <section class="advisor-chat" id="advisorChat"
+                 data-url="{{ route('front.advisor.recommend') }}" data-locale="{{ app()->getLocale() }}"
+                 data-token="{{ csrf_token() }}" data-bot="{{ $bot }}" data-error="{{ __('advisor_error') }}" data-max="{{ \App\Services\PerfumeAdvisorService::MAX_ANSWERS }}">
+            <script type="application/json" id="advisorStart">@json($start)</script>
+            <div class="advisor-chat__log" id="advisorLog" aria-live="polite"></div>
+            <div class="advisor-chat__typing" id="advisorTyping" hidden>
+                <img src="{{ $bot }}" alt="" width="32" height="32">
+                <span class="advisor-thinking__dots" aria-label="{{ __('advisor_typing') }}"><i></i><i></i><i></i></span>
             </div>
-            <p class="advisor-thinking__text">{{ __('advisor_loading') }}</p>
-            <span class="advisor-thinking__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        </div>
+            <div class="advisor-chat__replies" id="advisorReplies"></div>
+            <form class="advisor-chat__form" id="advisorForm" autocomplete="off">
+                <input type="text" class="advisor-input" id="advisorInput" maxlength="300" placeholder="{{ __('advisor_input_placeholder') }}" aria-label="{{ __('advisor_input_placeholder') }}">
+                <button type="submit" class="advisor-send" aria-label="{{ __('advisor_send') }}">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+                </button>
+            </form>
+            <button type="button" class="advisor-now" id="advisorNow" hidden>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
+                {{ __('advisor_show_now') }}
+            </button>
+        </section>
 
         <section class="advisor-results" id="advisorResults" hidden aria-live="polite" data-dynamic-cards>
-            <div class="advisor-results__head">
-                <h2 class="advisor-results__title">{{ __('advisor_results') }}</h2>
-                <button type="button" class="btn btn-outline advisor-again" id="advisorAgain">{{ __('advisor_again') }}</button>
-            </div>
+            <h2 class="advisor-results__title">{{ __('advisor_results') }}</h2>
             <p class="advisor-results__intro" id="advisorIntro"></p>
             <div class="advisor-results__body" id="advisorBody"></div>
             <p class="advisor-results__note">{{ __('advisor_disclaimer') }}</p>

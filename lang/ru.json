@@ -969,5 +969,10 @@
     "gift_card_placeholder_signature": "Спасибо тебе за всё. Выбери свой любимый аромат сам(а).",
     "gift_card_placeholder_love": "За каждый день, проведённый вместе. Я тебя люблю!",
     "gift_card_placeholder_bloom": "Самой прекрасной маме! В этот раз выбери аромат сама.",
-    "gift_card_placeholder_celebration": "С днём рождения! Пусть новый год жизни будет таким же ароматным, как ты."
+    "gift_card_placeholder_celebration": "С днём рождения! Пусть новый год жизни будет таким же ароматным, как ты.",
+    "advisor_input_placeholder": "Напишите ответ…",
+    "advisor_send": "Отправить",
+    "advisor_show_now": "Подобрать сейчас — показать результат",
+    "advisor_restart": "Начать заново",
+    "advisor_typing": "Печатает…"
 }
