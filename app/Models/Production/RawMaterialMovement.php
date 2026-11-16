@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** Xammalın hərəkəti: alış (+) və istehsala sərf (−) */
 class RawMaterialMovement extends Model
 {
+    protected $table = 'production_material_movements';
+
     protected $guarded = [];
 
     public const KINDS = ['purchase' => 'Alış', 'production' => 'İstehsal'];

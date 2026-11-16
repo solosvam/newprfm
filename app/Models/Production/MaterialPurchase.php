@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Xammal alışı. payment: paid — balansdan ödənilib, debt — tədarükçüyə borc, opening — başlanğıc qalıq (pul hərəkəti yoxdur) */
 class MaterialPurchase extends Model
 {
+    protected $table = 'production_material_purchases';
+
     protected $guarded = [];
 
     public const PAYMENTS = ['paid' => 'Ödənilib', 'debt' => 'Borca', 'opening' => 'Başlanğıc qalıq'];

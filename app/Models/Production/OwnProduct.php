@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Öz istehsalımız olan məhsul ölçüsü (kataloqdakı məhsulun variantı). Hazır mal "Öz anbarımız"dadır */
 class OwnProduct extends Model
 {
+    protected $table = 'production_products';
+
     protected $guarded = [];
 
     protected function casts(): array

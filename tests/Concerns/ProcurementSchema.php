@@ -75,6 +75,7 @@ trait ProcurementSchema
         (require database_path('migrations/2026_09_29_150000_create_procurement_tables.php'))->up();
         (require database_path('migrations/2026_11_15_090000_add_is_own_to_warehouses.php'))->up();
         (require database_path('migrations/2026_11_15_100000_create_production_tables.php'))->up();
+        (require database_path('migrations/2026_11_16_140000_rename_production_tables.php'))->up();
         (require database_path('migrations/2026_11_12_140000_add_opening_debt_to_warehouses.php'))->up();
         (require database_path('migrations/2026_09_29_160000_create_order_item_cancellations_table.php'))->up();
         (require database_path('migrations/2026_10_06_203155_add_fee_type_to_order_item_cancellations.php'))->up();

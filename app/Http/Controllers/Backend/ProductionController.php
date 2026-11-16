@@ -64,7 +64,7 @@ class ProductionController extends Controller
     public function storeProduct(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id', Rule::unique('own_products', 'product_variant_id')],
+            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id', Rule::unique('production_products', 'product_variant_id')],
         ], ['product_variant_id.required' => 'Məhsulu axtarıb seçin.', 'product_variant_id.unique' => 'Bu ölçü artıq öz məhsullarımızdadır.']);
         $variant = ProductVariant::findOrFail($data['product_variant_id']);
         $own = OwnProduct::create(['product_id' => $variant->product_id, 'product_variant_id' => $variant->id]);
@@ -90,7 +90,7 @@ class ProductionController extends Controller
     {
         $data = $request->validate([
             'recipe' => ['nullable', 'array', 'max:30'],
-            'recipe.*.raw_material_id' => ['required', 'integer', 'distinct', 'exists:raw_materials,id'],
+            'recipe.*.raw_material_id' => ['required', 'integer', 'distinct', 'exists:production_materials,id'],
             'recipe.*.quantity' => ['required', 'numeric', 'gt:0', 'max:100000'],
         ], ['recipe.*.raw_material_id.distinct' => 'Eyni xammal iki dəfə yazılıb.', 'recipe.*.quantity.gt' => 'Miqdar 0-dan böyük olmalıdır.'],
             ['recipe.*.quantity' => 'miqdar', 'recipe.*.raw_material_id' => 'xammal']);
@@ -118,7 +118,7 @@ class ProductionController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:100000'],
             'produced_at' => ['required', 'date', 'before_or_equal:today'],
             'lines' => ['nullable', 'array', 'max:30'],
-            'lines.*.raw_material_id' => ['required', 'integer', 'exists:raw_materials,id'],
+            'lines.*.raw_material_id' => ['required', 'integer', 'exists:production_materials,id'],
             'lines.*.quantity' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
             'extra_cost' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
             'note' => ['nullable', 'string', 'max:500'],
@@ -181,7 +181,7 @@ class ProductionController extends Controller
         $locked = $material && $material->movements()->exists();
 
         return $request->validate([
-            'name' => ['required', 'string', 'max:150', Rule::unique('raw_materials', 'name')->ignore($material?->id)],
+            'name' => ['required', 'string', 'max:150', Rule::unique('production_materials', 'name')->ignore($material?->id)],
             'unit' => ['required', Rule::in($locked ? [$material->unit] : array_keys(RawMaterial::UNITS))],
             'note' => ['nullable', 'string', 'max:500'],
         ], ['name.unique' => 'Bu adda xammal var.', 'unit.in' => $locked ? 'Hərəkəti olan xammalın vahidi dəyişdirilmir.' : 'Vahidi seçin.'], ['name' => 'ad', 'unit' => 'vahid']);
@@ -209,7 +209,7 @@ class ProductionController extends Controller
             'account_id' => ['nullable', 'required_if:payment,paid', 'integer'],
             'note' => ['nullable', 'string', 'max:500'],
             'lines' => ['required', 'array', 'min:1', 'max:30'],
-            'lines.*.raw_material_id' => ['required', 'integer', 'exists:raw_materials,id'],
+            'lines.*.raw_material_id' => ['required', 'integer', 'exists:production_materials,id'],
             'lines.*.quantity' => ['required', 'numeric', 'gt:0', 'max:10000000'],
             'lines.*.unit_cost' => ['required', 'numeric', 'min:0', 'max:1000000'],
         ], [

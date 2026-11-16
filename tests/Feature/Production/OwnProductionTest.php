@@ -55,6 +55,7 @@ class OwnProductionTest extends TestCase
             '2026_09_29_200000_create_finance_tables.php',
             '2026_10_16_100000_create_finance_categories.php',
             '2026_11_15_100000_create_production_tables.php',
+            '2026_11_16_140000_rename_production_tables.php',
             '2026_11_15_110000_production_permission_and_category.php',
         ] as $file) {
             (require database_path('migrations/'.$file))->up();

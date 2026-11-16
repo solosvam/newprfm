@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Xammal (əsans, spirt, flakon, qapaq, qutu, etiket...). Qalıq — hərəkətlərin cəmi (ProductionStock::materialStocks) */
 class RawMaterial extends Model
 {
+    protected $table = 'production_materials';
+
     protected $guarded = [];
 
     public const UNITS = ['ml' => 'ml', 'g' => 'q', 'pcs' => 'ədəd'];

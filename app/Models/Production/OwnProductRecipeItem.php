@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** Reseptin sətri: bir şüşəyə nə qədər xammal gedir */
 class OwnProductRecipeItem extends Model
 {
+    protected $table = 'production_recipe_items';
+
     protected $guarded = [];
 
     public $timestamps = false;
