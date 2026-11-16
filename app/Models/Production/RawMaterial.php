@@ -12,7 +12,7 @@ class RawMaterial extends Model
 
     protected $guarded = [];
 
-    public const UNITS = ['ml' => 'ml', 'g' => 'q', 'pcs' => 'ədəd'];
+    public const UNITS = ['ml' => 'ml', 'g' => 'qr', 'pcs' => 'ədəd'];
 
     protected function casts(): array
     {

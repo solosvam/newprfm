@@ -33,7 +33,7 @@
                     @endif</div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-sm-6" data-show="paid debt"><label class="form-label" for="pSupplier">Tədarükçü</label>
+                <div class="col-sm-6"><label class="form-label" for="pSupplier">Tədarükçü <span class="text-muted text-small" data-show="opening">(istəyə görə)</span></label>
                     <select id="pSupplier" name="supplier_account_id" class="form-select">
                         <option value="">Seçin</option>
                         @foreach($suppliers as $s)<option value="{{ $s->id }}" @selected((int) old('supplier_account_id', $purchase?->supplier_account_id) === $s->id)>{{ $s->name }}</option>@endforeach
@@ -67,13 +67,13 @@
                             <input type="number" step="0.001" min="0.001" name="lines[{{ $i }}][quantity]" class="form-control" value="{{ $line['quantity'] ?? '' }}" required data-qty></div>
                         <div class="col-md-3"><label class="form-label" data-price-label>1 vahidin qiyməti, ₼</label>
                             <input type="number" step="0.0001" min="0" name="lines[{{ $i }}][unit_cost]" class="form-control" value="{{ $line['unit_cost'] ?? '' }}" required data-price></div>
-                        <div class="col-md-1 text-end pb-2"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove aria-label="Sətri sil">✕</button></div>
+                        <div class="col-md-1 text-end pb-2"><button type="button" class="btn btn-sm btn-link text-danger p-0 cursor-pointer" data-remove aria-label="Sətri sil">✕</button></div>
                         <div class="col-12 text-muted text-small" data-unit-price></div>
                     </div>
                 @endforeach
             </div>
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <button type="button" class="btn btn-outline-primary btn-sm" id="addLine">+ Sətir</button>
+                <button type="button" class="btn btn-outline-primary btn-sm cursor-pointer" id="addLine">+ Sətir</button>
                 <span class="fw-bold" id="purchaseTotal"></span>
             </div>
             <label class="form-label" for="pNote">Qeyd</label>
