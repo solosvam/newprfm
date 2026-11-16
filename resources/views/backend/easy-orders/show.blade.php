@@ -15,6 +15,8 @@
 <style>
     /* Tapılmış müştərinin nömrə, ad, soyadı dəyişdirilmir: disabled kimi görünsün (readonly — formla göndərilir) */
     form[data-lookup-url] .form-control[readonly] { background: var(--background); color: var(--muted); cursor: not-allowed; }
+    /* d-flex (display:flex !important) hidden atributunu üstələyir — "tapıldı" bloku gizlənmirdi */
+    #customerFound[hidden] { display: none !important; }
 </style>
 @endsection
 @section('content')
