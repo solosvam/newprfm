@@ -493,7 +493,7 @@
             cart: cart.map(i => ({ variant_id: i.variantId, quantity: i.qty, price: i.price, gift_wrap: i.gift ? 1 : 0 })),
             address_mode: isNew ? 'new' : (onCall ? 'on_call' : 'existing'),
             address_id: isNew || onCall ? null : Number(els.address.value),
-            ...(isNew ? Object.fromEntries([...els.newAddress.querySelectorAll('[name]')].map(i => [i.name, i.value.trim() || null])) : {}),
+            ...(isNew ? Object.fromEntries([...els.newAddress.querySelectorAll('input[name], select[name], textarea[name]')].map(i => [i.name, i.value.trim() || null])) : {}),
             payment_method_id: Number(paymentRadios.find(r => r.checked)?.value),
             birbank_installment_months: code === 'birbank_installment'
                 ? Number(root.querySelector('input[name="crm_birbank_months"]:checked')?.value) || null : null,
