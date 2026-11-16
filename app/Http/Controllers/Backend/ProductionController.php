@@ -202,21 +202,11 @@ class ProductionController extends Controller
 
     public function storePurchase(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'purchased_at' => ['required', 'date', 'before_or_equal:today'],
+        $data = $request->validate($this->purchaseRules() + [
             'payment' => ['required', Rule::in(array_keys(MaterialPurchase::PAYMENTS))],
             'supplier_account_id' => ['nullable', 'required_unless:payment,opening', 'integer'],
             'account_id' => ['nullable', 'required_if:payment,paid', 'integer'],
-            'note' => ['nullable', 'string', 'max:500'],
-            'lines' => ['required', 'array', 'min:1', 'max:30'],
-            'lines.*.raw_material_id' => ['required', 'integer', 'exists:production_materials,id'],
-            'lines.*.quantity' => ['required', 'numeric', 'gt:0', 'max:10000000'],
-            'lines.*.unit_cost' => ['required', 'numeric', 'min:0', 'max:1000000'],
-        ], [
-            'supplier_account_id.required_unless' => 'Tədarükçünü seçin.',
-            'account_id.required_if' => 'Pulun çıxdığı hesabı seçin.',
-            'purchased_at.before_or_equal' => 'Gələcək tarix yazılmaz.',
-        ], ['purchased_at' => 'tarix', 'lines.*.quantity' => 'miqdar', 'lines.*.unit_cost' => '1 vahidin qiyməti', 'lines.*.raw_material_id' => 'xammal']);
+        ], ...$this->purchaseMessages());
 
         $purchase = $this->production->purchase($data, $data['lines'], (int) auth('admin')->id());
 
@@ -224,12 +214,52 @@ class ProductionController extends Controller
             .match ($purchase->payment) { 'paid' => ' — balansdan ödənildi.', 'debt' => ' — tədarükçüyə borc.', default => ' — başlanğıc qalıq.' });
     }
 
-    public function purchase(MaterialPurchase $purchase): View
+    public function purchase(MaterialPurchase $purchase, FinanceService $finance): View
     {
         $purchase->load(['supplier', 'lines.material', 'creator']);
-        $payment = MoneyMovement::with('from')->where('kind', 'supplier_payment')->where('note', 'Xammal alışı #'.$purchase->id)->first();
+        $used = $purchase->lines->pluck('raw_material_id')->all();
 
-        return view('backend.production.purchase', ['purchase' => $purchase, 'payment' => $payment]);
+        return view('backend.production.purchase', [
+            'purchase' => $purchase,
+            'payment' => $this->production->purchasePayment($purchase),
+            'materials' => RawMaterial::where(fn ($q) => $q->where('active', true)->orWhereIn('id', $used))->orderBy('name')->get(),
+            'suppliers' => FinanceAccount::where('type', 'supplier')->where(fn ($q) => $q->where('active', true)->orWhere('id', $purchase->supplier_account_id))->orderBy('name')->get(),
+        ]);
+    }
+
+    /** Alışa düzəliş: tarix, tədarükçü, qeyd, sətirlər (ödəniş növü və hesab dəyişmir) */
+    public function updatePurchase(Request $request, MaterialPurchase $purchase): RedirectResponse
+    {
+        $data = $request->validate($this->purchaseRules() + [
+            'supplier_account_id' => [$purchase->payment === 'opening' ? 'nullable' : 'required', 'integer'],
+        ], ...$this->purchaseMessages());
+
+        $purchase = $this->production->updatePurchase($purchase, $data, $data['lines'], (int) auth('admin')->id());
+
+        return redirect()->route('admin.production.purchase', $purchase)->with('success', 'Alış düzəldildi: '.number_format((float) $purchase->total, 2).' AZN'
+            .($purchase->payment === 'paid' ? ' — Maliyyədə ödəniş yeni məbləğlə yazıldı.' : '.'));
+    }
+
+    private function purchaseRules(): array
+    {
+        return [
+            'purchased_at' => ['required', 'date', 'before_or_equal:today'],
+            'note' => ['nullable', 'string', 'max:500'],
+            'lines' => ['required', 'array', 'min:1', 'max:30'],
+            'lines.*.raw_material_id' => ['required', 'integer', 'exists:production_materials,id'],
+            'lines.*.quantity' => ['required', 'numeric', 'gt:0', 'max:10000000'],
+            'lines.*.unit_cost' => ['required', 'numeric', 'min:0', 'max:1000000'],
+        ];
+    }
+
+    private function purchaseMessages(): array
+    {
+        return [[
+            'supplier_account_id.required_unless' => 'Tədarükçünü seçin.',
+            'supplier_account_id.required' => 'Tədarükçünü seçin.',
+            'account_id.required_if' => 'Pulun çıxdığı hesabı seçin.',
+            'purchased_at.before_or_equal' => 'Gələcək tarix yazılmaz.',
+        ], ['purchased_at' => 'tarix', 'lines.*.quantity' => 'miqdar', 'lines.*.unit_cost' => '1 vahidin qiyməti', 'lines.*.raw_material_id' => 'xammal']];
     }
 
     // ───────────── Tədarükçülər ─────────────

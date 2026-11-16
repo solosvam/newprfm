@@ -162,6 +162,101 @@ class OwnProduction
         });
     }
 
+    /**
+     * Alışa düzəliş: tarix, tədarükçü, qeyd, sətirlər (xammal, miqdar, 1 vahidin qiyməti). Ödəniş növü və hesab dəyişmir.
+     *  - Xammalın qalığı mənfiyə düşə bilməz (artıq istehsala sərf olunan hissə azaldıla bilməz).
+     *  - Orta maya bu xammalın bütün hərəkətləri üzrə yenidən hesablanır; artıq olunmuş partiyaların mayası dəyişmir.
+     *  - Ödənilib: köhnə ödəniş əks olunur (öz günü ilə), yeni məbləğ eyni hesabdan yazılır. Borca: borc cəmdən hesablanır.
+     */
+    public function updatePurchase(MaterialPurchase $purchase, array $data, array $lines, int $actor): MaterialPurchase
+    {
+        return DB::transaction(function () use ($purchase, $data, $lines, $actor) {
+            $purchase = MaterialPurchase::with('lines')->lockForUpdate()->findOrFail($purchase->id);
+            $supplier = !empty($data['supplier_account_id']) ? FinanceAccount::where('type', 'supplier')->find($data['supplier_account_id']) : null;
+            $this->ensure($purchase->payment === 'opening' || $supplier !== null, 'Tədarükçünü seçin.', 'supplier_account_id');
+            $lines = array_map(fn ($l) => [
+                'raw_material_id' => (int) $l['raw_material_id'], 'quantity' => round((float) $l['quantity'], 3), 'unit_cost' => round((float) $l['unit_cost'], 4),
+                'amount' => round((float) $l['quantity'] * (float) $l['unit_cost'], 2),
+            ], $lines);
+            foreach ($lines as $line) {
+                $this->ensure($line['quantity'] > 0, 'Miqdar 0-dan böyük olmalıdır.', 'lines');
+            }
+            $total = round(array_sum(array_column($lines, 'amount')), 2);
+            $this->ensure($total > 0, 'Alışın məbləği 0 ola bilməz.', 'lines');
+
+            // Qalıq mənfiyə düşməsin
+            $old = $purchase->lines->groupBy('raw_material_id')->map(fn ($rows) => (float) $rows->sum('quantity'));
+            $new = collect($lines)->groupBy('raw_material_id')->map(fn ($rows) => (float) $rows->sum('quantity'));
+            $ids = $old->keys()->merge($new->keys())->unique()->values();
+            $materials = RawMaterial::lockForUpdate()->whereIn('id', $ids)->get()->keyBy('id');
+            $stocks = $this->materialStocks();
+            foreach ($ids as $id) {
+                $after = (float) ($stocks[$id] ?? 0) - (float) ($old[$id] ?? 0) + (float) ($new[$id] ?? 0);
+                $material = $materials[$id];
+                $this->ensure($after >= -0.0005, $material->name.': bu alışdan artıq istehsala sərf olunub — miqdar ən azı '
+                    .self::qty((float) ($new[$id] ?? 0) - $after).' '.$material->unitLabel().' olmalıdır.', 'lines');
+            }
+
+            $date = Carbon::parse($data['purchased_at']);
+            $time = $purchase->lines->first()?->occurred_at ?? now();
+            $at = $date->copy()->setTimeFrom($time);
+            $purchase->lines()->delete();
+            foreach ($lines as $line) {
+                $purchase->lines()->create([
+                    'raw_material_id' => $line['raw_material_id'], 'quantity' => $line['quantity'], 'unit_cost' => $line['unit_cost'],
+                    'kind' => 'purchase', 'created_by' => $actor, 'occurred_at' => $at,
+                ]);
+            }
+            foreach ($materials as $material) {
+                $material->forceFill(['avg_cost' => $this->replayAverage($material->id)])->save();
+            }
+
+            if ($purchase->payment === 'paid') {
+                $payment = $this->purchasePayment($purchase);
+                $this->ensure($payment !== null, 'Bu alışın ödənişi Maliyyədə tapılmadı.', 'lines');
+                $changed = (int) round((float) $payment->amount * 100) !== (int) round($total * 100)
+                    || (int) $payment->to_account_id !== (int) $supplier->id || !$payment->occurred_at->isSameDay($at);
+                if ($changed) {
+                    $reversal = $this->finance->reverse($payment, $actor, 'Xammal alışı #'.$purchase->id.' — düzəliş');
+                    $reversal->forceFill(['occurred_at' => $payment->occurred_at])->save();
+                    $this->finance->record(FinanceAccount::findOrFail($payment->from_account_id), $supplier, $total, 'supplier_payment', [
+                        'note' => 'Xammal alışı #'.$purchase->id, 'occurred_at' => $at,
+                    ], $actor);
+                }
+            }
+
+            $purchase->forceFill([
+                'purchased_at' => $date->toDateString(), 'supplier_account_id' => $supplier?->id,
+                'total' => $total, 'paid' => $purchase->payment === 'paid' ? $total : 0, 'note' => $data['note'] ?? null,
+            ])->save();
+
+            return $purchase->refresh();
+        });
+    }
+
+    /** "Ödənilib" alışın Maliyyədəki qüvvədə olan ödənişi (əks olunmamış) */
+    public function purchasePayment(MaterialPurchase $purchase): ?MoneyMovement
+    {
+        return MoneyMovement::with('from')->where('kind', 'supplier_payment')->where('note', 'Xammal alışı #'.$purchase->id)
+            ->whereDoesntHave('reversedBy')->latest('id')->first();
+    }
+
+    /** Orta maya — hərəkətlər tarix ardıcıllığı ilə: alış çəkili orta yaradır, sərf qalığı azaldır */
+    private function replayAverage(int $materialId): float
+    {
+        $stock = 0.0;
+        $avg = 0.0;
+        foreach (RawMaterialMovement::where('raw_material_id', $materialId)->orderBy('occurred_at')->orderBy('id')->get(['quantity', 'unit_cost']) as $m) {
+            $q = (float) $m->quantity;
+            if ($q > 0) {
+                $avg = $stock > 0 ? ($stock * $avg + $q * (float) $m->unit_cost) / ($stock + $q) : (float) $m->unit_cost;
+            }
+            $stock += $q;
+        }
+
+        return round($avg, 4);
+    }
+
     /** Tədarükçüyə borcun ödənişi (borcdan çox ödənilmir) */
     public function paySupplier(FinanceAccount $supplier, FinanceAccount $from, float $amount, ?string $note, int $actor): MoneyMovement
     {

@@ -226,6 +226,7 @@ Route::prefix('admin')
                 Route::get('/purchases', 'purchases')->name('purchases');
                 Route::post('/purchases', 'storePurchase')->name('purchases.store');
                 Route::get('/purchases/{purchase}', 'purchase')->whereNumber('purchase')->name('purchase');
+                Route::post('/purchases/{purchase}', 'updatePurchase')->whereNumber('purchase')->name('purchase.update');
                 Route::get('/suppliers', 'suppliers')->name('suppliers');
                 Route::post('/suppliers', 'storeSupplier')->name('suppliers.store');
                 Route::get('/suppliers/{supplier}', 'supplier')->whereNumber('supplier')->name('supplier');

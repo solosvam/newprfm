@@ -10,8 +10,17 @@
 @section('content')
 <div class="container">
     <div class="page-title-container">
-        <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
-        @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
+        <div class="row">
+            <div class="col-12 col-sm-6">
+                <h1 class="mb-0 pb-0 display-4" id="title">{{ $title }}</h1>
+                @include('backend._layout.breadcrumb', ['breadcrumbs' => $breadcrumbs])
+            </div>
+            <div class="col-12 col-sm-6 d-flex align-items-start justify-content-end">
+                <button type="button" class="btn btn-outline-primary btn-icon btn-icon-end w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#purchaseModal">
+                    <span>Düzəliş et</span><i data-acorn-icon="edit"></i>
+                </button>
+            </div>
+        </div>
     </div>
     @include('backend.procurement.feedback')
 
@@ -49,4 +58,10 @@
         </table>
     </div></div>
 </div>
+
+@include('backend.production._purchase-form', ['purchase' => $purchase])
+@endsection
+
+@section('js_page')
+    @include('backend.production._purchase-form-js')
 @endsection

@@ -128,6 +128,49 @@ class OwnProductionTest extends TestCase
         $this->assertSame(-12000, $f->balances()[$cash->id]);
     }
 
+    public function test_purchase_can_be_corrected(): void
+    {
+        $p = app(OwnProduction::class);
+        $f = app(FinanceService::class);
+        $supplier = $this->supplier();
+        $other = FinanceAccount::create(['type' => 'supplier', 'name' => 'Qutu MMC']);
+        $cash = $f->system('cash');
+        $box = RawMaterial::create(['name' => 'Qutu', 'unit' => 'pcs']);
+
+        // Səhvən 89 əvəzinə 98 ədəd yazılıb (ödənilib, 2 AZN)
+        $purchase = $p->purchase(['purchased_at' => today()->toDateString(), 'payment' => 'paid', 'supplier_account_id' => $supplier->id, 'account_id' => $cash->id],
+            [['raw_material_id' => $box->id, 'quantity' => 98, 'unit_cost' => 2]], 7);
+        $this->assertSame(-19600, $f->balances()[$cash->id]);
+
+        $p->updatePurchase($purchase, ['purchased_at' => today()->toDateString(), 'supplier_account_id' => $other->id, 'note' => 'düzəliş'],
+            [['raw_material_id' => $box->id, 'quantity' => 89, 'unit_cost' => 2]], 7);
+        $purchase->refresh();
+        $this->assertSame('178.00', $purchase->total);
+        $this->assertSame($other->id, $purchase->supplier_account_id);
+        $this->assertSame(89.0, $p->materialStocks()[$box->id]);
+        $this->assertSame(-17800, $f->balances()[$cash->id]);       // kassa: köhnə ödəniş əks olundu, yenisi yazıldı
+        $this->assertSame(0, $f->balances()[$supplier->id] ?? 0);    // köhnə tədarükçü sıfırlandı
+        $this->assertSame(0, $p->supplierDebts()[$other->id]);
+        $this->assertSame(178.0, (float) $p->purchasePayment($purchase)->amount);
+        $this->assertSame(1, MoneyMovement::where('kind', 'reversal')->count());
+
+        // İstehsala sərf olunan hissədən az yazmaq olmaz; orta maya yenidən hesablanır
+        $own = OwnProduct::create(['product_id' => 5, 'product_variant_id' => 9]);
+        $p->produce($own, 50, today()->toDateString(), [['raw_material_id' => $box->id, 'quantity' => 50]], 0, null, 7);
+        try {
+            $p->updatePurchase($purchase, ['purchased_at' => today()->toDateString(), 'supplier_account_id' => $other->id],
+                [['raw_material_id' => $box->id, 'quantity' => 40, 'unit_cost' => 2]], 7);
+            $this->fail('Sərf olunandan az yazılmamalı idi');
+        } catch (ValidationException $e) {
+            $this->assertStringContainsString('ən azı 50', collect($e->errors())->flatten()->first());
+        }
+        $p->updatePurchase($purchase, ['purchased_at' => today()->toDateString(), 'supplier_account_id' => $other->id],
+            [['raw_material_id' => $box->id, 'quantity' => 89, 'unit_cost' => 3]], 7);
+        $this->assertEqualsWithDelta(3, (float) $box->fresh()->avg_cost, 0.0001);
+        $this->assertSame(39.0, $p->materialStocks()[$box->id]);
+        $this->assertSame(-26700, $f->balances()[$cash->id]);
+    }
+
     public function test_batch_consumes_materials_and_sets_unit_cost(): void
     {
         [$essence, $bottle] = $this->materials();
