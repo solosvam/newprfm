@@ -107,19 +107,17 @@ class AdvisorTest extends TestCase
         $this->assertStringNotContainsString('Sauvage', $data['html']); // kişi ətri namizəd deyil
     }
 
-    public function test_chat_ends_after_max_answers_or_on_request(): void
+    public function test_chat_ends_after_max_answers(): void
     {
         $openAi = Mockery::mock(OpenAiPerfumeService::class);
         // AI bitirmək istəməsə də — limitdən sonra bitir
-        $openAi->shouldReceive('json')->twice()->withArgs(fn ($prompt) => str_contains($prompt, 'must END NOW'))->andReturn($this->turn(false, ['budget_max' => 100]));
+        $openAi->shouldReceive('json')->once()->withArgs(fn ($prompt) => str_contains($prompt, 'must END NOW'))->andReturn($this->turn(false, ['budget_max' => 100]));
         $this->app->instance(OpenAiPerfumeService::class, $openAi);
 
         $data = $this->postJson(route('front.advisor.recommend'), ['messages' => $this->messages(PerfumeAdvisorService::MAX_ANSWERS)])->assertOk()->json();
         $this->assertTrue($data['done']);
         $this->assertSame([], $data['quick_replies']);
         $this->assertSame(__('advisor_empty'), $data['empty']); // 100 ₼-dək qadın ətri yoxdur — AI-yə kataloq sorğusu getmir
-
-        $this->postJson(route('front.advisor.recommend'), ['messages' => $this->messages(1), 'finish' => true])->assertOk()->assertJson(['done' => true]);
     }
 
     public function test_validation_and_ai_failure(): void

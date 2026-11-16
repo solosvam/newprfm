@@ -2,7 +2,7 @@
  * AI ətir seçici — chat (/advisor).
  *  - İlk iki mesaj səhifədədir (#advisorStart). Müştəri cavab yazır və ya hazır cavaba basır →
  *    bütün söhbət POST /advisor-a gedir → AI növbəti sualı + hazır cavabları qaytarır.
- *  - Söhbət bitəndə (AI qərar verir, ən çox data-max cavab və ya "Nəticəni göstər") — seçilən ətirlərin kartları.
+ *  - Söhbət bitəndə (AI qərar verir; server ən çox MAX_ANSWERS cavabdan sonra bitirir) — seçilən ətirlərin kartları.
  *  - Söhbət localStorage-də saxlanır (7 gün), səhifə yenilənəndə davam edir; nəticə 24 saat (qiymətlər dəyişə bilər).
  */
 (function () {
@@ -14,14 +14,12 @@
     const KEY = 'ps_advisor_chat_v1:' + chat.dataset.locale;
     const CHAT_TTL = 7 * 24 * 3600 * 1000;
     const RESULT_TTL = 24 * 3600 * 1000;
-    const MAX_ANSWERS = Number(chat.dataset.max) || 6;
 
     const log = document.getElementById('advisorLog');
     const typing = document.getElementById('advisorTyping');
     const repliesBox = document.getElementById('advisorReplies');
     const form = document.getElementById('advisorForm');
     const input = document.getElementById('advisorInput');
-    const nowBtn = document.getElementById('advisorNow');
     const restartBtn = document.getElementById('advisorRestart');
     const results = document.getElementById('advisorResults');
     const intro = document.getElementById('advisorIntro');
@@ -72,7 +70,6 @@
         renderReplies();
         const finished = state.done;
         form.hidden = finished;
-        nowBtn.hidden = finished || answers() < 1;
         restartBtn.hidden = answers() < 1;
         if (state.result) showResult(state.result, false);
         else results.hidden = true;
@@ -96,7 +93,6 @@
         typing.hidden = !on;
         input.disabled = on;
         form.querySelector('button').disabled = on;
-        nowBtn.disabled = on;
         renderReplies();
         if (on) typing.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -109,14 +105,14 @@
         if (scroll) results.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    async function ask(finish) {
+    async function ask() {
         setBusy(true);
         try {
             const response = await fetch(chat.dataset.url, {
                 method: 'POST',
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': chat.dataset.token, 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
-                body: JSON.stringify({ messages: state.messages.slice(-30), finish: !!finish }),
+                body: JSON.stringify({ messages: state.messages.slice(-30) }),
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(data.message || chat.dataset.error);
@@ -146,11 +142,10 @@
         input.value = '';
         save();
         render();
-        ask(answers() >= MAX_ANSWERS);
+        ask();
     }
 
     form.addEventListener('submit', (e) => { e.preventDefault(); send(input.value); });
-    nowBtn.addEventListener('click', () => { if (!busy && answers() > 0) ask(true); });
     restartBtn.addEventListener('click', () => {
         state = fresh();
         try { localStorage.removeItem(KEY); } catch { /* */ }
@@ -161,5 +156,5 @@
     render();
     // Son cavab AI-yə çatmayıbsa (səhifə bağlanıb) — yenidən soruşulur
     const last = state.messages[state.messages.length - 1];
-    if (!state.done && last && last.role === 'user') ask(answers() >= MAX_ANSWERS);
+    if (!state.done && last && last.role === 'user') ask();
 })();

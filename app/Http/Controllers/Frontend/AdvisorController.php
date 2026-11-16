@@ -27,7 +27,6 @@ class AdvisorController extends Controller
             'messages' => ['required', 'array', 'min:1', 'max:30'],
             'messages.*.role' => ['required', 'in:assistant,user'],
             'messages.*.text' => ['required', 'string', 'max:400'],
-            'finish' => ['nullable', 'boolean'],
         ]);
         $messages = array_map(fn ($m) => ['role' => $m['role'], 'text' => trim(strip_tags($m['text']))], $data['messages']);
         if (!collect($messages)->contains('role', 'user')) {
@@ -35,7 +34,7 @@ class AdvisorController extends Controller
         }
 
         try {
-            $turn = $advisor->chat($messages, app()->getLocale(), (bool) ($data['finish'] ?? false));
+            $turn = $advisor->chat($messages, app()->getLocale());
             if (!$turn['done']) {
                 return response()->json(['reply' => $turn['reply'], 'quick_replies' => $turn['quick_replies'], 'done' => false]);
             }

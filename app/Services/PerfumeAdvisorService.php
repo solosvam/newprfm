@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
  * AI ətir məsləhətçisi (/advisor) — chat:
  *  - chat(): AI söhbəti oxuyub növbəti sualı + 2–5 hazır cavab yazır və o vaxta qədər bilinənləri (profil) qaytarır.
  *    İlk iki mesaj (salam + "kimin üçündür?") səhifədə hazırdır — AI sorğusu yoxdur. Ən çox MAX_ANSWERS cavabdan sonra
- *    və ya müştəri "Nəticəni göstər" basanda AI söhbəti bitirir (done).
+ *    AI söhbəti bitirir (done).
  *  - recommend(): profilə görə kataloqdan namizədlər (cins, büdcə — kod süzür; ən çox satılanlar öndə),
  *    AI onlardan ən uyğun 6-nı seçib qısa izah yazır. Eyni profil keşdə saxlanılır.
  * Söhbət serverdə saxlanmır: brauzer (localStorage) hər addımda bütün söhbəti göndərir.
@@ -43,10 +43,10 @@ class PerfumeAdvisorService
      * @param  list<array{role: string, text: string}>  $messages
      * @return array{reply: string, quick_replies: list<string>, done: bool, profile: array}
      */
-    public function chat(array $messages, string $locale, bool $finish = false): array
+    public function chat(array $messages, string $locale): array
     {
         $answers = count(array_filter($messages, fn ($m) => $m['role'] === 'user'));
-        $mustFinish = $finish || $answers >= self::MAX_ANSWERS;
+        $mustFinish = $answers >= self::MAX_ANSWERS;
         $language = self::LANGUAGES[$locale] ?? 'Azerbaijani';
         $dialog = collect($messages)->map(fn ($m) => ($m['role'] === 'user' ? 'Customer: ' : 'Advisor: ').$m['text'])->implode("\n");
 

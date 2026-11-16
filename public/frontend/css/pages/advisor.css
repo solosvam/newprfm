@@ -67,13 +67,6 @@
     display: inline-flex; align-items: center; justify-content: center; background: var(--accent); color: var(--on-accent);
 }
 .advisor-send:disabled, .advisor-input:disabled { opacity: .6; cursor: progress; }
-.advisor-now {
-    display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px auto 0; padding: 6px 12px; cursor: pointer;
-    border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px;
-}
-.advisor-now:hover { color: var(--accent); }
-.advisor-now[hidden] { display: none; }
-.advisor-now:disabled { opacity: .5; cursor: progress; }
 
 .advisor-thinking__dots { display: inline-flex; gap: 6px; }
 .advisor-thinking__dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: advisor-dot 1.2s ease-in-out infinite; }

@@ -40,7 +40,7 @@
 
         <section class="advisor-chat" id="advisorChat"
                  data-url="{{ route('front.advisor.recommend') }}" data-locale="{{ app()->getLocale() }}"
-                 data-token="{{ csrf_token() }}" data-bot="{{ $bot }}" data-error="{{ __('advisor_error') }}" data-max="{{ \App\Services\PerfumeAdvisorService::MAX_ANSWERS }}">
+                 data-token="{{ csrf_token() }}" data-bot="{{ $bot }}" data-error="{{ __('advisor_error') }}">
             <script type="application/json" id="advisorStart">@json($start)</script>
             <div class="advisor-chat__log" id="advisorLog" aria-live="polite"></div>
             <div class="advisor-chat__typing" id="advisorTyping" hidden>
@@ -54,10 +54,6 @@
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
                 </button>
             </form>
-            <button type="button" class="advisor-now" id="advisorNow" hidden>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
-                {{ __('advisor_show_now') }}
-            </button>
         </section>
 
         <section class="advisor-results" id="advisorResults" hidden aria-live="polite" data-dynamic-cards>
