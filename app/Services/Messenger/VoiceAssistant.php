@@ -35,7 +35,7 @@ class VoiceAssistant
     private const MAX_TOOL_ROUNDS = 3;
 
     /** Səsləndirmənin tərzi (TTS; birbaşa üsulda bu, sistem göstərişinin içindədir) */
-    private const DELIVERY = 'Azərbaycan dilində danış: səmimi, isti, həyəcanlı və canayaxın — gülümsəyərək, enerji ilə, müştəriyə kömək etməkdən məmnun kimi. Tempi canlı saxla: sözləri uzatma, cümlələr arasında uzun fasilə vermə, süst və yavaş danışma.';
+    private const DELIVERY = 'Azərbaycan dilində danış: səmimi, isti, həyəcanlı və canayaxın — gülümsəyərək, enerji ilə, müştəriyə kömək etməkdən məmnun kimi. Tempi canlı saxla: sözləri uzatma, cümlələr arasında uzun fasilə vermə, süst və yavaş danışma. Qiymətləri və rəqəmləri isə aydın, tələsmədən, hər sözü tam tələffüz et (məs. "yeddi yüz qırx səkkiz").';
 
     public function __construct(private ?ProductLookup $products = null)
     {

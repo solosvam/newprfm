@@ -301,7 +301,11 @@ class CustomerBot
         if ($products === []) {
             return;
         }
-        $lines = array_map(fn ($p) => $p['name']."\n".$p['url'], array_slice($products, 0, 3));
+        // Qiymət yazılı da — səsdə rəqəm səhv eşidilə bilər (aksent)
+        $money = fn (float $v) => rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.').' ₼';
+        $lines = array_map(fn ($p) => $p['name']
+            .implode('', array_map(fn ($s) => "\n".$s['size'].' — '.$money($s['price']).($s['old_price'] ? ' (əvvəl '.$money($s['old_price']).')' : ''), $p['sizes']))
+            ."\n".$p['url'], array_slice($products, 0, 3));
         $channel->send($to, OutgoingMessage::text(implode("\n\n", $lines)));
     }
 
