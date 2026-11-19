@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 
 // Telegram webhook: deponun Telegram qrupundakı cavabları (CSRF-dən azad — bootstrap/app.php)
 Route::post('/telegram/webhook', \App\Http\Controllers\TelegramWebhookController::class)->middleware('throttle:120,1')->name('telegram.webhook');
+// Müştəri botu (@parfumshopai_bot) — ayrıca bot, ayrıca webhook
+Route::post('/telegram/customer-webhook', \App\Http\Controllers\TelegramCustomerWebhookController::class)->middleware('throttle:300,1')->name('telegram.customer.webhook');
 
 // Depo portalı: qısa link /w/{token} (WarehousePortalService::TOKEN_PATTERN)
 Route::middleware([\App\Http\Middleware\WarehousePortalHeaders::class, 'throttle:60,1'])
@@ -209,6 +211,12 @@ Route::controller(\App\Http\Controllers\Frontend\GoogleAuthController::class)->m
         Route::post('/auth/google/resend', 'resend')->name('auth.google.resend');
     });
     Route::post('/profile/google/disconnect', 'disconnect')->middleware('auth')->name('profile.google.disconnect');
+});
+
+// Profil → Telegram (müştəri botu): bağlama linki və ayırma
+Route::controller(\App\Http\Controllers\Frontend\TelegramLinkController::class)->middleware(['auth', 'throttle:20,1'])->group(function () {
+    Route::get('/profile/telegram/connect', 'connect')->name('profile.telegram.connect');
+    Route::post('/profile/telegram/disconnect', 'disconnect')->name('profile.telegram.disconnect');
 });
 
 // Dostunu dəvət et: qısa dəvət linki /r/{code}

@@ -74,6 +74,9 @@ return [
         'courier_group_id' => env('TELEGRAM_COURIER_GROUP_ID'),
         // Operatorların qrupu: saytdan yeni sifariş (səbət, asan sifariş, kredit müraciəti) — App\Services\Telegram\OrderTelegram
         'orders_group_id' => env('TELEGRAM_ORDERS_GROUP_ID'),
+        // Müştəri botu (@parfumshopai_bot): hesabı bağlama, sonra bildirişlər və AI köməkçi — App\Services\Messenger
+        'customer_bot_token' => env('TELEGRAM_CUSTOMER_BOT_TOKEN'),
+        'customer_bot_username' => env('TELEGRAM_CUSTOMER_BOT_USERNAME', 'parfumshopai_bot'),
     ],
 
     'parfumshop_sms' => [

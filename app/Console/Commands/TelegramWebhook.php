@@ -12,12 +12,15 @@ use Throwable;
  */
 class TelegramWebhook extends Command
 {
-    protected $signature = 'telegram:webhook {--info : Hazırkı webhook-u göstər, dəyişmə} {--delete : Webhook-u sil}';
+    protected $signature = 'telegram:webhook {--info : Hazırkı webhook-u göstər, dəyişmə} {--delete : Webhook-u sil}
+        {--customer : Müştəri botu (TELEGRAM_CUSTOMER_BOT_TOKEN), yoxsa işçi botu}';
 
-    protected $description = 'Telegram botunun webhook-unu bu sayta qoşur (depo cavabları üçün)';
+    protected $description = 'Telegram botunun webhook-unu bu sayta qoşur (işçi botu — depo cavabları; --customer — müştəri botu)';
 
-    public function handle(TelegramApi $api): int
+    public function handle(): int
     {
+        $customer = (bool) $this->option('customer');
+        $api = $customer ? TelegramApi::customer() : app(TelegramApi::class);
         try {
             $info = $api->call('getWebhookInfo');
             $this->line('Hazırkı webhook: '.(($info['url'] ?? '') ?: '— yoxdur')
@@ -33,7 +36,7 @@ class TelegramWebhook extends Command
                 return self::SUCCESS;
             }
 
-            $url = route('telegram.webhook');
+            $url = route($customer ? 'telegram.customer.webhook' : 'telegram.webhook');
             if (!str_starts_with($url, 'https://')) {
                 $this->error('Webhook yalnız https ünvanı ola bilər: '.$url.' (APP_URL-i yoxlayın).');
 
@@ -42,7 +45,7 @@ class TelegramWebhook extends Command
             if (($info['url'] ?? '') !== '' && $info['url'] !== $url && !$this->confirm('Bot hazırda başqa ünvana bağlıdır ('.$info['url'].'). Əvəz edilsin?')) {
                 return self::SUCCESS;
             }
-            $api->call('setWebhook', ['url' => $url, 'secret_token' => $api->webhookSecret(), 'allowed_updates' => ['message', 'callback_query']]);
+            $api->call('setWebhook', ['url' => $url, 'secret_token' => $api->webhookSecret(), 'allowed_updates' => $customer ? ['message'] : ['message', 'callback_query']]);
             $this->info('Webhook qoşuldu: '.$url);
 
             return self::SUCCESS;

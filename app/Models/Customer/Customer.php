@@ -22,6 +22,7 @@ class Customer extends Authenticatable
         'easy_order' => 'Asan sifarişdən',
         'google' => 'Saytda qeydiyyat (Google)',
         'legacy' => 'Köhnə sistemdən',
+        'telegram' => 'Telegram botundan',
     ];
 
     public function sourceLabel(): ?string
@@ -63,6 +64,17 @@ class Customer extends Authenticatable
             'registration_otp_expires_at' => 'datetime',
         ];
     }
+    /** Müştəri botunun hesabları (Telegram, sonra WhatsApp) */
+    public function messengerAccounts()
+    {
+        return $this->hasMany(CustomerMessengerAccount::class);
+    }
+
+    public function telegramAccount()
+    {
+        return $this->hasOne(CustomerMessengerAccount::class)->where('channel', CustomerMessengerAccount::TELEGRAM);
+    }
+
     /** Müştərinin ünvanları — "əlaqə ilə" xüsusi ünvanı (CustomerAddress::onCallFor) daxil deyil: saytda, seçimlərdə görünmür */
     public function addresses(){
         return $this->hasMany(CustomerAddress::class)->where('on_call', false);

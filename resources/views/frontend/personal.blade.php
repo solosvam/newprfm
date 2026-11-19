@@ -129,6 +129,28 @@
                         @endif
                     </div>
                 @endif
+
+                {{-- Telegram müştəri botu: bağlıdırsa — "Ayır", deyilsə — "Bağla" (birdəfəlik linklə botu açır) --}}
+                @if(\App\Http\Controllers\Frontend\TelegramLinkController::enabled())
+                    @php($telegramAccount = $user->telegramAccount)
+                    <div class="account-google">
+                        <div class="account-google__info">
+                            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#29A9EB"/><path fill="#fff" d="M5.4 11.8 16.9 7.4c.5-.2 1 .1.8.9l-2 9.3c-.1.6-.5.8-1 .5l-2.9-2.1-1.4 1.3c-.2.2-.3.3-.6.3l.2-3 5.4-4.9c.2-.2 0-.3-.3-.1l-6.7 4.2-2.9-.9c-.6-.2-.6-.6.1-.9z"/></svg>
+                            <div>
+                                <div class="account-google__title">Telegram</div>
+                                <div class="account-google__status">{{ $telegramAccount ? __('profile_telegram_connected', ['bot' => config('services.telegram.customer_bot_username')]) : __('profile_telegram_not_connected') }}</div>
+                            </div>
+                        </div>
+                        @if($telegramAccount)
+                            <form method="POST" action="{{ route('profile.telegram.disconnect') }}" onsubmit="return confirm(@js(__('profile_telegram_disconnect_confirm')))">
+                                @csrf
+                                <button type="submit" class="btn btn-outline">{{ __('profile_telegram_disconnect') }}</button>
+                            </form>
+                        @else
+                            <a href="{{ route('profile.telegram.connect') }}" class="btn btn-outline" target="_blank" rel="nofollow noopener">{{ __('profile_telegram_connect') }}</a>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
     </main>
