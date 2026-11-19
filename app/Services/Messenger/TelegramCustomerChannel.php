@@ -58,7 +58,7 @@ class TelegramCustomerChannel implements MessengerChannel
         if ($message->buttons) {
             $params['reply_markup'] = [
                 'keyboard' => $message->keepButtons
-                    ? [array_map(fn ($b) => ['text' => $b['label']], $message->buttons)]   // bir sırada
+                    ? array_chunk(array_map(fn ($b) => ['text' => $b['label']], $message->buttons), 3)   // sırada 3
                     : array_map(fn ($b) => [['text' => $b['label']] + (($b['contact'] ?? false) ? ['request_contact' => true] : [])], $message->buttons),
                 'resize_keyboard' => true,
                 'one_time_keyboard' => !$message->keepButtons,

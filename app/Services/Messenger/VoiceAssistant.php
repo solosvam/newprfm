@@ -95,7 +95,7 @@ class VoiceAssistant
      * @param list<array{role: string, text: string}> $history
      * @return array{text: string, audio: string, products: list<array>} cavabın mətni, OGG/Opus səsi, tapılan ətirlər
      */
-    public function talk(string $customerName, array $history, string $ogg): array
+    public function talk(string $customerName, array $history, string $ogg, ?string $voice = null): array
     {
         $messages = [['role' => 'system', 'content' => $this->instructions($customerName)]];
         foreach ($history as $turn) {
@@ -108,7 +108,7 @@ class VoiceAssistant
             $response = $this->ok($this->http(90)->post(self::API.'chat/completions', [
                 'model' => config('services.openai.audio_model'),
                 'modalities' => ['text', 'audio'],
-                'audio' => ['voice' => config('services.openai.tts_voice'), 'format' => 'opus'],
+                'audio' => ['voice' => $voice ?: config('services.openai.tts_voice'), 'format' => 'opus'],
                 'tools' => [['type' => 'function', 'function' => ['name' => ProductLookup::TOOL, 'description' => ProductLookup::TOOL_DESCRIPTION,
                     'parameters' => ProductLookup::TOOL_PARAMETERS]]],
                 'messages' => $messages,
@@ -167,11 +167,11 @@ class VoiceAssistant
     }
 
     /** Telegram səsli mesajı üçün OGG/Opus */
-    public function speak(string $text): string
+    public function speak(string $text, ?string $voice = null): string
     {
         $response = $this->http(60, false)->post(self::API.'audio/speech', [
             'model' => config('services.openai.tts_model'),
-            'voice' => config('services.openai.tts_voice'),
+            'voice' => $voice ?: config('services.openai.tts_voice'),
             'input' => $text,
             'instructions' => 'Azərbaycan dilində, təbii, mehriban və aydın danış — mağaza məsləhətçisi kimi. Sürət orta.',
             'response_format' => 'opus',

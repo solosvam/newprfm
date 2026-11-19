@@ -53,14 +53,14 @@ class CustomerBotTest extends TestCase
         $this->app->instance(TelegramCustomerChannel::class, new class(TelegramApi::customer()) extends TelegramCustomerChannel {
             public function send(string $recipientId, OutgoingMessage $message): void { CustomerBotTest::$replies[] = [$recipientId, $message]; }
             public function downloadVoice(string $fileId): string { return 'ogg:'.$fileId; }
-            public function sendVoice(string $recipientId, string $audio, ?string $caption = null): void { CustomerBotTest::$voices[] = [$recipientId, $audio, $caption]; }
+            public function sendVoice(string $recipientId, string $audio, ?string $caption = null): void { CustomerBotTest::$voices[] = [$recipientId, $audio, preg_replace('/ · \d+\.\d san\n/', ' · ', (string) $caption)]; }
             public function recordingVoice(string $recipientId): void {}
         });
         $this->app->instance(VoiceAssistant::class, new class extends VoiceAssistant {
             public function transcribe(string $audio): string { return 'Yay üçün ətir? ('.$audio.')'; }
             public function reply(string $customerName, array $history, string $text): array { return ['text' => $customerName.', '.count($history).' növbə: cavab', 'products' => []]; }
-            public function speak(string $text): string { return 'opus:'.$text; }
-            public function talk(string $customerName, array $history, string $ogg): array { return ['text' => $customerName.', '.count($history).' növbə: birbaşa', 'audio' => 'opus-direct:'.$ogg,
+            public function speak(string $text, ?string $voice = null): string { return 'opus:'.$text.($voice && $voice !== 'coral' ? ':'.$voice : ''); }
+            public function talk(string $customerName, array $history, string $ogg, ?string $voice = null): array { return ['text' => $customerName.', '.count($history).' növbə: birbaşa', 'audio' => 'opus-direct:'.$ogg,
                 'products' => $ogg === 'ogg:F2' ? [['id' => 5, 'name' => 'Creed Aventus EDP', 'url' => 'https://parfumshop.az/creed-aventus', 'sizes' => []]] : []]; }
         });
         $this->app->instance(SmsService::class, new class($this->sms) extends SmsService {
@@ -254,7 +254,7 @@ class CustomerBotTest extends TestCase
 
         $this->update(['voice' => ['file_id' => 'F1', 'duration' => 4]])->assertOk();
         $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]])->assertOk();
-        $this->assertSame([['777', 'opus:Rufat, 0 növbə: cavab', '🔗 Zəncir · Rufat, 0 növbə: cavab'], ['777', 'opus:Rufat, 2 növbə: cavab', '🔗 Zəncir · Rufat, 2 növbə: cavab']], self::$voices, 'söhbət yadda qalır');
+        $this->assertSame([['777', 'opus:Rufat, 0 növbə: cavab', '🔗 Zəncir · Coral · Rufat, 0 növbə: cavab'], ['777', 'opus:Rufat, 2 növbə: cavab', '🔗 Zəncir · Coral · Rufat, 2 növbə: cavab']], self::$voices, 'söhbət yadda qalır');
 
         $this->update(['voice' => ['file_id' => 'F3', 'duration' => 4]], 888)->assertOk();
         $this->assertCount(2, self::$voices, 'başqa nömrəyə səsli cavab yoxdur');
@@ -275,8 +275,8 @@ class CustomerBotTest extends TestCase
         $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]])->assertOk();
 
         $this->assertSame([
-            ['777', 'opus-direct:ogg:F1', '🎙 Birbaşa · Rufat, 0 növbə: birbaşa'],
-            ['777', 'opus-direct:ogg:F2', '🎙 Birbaşa · Rufat, 2 növbə: birbaşa'],
+            ['777', 'opus-direct:ogg:F1', '🎙 Birbaşa · Coral · Rufat, 0 növbə: birbaşa'],
+            ['777', 'opus-direct:ogg:F2', '🎙 Birbaşa · Coral · Rufat, 2 növbə: birbaşa'],
         ], self::$voices);
         $this->assertSame("Creed Aventus EDP\nhttps://parfumshop.az/creed-aventus", $this->lastReply()->text, 'tapılan ətirin linki səsdən sonra');
     }
@@ -288,7 +288,7 @@ class CustomerBotTest extends TestCase
         CustomerMessengerAccount::create(['customer_id' => $customer->id, 'channel' => 'telegram', 'external_id' => '777', 'linked_via' => 'contact']);
 
         $this->update(['text' => 'salam']);
-        $this->assertSame(['🎙 Birbaşa', '🔗 Zəncir'], array_column($this->lastReply()->buttons, 'label'));
+        $this->assertSame(['🎙 Birbaşa', '🔗 Zəncir', '🔊 Səs: Coral'], array_column($this->lastReply()->buttons, 'label'));
         $this->assertTrue($this->lastReply()->keepButtons);
         $this->assertStringContainsString('üsulu: 🎙 Birbaşa', $this->lastReply()->text);
 
@@ -298,6 +298,22 @@ class CustomerBotTest extends TestCase
         $this->update(['text' => '🎙 Birbaşa']);
         $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]]);
 
-        $this->assertSame(['🔗 Zəncir · Rufat, 0 növbə: cavab', '🎙 Birbaşa · Rufat, 2 növbə: birbaşa'], array_column(self::$voices, 2));
+        $this->assertSame(['🔗 Zəncir · Coral · Rufat, 0 növbə: cavab', '🎙 Birbaşa · Coral · Rufat, 2 növbə: birbaşa'], array_column(self::$voices, 2));
+    }
+
+    public function test_tester_picks_voice_and_gets_sample(): void
+    {
+        config(['services.telegram.customer_voice_mobiles' => '994103227575', 'services.telegram.customer_voice_mode' => 'chain', 'services.openai.tts_voice' => 'coral']);
+        $customer = Customer::forceCreate(['name' => 'Rufat', 'mobile' => '994103227575']);
+        CustomerMessengerAccount::create(['customer_id' => $customer->id, 'channel' => 'telegram', 'external_id' => '777', 'linked_via' => 'contact']);
+
+        $this->update(['text' => '🔊 Səs: Coral']);
+        $this->assertCount(13, $this->lastReply()->buttons);
+        $this->update(['text' => '🔊 Onyx']);
+        $this->assertSame('🔊 Səs: Onyx', $this->lastReply()->buttons[2]['label']);
+        $this->assertSame(['777', 'opus:Salam, Rufat! Sizə bu səslə cavab verəcəyəm.:onyx', '🔊 Onyx'], self::$voices[0], 'seçilən səsdən nümunə');
+
+        $this->update(['voice' => ['file_id' => 'F1', 'duration' => 4]]);
+        $this->assertSame(['777', 'opus:Rufat, 0 növbə: cavab:onyx', '🔗 Zəncir · Onyx · Rufat, 0 növbə: cavab'], self::$voices[1]);
     }
 }
