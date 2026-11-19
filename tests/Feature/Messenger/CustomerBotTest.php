@@ -58,9 +58,10 @@ class CustomerBotTest extends TestCase
         });
         $this->app->instance(VoiceAssistant::class, new class extends VoiceAssistant {
             public function transcribe(string $audio): string { return 'Yay üçün ətir? ('.$audio.')'; }
-            public function reply(string $customerName, array $history, string $text): string { return $customerName.', '.count($history).' növbə: cavab'; }
+            public function reply(string $customerName, array $history, string $text): array { return ['text' => $customerName.', '.count($history).' növbə: cavab', 'products' => []]; }
             public function speak(string $text): string { return 'opus:'.$text; }
-            public function talk(string $customerName, array $history, string $ogg): array { return ['text' => $customerName.', '.count($history).' növbə: birbaşa', 'audio' => 'opus-direct:'.$ogg]; }
+            public function talk(string $customerName, array $history, string $ogg): array { return ['text' => $customerName.', '.count($history).' növbə: birbaşa', 'audio' => 'opus-direct:'.$ogg,
+                'products' => $ogg === 'ogg:F2' ? [['id' => 5, 'name' => 'Creed Aventus EDP', 'url' => 'https://parfumshop.az/creed-aventus', 'sizes' => []]] : []]; }
         });
         $this->app->instance(SmsService::class, new class($this->sms) extends SmsService {
             public function __construct(private array &$log) {}
@@ -277,6 +278,7 @@ class CustomerBotTest extends TestCase
             ['777', 'opus-direct:ogg:F1', '🎙 Birbaşa · Rufat, 0 növbə: birbaşa'],
             ['777', 'opus-direct:ogg:F2', '🎙 Birbaşa · Rufat, 2 növbə: birbaşa'],
         ], self::$voices);
+        $this->assertSame("Creed Aventus EDP\nhttps://parfumshop.az/creed-aventus", $this->lastReply()->text, 'tapılan ətirin linki səsdən sonra');
     }
 
     public function test_tester_switches_voice_mode_with_buttons(): void

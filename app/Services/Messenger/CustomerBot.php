@@ -183,6 +183,7 @@ class CustomerBot
                 // Birbaşa: audio model dinləyib səslə cavab verir; müştərinin sözləri tarixçə üçün cavabdan SONRA mətnə çevrilir
                 $answer = $this->voice->talk($customer->name, $history, $audio);
                 $channel->sendVoice($to, $answer['audio'], $label.$answer['text']);
+                $this->sendLinks($channel, $to, $answer['products']);
                 $history[] = ['role' => 'user', 'text' => rescue(fn () => $this->voice->transcribe($audio), '(səsli mesaj)', false) ?: '(səsli mesaj)'];
                 $history[] = ['role' => 'assistant', 'text' => $answer['text']];
                 Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));
@@ -197,14 +198,25 @@ class CustomerBot
             }
             $answer = $this->voice->reply($customer->name, $history, $text);
             $channel->recordingVoice($to);
-            $channel->sendVoice($to, $this->voice->speak($answer), $label.$answer);
+            $channel->sendVoice($to, $this->voice->speak($answer['text']), $label.$answer['text']);
+            $this->sendLinks($channel, $to, $answer['products']);
             $history[] = ['role' => 'user', 'text' => $text];
-            $history[] = ['role' => 'assistant', 'text' => $answer];
+            $history[] = ['role' => 'assistant', 'text' => $answer['text']];
             Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));
         } catch (Throwable $e) {
             report($e);
             rescue(fn () => $channel->send($to, OutgoingMessage::text('Bağışlayın, cavab hazırlana bilmədi. Bir az sonra yenidən yoxlayın.')), null, false);
         }
+    }
+
+    /** Səsli cavabda adı çəkilən (funksiyanın tapdığı) ətirlərin linkləri — ayrıca mesaj; üsul düymələri yerində qalır */
+    private function sendLinks(MessengerChannel $channel, string $to, array $products): void
+    {
+        if ($products === []) {
+            return;
+        }
+        $lines = array_map(fn ($p) => $p['name']."\n".$p['url'], array_slice($products, 0, 3));
+        $channel->send($to, OutgoingMessage::withButtons(implode("\n\n", $lines), array_values(self::VOICE_MODES), null, true));
     }
 
     /** Kanalın təsdiqlədiyi öz nömrəsi: bazada varsa bağla, yoxdursa yeni müştəri */
