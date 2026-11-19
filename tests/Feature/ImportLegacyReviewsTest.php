@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Tests\TestCase;
@@ -13,7 +12,7 @@ class ImportLegacyReviewsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'services.legacy_site.url' => 'https://old.test']);
+        config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:']);
         DB::purge('sqlite');
         Schema::create('products', fn (Blueprint $t) => [$t->id(), $t->string('name'), $t->integer('old_id')->nullable()]);
         Schema::create('product_reviews', function (Blueprint $t) {
@@ -24,38 +23,41 @@ class ImportLegacyReviewsTest extends TestCase
         DB::table('products')->insert([['id' => 1, 'name' => 'Acqua di Gio', 'old_id' => 67], ['id' => 2, 'name' => 'Yeni', 'old_id' => null]]);
     }
 
-    private function review(string $author, int $stars, string $date, string $text): string
-    {
-        return '<div style="background: #F7F7F7;"><b>'.$author.'</b> | <img src="catalog/view/theme/cofran/image/stars_'.$stars.'.png" alt="" /><br />'
-            ."\n {$date}<br />\n <br />\n {$text}</div>\n";
-    }
-
     public function test_dry_run_then_apply_then_no_duplicates(): void
     {
-        Http::fake([
-            'old.test/index.php?route=product%2Fproduct%2Freview&product_id=67&page=1' => Http::response(
-                $this->review('Ruslan', 5, '16.01.2014', 'əla iyi var, meslehetlidi')
-                .$this->review('Ilqar &amp; Co', 4, '25.06.2012', "Cox gozel iyi var\nqizlarin da xowuna gelir")
-                .'<div class="pagination"><div class="results">göstərilir 1 dən 6 cəmi 6 (səhifə sayı 2)</div></div>'),
-            'old.test/index.php?route=product%2Fproduct%2Freview&product_id=67&page=2' => Http::response(
-                $this->review('Nika', 3, '17.03.2012', 'normal').'<div class="pagination"><div class="results">(səhifə sayı 2)</div></div>'),
-        ]);
+        $file = tempnam(sys_get_temp_dir(), 'rev');
+        file_put_contents($file, json_encode([
+            ['id' => 241, 'product' => 67, 'author' => 'Ruslan', 'text' => 'əla iyi var, meslehetlidi', 'rating' => 5, 'date' => '2014-01-16 10:33:28'],
+            ['id' => 123, 'product' => 67, 'author' => 'Lala &amp; Co', 'text' => "Necə deyərlər, &quot;doşab aldım, bal çıxdı&quot;\r\nƏla", 'rating' => 4, 'date' => '2012-06-25 10:29:00'],
+            ['id' => 999, 'product' => 12345, 'author' => 'Yox', 'text' => 'məhsulu yoxdur', 'rating' => 5, 'date' => '2015-01-01 00:00:00'],
+        ]));
 
-        $this->artisan('parfumshop:import-reviews', ['--sleep' => 0])->assertSuccessful();
+        $this->artisan('parfumshop:import-reviews', ['--file' => $file])->assertSuccessful();
         $this->assertSame(0, DB::table('product_reviews')->count()); // yoxlama — yazılmır
 
-        $this->artisan('parfumshop:import-reviews', ['--apply' => true, '--sleep' => 0])->assertSuccessful();
+        $this->artisan('parfumshop:import-reviews', ['--file' => $file, '--apply' => true])->assertSuccessful();
         $rows = DB::table('product_reviews')->orderBy('id')->get();
-        $this->assertSame(['Ruslan', 'Ilqar & Co', 'Nika'], $rows->pluck('author_name')->all());
-        $this->assertSame([5, 4, 3], $rows->pluck('rating')->map(fn ($r) => (int) $r)->all());
-        $this->assertSame("Cox gozel iyi var\nqizlarin da xowuna gelir", $rows[1]->comment);
-        $this->assertSame('2014-01-16', substr($rows[0]->created_at, 0, 10));
+        $this->assertSame(['Ruslan', 'Lala & Co'], $rows->pluck('author_name')->all());
+        $this->assertSame([5, 4], $rows->pluck('rating')->map(fn ($r) => (int) $r)->all());
+        $this->assertSame("Necə deyərlər, \"doşab aldım, bal çıxdı\"\nƏla", $rows[1]->comment);
+        $this->assertSame('2014-01-16 10:33:28', (string) $rows[0]->created_at);
         $this->assertNull($rows[0]->customer_id);
-        $this->assertSame([1, 1, 1], $rows->pluck('active')->map(fn ($a) => (int) $a)->all());
-        $this->assertSame([1, 1, 1], $rows->pluck('product_id')->map(fn ($a) => (int) $a)->all());
+        $this->assertSame([1, 1], $rows->pluck('active')->map(fn ($a) => (int) $a)->all());
+        $this->assertSame([1, 1], $rows->pluck('product_id')->map(fn ($a) => (int) $a)->all());
 
         // Təkrar işlədəndə ikiqat düşmür
-        $this->artisan('parfumshop:import-reviews', ['--apply' => true, '--sleep' => 0])->assertSuccessful();
-        $this->assertSame(3, DB::table('product_reviews')->count());
+        $this->artisan('parfumshop:import-reviews', ['--file' => $file, '--apply' => true])->assertSuccessful();
+        $this->assertSame(2, DB::table('product_reviews')->count());
+        unlink($file);
+    }
+
+    public function test_repo_file_has_only_customer_reviews(): void
+    {
+        $reviews = json_decode(file_get_contents(database_path('data/legacy-reviews.json')), true);
+        $this->assertNotEmpty($reviews);
+        foreach ($reviews as $r) {
+            $this->assertDoesNotMatchRegularExpression('/pa?r?fumshop/i', $r['author']); // mağazanın cavabları çıxarılıb
+            $this->assertNotSame('', trim($r['text']));
+        }
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Köhnə saytın (old.parfumshop.az) təsdiqlənmiş rəyləri (parfumshop:import-reviews):
  *  - customer_id boş ola bilər — köhnə rəyi qonaq da yazırdı, yalnız adı məlumdur (author_name);
- *  - legacy_key — köhnə rəyin açarı (köhnə məhsul ID + ad + tarix + mətn), təkrar köçürmədə ikiqat düşməsin.
+ *  - legacy_key — köhnə rəyin açarı (sha1 "oc_review:{review_id}"), təkrar köçürmədə ikiqat düşməsin.
  */
 return new class extends Migration
 {
