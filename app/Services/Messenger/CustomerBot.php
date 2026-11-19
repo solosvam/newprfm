@@ -29,7 +29,9 @@ class CustomerBot
     public const VOICE_MODES = ['direct' => '🎙 Birbaşa', 'chain' => '🔗 Zəncir'];
     /** OpenAI səsləri — hər ikisi (gpt-audio-mini və gpt-4o-mini-tts) dəstəkləyir */
     public const VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse', 'marin', 'cedar'];
-    public const VOICE_MENU = '🔊 Səs';
+    public const SPEEDS = ['0.8', '1', '1.2', '1.4', '1.6'];
+    /** Sınayanın menyusu (☰) — yalnız onun çatında */
+    public const MENU = ['usul' => 'Səsli cavab üsulu', 'ses' => 'Səs', 'suret' => 'Danışıq sürəti'];
 
     private const STATE_TTL_MINUTES = 10;
     private const MAX_CODE_ATTEMPTS = 5;
@@ -42,6 +44,15 @@ class CustomerBot
     public function handle(IncomingMessage $message, MessengerChannel $channel): void
     {
         $reply = fn (OutgoingMessage $out) => $channel->send($message->senderId, $out);
+
+        if ($message->action !== null) {   // mesajın altındakı seçim düyməsi (səsli cavabın ayarları)
+            $account = $this->accounts->find($message->channel, $message->senderId);
+            $account && $this->voiceAllowed($account->customer)
+                ? $this->onSetting($message, $account->customer, $channel)
+                : $channel->acknowledge($message);
+
+            return;
+        }
 
         if (preg_match('~^/start(?:@\w+)?\s+(\S+)$~', $message->text, $m)) {
             $customer = $this->accounts->consumeLinkToken($m[1]);
@@ -114,36 +125,23 @@ class CustomerBot
         }
 
         if ($this->voiceAllowed($customer)) {
+            $this->ensureMenu($customer, $message, $channel);
             if ($message->voiceFileId !== null) {
-                $mode = $this->voiceMode($customer);
-                $this->later(fn () => $this->voiceReply($message, $customer, $channel, $mode));
+                $settings = $this->settings($customer);
+                $this->later(fn () => $this->voiceReply($message, $customer, $channel, $settings['mode'], $settings['voice'], $settings['speed']));
 
                 return;
             }
-            if (str_starts_with($message->text, self::VOICE_MENU)) {
-                $reply(OutgoingMessage::withButtons('Səsi seçin — seçəndə nümunə göndərəcəyəm:', array_map(fn ($v) => '🔊 '.ucfirst($v), self::VOICES), null, true));
-
-                return;
-            }
-            $voice = array_search($message->text, array_map(fn ($v) => '🔊 '.ucfirst($v), self::VOICES), true);
-            if ($voice !== false) {
-                $voice = self::VOICES[$voice];
-                Cache::forever($this->voiceKey($customer), $voice);
-                $reply(OutgoingMessage::withButtons('Səs: '.ucfirst($voice).'.', $this->mainButtons($customer), null, true));
-                $this->later(fn () => rescue(fn () => $channel->sendVoice($message->senderId,
-                    $this->voice->speak('Salam, '.$customer->name.'! Sizə bu səslə cavab verəcəyəm.', $voice), '🔊 '.ucfirst($voice)), null, true));
-
-                return;
-            }
-            $mode = array_search($message->text, self::VOICE_MODES, true);
-            if ($mode !== false) {
-                Cache::forever($this->voiceModeKey($customer), $mode);
-            }
-            $reply(OutgoingMessage::withButtons(
-                ($mode !== false ? 'Səsli cavab üsulu: ' : 'Salam, '.$customer->name.'! Səsli mesaj göndərin. Səsli cavab üsulu: ')
-                    .self::VOICE_MODES[$this->voiceMode($customer)].', səs: '.ucfirst($this->voiceName($customer)).".\n🎙 Birbaşa — model səsinizi dinləyib dərhal səslə cavab verir.\n🔗 Zəncir — səs mətnə, GPT cavabı, cavab səsə.",
-                $this->mainButtons($customer), null, true,
-            ));
+            $picker = match (true) {
+                (bool) preg_match('~^/usul(?:@\w+)?$~', $message->text) => 'mode',
+                (bool) preg_match('~^/ses(?:@\w+)?$~', $message->text) => 'voice',
+                (bool) preg_match('~^/suret(?:@\w+)?$~', $message->text) => 'speed',
+                default => null,
+            };
+            $reply($picker ? $this->picker($picker, $customer) : OutgoingMessage::text('Salam, '.$customer->name.'! Səsli mesaj göndərin.'
+                ."\n".$this->settingsLine($customer)
+                ."\n\nDəyişmək üçün menyu (☰): /usul — üsul, /ses — səs, /suret — sürət."
+                ."\n🎙 Birbaşa — model səsinizi dinləyib dərhal səslə cavab verir.\n🔗 Zəncir — səs mətnə, GPT cavabı, cavab səsə."));
 
             return;
         }
@@ -159,36 +157,82 @@ class CustomerBot
         return in_array($customer->mobile, $mobiles, true);
     }
 
-    /** Müştərinin seçdiyi üsul (botdakı düymələr), seçməyibsə — services.telegram.customer_voice_mode */
-    private function voiceMode(Customer $customer): string
+    /** Sınayanın ayarları (menyudan seçir; Cache, müddətsiz); seçməyibsə — konfiqurasiya */
+    private function settings(Customer $customer): array
     {
-        $mode = Cache::get($this->voiceModeKey($customer)) ?: config('services.telegram.customer_voice_mode');
+        $saved = Cache::get('messenger:voice-settings:'.$customer->id, []);
+        $mode = $saved['mode'] ?? config('services.telegram.customer_voice_mode');
+        $voice = $saved['voice'] ?? config('services.openai.tts_voice');
+        $speed = $saved['speed'] ?? '1';
 
-        return isset(self::VOICE_MODES[$mode]) ? $mode : 'direct';
+        return [
+            'mode' => isset(self::VOICE_MODES[$mode]) ? $mode : 'direct',
+            'voice' => in_array($voice, self::VOICES, true) ? $voice : 'coral',
+            'speed' => in_array($speed, self::SPEEDS, true) ? $speed : '1',
+        ];
     }
 
-    /** Müştərinin seçdiyi səs, seçməyibsə — services.openai.tts_voice */
-    private function voiceName(Customer $customer): string
+    private function settingsLine(Customer $customer): string
     {
-        $voice = Cache::get($this->voiceKey($customer)) ?: config('services.openai.tts_voice');
+        $s = $this->settings($customer);
 
-        return in_array($voice, self::VOICES, true) ? $voice : 'coral';
+        return 'Üsul: '.self::VOICE_MODES[$s['mode']].' · səs: '.ucfirst($s['voice']).' · sürət: '.$s['speed'].'x';
     }
 
-    private function voiceKey(Customer $customer): string
+    /** Ayar seçimi — mesajın altındakı düymələr; seçilən ✓ ilə */
+    private function picker(string $key, Customer $customer): OutgoingMessage
     {
-        return 'messenger:voice-name:'.$customer->id;
+        $current = $this->settings($customer)[$key];
+        $options = match ($key) {
+            'mode' => self::VOICE_MODES,
+            'voice' => array_combine(self::VOICES, array_map('ucfirst', self::VOICES)),
+            'speed' => array_combine(self::SPEEDS, array_map(fn ($s) => $s.'x', self::SPEEDS)),
+        };
+        $buttons = [];
+        foreach ($options as $value => $label) {
+            $buttons[] = [((string) $value === $current ? '✓ ' : '').$label, $key.':'.$value];   // (string): '1' massiv açarında int olur
+        }
+        $title = ['mode' => 'Səsli cavab üsulu:', 'voice' => 'Səs (seçəndə nümunə göndərirəm):', 'speed' => 'Danışıq sürəti:'][$key];
+
+        return OutgoingMessage::choices($title, array_chunk($buttons, $key === 'mode' ? 2 : ($key === 'speed' ? 5 : 3)));
     }
 
-    /** Sınayanın daimi düymələri: üsul + səs */
-    private function mainButtons(Customer $customer): array
+    /** Seçim düyməsi basıldı: yadda saxla, düymələrdə ✓-i yenilə; səs seçiləndə — nümunə */
+    private function onSetting(IncomingMessage $message, Customer $customer, MessengerChannel $channel): void
     {
-        return [...array_values(self::VOICE_MODES), self::VOICE_MENU.': '.ucfirst($this->voiceName($customer))];
+        [$key, $value] = array_pad(explode(':', (string) $message->action, 2), 2, '');
+        $valid = match ($key) {
+            'mode' => isset(self::VOICE_MODES[$value]),
+            'voice' => in_array($value, self::VOICES, true),
+            'speed' => in_array($value, self::SPEEDS, true),
+            default => false,
+        };
+        if (!$valid) {
+            $channel->acknowledge($message);
+
+            return;
+        }
+        $cacheKey = 'messenger:voice-settings:'.$customer->id;
+        Cache::forever($cacheKey, [$key => $value] + Cache::get($cacheKey, []));
+        $channel->acknowledge($message, '✓ '.$this->settingsLine($customer));
+        if ($message->actionMessageId) {
+            $channel->replace($message->senderId, $message->actionMessageId, $this->picker($key, $customer));
+        }
+        if ($key === 'voice') {
+            $settings = $this->settings($customer);
+            $this->later(fn () => rescue(fn () => $channel->sendVoice($message->senderId,
+                $this->voice->speak('Salam, '.$customer->name.'! Sizə bu səslə cavab verəcəyəm.', $value, (float) $settings['speed']), '🔊 '.ucfirst($value)), null, true));
+        }
     }
 
-    private function voiceModeKey(Customer $customer): string
+    /** Menyu (☰ /usul /ses /suret) — sınayanın çatında bir dəfə qurulur */
+    private function ensureMenu(Customer $customer, IncomingMessage $message, MessengerChannel $channel): void
     {
-        return 'messenger:voice-mode:'.$customer->id;
+        $key = 'messenger:menu:v1:'.$message->channel.':'.$message->senderId;
+        if (!Cache::has($key)) {
+            rescue(fn () => $channel->setMenu($message->senderId, self::MENU), null, true);
+            Cache::forever($key, true);
+        }
     }
 
     /** Uzun iş (OpenAI 3 sorğu) — veb sorğuda cavab Telegram-a qayıdandan sonra; konsolda (telegram:customer-poll) dərhal */
@@ -202,7 +246,7 @@ class CustomerBot
     }
 
     /** Səs → mətn → AI cavabı → səs. Söhbətin son 10 növbəsi yadda saxlanır (2 saat). */
-    public function voiceReply(IncomingMessage $message, Customer $customer, MessengerChannel $channel, string $mode = 'direct'): void
+    public function voiceReply(IncomingMessage $message, Customer $customer, MessengerChannel $channel, string $mode = 'direct', string $voice = 'coral', string $speed = '1'): void
     {
         $to = $message->senderId;
         if ($message->voiceDuration > self::MAX_VOICE_SECONDS) {
@@ -212,19 +256,19 @@ class CustomerBot
         }
         $channel->recordingVoice($to);
         $started = microtime(true);
-        $voice = $this->voiceName($customer);
-        $buttons = $this->mainButtons($customer);
         $historyKey = 'messenger:voice-history:'.$message->channel.':'.$to;
         try {
             $audio = $channel->downloadVoice($message->voiceFileId);
             $history = Cache::get($historyKey, []);
             // müqayisə üçün: üsul, səs və cavabın neçə saniyəyə hazırlandığı (Telegram-dan yükləmədən səs hazır olana qədər)
-            $label = fn () => self::VOICE_MODES[$mode].' · '.ucfirst($voice).' · '.number_format(microtime(true) - $started, 1).' san'."\n";
+            $label = fn () => self::VOICE_MODES[$mode].' · '.ucfirst($voice).' · '.$speed.'x · '.number_format(microtime(true) - $started, 1).' san'."\n";
             if ($mode === 'direct') {
                 // Birbaşa: audio model dinləyib səslə cavab verir; müştərinin sözləri tarixçə üçün cavabdan SONRA mətnə çevrilir
                 $answer = $this->voice->talk($customer->name, $history, $audio, $voice);
-                $channel->sendVoice($to, $answer['audio'], $label().$answer['text']);
-                $this->sendLinks($channel, $to, $answer['products'], $buttons);
+                // Audio modelin sürət parametri yoxdur — hazır səs ffmpeg ilə sürətləndirilir (ton dəyişmir)
+                $speech = $speed === '1' ? $answer['audio'] : rescue(fn () => $this->voice->retime($answer['audio'], (float) $speed), $answer['audio'], true);
+                $channel->sendVoice($to, $speech, $label().$answer['text']);
+                $this->sendLinks($channel, $to, $answer['products']);
                 $history[] = ['role' => 'user', 'text' => rescue(fn () => $this->voice->transcribe($audio), '(səsli mesaj)', false) ?: '(səsli mesaj)'];
                 $history[] = ['role' => 'assistant', 'text' => $answer['text']];
                 Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));
@@ -239,9 +283,9 @@ class CustomerBot
             }
             $answer = $this->voice->reply($customer->name, $history, $text);
             $channel->recordingVoice($to);
-            $speech = $this->voice->speak($answer['text'], $voice);
+            $speech = $this->voice->speak($answer['text'], $voice, (float) $speed);
             $channel->sendVoice($to, $speech, $label().$answer['text']);
-            $this->sendLinks($channel, $to, $answer['products'], $buttons);
+            $this->sendLinks($channel, $to, $answer['products']);
             $history[] = ['role' => 'user', 'text' => $text];
             $history[] = ['role' => 'assistant', 'text' => $answer['text']];
             Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));
@@ -251,14 +295,14 @@ class CustomerBot
         }
     }
 
-    /** Səsli cavabda adı çəkilən (funksiyanın tapdığı) ətirlərin linkləri — ayrıca mesaj; üsul düymələri yerində qalır */
-    private function sendLinks(MessengerChannel $channel, string $to, array $products, array $buttons): void
+    /** Səsli cavabda adı çəkilən (funksiyanın tapdığı) ətirlərin linkləri — ayrıca mesaj */
+    private function sendLinks(MessengerChannel $channel, string $to, array $products): void
     {
         if ($products === []) {
             return;
         }
         $lines = array_map(fn ($p) => $p['name']."\n".$p['url'], array_slice($products, 0, 3));
-        $channel->send($to, OutgoingMessage::withButtons(implode("\n\n", $lines), $buttons, null, true));
+        $channel->send($to, OutgoingMessage::text(implode("\n\n", $lines)));
     }
 
     /** Kanalın təsdiqlədiyi öz nömrəsi: bazada varsa bağla, yoxdursa yeni müştəri */

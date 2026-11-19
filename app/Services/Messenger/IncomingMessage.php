@@ -19,6 +19,9 @@ final class IncomingMessage
         public readonly bool $foreignContact = false,  // başqasının kontaktını göndərib
         public readonly ?string $voiceFileId = null,     // səsli mesaj (kanalın fayl ID-si)
         public readonly int $voiceDuration = 0,         // saniyə
+        public readonly ?string $action = null,          // mesajın altındakı seçim düyməsi basıldı (dəyəri, məs. "voice:onyx")
+        public readonly ?string $actionId = null,        // kanala "qəbul olundu" cavabı üçün
+        public readonly ?int $actionMessageId = null,    // düymələrin olduğu mesaj — seçim işarəsi yenilənir
     ) {
     }
 }

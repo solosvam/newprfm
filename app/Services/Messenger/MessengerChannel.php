@@ -19,6 +19,15 @@ interface MessengerChannel
     /** Səsli cavab (OGG/Opus); caption — səsin mətni */
     public function sendVoice(string $recipientId, string $audio, ?string $caption = null): void;
 
+    /** Seçim düyməsi basıldı — kanala qəbul (Telegram: düymədəki "saat" işarəsi itir), istəyə görə qısa bildiriş */
+    public function acknowledge(IncomingMessage $message, ?string $notice = null): void;
+
+    /** Seçim düymələri olan mesajı yeniləyir (seçilən işarələnir) */
+    public function replace(string $recipientId, int $messageId, OutgoingMessage $message): void;
+
+    /** Bu müştərinin menyusu (Telegram: ☰ əmrlər siyahısı, yalnız onun çatında); [] — menyu silinir */
+    public function setMenu(string $recipientId, array $commands): void;
+
     /** "Səs yazılır…" statusu — cavab hazırlanarkən */
     public function recordingVoice(string $recipientId): void;
 }

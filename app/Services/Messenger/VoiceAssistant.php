@@ -145,14 +145,26 @@ class VoiceAssistant
         return ProductLookup::forModel($products);
     }
 
+    /** Hazır səsi sürətləndirir/yavaşladır, ton dəyişmir (ffmpeg atempo) — birbaşa üsul üçün, audio modelin sürət parametri yoxdur */
+    public function retime(string $ogg, float $speed): string
+    {
+        return $this->ffmpeg($ogg, 'ogg', ['-filter:a', 'atempo='.max(0.5, min(2.0, $speed)), '-c:a', 'libopus', '-b:a', '48k']);
+    }
+
     /** Telegram-ın OGG/Opus səsi → wav (audio model ogg qəbul etmir) */
     public function toWav(string $ogg): string
     {
-        $in = tempnam(sys_get_temp_dir(), 'voice').'.ogg';
-        $out = substr($in, 0, -4).'.wav';
+        return $this->ffmpeg($ogg, 'wav', ['-ac', '1', '-ar', '16000']);
+    }
+
+    private function ffmpeg(string $ogg, string $outExtension, array $options): string
+    {
+        $base = tempnam(sys_get_temp_dir(), 'voice');
+        $in = $base.'.ogg';
+        $out = $base.'-out.'.$outExtension;
         file_put_contents($in, $ogg);
         try {
-            $process = new Process([config('services.openai.ffmpeg'), '-hide_banner', '-loglevel', 'error', '-y', '-i', $in, '-ac', '1', '-ar', '16000', $out]);
+            $process = new Process([config('services.openai.ffmpeg'), '-hide_banner', '-loglevel', 'error', '-y', '-i', $in, ...$options, $out]);
             $process->setTimeout(30)->run();
             if (!$process->isSuccessful() || !is_file($out)) {
                 throw new RuntimeException('ffmpeg səsi çevirmədi: '.trim($process->getErrorOutput() ?: 'ffmpeg tapılmadı ('.config('services.openai.ffmpeg').')'));
@@ -162,12 +174,12 @@ class VoiceAssistant
         } finally {
             @unlink($in);
             @unlink($out);
-            @unlink(substr($in, 0, -4));
+            @unlink($base);
         }
     }
 
     /** Telegram səsli mesajı üçün OGG/Opus */
-    public function speak(string $text, ?string $voice = null): string
+    public function speak(string $text, ?string $voice = null, float $speed = 1.0): string
     {
         $response = $this->http(60, false)->post(self::API.'audio/speech', [
             'model' => config('services.openai.tts_model'),
@@ -175,7 +187,7 @@ class VoiceAssistant
             'input' => $text,
             'instructions' => 'Azərbaycan dilində, təbii, mehriban və aydın danış — mağaza məsləhətçisi kimi. Sürət orta.',
             'response_format' => 'opus',
-        ]);
+        ] + ($speed !== 1.0 ? ['speed' => $speed] : []));
 
         return $this->ok($response)->body();
     }

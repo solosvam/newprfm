@@ -45,7 +45,7 @@ class TelegramWebhook extends Command
             if (($info['url'] ?? '') !== '' && $info['url'] !== $url && !$this->confirm('Bot hazırda başqa ünvana bağlıdır ('.$info['url'].'). Əvəz edilsin?')) {
                 return self::SUCCESS;
             }
-            $api->call('setWebhook', ['url' => $url, 'secret_token' => $api->webhookSecret(), 'allowed_updates' => $customer ? ['message'] : ['message', 'callback_query']]);
+            $api->call('setWebhook', ['url' => $url, 'secret_token' => $api->webhookSecret(), 'allowed_updates' => ['message', 'callback_query']]);
             $this->info('Webhook qoşuldu: '.$url);
 
             return self::SUCCESS;

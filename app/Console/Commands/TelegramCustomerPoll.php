@@ -23,7 +23,7 @@ class TelegramCustomerPoll extends Command
         $this->info('Müştəri botu dinlənilir (Ctrl+C — dayandır)…');
         while (true) {
             try {
-                $updates = $channel->api()->call('getUpdates', ['offset' => $offset, 'timeout' => 10, 'allowed_updates' => ['message']]);
+                $updates = $channel->api()->call('getUpdates', ['offset' => $offset, 'timeout' => 10, 'allowed_updates' => ['message', 'callback_query']]);
             } catch (Throwable $e) {
                 $this->error($e->getMessage());
 
