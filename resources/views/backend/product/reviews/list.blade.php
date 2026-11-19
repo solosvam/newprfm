@@ -14,6 +14,22 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        <form method="GET" class="card mb-4"><div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-6 col-xl-5"><label class="form-label" for="revSearch">Ətir</label>
+                    <input id="revSearch" type="search" name="q" class="form-control" value="{{ $search }}" placeholder="Brend və ya ətrin adı, məs.: creed aventus" maxlength="100"></div>
+                <div class="col-6 col-md-3 col-xl-2"><label class="form-label" for="revRating">Reytinq</label>
+                    <select id="revRating" name="rating" class="form-select">
+                        <option value="">Hamısı</option>
+                        @foreach([5, 4, 3, 2, 1] as $star)<option value="{{ $star }}" @selected($rating === $star)>{{ $star }} / 5</option>@endforeach
+                    </select></div>
+                <div class="col-6 col-md-3 col-xl-2"><button class="btn btn-primary w-100">Filter</button></div>
+                @if($search !== '' || $rating)
+                    <div class="col-12 col-xl-3"><a href="{{ route(request()->route()->getName()) }}" class="btn btn-link px-0">Filtri sıfırla</a></div>
+                @endif
+            </div>
+        </div></form>
+
         @foreach(['pending' => 'Təsdiqlənməmiş rəylər', 'approved' => 'Təsdiqlənmiş rəylər'] as $group => $heading)
             @php($records = $group === 'pending' ? $pending : $approved)
 
