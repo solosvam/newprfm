@@ -47,7 +47,8 @@ class TelegramCustomerChannel implements MessengerChannel
             text: trim((string) ($message['text'] ?? '')),
             verifiedPhone: $own ? preg_replace('/\D+/', '', (string) ($contact['phone_number'] ?? '')) : null,
             foreignContact: is_array($contact) && !$own,
-            voice: isset($message['voice']) || isset($message['audio']),
+            voiceFileId: $message['voice']['file_id'] ?? null,
+            voiceDuration: (int) ($message['voice']['duration'] ?? 0),
         );
     }
 
@@ -64,5 +65,24 @@ class TelegramCustomerChannel implements MessengerChannel
             $params['reply_markup'] = ['remove_keyboard' => true];
         }
         $this->api->call('sendMessage', $params);
+    }
+
+    public function downloadVoice(string $fileId): string
+    {
+        return $this->api->downloadFile($fileId);
+    }
+
+    public function sendVoice(string $recipientId, string $audio, ?string $caption = null): void
+    {
+        $params = ['chat_id' => $recipientId];
+        if ($caption !== null && $caption !== '') {
+            $params['caption'] = mb_substr($caption, 0, 1000);
+        }
+        $this->api->upload('sendVoice', $params, 'voice', $audio, 'cavab.ogg');
+    }
+
+    public function recordingVoice(string $recipientId): void
+    {
+        rescue(fn () => $this->api->call('sendChatAction', ['chat_id' => $recipientId, 'action' => 'record_voice']), null, false);
     }
 }

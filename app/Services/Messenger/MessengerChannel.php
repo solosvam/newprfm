@@ -12,4 +12,13 @@ interface MessengerChannel
     public function parse(array $update): ?IncomingMessage;
 
     public function send(string $recipientId, OutgoingMessage $message): void;
+
+    /** Səsli mesajın faylı (IncomingMessage::$voiceFileId) */
+    public function downloadVoice(string $fileId): string;
+
+    /** Səsli cavab (OGG/Opus); caption — səsin mətni */
+    public function sendVoice(string $recipientId, string $audio, ?string $caption = null): void;
+
+    /** "Səs yazılır…" statusu — cavab hazırlanarkən */
+    public function recordingVoice(string $recipientId): void;
 }

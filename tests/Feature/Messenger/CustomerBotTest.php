@@ -9,6 +9,7 @@ use App\Services\Messenger\CustomerBot;
 use App\Services\Messenger\MessengerAccounts;
 use App\Services\Messenger\OutgoingMessage;
 use App\Services\Messenger\TelegramCustomerChannel;
+use App\Services\Messenger\VoiceAssistant;
 use App\Services\SmsService;
 use App\Services\Telegram\TelegramApi;
 use Illuminate\Database\Schema\Blueprint;
@@ -23,6 +24,8 @@ use Tests\TestCase;
 class CustomerBotTest extends TestCase
 {
     public static array $replies = [];
+
+    public static array $voices = [];
 
     private array $sms = [];
 
@@ -45,9 +48,18 @@ class CustomerBotTest extends TestCase
             $t->unique(['channel', 'external_id']); $t->unique(['customer_id', 'channel']);
         });
         self::$replies = [];
+        self::$voices = [];
         self::$bonuses = [];
         $this->app->instance(TelegramCustomerChannel::class, new class(TelegramApi::customer()) extends TelegramCustomerChannel {
             public function send(string $recipientId, OutgoingMessage $message): void { CustomerBotTest::$replies[] = [$recipientId, $message]; }
+            public function downloadVoice(string $fileId): string { return 'ogg:'.$fileId; }
+            public function sendVoice(string $recipientId, string $audio, ?string $caption = null): void { CustomerBotTest::$voices[] = [$recipientId, $audio, $caption]; }
+            public function recordingVoice(string $recipientId): void {}
+        });
+        $this->app->instance(VoiceAssistant::class, new class extends VoiceAssistant {
+            public function transcribe(string $audio): string { return 'Yay üçün ətir? ('.$audio.')'; }
+            public function reply(string $customerName, array $history, string $text): string { return $customerName.', '.count($history).' növbə: cavab'; }
+            public function speak(string $text): string { return 'opus:'.$text; }
         });
         $this->app->instance(SmsService::class, new class($this->sms) extends SmsService {
             public function __construct(private array &$log) {}
@@ -228,5 +240,26 @@ class CustomerBotTest extends TestCase
 
         $this->actingAs($customer)->from('/profile/personal')->post('/profile/telegram/disconnect')->assertRedirect('/profile/personal');
         $this->assertSame(0, CustomerMessengerAccount::count());
+    }
+
+    public function test_voice_message_gets_voice_reply_only_for_allowed_number(): void
+    {
+        config(['services.telegram.customer_voice_mobiles' => '+994 10 322 75 75']);
+        $allowed = Customer::forceCreate(['name' => 'Rufat', 'mobile' => '994103227575']);
+        CustomerMessengerAccount::create(['customer_id' => $allowed->id, 'channel' => 'telegram', 'external_id' => '777', 'linked_via' => 'contact']);
+        $other = Customer::forceCreate(['name' => 'Aysel', 'mobile' => '994501234567']);
+        CustomerMessengerAccount::create(['customer_id' => $other->id, 'channel' => 'telegram', 'external_id' => '888', 'linked_via' => 'contact']);
+
+        $this->update(['voice' => ['file_id' => 'F1', 'duration' => 4]])->assertOk();
+        $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]])->assertOk();
+        $this->assertSame([['777', 'opus:Rufat, 0 növbə: cavab', 'Rufat, 0 növbə: cavab'], ['777', 'opus:Rufat, 2 növbə: cavab', 'Rufat, 2 növbə: cavab']], self::$voices, 'söhbət yadda qalır');
+
+        $this->update(['voice' => ['file_id' => 'F3', 'duration' => 4]], 888)->assertOk();
+        $this->assertCount(2, self::$voices, 'başqa nömrəyə səsli cavab yoxdur');
+        $this->assertStringContainsString('Salam, Aysel', $this->lastReply()->text);
+
+        $this->update(['voice' => ['file_id' => 'F4', 'duration' => 300]])->assertOk();
+        $this->assertCount(2, self::$voices);
+        $this->assertStringContainsString('2 dəqiqədən', $this->lastReply()->text);
     }
 }

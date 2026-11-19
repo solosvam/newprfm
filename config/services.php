@@ -77,6 +77,8 @@ return [
         // Müştəri botu (@parfumshopai_bot): hesabı bağlama, sonra bildirişlər və AI köməkçi — App\Services\Messenger
         'customer_bot_token' => env('TELEGRAM_CUSTOMER_BOT_TOKEN'),
         'customer_bot_username' => env('TELEGRAM_CUSTOMER_BOT_USERNAME', 'parfumshopai_bot'),
+        // Səsli mesaja səsli cavab — sınaq: yalnız bu nömrələrə bağlı hesablara (vergüllə, 994XXXXXXXXX)
+        'customer_voice_mobiles' => env('TELEGRAM_CUSTOMER_VOICE_MOBILES', '994103227575'),
     ],
 
     'parfumshop_sms' => [
@@ -105,6 +107,10 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-5-mini'),
+        // Müştəri botunun səsli cavabı: səs → mətn, mətn → səs (App\Services\Messenger\VoiceAssistant)
+        'transcribe_model' => env('OPENAI_TRANSCRIBE_MODEL', 'gpt-4o-mini-transcribe'),
+        'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
+        'tts_voice' => env('OPENAI_TTS_VOICE', 'coral'),
     ],
 
     'serper' => [

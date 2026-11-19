@@ -48,6 +48,34 @@ class TelegramApi
         return $data['result'] ?? null;
     }
 
+    /** Faylı yükləyir (səsli mesaj və s.): getFile → https://api.telegram.org/file/bot<token>/<path> */
+    public function downloadFile(string $fileId): string
+    {
+        $file = $this->call('getFile', ['file_id' => $fileId]);
+        $response = Http::timeout(30)->get('https://api.telegram.org/file/bot'.$this->token().'/'.($file['file_path'] ?? ''));
+        if (!$response->successful()) {
+            throw new RuntimeException('Telegram: fayl yüklənmədi (HTTP '.$response->status().')');
+        }
+
+        return $response->body();
+    }
+
+    /** Fayl göndərən metodlar (sendVoice və s.) — multipart */
+    public function upload(string $method, array $params, string $field, string $contents, string $filename): mixed
+    {
+        $token = $this->token();
+        if ($token === '') {
+            throw new RuntimeException('Telegram bot tokeni yazılmayıb.');
+        }
+        $response = Http::timeout(60)->attach($field, $contents, $filename)->post('https://api.telegram.org/bot'.$token.'/'.$method, $params);
+        $data = $response->json();
+        if (!is_array($data) || !($data['ok'] ?? false)) {
+            throw new RuntimeException('Telegram: '.(is_array($data) ? ($data['description'] ?? 'xəta') : 'HTTP '.$response->status()));
+        }
+
+        return $data['result'] ?? null;
+    }
+
     /** Webhook sorğusunun həqiqətən Telegram-dan gəldiyini yoxlamaq üçün gizli açar (tokendən törənir, ayrıca .env lazım deyil) */
     public function webhookSecret(): string
     {

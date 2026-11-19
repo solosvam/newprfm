@@ -17,7 +17,8 @@ final class IncomingMessage
         public readonly string $text = '',
         public readonly ?string $verifiedPhone = null,
         public readonly bool $foreignContact = false,  // başqasının kontaktını göndərib
-        public readonly bool $voice = false,
+        public readonly ?string $voiceFileId = null,     // səsli mesaj (kanalın fayl ID-si)
+        public readonly int $voiceDuration = 0,         // saniyə
     ) {
     }
 }

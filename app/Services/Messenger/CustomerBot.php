@@ -19,7 +19,7 @@ use Throwable;
  *     WhatsApp-da nömrə hər mesajda məlumdur — ilk mesajda elə bu yolla bağlanır.
  *  2. "Başqa nömrə ilə" — saytdakı nömrəni yazır, ora SMS kodu gedir, kodu botda yazır.
  *  3. Saytda profil → Telegram → "Bağla" → /start <birdəfəlik açar> (MessengerAccounts::createLinkToken).
- * Bağlı müştəriyə hələlik yalnız salam; /stop — ayırır. Söhbətin addımı (nömrə / kod gözlənilir) — Cache-də, 10 dəqiqə.
+ * Bağlı müştəriyə hələlik yalnız salam; səsli mesaja səsli cavab — sınaq, yalnız seçilmiş nömrələrə; /stop — ayırır. Söhbətin addımı (nömrə / kod gözlənilir) — Cache-də, 10 dəqiqə.
  */
 class CustomerBot
 {
@@ -29,8 +29,9 @@ class CustomerBot
 
     private const STATE_TTL_MINUTES = 10;
     private const MAX_CODE_ATTEMPTS = 5;
+    private const MAX_VOICE_SECONDS = 120;
 
-    public function __construct(private MessengerAccounts $accounts, private SmsService $sms)
+    public function __construct(private MessengerAccounts $accounts, private SmsService $sms, private VoiceAssistant $voice)
     {
     }
 
@@ -56,7 +57,7 @@ class CustomerBot
 
         $account = $this->accounts->find($message->channel, $message->senderId);
         if ($account) {
-            $this->linked($message, $account->customer, $reply);
+            $this->linked($message, $account->customer, $reply, $channel);
 
             return;
         }
@@ -99,7 +100,7 @@ class CustomerBot
         $reply($this->welcome());
     }
 
-    private function linked(IncomingMessage $message, Customer $customer, callable $reply): void
+    private function linked(IncomingMessage $message, Customer $customer, callable $reply, MessengerChannel $channel): void
     {
         if (preg_match('~^/stop(?:@\w+)?$~', $message->text)) {
             $this->accounts->unlink($customer, $message->channel);
@@ -108,7 +109,62 @@ class CustomerBot
             return;
         }
 
+        if ($message->voiceFileId !== null && $this->voiceAllowed($customer)) {
+            $this->later(fn () => $this->voiceReply($message, $customer, $channel));
+
+            return;
+        }
+
         $reply(OutgoingMessage::text('Salam, '.$customer->name.'! Hesabınız bağlıdır. Bot hazırlanır — tezliklə burada sifarişləriniz və ətir seçimi olacaq.'));
+    }
+
+    /** Səsli cavab — sınaq: yalnız services.telegram.customer_voice_mobiles nömrələrinə */
+    private function voiceAllowed(Customer $customer): bool
+    {
+        $mobiles = array_filter(array_map(fn ($m) => CustomerRegistration::normalizeMobile($m), explode(',', (string) config('services.telegram.customer_voice_mobiles'))));
+
+        return in_array($customer->mobile, $mobiles, true);
+    }
+
+    /** Uzun iş (OpenAI 3 sorğu) — veb sorğuda cavab Telegram-a qayıdandan sonra; konsolda (telegram:customer-poll) dərhal */
+    private function later(\Closure $work): void
+    {
+        if (app()->runningInConsole()) {
+            $work();
+        } else {
+            dispatch($work)->afterResponse();
+        }
+    }
+
+    /** Səs → mətn → AI cavabı → səs. Söhbətin son 10 növbəsi yadda saxlanır (2 saat). */
+    public function voiceReply(IncomingMessage $message, Customer $customer, MessengerChannel $channel): void
+    {
+        $to = $message->senderId;
+        if ($message->voiceDuration > self::MAX_VOICE_SECONDS) {
+            $channel->send($to, OutgoingMessage::text('Səsli mesaj 2 dəqiqədən qısa olsun.'));
+
+            return;
+        }
+        $channel->recordingVoice($to);
+        $historyKey = 'messenger:voice-history:'.$message->channel.':'.$to;
+        try {
+            $text = $this->voice->transcribe($channel->downloadVoice($message->voiceFileId));
+            if ($text === '') {
+                $channel->send($to, OutgoingMessage::text('Səsi başa düşə bilmədim, bir də deyin.'));
+
+                return;
+            }
+            $history = Cache::get($historyKey, []);
+            $answer = $this->voice->reply($customer->name, $history, $text);
+            $channel->recordingVoice($to);
+            $channel->sendVoice($to, $this->voice->speak($answer), $answer);
+            $history[] = ['role' => 'user', 'text' => $text];
+            $history[] = ['role' => 'assistant', 'text' => $answer];
+            Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));
+        } catch (Throwable $e) {
+            report($e);
+            rescue(fn () => $channel->send($to, OutgoingMessage::text('Bağışlayın, cavab hazırlana bilmədi. Bir az sonra yenidən yoxlayın.')), null, false);
+        }
     }
 
     /** Kanalın təsdiqlədiyi öz nömrəsi: bazada varsa bağla, yoxdursa yeni müştəri */
