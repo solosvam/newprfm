@@ -60,6 +60,7 @@ class CustomerBotTest extends TestCase
             public function transcribe(string $audio): string { return 'Yay üçün ətir? ('.$audio.')'; }
             public function reply(string $customerName, array $history, string $text): string { return $customerName.', '.count($history).' növbə: cavab'; }
             public function speak(string $text): string { return 'opus:'.$text; }
+            public function talk(string $customerName, array $history, string $ogg): array { return ['text' => $customerName.', '.count($history).' növbə: birbaşa', 'audio' => 'opus-direct:'.$ogg]; }
         });
         $this->app->instance(SmsService::class, new class($this->sms) extends SmsService {
             public function __construct(private array &$log) {}
@@ -244,7 +245,7 @@ class CustomerBotTest extends TestCase
 
     public function test_voice_message_gets_voice_reply_only_for_allowed_number(): void
     {
-        config(['services.telegram.customer_voice_mobiles' => '+994 10 322 75 75']);
+        config(['services.telegram.customer_voice_mobiles' => '+994 10 322 75 75', 'services.telegram.customer_voice_mode' => 'chain']);
         $allowed = Customer::forceCreate(['name' => 'Rufat', 'mobile' => '994103227575']);
         CustomerMessengerAccount::create(['customer_id' => $allowed->id, 'channel' => 'telegram', 'external_id' => '777', 'linked_via' => 'contact']);
         $other = Customer::forceCreate(['name' => 'Aysel', 'mobile' => '994501234567']);
@@ -261,5 +262,20 @@ class CustomerBotTest extends TestCase
         $this->update(['voice' => ['file_id' => 'F4', 'duration' => 300]])->assertOk();
         $this->assertCount(2, self::$voices);
         $this->assertStringContainsString('2 dəqiqədən', $this->lastReply()->text);
+    }
+
+    public function test_direct_voice_mode_answers_in_one_call_and_keeps_history(): void
+    {
+        config(['services.telegram.customer_voice_mobiles' => '994103227575', 'services.telegram.customer_voice_mode' => 'direct']);
+        $customer = Customer::forceCreate(['name' => 'Rufat', 'mobile' => '994103227575']);
+        CustomerMessengerAccount::create(['customer_id' => $customer->id, 'channel' => 'telegram', 'external_id' => '777', 'linked_via' => 'contact']);
+
+        $this->update(['voice' => ['file_id' => 'F1', 'duration' => 4]])->assertOk();
+        $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]])->assertOk();
+
+        $this->assertSame([
+            ['777', 'opus-direct:ogg:F1', 'Rufat, 0 növbə: birbaşa'],
+            ['777', 'opus-direct:ogg:F2', 'Rufat, 2 növbə: birbaşa'],
+        ], self::$voices);
     }
 }

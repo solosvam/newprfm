@@ -5,10 +5,13 @@ namespace App\Services\Messenger;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Symfony\Component\Process\Process;
 
 /**
- * Səsli mesaja səsli cavab (OpenAI): səs → mətn (transcribe), mətn → cavab (Responses API), cavab → səs (TTS, OGG/Opus).
- * Modellər: services.openai.transcribe_model / model / tts_model, səs — tts_voice.
+ * Səsli mesaja səsli cavab (OpenAI), iki üsul (services.telegram.customer_voice_mode):
+ *  chain  — səs → mətn (transcribe), mətn → cavab (Responses API), cavab → səs (TTS, OGG/Opus);
+ *  direct — audio model (chat/completions, audio_model) səsi dinləyib birbaşa səslə cavab verir; giriş wav (ffmpeg çevirir).
+ * Səs — tts_voice.
  */
 class VoiceAssistant
 {
@@ -56,6 +59,55 @@ class VoiceAssistant
         throw new RuntimeException('OpenAI cavabında mətn tapılmadı.');
     }
 
+    /**
+     * Birbaşa: səs → səs. Əvvəlki növbələr mətn kimi verilir.
+     *
+     * @param list<array{role: string, text: string}> $history
+     * @return array{text: string, audio: string} cavabın mətni və OGG/Opus səsi
+     */
+    public function talk(string $customerName, array $history, string $ogg): array
+    {
+        $messages = [['role' => 'system', 'content' => $this->instructions($customerName)]];
+        foreach ($history as $turn) {
+            $messages[] = ['role' => $turn['role'], 'content' => $turn['text']];
+        }
+        $messages[] = ['role' => 'user', 'content' => [['type' => 'input_audio', 'input_audio' => ['data' => base64_encode($this->toWav($ogg)), 'format' => 'wav']]]];
+
+        $response = $this->ok($this->http(90)->post(self::API.'chat/completions', [
+            'model' => config('services.openai.audio_model'),
+            'modalities' => ['text', 'audio'],
+            'audio' => ['voice' => config('services.openai.tts_voice'), 'format' => 'opus'],
+            'messages' => $messages,
+        ]));
+        $audio = base64_decode((string) $response->json('choices.0.message.audio.data'));
+        if ($audio === '') {
+            throw new RuntimeException('OpenAI cavabında səs yoxdur.');
+        }
+
+        return ['text' => trim((string) $response->json('choices.0.message.audio.transcript')), 'audio' => $audio];
+    }
+
+    /** Telegram-ın OGG/Opus səsi → wav (audio model ogg qəbul etmir) */
+    public function toWav(string $ogg): string
+    {
+        $in = tempnam(sys_get_temp_dir(), 'voice').'.ogg';
+        $out = substr($in, 0, -4).'.wav';
+        file_put_contents($in, $ogg);
+        try {
+            $process = new Process([config('services.openai.ffmpeg'), '-hide_banner', '-loglevel', 'error', '-y', '-i', $in, '-ac', '1', '-ar', '16000', $out]);
+            $process->setTimeout(30)->run();
+            if (!$process->isSuccessful() || !is_file($out)) {
+                throw new RuntimeException('ffmpeg səsi çevirmədi: '.trim($process->getErrorOutput() ?: 'ffmpeg tapılmadı ('.config('services.openai.ffmpeg').')'));
+            }
+
+            return (string) file_get_contents($out);
+        } finally {
+            @unlink($in);
+            @unlink($out);
+            @unlink(substr($in, 0, -4));
+        }
+    }
+
     /** Telegram səsli mesajı üçün OGG/Opus */
     public function speak(string $text): string
     {
@@ -79,7 +131,7 @@ Cavabın səsə çevrilib səsli mesaj kimi göndəriləcək, ona görə:
 - Çox qısa cavab ver: ən çox 3 qısa cümlə (səsli mesaj 20 saniyədən uzun olmasın). Ən çox 2 ətir adı çək.
 - Siyahı, emoji, link, ulduz, mötərizə, qısaltma yazma; rəqəmləri sözlə oxunacaq kimi yaz.
 - Ətir seçimi, ətir notları, istifadə qaydası kimi suallarda kömək et.
-- Qiymət, stok, endirim, sifarişin statusu və çatdırılma barədə məlumatın yoxdur — uydurma; saytda baxmağı və ya operatorla əlaqə saxlamağı tövsiyə et.
+- Qiymət, stok, endirim, sifarişin statusu və çatdırılma barədə məlumatın YOXDUR. Heç vaxt məbləğ, manat, endirim, "anbarda var", "mövcuddur" demə — soruşsalar, qiymət və stoku saytda görmək və ya operatordan soruşmaq olar de.
 - Ətirlə əlaqəsi olmayan mövzularda nəzakətlə yalnız ətir mövzusunda kömək etdiyini de.
 TXT;
     }

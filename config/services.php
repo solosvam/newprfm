@@ -79,6 +79,8 @@ return [
         'customer_bot_username' => env('TELEGRAM_CUSTOMER_BOT_USERNAME', 'parfumshopai_bot'),
         // Səsli mesaja səsli cavab — sınaq: yalnız bu nömrələrə bağlı hesablara (vergüllə, 994XXXXXXXXX)
         'customer_voice_mobiles' => env('TELEGRAM_CUSTOMER_VOICE_MOBILES', '994103227575'),
+        // chain — səs → mətn → GPT → səs (3 sorğu); direct — audio model səsi dinləyib səslə cavab verir (1 sorğu)
+        'customer_voice_mode' => env('TELEGRAM_CUSTOMER_VOICE_MODE', 'direct'),
     ],
 
     'parfumshop_sms' => [
@@ -111,6 +113,9 @@ return [
         'transcribe_model' => env('OPENAI_TRANSCRIBE_MODEL', 'gpt-4o-mini-transcribe'),
         'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
         'tts_voice' => env('OPENAI_TTS_VOICE', 'coral'),
+        // Birbaşa səs → səs (bir sorğu; giriş yalnız wav/mp3 — Telegram-ın ogg-u ffmpeg ilə çevrilir)
+        'audio_model' => env('OPENAI_AUDIO_MODEL', 'gpt-audio-mini'),
+        'ffmpeg' => env('FFMPEG_PATH', 'ffmpeg'),
     ],
 
     'serper' => [

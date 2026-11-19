@@ -148,13 +148,24 @@ class CustomerBot
         $channel->recordingVoice($to);
         $historyKey = 'messenger:voice-history:'.$message->channel.':'.$to;
         try {
-            $text = $this->voice->transcribe($channel->downloadVoice($message->voiceFileId));
+            $audio = $channel->downloadVoice($message->voiceFileId);
+            $history = Cache::get($historyKey, []);
+            if (config('services.telegram.customer_voice_mode') === 'direct') {
+                // Birbaşa: audio model dinləyib səslə cavab verir; müştərinin sözləri tarixçə üçün cavabdan SONRA mətnə çevrilir
+                $answer = $this->voice->talk($customer->name, $history, $audio);
+                $channel->sendVoice($to, $answer['audio'], $answer['text']);
+                $history[] = ['role' => 'user', 'text' => rescue(fn () => $this->voice->transcribe($audio), '(səsli mesaj)', false) ?: '(səsli mesaj)'];
+                $history[] = ['role' => 'assistant', 'text' => $answer['text']];
+                Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));
+
+                return;
+            }
+            $text = $this->voice->transcribe($audio);
             if ($text === '') {
                 $channel->send($to, OutgoingMessage::text('Səsi başa düşə bilmədim, bir də deyin.'));
 
                 return;
             }
-            $history = Cache::get($historyKey, []);
             $answer = $this->voice->reply($customer->name, $history, $text);
             $channel->recordingVoice($to);
             $channel->sendVoice($to, $this->voice->speak($answer), $answer);
