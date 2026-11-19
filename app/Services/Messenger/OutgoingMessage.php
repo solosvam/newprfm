@@ -12,6 +12,7 @@ final class OutgoingMessage
     public function __construct(
         public readonly string $text,
         public readonly array $buttons = [],
+        public readonly bool $keepButtons = false,   // düymələr basılandan sonra da qalsın (məs. səsli cavabın üsulu)
     ) {
     }
 
@@ -21,13 +22,13 @@ final class OutgoingMessage
     }
 
     /** @param list<string> $labels */
-    public static function withButtons(string $text, array $labels, ?string $contactLabel = null): self
+    public static function withButtons(string $text, array $labels, ?string $contactLabel = null, bool $keep = false): self
     {
         $buttons = $contactLabel ? [['label' => $contactLabel, 'contact' => true]] : [];
         foreach ($labels as $label) {
             $buttons[] = ['label' => $label];
         }
 
-        return new self($text, $buttons);
+        return new self($text, $buttons, $keep);
     }
 }

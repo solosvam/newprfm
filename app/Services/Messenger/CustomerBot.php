@@ -26,6 +26,7 @@ class CustomerBot
     public const SHARE = '📱 Nömrəmi paylaş';
     public const OTHER_NUMBER = 'Başqa nömrə ilə';
     public const CANCEL = 'Ləğv et';
+    public const VOICE_MODES = ['direct' => '🎙 Birbaşa', 'chain' => '🔗 Zəncir'];
 
     private const STATE_TTL_MINUTES = 10;
     private const MAX_CODE_ATTEMPTS = 5;
@@ -109,8 +110,22 @@ class CustomerBot
             return;
         }
 
-        if ($message->voiceFileId !== null && $this->voiceAllowed($customer)) {
-            $this->later(fn () => $this->voiceReply($message, $customer, $channel));
+        if ($this->voiceAllowed($customer)) {
+            if ($message->voiceFileId !== null) {
+                $mode = $this->voiceMode($customer);
+                $this->later(fn () => $this->voiceReply($message, $customer, $channel, $mode));
+
+                return;
+            }
+            $mode = array_search($message->text, self::VOICE_MODES, true);
+            if ($mode !== false) {
+                Cache::forever($this->voiceModeKey($customer), $mode);
+            }
+            $reply(OutgoingMessage::withButtons(
+                ($mode !== false ? 'Səsli cavab üsulu: ' : 'Salam, '.$customer->name.'! Səsli mesaj göndərin. Səsli cavab üsulu: ')
+                    .self::VOICE_MODES[$this->voiceMode($customer)].".\n🎙 Birbaşa — model səsinizi dinləyib dərhal səslə cavab verir.\n🔗 Zəncir — səs mətnə, GPT cavabı, cavab səsə.",
+                array_values(self::VOICE_MODES), null, true,
+            ));
 
             return;
         }
@@ -126,6 +141,19 @@ class CustomerBot
         return in_array($customer->mobile, $mobiles, true);
     }
 
+    /** Müştərinin seçdiyi üsul (botdakı düymələr), seçməyibsə — services.telegram.customer_voice_mode */
+    private function voiceMode(Customer $customer): string
+    {
+        $mode = Cache::get($this->voiceModeKey($customer)) ?: config('services.telegram.customer_voice_mode');
+
+        return isset(self::VOICE_MODES[$mode]) ? $mode : 'direct';
+    }
+
+    private function voiceModeKey(Customer $customer): string
+    {
+        return 'messenger:voice-mode:'.$customer->id;
+    }
+
     /** Uzun iş (OpenAI 3 sorğu) — veb sorğuda cavab Telegram-a qayıdandan sonra; konsolda (telegram:customer-poll) dərhal */
     private function later(\Closure $work): void
     {
@@ -137,7 +165,7 @@ class CustomerBot
     }
 
     /** Səs → mətn → AI cavabı → səs. Söhbətin son 10 növbəsi yadda saxlanır (2 saat). */
-    public function voiceReply(IncomingMessage $message, Customer $customer, MessengerChannel $channel): void
+    public function voiceReply(IncomingMessage $message, Customer $customer, MessengerChannel $channel, string $mode = 'direct'): void
     {
         $to = $message->senderId;
         if ($message->voiceDuration > self::MAX_VOICE_SECONDS) {
@@ -150,10 +178,11 @@ class CustomerBot
         try {
             $audio = $channel->downloadVoice($message->voiceFileId);
             $history = Cache::get($historyKey, []);
-            if (config('services.telegram.customer_voice_mode') === 'direct') {
+            $label = self::VOICE_MODES[$mode].' · ';   // müqayisə üçün: cavabın hansı üsulla gəldiyi
+            if ($mode === 'direct') {
                 // Birbaşa: audio model dinləyib səslə cavab verir; müştərinin sözləri tarixçə üçün cavabdan SONRA mətnə çevrilir
                 $answer = $this->voice->talk($customer->name, $history, $audio);
-                $channel->sendVoice($to, $answer['audio'], $answer['text']);
+                $channel->sendVoice($to, $answer['audio'], $label.$answer['text']);
                 $history[] = ['role' => 'user', 'text' => rescue(fn () => $this->voice->transcribe($audio), '(səsli mesaj)', false) ?: '(səsli mesaj)'];
                 $history[] = ['role' => 'assistant', 'text' => $answer['text']];
                 Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));
@@ -168,7 +197,7 @@ class CustomerBot
             }
             $answer = $this->voice->reply($customer->name, $history, $text);
             $channel->recordingVoice($to);
-            $channel->sendVoice($to, $this->voice->speak($answer), $answer);
+            $channel->sendVoice($to, $this->voice->speak($answer), $label.$answer);
             $history[] = ['role' => 'user', 'text' => $text];
             $history[] = ['role' => 'assistant', 'text' => $answer];
             Cache::put($historyKey, array_slice($history, -10), now()->addHours(2));

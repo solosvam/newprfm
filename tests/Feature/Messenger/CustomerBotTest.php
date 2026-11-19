@@ -253,7 +253,7 @@ class CustomerBotTest extends TestCase
 
         $this->update(['voice' => ['file_id' => 'F1', 'duration' => 4]])->assertOk();
         $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]])->assertOk();
-        $this->assertSame([['777', 'opus:Rufat, 0 növbə: cavab', 'Rufat, 0 növbə: cavab'], ['777', 'opus:Rufat, 2 növbə: cavab', 'Rufat, 2 növbə: cavab']], self::$voices, 'söhbət yadda qalır');
+        $this->assertSame([['777', 'opus:Rufat, 0 növbə: cavab', '🔗 Zəncir · Rufat, 0 növbə: cavab'], ['777', 'opus:Rufat, 2 növbə: cavab', '🔗 Zəncir · Rufat, 2 növbə: cavab']], self::$voices, 'söhbət yadda qalır');
 
         $this->update(['voice' => ['file_id' => 'F3', 'duration' => 4]], 888)->assertOk();
         $this->assertCount(2, self::$voices, 'başqa nömrəyə səsli cavab yoxdur');
@@ -274,8 +274,28 @@ class CustomerBotTest extends TestCase
         $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]])->assertOk();
 
         $this->assertSame([
-            ['777', 'opus-direct:ogg:F1', 'Rufat, 0 növbə: birbaşa'],
-            ['777', 'opus-direct:ogg:F2', 'Rufat, 2 növbə: birbaşa'],
+            ['777', 'opus-direct:ogg:F1', '🎙 Birbaşa · Rufat, 0 növbə: birbaşa'],
+            ['777', 'opus-direct:ogg:F2', '🎙 Birbaşa · Rufat, 2 növbə: birbaşa'],
         ], self::$voices);
+    }
+
+    public function test_tester_switches_voice_mode_with_buttons(): void
+    {
+        config(['services.telegram.customer_voice_mobiles' => '994103227575', 'services.telegram.customer_voice_mode' => 'direct']);
+        $customer = Customer::forceCreate(['name' => 'Rufat', 'mobile' => '994103227575']);
+        CustomerMessengerAccount::create(['customer_id' => $customer->id, 'channel' => 'telegram', 'external_id' => '777', 'linked_via' => 'contact']);
+
+        $this->update(['text' => 'salam']);
+        $this->assertSame(['🎙 Birbaşa', '🔗 Zəncir'], array_column($this->lastReply()->buttons, 'label'));
+        $this->assertTrue($this->lastReply()->keepButtons);
+        $this->assertStringContainsString('üsulu: 🎙 Birbaşa', $this->lastReply()->text);
+
+        $this->update(['text' => '🔗 Zəncir']);
+        $this->assertStringContainsString('üsulu: 🔗 Zəncir', $this->lastReply()->text);
+        $this->update(['voice' => ['file_id' => 'F1', 'duration' => 4]]);
+        $this->update(['text' => '🎙 Birbaşa']);
+        $this->update(['voice' => ['file_id' => 'F2', 'duration' => 4]]);
+
+        $this->assertSame(['🔗 Zəncir · Rufat, 0 növbə: cavab', '🎙 Birbaşa · Rufat, 2 növbə: birbaşa'], array_column(self::$voices, 2));
     }
 }
