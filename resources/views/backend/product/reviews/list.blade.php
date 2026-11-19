@@ -48,7 +48,7 @@
                                                 —
                                             @endif
                                         </td>
-                                        <td>{{ trim(($review->customer?->name ?? '') . ' ' . ($review->customer?->surname ?? '')) ?: '—' }}</td>
+                                        <td>@if($review->customer){{ trim($review->customer->name.' '.$review->customer->surname) ?: '—' }}@elseif($review->author_name){{ $review->author_name }} <span class="text-muted small">(köhnə sayt)</span>@else — @endif</td>
                                         <td>{{ $review->rating }} / 5</td>
                                         <td style="min-width: 220px; white-space: pre-line;">{{ $review->comment }}</td>
                                         <td>

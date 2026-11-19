@@ -12,6 +12,7 @@ class ProductReview extends Model
     protected $fillable = [
         'product_id',
         'customer_id',
+        'author_name',   // köhnə saytdan köçürülən rəy (customer_id boş) — parfumshop:import-reviews
         'rating',
         'comment',
         'active',

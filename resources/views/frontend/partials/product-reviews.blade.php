@@ -41,7 +41,7 @@
     <div class="accordion-body" data-accordion-body>
         @forelse($approvedReviews as $review)
             <article class="review-item">
-                <p class="review-author">{{ $review->customer?->name ?? __('review_customer') }}</p>
+                <p class="review-author">{{ $review->customer?->name ?? ($review->author_name ?: __('review_customer')) }}</p>
                 <p class="review-item-stars" aria-label="{{ $review->rating }} / 5">
                     @for($star = 1; $star <= 5; $star++)
                         {{ $star <= $review->rating ? '★' : '☆' }}
