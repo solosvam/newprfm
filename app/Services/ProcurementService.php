@@ -24,10 +24,11 @@ class ProcurementService
     }
 
     // Lock the parent first in every mutation, serializing allocation and answer changes.
-    private function lockOrder(Order $order, array $allowed = OrderStatusService::PROCUREMENT): Order
+    private function lockOrder(Order $order, array $allowed = OrderStatusService::SUPPLY_FLOW): Order
     {
         $locked = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
-        // Sorğu/seçim yalnız "İcraya götür"dən sonra; götürmə mərhələləri kuryer təyinindən sonra da
+        // Sorğu/seçim "İcraya götür"dən sonra; kuryer təyin olunandan sonra da (depoda tapılmadı → başqa depo; kuryerə bildiriş gedir).
+        // Götürülmüş məhsulun seçimi isə ləğv olunmur (OrderItemAllocation::CANCELLABLE)
         $this->ensure($locked->status?->code !== 'new', 'Əvvəlcə sifarişi icraya götürün ("İcraya götür").');
         $this->ensure(in_array($locked->status?->code, $allowed, true),
             'Bu sifarişin cari mərhələsində depo seçimi dəyişdirilə bilməz.');

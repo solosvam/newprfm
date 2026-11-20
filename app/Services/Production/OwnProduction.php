@@ -90,7 +90,7 @@ class OwnProduction
         if ($owns->isEmpty()) {
             return collect();
         }
-        $statusIds = DB::table('order_statuses')->whereIn('code', ['new', ...\App\Services\OrderStatusService::PROCUREMENT])->pluck('id');
+        $statusIds = DB::table('order_statuses')->whereIn('code', ['new', ...\App\Services\OrderStatusService::SUPPLY_FLOW])->pluck('id');
         $items = OrderItem::with(['allocations' => fn ($q) => $q->whereNotIn('status', OrderItemAllocation::SUPPLY_INACTIVE)])
             ->whereIn('product_variant_id', $owns->keys())
             ->whereIn('order_id', Order::whereIn('order_status_id', $statusIds)->select('id'))

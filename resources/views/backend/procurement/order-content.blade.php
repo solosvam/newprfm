@@ -5,8 +5,9 @@
   Formalar ProcurementController-ə gedir; "Yeni sorğu", "Cavab daxil et", "Seçimi ləğv et" — yan modallar.
 --}}
 @php
-    // Sorğu/cavab/seçim — "İcraya götür"dən sonra; bildirildi/ayrıldı/götürüldü — kuryer təyinindən sonra da
-    $editable = $order->customer_id && in_array($order->status?->code, \App\Services\OrderStatusService::PROCUREMENT, true);
+    // Sorğu/cavab/seçim və bildirildi/ayrıldı/götürüldü — "İcraya götür"dən sonra, kuryer təyin olunandan sonra da
+    // (depo dəyişəndə kuryerə bildiriş gedir — ProcurementController::notifyCourier)
+    $editable = $order->customer_id && in_array($order->status?->code, \App\Services\OrderStatusService::SUPPLY_FLOW, true);
     $flowEditable = $order->customer_id && in_array($order->status?->code, \App\Services\OrderStatusService::SUPPLY_FLOW, true);
     $staff = $staff ?? collect();
     // user_id 0 — deponun özü (portal linki ilə)
@@ -54,6 +55,7 @@
     <div class="text-muted text-small">
         @if($order->status?->code === 'new') Depo sorğusu sifariş icraya götürüləndən sonra göndərilir.
         @elseif(!$editable) Bu mərhələdə depo seçimi dəyişdirilmir{{ $flowEditable ? ' — yalnız götürmə mərhələləri qeyd olunur' : '' }}.
+        @elseif($order->status?->code === 'courier_assigned') Kuryer təyin olunub: depo seçimi dəyişsə, kuryerə bildiriş gedir. Götürülmüş məhsulun deposu dəyişdirilmir.
         @else Depo seçimi rezervasiya təsdiqi deyil. Müştərinin satış qiyməti dəyişmir. @endif
     </div>
     @if($editable)

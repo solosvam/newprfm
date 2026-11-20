@@ -40,7 +40,7 @@ class TelegramRemind extends Command
             $order = $requestItem?->request?->order;
             // Cavab artıq var (Telegram-dan, linkdən və ya operator yazıb) və ya sifariş bu mərhələdən çıxıb — xatırlatma lazım deyil
             if (!$requestItem || $requestItem->offers->isNotEmpty() || !$order
-                || !in_array($order->status?->code, OrderStatusService::PROCUREMENT, true)
+                || !in_array($order->status?->code, OrderStatusService::SUPPLY_FLOW, true)
                 || $requestItem->orderItem?->activeQuantity() <= 0) {
                 continue;
             }

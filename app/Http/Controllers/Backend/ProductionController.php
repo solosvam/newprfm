@@ -135,6 +135,7 @@ class ProductionController extends Controller
     {
         abort_unless((int) $item->order_id === (int) $order->id, 404);
         $allocation = $this->production->allocate($order, $item, (int) auth('admin')->id());
+        ProcurementController::notifyCourier($order, $allocation, false);
 
         return back()->with('success', 'Öz anbarımızdan '.$allocation->quantity.' ədəd götürüldü (maya '.number_format((float) $allocation->unit_cost, 2).' AZN).');
     }

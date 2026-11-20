@@ -170,6 +170,7 @@ class ProcurementController extends Controller
         $actor = (int) auth('admin')->id();
         $allocation = $service->recordDirect($order, (int) $data['item_id'], (int) $data['warehouse_id'], (string) $data['unit_cost'], $actor);
         $sms = WarehouseNotifier::summary([$allocation->warehouse->name_az => $notifier->notifySelected($order, $allocation, $actor)]);
+        $this->notifyCourier($order, $allocation, false);
 
         return back()->with('success', trim($allocation->warehouse->name_az.' seçildi (sorğusuz). '.$sms));
     }
@@ -203,6 +204,7 @@ class ProcurementController extends Controller
         if ($allocation->wasRecentlyCreated) {
             $log = $notifier->notifySelected($order, $allocation, $actor);
             $sms = WarehouseNotifier::summary([$allocation->warehouse->name_az => $log]);
+            $this->notifyCourier($order, $allocation, false);
         }
 
         return back()->with('success', trim('Depo seçimi qeydə alındı. '.($sms ?? '')));
@@ -232,6 +234,9 @@ class ProcurementController extends Controller
             $model = OrderItemAllocation::with('warehouse')->find($allocation);
             $sms = WarehouseNotifier::summary([$model->warehouse->name_az => $notifier->notifyCancelled($model, $actor)]);
         }
+        if ($from !== null) {
+            $this->notifyCourier($order, OrderItemAllocation::findOrFail($allocation), true);
+        }
 
         return back()->with('success', trim('Depo seçimi ləğv edildi. Məhsul sifarişdə qalır. '.($sms ?? '')));
     }
@@ -239,7 +244,7 @@ class ProcurementController extends Controller
     /** "SMS göndər / təkrar göndər" — sorğu üzrə */
     public function requestSms(Order $order, int $warehouseRequest, WarehouseNotifier $notifier)
     {
-        $this->ensureOpen($order, \App\Services\OrderStatusService::PROCUREMENT);
+        $this->ensureOpen($order, \App\Services\OrderStatusService::SUPPLY_FLOW);
         $req = WarehouseRequest::with('warehouse')->where('order_id', $order->id)->findOrFail($warehouseRequest);
         $log = $notifier->notifyRequest($req, (int) auth('admin')->id());
 
@@ -265,6 +270,12 @@ class ProcurementController extends Controller
         $log = $notifier->notifySelected($order, $model, (int) auth('admin')->id());
 
         return $this->smsResponse($model->warehouse->name_az, $log);
+    }
+
+    /** Sifariş kuryerdədirsə — depo dəyişdi bildirişi (tətbiq + push); xəta əməliyyatı pozmur */
+    public static function notifyCourier(Order $order, OrderItemAllocation $allocation, bool $cancelled): void
+    {
+        rescue(fn () => app(\App\Services\Courier\CourierNotifier::class)->supplyChanged($order, $allocation, $cancelled), null, !app()->runningUnitTests());
     }
 
     private function ensureOpen(Order $order, array $statuses): void

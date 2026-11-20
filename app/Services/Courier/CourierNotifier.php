@@ -48,6 +48,41 @@ class CourierNotifier
             $order);
     }
 
+    /**
+     * Depo seçimi dəyişdi (yeni seçim və ya ləğv) — sifariş kuryerdədirsə ona bildiriş; deyilsə heç nə.
+     * Yeni seçimdə köhnə depo — həmin məhsulun ən son ləğv edilmiş başqa depo seçimi.
+     */
+    public function supplyChanged(Order $order, \App\Models\Procurement\OrderItemAllocation $allocation, bool $cancelled): ?CourierNotification
+    {
+        $order = $order->fresh(['status', 'courier']);
+        if ($order->status?->code !== 'courier_assigned' || !$order->courier) {
+            return null;
+        }
+        $allocation->loadMissing(['warehouse', 'orderItem.product.brand', 'orderItem.product.type', 'orderItem.product.genders', 'orderItem.variant.size']);
+        if ($cancelled) {
+            return $this->warehouseChanged($order, $order->courier, $allocation->orderItem, $allocation->warehouse, null);
+        }
+        $previous = \App\Models\Procurement\OrderItemAllocation::with('warehouse')->where('order_item_id', $allocation->order_item_id)
+            ->where('status', \App\Models\Procurement\OrderItemAllocation::CANCELLED)->where('warehouse_id', '!=', $allocation->warehouse_id)
+            ->latest('id')->first();
+
+        return $this->warehouseChanged($order, $order->courier, $allocation->orderItem, $previous?->warehouse, $allocation->warehouse);
+    }
+
+    /**
+     * Kuryerdəki sifarişdə məhsulun deposu dəyişdi: yeni depo seçildi ($to) və ya köhnə seçim ləğv edildi ($from, $to yox)
+     */
+    public function warehouseChanged(Order $order, User $courier, \App\Models\Order\OrderItem $item, ?\App\Models\Procurement\Warehouse $from, ?\App\Models\Procurement\Warehouse $to): CourierNotification
+    {
+        $name = \App\Support\ProductTitle::item($item, 'Məhsul');
+
+        return $this->notify($courier, 'warehouse_changed', 'Depo dəyişdi: '.$order->order_no,
+            $to
+                ? $name.' — indi '.$to->name_az.' deposundan götürülür'.($from ? ' ('.$from->name_az.' yox)' : '')
+                : $name.' — '.$from?->name_az.' deposundan götürülmür (seçim ləğv edildi, yeni depo seçiləcək)',
+            $order);
+    }
+
     /** Baş kuryer kuryerin balansından pul götürdü */
     public function moneyCollected(MoneyMovement $movement, User $courier, User $head, int $balanceAfterCents): CourierNotification
     {
