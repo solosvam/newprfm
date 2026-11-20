@@ -78,7 +78,7 @@ return [
         'customer_bot_token' => env('TELEGRAM_CUSTOMER_BOT_TOKEN'),
         'customer_bot_username' => env('TELEGRAM_CUSTOMER_BOT_USERNAME', 'parfumshopai_bot'),
         // Səsli mesaja səsli cavab — sınaq: yalnız bu nömrələrə bağlı hesablara (vergüllə, 994XXXXXXXXX)
-        'customer_voice_mobiles' => env('TELEGRAM_CUSTOMER_VOICE_MOBILES', '994103227575'),
+        'customer_voice_mobiles' => env('TELEGRAM_CUSTOMER_VOICE_MOBILES', '994103227575,994503007007'),
         // chain — səs → mətn → GPT → səs (3 sorğu); direct — audio model səsi dinləyib səslə cavab verir (1 sorğu)
         'customer_voice_mode' => env('TELEGRAM_CUSTOMER_VOICE_MODE', 'direct'),
     ],
